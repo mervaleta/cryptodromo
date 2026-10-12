@@ -248,17 +248,35 @@ class ChronicleGenerator:
           <div id="slot-result" style="font-size:0.75rem; text-align:center; color:var(--muted); margin-top:6px;">Esperando giro...</div>
         </div>
 
-        <!-- Salón 3: CryptoMochi Arcade -->
+        <!-- Salón 3: CryptoMochi Tamagotchi & Arcade -->
         <div id="cryptomochi-arcade" class="widget">
-          <h4 style="color: var(--accent-pink); margin-bottom: 0.5rem;">👾 CryptoMochi Arcade</h4>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Carrera de mascotas mapeadas a momentum bursátil.</p>
-          <div style="background:#090a10; padding:0.8rem; border-radius:6px; font-size:0.8rem; font-family:var(--font-mono); margin-bottom:0.8rem; line-height:1.6;">
-            <div>🐂 GigaBull ($BTC): <span id="mochi-btc-speed">68.2 km/h</span></div>
-            <div>⚡ SiliconBeast ($NVDA): <span id="mochi-nvda-speed">72.4 km/h</span></div>
-            <div>🏇 PampaRunner ($YPF): <span id="mochi-ypf-speed">64.1 km/h</span></div>
+          <h4 style="color: var(--accent-pink); margin-bottom: 0.5rem;">👾 CryptoMochi Tamagotchi</h4>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Mascota evolutiva. Seleccioná el ticker para modular su comportamiento:</p>
+          
+          <div style="margin-bottom:0.8rem;">
+            <label style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono);">VINCULAR A TICKER:</label>
+            <select id="mochi-ticker-select" onchange="changeMochiTicker()" style="width:100%; margin-top:4px; background:#1e2235; color:#fff; border:1px solid var(--card-border); padding:0.4rem; border-radius:4px; font-family:var(--font-mono);">
+              <option value="BTC">$BTC - Volatilidad Cuántica (Euforia / Pánico)</option>
+              <option value="NVDA">$NVDA - Aceleración Neuronal (Hiperactividad GPU)</option>
+              <option value="ETH">$ETH - Complejidad Lógica (Gas & Astucia)</option>
+              <option value="YPF">$YPF - Resiliencia de Recursos (Fuerza Telúrica)</option>
+            </select>
           </div>
-          <button onclick="runMochiRace()" style="width:100%; background:var(--accent-pink); color:#fff; border:none; padding:0.5rem; border-radius:4px; font-weight:bold; cursor:pointer;">INICIAR CARRERA</button>
-          <div id="mochi-winner" style="font-size:0.75rem; text-align:center; color:var(--muted); margin-top:6px;">Pista despejada</div>
+
+          <div style="background:#090a10; padding:0.8rem; border-radius:6px; font-size:0.8rem; font-family:var(--font-mono); margin-bottom:0.8rem; line-height:1.6;">
+            <div style="text-align:center; font-size:2rem; margin-bottom:0.3rem;" id="mochi-avatar">🐱‍👤</div>
+            <div style="color:var(--accent-pink); font-weight:bold; text-align:center; margin-bottom:0.4rem;" id="mochi-name-display">Kuro [Vinculado a $BTC]</div>
+            <div>Humor: <span id="mochi-mood-val" style="color:var(--accent-green); font-weight:bold;">Alcista</span></div>
+            <div>Rasgo Dominante: <span id="mochi-trait-val" style="color:var(--accent-blue);">Volatilidad Cuántica</span></div>
+            <div>Energía: <span id="mochi-energy-val" style="color:#ffcc00;">85%</span></div>
+            <div>Apetito: <span id="mochi-hunger-val" style="color:var(--muted);">Bajo (20%)</span></div>
+          </div>
+          
+          <div style="display:flex; gap:0.5rem;">
+            <button onclick="feedMochi()" style="flex:1; background:#222538; color:var(--accent-green); border:1px solid var(--card-border); padding:0.4rem; border-radius:4px; font-weight:bold; cursor:pointer;">ALIMENTAR</button>
+            <button onclick="runMochiRace()" style="flex:1; background:var(--accent-pink); color:#fff; border:none; padding:0.4rem; border-radius:4px; font-weight:bold; cursor:pointer;">CORRER PISTA</button>
+          </div>
+          <div id="mochi-winner" style="font-size:0.75rem; text-align:center; color:var(--muted); margin-top:6px;">Mascota en reposo</div>
         </div>
 
       </div>
@@ -314,12 +332,36 @@ class ChronicleGenerator:
         }}
       }}
 
-      // 3. Logica Simulada CryptoMochi
+      // 3. Logica Simulada CryptoMochi Tamagotchi
+      const tickerProfiles = {{
+        BTC: {{ trait: 'Volatilidad Cuántica', mood: 'Euforia / Pánico', avatar: '🐂', energy: '90%', hunger: 'Alta (75%)' }},
+        NVDA: {{ trait: 'Aceleración Neuronal', mood: 'Hiperactivo GPU', avatar: '⚡', energy: '98%', hunger: 'Media (40%)' }},
+        ETH: {{ trait: 'Complejidad Lógica', mood: 'Foco Algorítmico', avatar: '🧙‍♂️', energy: '80%', hunger: 'Baja (20%)' }},
+        YPF: {{ trait: 'Resiliencia de Recursos', mood: 'Fuerza Telúrica', avatar: '🦬', energy: '75%', hunger: 'Baja (15%)' }}
+      }};
+
+      function changeMochiTicker() {{
+        const sel = document.getElementById('mochi-ticker-select').value;
+        const profile = tickerProfiles[sel];
+        document.getElementById('mochi-avatar').innerText = profile.avatar;
+        document.getElementById('mochi-name-display').innerText = 'Kuro [Vinculado a $' + sel + ']';
+        document.getElementById('mochi-trait-val').innerText = profile.trait;
+        document.getElementById('mochi-mood-val').innerText = profile.mood;
+        document.getElementById('mochi-energy-val').innerText = profile.energy;
+        document.getElementById('mochi-hunger-val').innerText = profile.hunger;
+        document.getElementById('mochi-winner').innerText = 'Genética adaptada a $' + sel;
+      }}
+
+      function feedMochi() {{
+        document.getElementById('mochi-hunger-val').innerText = 'Saciado (0%)';
+        document.getElementById('mochi-winner').innerText = '🍖 Kuro consumió liquidez de mercado!';
+      }}
+
       function runMochiRace() {{
-        const mochis = ['🐂 GigaBull ($BTC)', '⚡ SiliconBeast ($NVDA)', '🏇 PampaRunner ($YPF)'];
-        const winner = mochis[Math.floor(Math.random() * mochis.length)];
+        const sel = document.getElementById('mochi-ticker-select').value;
+        const profile = tickerProfiles[sel];
         const el = document.getElementById('mochi-winner');
-        el.innerText = '🏁 Ganador de la carrera: ' + winner + '!';
+        el.innerText = '🏁 ' + profile.avatar + ' Kuro aceleró con el momentum de $' + sel + '! Tiempo: 9.84s';
         el.style.color = 'var(--accent-pink)';
       }}
     </script>

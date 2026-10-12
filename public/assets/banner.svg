@@ -39,6 +39,6 @@
   <!-- Entropy Proof Box -->
   <rect x="100" y="275" width="1000" height="95" rx="8" fill="#161829" stroke="#2a2d4a" stroke-width="1.5" />
   <text x="130" y="312" fill="#8e92bc" font-family="'Courier New', monospace" font-size="14">PROVABLY FAIR VERIFIED SEED</text>
-  <text x="130" y="345" fill="#00ff87" font-family="'Courier New', monospace" font-size="20" font-weight="bold">HASH: 8624d0be4423...e55311fd</text>
+  <text x="130" y="345" fill="#00ff87" font-family="'Courier New', monospace" font-size="20" font-weight="bold">HASH: 25a6198f4ad2...108c2ae2</text>
   <text x="860" y="345" fill="#60efff" font-family="'Courier New', monospace" font-size="14">STATUS: IMMUTABLE</text>
 </svg>

@@ -13,6 +13,28 @@ from typing import Dict, Any, List
 from core.mock_market_data import MockMarketDay
 
 
+class CryptoMochiPet:
+    def __init__(self, name: str, ticker: str = "BTC"):
+        self.name = name
+        self.ticker = ticker.upper()
+        self.level = 1
+        self.energy = 80
+        self.hunger = 20
+        self.happiness = 75
+        self.mood = "Neutral"
+
+    def get_status(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "ticker": self.ticker,
+            "level": self.level,
+            "energy": self.energy,
+            "hunger": self.hunger,
+            "happiness": self.happiness,
+            "mood": self.mood
+        }
+
+
 class GamesEngine:
     def __init__(self, data_file: str = "data/mock_market_day.json"):
         self.mock_data = MockMarketDay(data_file).load_dataset()
@@ -113,3 +135,94 @@ class GamesEngine:
             "final_times": times,
             "winner": winner
         }
+
+    def create_cryptomochi(self, name: str, ticker: str = "BTC") -> CryptoMochiPet:
+        pet = CryptoMochiPet(name=name, ticker=ticker)
+        self.update_mochi_state(name=name, ticker=ticker, hour=0, pet=pet)
+        return pet
+
+    def get_ticker_behavior_profile(self, ticker: str) -> Dict[str, Any]:
+        t = ticker.upper()
+        profiles = {
+            "BTC": {
+                "ticker": "BTC",
+                "dominant_trait": "Volatilidad Cuántica",
+                "description": "Humor hiperreactivo a velas de 1m. Pasa de la euforia al pánico súbito.",
+                "affected_attributes": ["Humor", "Apetito por Riesgo", "Hiperactividad"]
+            },
+            "NVDA": {
+                "ticker": "NVDA",
+                "dominant_trait": "Aceleración Neuronal",
+                "description": "Energía infinita atada al volumen de GPUs. Rápido, insomne e hiper productivo.",
+                "affected_attributes": ["Velocidad de Procesamiento", "Energía", "Resistencia"]
+            },
+            "ETH": {
+                "ticker": "ETH",
+                "dominant_trait": "Complejidad Lógica",
+                "description": "Regulado por gas y consensos. Desarrolla magia algorítmica y astucia.",
+                "affected_attributes": ["Inteligencia", "Concentración", "Vitalidad Espiritual"]
+            },
+            "YPF": {
+                "ticker": "YPF",
+                "dominant_trait": "Resiliencia de Recursos",
+                "description": "Fuerza telúrica basada en hidrocarburos. Fuerte, pesado, resistente al oso.",
+                "affected_attributes": ["Fuerza Bruta", "Apego Territorial", "Estabilidad Emocional"]
+            }
+        }
+        return profiles.get(t, {
+            "ticker": t,
+            "dominant_trait": "Comportamiento Estándar",
+            "description": "Mascota equilibrada sin sesgo de activo extremo.",
+            "affected_attributes": ["Equilibrio"]
+        })
+
+    def update_mochi_state(self, name: str, ticker: str, hour: int = 0, pet: CryptoMochiPet = None) -> Dict[str, Any]:
+        if pet is None:
+            pet = CryptoMochiPet(name=name, ticker=ticker)
+
+        snap = self._get_snapshot(hour)
+        t = ticker.upper()
+
+        if t == "BTC":
+            delta = (snap["btc"]["close"] - snap["btc"]["open"]) / snap["btc"]["open"]
+            if delta > 0.01:
+                pet.mood = "Eufórico"
+                pet.happiness = min(100, pet.happiness + 15)
+                pet.energy = min(100, pet.energy + 10)
+            elif delta < -0.01:
+                pet.mood = "Pánico"
+                pet.happiness = max(10, pet.happiness - 20)
+                pet.hunger = min(100, pet.hunger + 15)
+            else:
+                pet.mood = "Neutral"
+        elif t == "NVDA":
+            vol = snap["nvda"]["volume_1m_sample"]
+            if vol > 50000000:
+                pet.mood = "Eufórico"
+                pet.energy = 95
+            else:
+                pet.mood = "Alcista"
+                pet.energy = 80
+        elif t == "ETH":
+            pct = snap["eth"]["pct_change_1h"]
+            if pct > 1.0:
+                pet.mood = "Alcista"
+                pet.happiness = min(100, pet.happiness + 10)
+            elif pct < -1.0:
+                pet.mood = "Bajista"
+                pet.happiness = max(15, pet.happiness - 10)
+            else:
+                pet.mood = "Neutral"
+        elif t == "YPF":
+            d_pct = snap["ypf"]["delta_pct"]
+            if d_pct > 2.0:
+                pet.mood = "Alcista"
+                pet.energy = 85
+            elif d_pct < -2.0:
+                pet.mood = "Bajista"
+                pet.energy = 50
+            else:
+                pet.mood = "Neutral"
+
+        return pet.get_status()
+
