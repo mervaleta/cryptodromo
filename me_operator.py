@@ -73,6 +73,21 @@ class MarketEntropyOperator:
             check=False,
         )
 
+    def deploy_to_hostinger(self, deploy_url: str = "https://rngmarketdriven.com/deploy.php?token=RNG_DEPLOY_SECRET_2026") -> Dict[str, Any]:
+        """Pushes to GitHub and triggers Hostinger webhook to deploy in seconds."""
+        push_res = self._git("push", "origin", "main")
+        if push_res.returncode != 0:
+            return {"status": "error", "stage": "git_push", "stderr": push_res.stderr.strip()}
+
+        import urllib.request
+        try:
+            req = urllib.request.Request(deploy_url, headers={"User-Agent": "MarketEntropyOperator/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return {"status": "deployed", "hostinger_response": data}
+        except Exception as e:
+            return {"status": "error", "stage": "webhook", "error": str(e)}
+
     def publish_to_git(self, push: bool = False, commit_message: str = None) -> Dict[str, Any]:
         """Initializes the repo if needed, commits generated artifacts, and optionally pushes."""
         init = self._git("init")
