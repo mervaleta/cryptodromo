@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RNGMarketDriven.com | Next-Gen Provably Fair Engine</title>
+  <meta name="description" content="Infraestructura iGaming y FinTech B2B que convierte la volatilidad de los mercados globales en aleatoriedad Provably Fair auditada e inmanipulable.">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #12131d;
+      --bg-card-hover: #181928;
+      --border: #212438;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --neon-green: #00ff88;
+      --neon-blue: #00d2ff;
+      --neon-purple: #9d4edd;
+      --neon-pink: #ff007f;
+      --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Container & Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Header & Navigation */
+    header.site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+    .nav-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-logo {
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      font-weight: 900;
+      text-decoration: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .brand-logo span.accent {
+      color: var(--neon-green);
+    }
+    nav.nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    nav.nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    nav.nav-links a:hover {
+      color: var(--neon-blue);
+    }
+    .btn-nav {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 210, 255, 0.15));
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green) !important;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 5rem 0 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 3rem;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(157, 78, 221, 0.15);
+      border: 1px solid var(--neon-purple);
+      color: var(--neon-purple);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: bold;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+      letter-spacing: 1px;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+      background: linear-gradient(135deg, #ffffff 40%, var(--neon-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p.lead {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      max-width: 580px;
+    }
+    .cta-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--neon-green);
+      color: #050508;
+      text-decoration: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--neon-blue);
+      border: 1px solid var(--neon-blue);
+      text-decoration: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-secondary:hover {
+      background: rgba(0, 210, 255, 0.1);
+      box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+    }
+
+    /* Live Entropy Visualizer Terminal */
+    .terminal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .terminal-header {
+      background: #181928;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-left: 0.5rem;
+    }
+    .terminal-body {
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+    .stream-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+      border-bottom: 1px dashed #1e2235;
+      padding-bottom: 0.4rem;
+    }
+    .stream-label { color: var(--text-muted); }
+    .stream-val { color: var(--neon-blue); font-weight: bold; }
+    .hash-highlight {
+      background: #090a10;
+      border: 1px solid var(--neon-green);
+      padding: 0.6rem;
+      border-radius: 4px;
+      color: var(--neon-green);
+      word-break: break-all;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    /* Section Headers */
+    .section-title {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .section-title h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 0.8rem;
+      background: linear-gradient(135deg, #fff, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .section-title p {
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto;
+      font-size: 1rem;
+    }
+
+    /* Engine Steps */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2rem 1.5rem;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .step-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--neon-purple);
+    }
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: rgba(157, 78, 221, 0.2);
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+    }
+    .step-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .step-card h3 {
+      font-size: 1.2rem;
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+    .step-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Sub-Casinos Grid */
+    .satellite-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .satellite-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s;
+    }
+    .satellite-card:hover {
+      border-color: var(--neon-blue);
+    }
+    .sat-header {
+      margin-bottom: 1rem;
+    }
+    .sat-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--neon-green);
+      background: rgba(0, 255, 136, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 0.6rem;
+    }
+    .satellite-card h3 {
+      font-size: 1.35rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .satellite-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Interactive Games Sandbox Section */
+    .sandbox-section {
+      background: #0e0f17;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      margin: 4rem 0;
+    }
+    .games-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: #181928;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--neon-green);
+      color: #050508;
+      border-color: var(--neon-green);
+      font-weight: bold;
+    }
+    .game-panel {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .game-panel.active { display: block; }
+
+    /* B2B Solutions */
+    .b2b-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .b2b-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.8rem;
+    }
+    .b2b-card h4 {
+      font-size: 1.15rem;
+      color: var(--neon-blue);
+      margin-bottom: 0.6rem;
+    }
+    .b2b-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Chronicle Preview */
+    .chronicle-box {
+      background: var(--bg-card);
+      border: 1px solid var(--neon-green);
+      border-radius: 12px;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    @media (max-width: 800px) {
+      .chronicle-box { grid-template-columns: 1fr; }
+    }
+    .chronicle-info h3 {
+      font-size: 1.5rem;
+      color: #fff;
+      margin-bottom: 0.8rem;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 0;
+      margin-top: 5rem;
+      background: #08080d;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 2.5rem;
+    }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+    .footer-links h5 {
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .footer-links ul { list-style: none; }
+    .footer-links li { margin-bottom: 0.5rem; }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+    .footer-links a:hover { color: var(--neon-green); }
+    .copy-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2rem;
+      border-top: 1px solid #181928;
+      padding-top: 1.5rem;
+      text-align: center;
+      font-family: var(--font-mono);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="#" class="brand-logo">
+        RNG<span class="accent">MarketDriven</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#motor">El Motor</a>
+        <a href="#ecosistema">Ecosistema</a>
+        <a href="#sandbox">Probar Juegos</a>
+        <a href="#b2b">Soluciones B2B</a>
+        <a href="#cronica">Crónica</a>
+        <a href="default.php" class="btn-nav">Portal Live</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section class="hero container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="badge">PROVABLY FAIR 2.0 &bull; FINANCIAL ENTROPY INFRASTRUCTURE</div>
+          <h1>Next-Gen Provably Fair Engine Powered by Global Financial Entropy</h1>
+          <p class="lead">
+            Convertimos la volatilidad de los mercados financieros globales (acciones, criptomonedas e índices) en aleatoriedad inmanipulable, auditable y transparente para juegos de azar y predicción institucional.
+          </p>
+          <div class="cta-group">
+            <a href="#b2b" class="btn-primary">Explorar API / Documentación</a>
+            <a href="#sandbox" class="btn-secondary">Probar Sub-Casinos</a>
+          </div>
+        </div>
+
+        <!-- Terminal Telemetría Hero -->
+        <div class="terminal-card">
+          <div class="terminal-header">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+            <span class="terminal-title">ENTROPY_INGEST_NODE_01 (PARIS/ZURICH)</span>
+          </div>
+          <div class="terminal-body">
+            <div class="stream-row">
+              <span class="stream-label">BTC/USDT (1s Spot)</span>
+              <span class="stream-val" id="t-btc">$68,565.40</span>
+            </div>
+            <div class="stream-row">
+              <span class="stream-label">NVDA (1m Volume)</span>
+              <span class="stream-val" id="t-nvda">69,908,781</span>
+            </div>
+            <div class="stream-row">
+              <span class="stream-label">ETH/USDT (1h Delta)</span>
+              <span class="stream-val" id="t-eth">+1.81%</span>
+            </div>
+            <div class="stream-row">
+              <span class="stream-label">YPF (ByMA / NYSE Delta)</span>
+              <span class="stream-val" id="t-ypf">+3.20%</span>
+            </div>
+            <div style="margin-top:0.8rem; font-size:0.75rem; color:var(--text-muted);">
+              LAST DERIVED ENTROPY SEED (SHA-256):
+            </div>
+            <div class="hash-highlight" id="t-hash">
+              25a6198f4ad2b526b655ea2895c8f3c97b409ce0ffb4698b54a2e5cd108c2ae2
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. EL MOTOR (THE ENTROPY ENGINE) -->
+    <section id="motor" class="container" style="padding: 5rem 1.5rem;">
+      <div class="section-title">
+        <h2>Nuestro Motor (The Entropy Engine)</h2>
+        <p>Un pipeline matemático desacoplado que elimina la confianza ciega y sustituye los pseudo-generadores convencionales por ruido de mercado verificable.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-icon">📡</div>
+          <h3>Ingesta en Tiempo Real</h3>
+          <p>Consumo streaming de feeds de alta frecuencia vía WebSockets y REST (Binance, NYSE, NASDAQ, BYMA) sin interpolaciones.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-icon">🔐</div>
+          <h3>Generación SHA-256</h3>
+          <p>Síntesis criptográfica instantánea combinando precio spot, volumen, variaciones porcentuales, marca de tiempo y sal de servidor.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-icon">🎲</div>
+          <h3>Determinación Provably Fair</h3>
+          <p>Mapeo matemático directo sobre multiplicadores de crash, carretes de slots o estadísticas de carreras sin sesgo humano.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <div class="step-icon">📜</div>
+          <h3>Registro Inmutable</h3>
+          <p>Almacenamiento público append-only del bloque para auditoría retrospectiva de cada jugador o entidad reguladora.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. ECOSISTEMA DE SUB-CASINOS -->
+    <section id="ecosistema" class="container" style="padding: 5rem 1.5rem;">
+      <div class="section-title">
+        <h2>Ecosistema de Sub-Casinos (Satellite Brands)</h2>
+        <p>Marcas satélite especializadas que operan sobre la infraestructura de entropía de RNGMarketDriven.</p>
+      </div>
+
+      <div class="satellite-grid">
+        <div class="satellite-card">
+          <div class="sat-header">
+            <span class="sat-tag">SALÓN 1 &bull; CRYPTO RUSH</span>
+            <h3>Cryptódromo / CryptoRush</h3>
+          </div>
+          <p>Carreras vertiginosas y juegos Crash de multiplicador exponencial alimentados por ticks de velas de 1 segundo de BTC y ETH.</p>
+          <a href="#sandbox" onclick="switchGame('crash')" class="btn-secondary" style="font-size:0.85rem; padding:0.5rem 1rem; width:fit-content;">Ver Simulación</a>
+        </div>
+
+        <div class="satellite-card">
+          <div class="sat-header">
+            <span class="sat-tag">SALÓN 2 &bull; TRADING FLOOR</span>
+            <h3>Wall Street Floor</h3>
+          </div>
+          <p>Tragamonedas 3x3 y cinchadas bursátiles donde los carretes representan activos reales ($NVDA, $BTC, $YPF) con jackpots de mercado.</p>
+          <a href="#sandbox" onclick="switchGame('slots')" class="btn-secondary" style="font-size:0.85rem; padding:0.5rem 1rem; width:fit-content;">Ver Simulación</a>
+        </div>
+
+        <div class="satellite-card">
+          <div class="sat-header">
+            <span class="sat-tag">B2C &bull; VIRTUAL PETS</span>
+            <h3>CryptoMochi Arcade</h3>
+          </div>
+          <p>Mascotas virtuales evolutivas cuyo humor, energía y desempeño en combate se modulan en vivo según el ticker seleccionado.</p>
+          <a href="#sandbox" onclick="switchGame('mochi')" class="btn-secondary" style="font-size:0.85rem; padding:0.5rem 1rem; width:fit-content;">Ver Simulación</a>
+        </div>
+
+        <div class="satellite-card">
+          <div class="sat-header">
+            <span class="sat-tag">PREDICCIÓN SOCIAL</span>
+            <h3>Financial Prode</h3>
+          </div>
+          <p>Quinielas descentralizadas y mercados de predicción basados en el cierre de la rueda bursátil y liquidación smart contract.</p>
+          <span style="color:var(--text-muted); font-size:0.85rem; font-family:var(--font-mono);">EN DESARROLLO &bull; Q4 2026</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SANDBOX INTERACTIVO DE JUEGOS EMBEBIDOS -->
+    <section id="sandbox" class="container">
+      <div class="sandbox-section">
+        <div class="section-title" style="margin-bottom:2rem;">
+          <h2>Sandbox Interactivo de Juegos</h2>
+          <p>Experimente en vivo cómo los 3 salones principales resuelven la entropía provably fair en cliente.</p>
+        </div>
+
+        <div class="games-tabs">
+          <button class="tab-btn active" onclick="switchGame('crash', this)">🚀 Crypto Rocket Crash</button>
+          <button class="tab-btn" onclick="switchGame('slots', this)">🎰 Wall Street Slots</button>
+          <button class="tab-btn" onclick="switchGame('mochi', this)">👾 CryptoMochi Tamagotchi</button>
+        </div>
+
+        <!-- 1. Crash Game -->
+        <div id="game-crash" class="game-panel active">
+          <h4 style="color:var(--neon-green); margin-bottom:0.5rem;">Crypto Rocket Crash (Salón 1)</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Multiplicador continuo sobre velas de BTC. Elegí tu objetivo de cobro:</p>
+          <div style="background:#090a10; padding:1.5rem; border-radius:8px; margin-bottom:1rem;">
+            <div id="c-disp" style="font-size:3rem; font-family:var(--font-mono); font-weight:bold; color:var(--neon-green);">1.00x</div>
+            <div id="c-status" style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">LISTO PARA EL VUELO</div>
+          </div>
+          <div style="display:flex; justify-content:center; gap:0.5rem;">
+            <input type="number" id="c-target" value="2.00" step="0.1" min="1.1" style="width:90px; background:#181928; border:1px solid var(--border); color:#fff; padding:0.5rem; border-radius:4px; font-family:var(--font-mono); text-align:center;">
+            <button onclick="runCrash()" class="btn-primary" style="cursor:pointer; border:none;">DESPEGAR</button>
+          </div>
+        </div>
+
+        <!-- 2. Slots Game -->
+        <div id="game-slots" class="game-panel">
+          <h4 style="color:var(--neon-blue); margin-bottom:0.5rem;">Wall Street Slots (Salón 2)</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">Carretes multi-activo con multiplicadores por variaciones del mercado:</p>
+          <div style="background:#090a10; padding:1.5rem; border-radius:8px; display:flex; justify-content:space-around; font-size:2rem; font-family:var(--font-mono); font-weight:bold; color:var(--neon-blue); margin-bottom:1rem;">
+            <span id="s-r1">$BTC</span>
+            <span id="s-r2">$NVDA</span>
+            <span id="s-r3">$YPF</span>
+          </div>
+          <button onclick="runSlots()" class="btn-secondary" style="cursor:pointer; width:100%; justify-content:center;">TIRAR PALANCA</button>
+          <div id="s-res" style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">Esperando tirada...</div>
+        </div>
+
+        <!-- 3. Mochi Tamagotchi Game -->
+        <div id="game-mochi" class="game-panel">
+          <h4 style="color:var(--neon-pink); margin-bottom:0.5rem;">CryptoMochi Tamagotchi (Ecosistema B2C)</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">Vinculá tu mascota a un ticker para modular sus estadísticas:</p>
+          <select id="m-select" onchange="runMochiChange()" style="width:100%; background:#181928; color:#fff; border:1px solid var(--border); padding:0.5rem; border-radius:4px; font-family:var(--font-mono); margin-bottom:1rem;">
+            <option value="BTC">$BTC - Volatilidad Cuántica (Euforia / Pánico)</option>
+            <option value="NVDA">$NVDA - Aceleración Neuronal (Energía GPU)</option>
+            <option value="ETH">$ETH - Complejidad Lógica (Gas & Astucia)</option>
+            <option value="YPF">$YPF - Resiliencia de Recursos (Fuerza Telúrica)</option>
+          </select>
+          <div style="background:#090a10; padding:1rem; border-radius:8px; font-size:0.85rem; font-family:var(--font-mono); line-height:1.7; margin-bottom:1rem;">
+            <div id="m-avatar" style="font-size:2.5rem;">🐂</div>
+            <div id="m-name" style="color:var(--neon-pink); font-weight:bold;">Kuro [Vinculado a $BTC]</div>
+            <div>Humor: <span id="m-mood" style="color:var(--neon-green);">Euforia / Pánico</span></div>
+            <div>Energía: <span id="m-energy" style="color:#ffcc00;">90%</span></div>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button onclick="runMochiFeed()" style="flex:1; background:#181928; border:1px solid var(--border); color:var(--neon-green); padding:0.5rem; border-radius:4px; font-weight:bold; cursor:pointer;">ALIMENTAR</button>
+            <button onclick="runMochiRace()" style="flex:1; background:var(--neon-pink); border:none; color:#fff; padding:0.5rem; border-radius:4px; font-weight:bold; cursor:pointer;">CORRER PISTA</button>
+          </div>
+          <div id="m-msg" style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">Genética adaptada a $BTC</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. SOLUCIONES B2B / WHITE-LABEL -->
+    <section id="b2b" class="container" style="padding: 5rem 1.5rem;">
+      <div class="section-title">
+        <h2>Soluciones B2B / White-Label</h2>
+        <p>Infraestructura diseñada para operadores de juego online, plataformas de apuestas y fondos de predicción.</p>
+      </div>
+
+      <div class="b2b-grid">
+        <div class="b2b-card">
+          <h4>⚡ Integración en Minutos</h4>
+          <p>Conexión directa vía REST API y WebSockets bidireccionales con SDKs listos para Node.js, Python y Go.</p>
+        </div>
+        <div class="b2b-card">
+          <h4>💵 Pagos Nativos Cripto</h4>
+          <p>Acreditaciones y liquidaciones automáticas 100% en USDC y USDT con conciliación instantánea y zero chargebacks.</p>
+        </div>
+        <div class="b2b-card">
+          <h4>🛡️ Auditoría Inmutable</h4>
+          <p>Cumplimiento regulatorio asistido: exportación de hashes de auditoría a libro contable y GitLab público.</p>
+        </div>
+        <div class="b2b-card">
+          <h4>🎨 Marca Blanca Total</h4>
+          <p>Personalización de salones, activos de bolsa locales, interfaces frontend y reglas de payout para su propia marca.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. THE MARKET ENTROPY CHRONICLE -->
+    <section id="cronica" class="container" style="padding: 4rem 1.5rem;">
+      <div class="chronicle-box">
+        <div class="chronicle-info">
+          <span style="font-family:var(--font-mono); color:var(--neon-green); font-size:0.8rem; letter-spacing:1px;">ÓRGANO OFICIAL DE AUDITORÍA & ARBITRAJE</span>
+          <h3>The Market Entropy Chronicle</h3>
+          <p style="color:var(--text-muted); margin-bottom:1.5rem;">
+            Nuestro agente autónomo redacta y publica diariamente la crónica del mercado financiero combinada con los hashes ganadores, telemetría y tablas de posiciones de los jugadores.
+          </p>
+          <a href="default.php" class="btn-primary">Leer Última Edición</a>
+        </div>
+        <div style="background:#090a10; padding:1.5rem; border-radius:8px; border:1px solid var(--border); font-family:var(--font-mono); font-size:0.8rem;">
+          <div style="color:var(--neon-blue); font-weight:bold; margin-bottom:0.5rem;">ÚLTIMA AUDITORÍA PUBLICADA:</div>
+          <div style="color:var(--text-muted);">Fecha: 2026-10-12 23:25 UTC</div>
+          <div style="color:var(--text-muted);">Multiplicador Mesa: <span style="color:var(--neon-green);">32.74x</span></div>
+          <div style="color:var(--text-muted);">Ruleta Entrópica: <span style="color:var(--neon-pink);">Casilla #35</span></div>
+          <div style="margin-top:0.6rem; color:var(--text-muted); font-size:0.75rem;">Seed SHA-256: 25a6198f4ad2b5...</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="brand-logo" style="margin-bottom:0.8rem;">
+          RNG<span class="accent">MarketDriven</span>
+        </div>
+        <p style="color:var(--text-muted); font-size:0.85rem; max-width:320px;">
+          Plataforma madre B2B proveedora de entropía provably fair basada en datos bursátiles en tiempo real para el ecosistema global de iGaming.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <h5>Plataforma</h5>
+        <ul>
+          <li><a href="#motor">The Entropy Engine</a></li>
+          <li><a href="#ecosistema">Satellite Brands</a></li>
+          <li><a href="#b2b">Soluciones White-Label</a></li>
+          <li><a href="default.php">The Chronicle</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links">
+        <h5>Recursos & Auditoría</h5>
+        <ul>
+          <li><a href="#b2b">Documentación API</a></li>
+          <li><a href="#">GitLab Audit Logs</a></li>
+          <li><a href="#">Términos de Servicio</a></li>
+          <li><a href="#">Telegram &bull; Discord &bull; X</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container copy-text">
+      Copyright &copy; 2026 RNGMarketDriven.com &bull; Next-Gen Provably Fair Engine &bull; Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <!-- Scripts Interactivos del Sandbox -->
+  <script>
+    // Tab Switching
+    function switchGame(game, btn) {
+      document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('game-' + game).classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    // 1. Rocket Crash
+    function runCrash() {
+      const target = parseFloat(document.getElementById('c-target').value) || 2.0;
+      const disp = document.getElementById('c-disp');
+      const status = document.getElementById('c-status');
+      disp.style.color = 'var(--neon-green)';
+      status.innerText = 'VOLANDO EN VELAS DE 1S...';
+
+      let current = 1.0;
+      const crashAt = +(1.1 + Math.random() * 4.5).toFixed(2);
+      const timer = setInterval(() => {
+        current = +(current + 0.05).toFixed(2);
+        disp.innerText = current.toFixed(2) + 'x';
+        if (current >= target && current <= crashAt) {
+          clearInterval(timer);
+          status.innerText = '✅ CASHOUT EXITOSO A ' + target.toFixed(2) + 'x';
+          disp.style.color = '#00ff88';
+        } else if (current >= crashAt) {
+          clearInterval(timer);
+          status.innerText = '💥 CRASHED A ' + crashAt.toFixed(2) + 'x';
+          disp.style.color = 'var(--neon-pink)';
+        }
+      }, 50);
+    }
+
+    // 2. Slots
+    function runSlots() {
+      const symbols = ['$BTC', '$NVDA', '$YPF', '$ETH', '$BULL', '$BEAR'];
+      const r1 = symbols[Math.floor(Math.random() * symbols.length)];
+      const r2 = symbols[Math.floor(Math.random() * symbols.length)];
+      const r3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+      document.getElementById('s-r1').innerText = r1;
+      document.getElementById('s-r2').innerText = r2;
+      document.getElementById('s-r3').innerText = r3;
+
+      const res = document.getElementById('s-res');
+      if (r1 === r2 && r2 === r3) {
+        res.innerText = '🎉 JACKPOT TRIPLE ' + r1 + '! Pago 10x';
+        res.style.color = 'var(--neon-green)';
+      } else if (r1 === r2 || r2 === r3 || r1 === r3) {
+        res.innerText = '✨ Par encontrado! Pago 1.5x';
+        res.style.color = 'var(--neon-blue)';
+      } else {
+        res.innerText = 'Sin combinación. Intente en la siguiente vela.';
+        res.style.color = 'var(--text-muted)';
+      }
+    }
+
+    // 3. Mochi
+    const profiles = {
+      BTC: { mood: 'Euforia / Pánico', avatar: '🐂', energy: '90%' },
+      NVDA: { mood: 'Hiperactivo GPU', avatar: '⚡', energy: '98%' },
+      ETH: { mood: 'Foco Algorítmico', avatar: '🧙‍♂️', energy: '80%' },
+      YPF: { mood: 'Fuerza Telúrica', avatar: '🦬', energy: '75%' }
+    };
+    function runMochiChange() {
+      const sel = document.getElementById('m-select').value;
+      const p = profiles[sel];
+      document.getElementById('m-avatar').innerText = p.avatar;
+      document.getElementById('m-name').innerText = 'Kuro [Vinculado a $' + sel + ']';
+      document.getElementById('m-mood').innerText = p.mood;
+      document.getElementById('m-energy').innerText = p.energy;
+      document.getElementById('m-msg').innerText = 'Genética adaptada a $' + sel;
+    }
+    function runMochiFeed() {
+      document.getElementById('m-msg').innerText = '🍖 Kuro absorbió liquidez de mercado!';
+    }
+    function runMochiRace() {
+      const sel = document.getElementById('m-select').value;
+      document.getElementById('m-msg').innerText = '🏁 Kuro compitió con momentum de $' + sel + ' en 9.8s!';
+    }
+  </script>
+</body>
+</html>

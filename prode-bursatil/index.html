@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prode Bursátil Argentino | RNGMarketDriven Sub-Casino</title>
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: #111420;
+      --card-border: #1f2538;
+      --text: #e2e8f0;
+      --muted: #828c9f;
+      --accent-green: #00ff87;
+      --accent-blue: #60efff;
+      --accent-pink: #ff007f;
+      --accent-yellow: #ffd000;
+      --accent-red: #ff3366;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      padding: 1.5rem 1rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      background: linear-gradient(180deg, #161a29 0%, #0d0f17 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green), var(--accent-pink));
+    }
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      background: rgba(96, 239, 255, 0.1);
+      color: var(--accent-blue);
+      border: 1px solid rgba(96, 239, 255, 0.3);
+      margin-bottom: 0.8rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #ffffff, #60efff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 700px;
+      margin: 0 auto 1.2rem auto;
+    }
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+    .stats-item span {
+      color: var(--accent-green);
+      font-weight: bold;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 850px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2, .card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Prode Items Table */
+    .prode-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .prode-table th {
+      text-align: left;
+      padding: 0.6rem 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--card-border);
+    }
+    .prode-table td {
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    .pick-options {
+      display: flex;
+      gap: 0.35rem;
+    }
+    .pick-btn {
+      background: #181c2d;
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      padding: 0.35rem 0.6rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pick-btn:hover {
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+    .pick-btn.active-green {
+      background: rgba(0, 255, 135, 0.2);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+      font-weight: bold;
+    }
+    .pick-btn.active-yellow {
+      background: rgba(255, 208, 0, 0.2);
+      border-color: var(--accent-yellow);
+      color: var(--accent-yellow);
+      font-weight: bold;
+    }
+    .pick-btn.active-red {
+      background: rgba(255, 51, 102, 0.2);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      font-weight: bold;
+    }
+    .pick-btn.active-blue {
+      background: rgba(96, 239, 255, 0.2);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      font-weight: bold;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(90deg, #00ff87, #60efff);
+      color: #05070a;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 1rem;
+      transition: opacity 0.2s;
+    }
+    .btn-submit:hover { opacity: 0.9; }
+
+    .btn-secondary {
+      width: 100%;
+      background: #1b2033;
+      color: #cbd5e1;
+      border: 1px solid var(--card-border);
+      padding: 0.7rem;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .btn-secondary:hover {
+      background: #242a42;
+    }
+
+    /* Chronicle Box */
+    .chronicle-box {
+      background: #090b12;
+      border: 1px dashed var(--accent-blue);
+      border-radius: 8px;
+      padding: 1.2rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .chronicle-box h4 {
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+    }
+
+    /* Leaderboard */
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+    }
+    .rank-1 { color: var(--accent-yellow); font-weight: bold; }
+    .rank-2 { color: #cbd5e1; font-weight: bold; }
+    .rank-3 { color: #cd7f32; font-weight: bold; }
+
+    .hash-tag {
+      word-break: break-all;
+      background: #06070a;
+      padding: 0.4rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-green);
+      border: 1px solid #1a2030;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">Ecosistema RNGMarketDriven &bull; Juego 4</div>
+      <h1>PRODE BURSÁTIL ARGENTINO</h1>
+      <p class="subtitle">Pronósticos del Merval y BYMA. 13 aciertos diarios o semanales vinculados al cierre oficial de rueda de las 17:00 hs de Buenos Aires.</p>
+      <div class="stats-bar">
+        <div class="stats-item">Pozo USDC: <span id="pool-usdc">14,850 USDC</span></div>
+        <div class="stats-item">Participantes Fecha: <span>3,412</span></div>
+        <div class="stats-item">Cierre Rueda: <span id="clock-status">17:00 hs ART (Oficial)</span></div>
+        <div class="stats-item">Modo: <span>Diario / Semanal</span></div>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- Left Column: The 13 Pronósticos Slip -->
+      <div>
+        <div class="card">
+          <h2>
+            <span>📋 Boleta de 13 Pronósticos (Fecha Vigente)</span>
+            <span style="font-size:0.75rem; color:var(--accent-green); font-family:var(--font-mono);" id="slip-status">13 / 13 SELECCIONADOS</span>
+          </h2>
+          <table class="prode-table">
+            <thead>
+              <tr>
+                <th style="width:35px;">#</th>
+                <th>Activo / Duelo</th>
+                <th style="text-align:right;">Opciones (Pronóstico)</th>
+              </tr>
+            </thead>
+            <tbody id="slip-rows">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+
+          <button class="btn-submit" onclick="submitTicket()">Confirmar Boleta y Registrar Hash</button>
+          <button class="btn-secondary" onclick="simulate17hsClose()">Simular Cierre de Rueda 17:00 hs (BYMA Ingestion)</button>
+        </div>
+
+        <!-- Result / Resolution Report -->
+        <div class="card" id="resolution-card" style="display:none;">
+          <h3>
+            <span>📊 Escrutinio Oficial &bull; Rueda 17:00 hs</span>
+            <span id="score-badge" style="font-family:var(--font-mono); color:var(--accent-yellow);"></span>
+          </h3>
+          <div id="resolution-breakdown" style="font-family:var(--font-mono); font-size:0.8rem; margin-bottom:1rem;"></div>
+          <div style="font-size:0.75rem; color:var(--muted);">
+            Auditoría Criptográfica SHA-256 de Precios de Cierre (Provably Fair):
+          </div>
+          <div class="hash-tag" id="resolution-hash"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Sidebar (Pozo, Leaderboard, Diario Chronicle) -->
+      <div>
+        <!-- Pozo & Modo -->
+        <div class="card">
+          <h3>💰 Pozo Acumulado</h3>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem;">
+            <span style="color:var(--muted); font-size:0.85rem;">Pozo Mayor (13 Aciertos):</span>
+            <span style="color:var(--accent-green); font-family:var(--font-mono); font-weight:bold;">10,395 USDC (70%)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem;">
+            <span style="color:var(--muted); font-size:0.85rem;">Pozo Consuelo (12 Aciertos):</span>
+            <span style="color:var(--accent-blue); font-family:var(--font-mono); font-weight:bold;">2,970 USDC (20%)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem;">
+            <span style="color:var(--muted); font-size:0.85rem;">Pozo Reserva Fecha Siguiente:</span>
+            <span style="color:var(--accent-pink); font-family:var(--font-mono); font-weight:bold;">1,485 USDC (10%)</span>
+          </div>
+          <div style="border-top:1px solid var(--card-border); padding-top:0.8rem; font-size:0.75rem; color:var(--muted);">
+            Disponibles boletas en <strong>Modo Gratuito (Puntos)</strong> y <strong>Modo USDC Pool</strong>.
+          </div>
+        </div>
+
+        <!-- Tabla de Posiciones -->
+        <div class="card">
+          <h3>🏆 Tabla de Posiciones</h3>
+          <div class="leaderboard-item">
+            <span class="rank-1">1. @CadornaTrader</span>
+            <span>13 pts &bull; 5,197 USDC</span>
+          </div>
+          <div class="leaderboard-item">
+            <span class="rank-1">1. @MervalBull_99</span>
+            <span>13 pts &bull; 5,197 USDC</span>
+          </div>
+          <div class="leaderboard-item">
+            <span class="rank-2">3. @PampaHodler</span>
+            <span>12 pts &bull; 990 USDC</span>
+          </div>
+          <div class="leaderboard-item">
+            <span class="rank-2">4. @GgalWhale</span>
+            <span>12 pts &bull; 990 USDC</span>
+          </div>
+          <div class="leaderboard-item">
+            <span class="rank-3">5. @CryptoGaucho</span>
+            <span>12 pts &bull; 990 USDC</span>
+          </div>
+          <div class="leaderboard-item" id="user-rank-row" style="display:none; color:var(--accent-pink);">
+            <span id="user-rank-name">Tu Boleta</span>
+            <span id="user-rank-score">-- pts</span>
+          </div>
+        </div>
+
+        <!-- Crónica del Casino -->
+        <div class="card">
+          <h3>📰 Crónica: Diario del Casino</h3>
+          <div class="chronicle-box" id="chronicle-text">
+            <h4>EDICIÓN VESPERTINA: CIERRE DE RUEDA 17:00</h4>
+            <p>La campana de BYMA sonó con fuerte dinamismo en el panel líder. <strong>$GGAL</strong> y <strong>$EDN</strong> impulsaron las boletas ganadoras, mientras que el clásico duelo energético-bancario entre <strong>$YPF</strong> y <strong>$GGAL</strong> dividió a los pronosticadores de la fecha.</p>
+            <p style="margin-top:0.5rem; color:var(--muted); font-size:0.75rem;">* Publicado por el generador de entropía bursátil al sellar los precios de Yahoo Finance y BYMA.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FIXTURES = [
+      { id: 1, type: "dir", name: "$GGAL (Grupo Fin. Galicia)" },
+      { id: 2, type: "dir", name: "$YPFD (YPF S.A.)" },
+      { id: 3, type: "dir", name: "$PAMP (Pampa Energía)" },
+      { id: 4, type: "dir", name: "$BMA (Banco Macro)" },
+      { id: 5, type: "dir", name: "$TXAR (Ternium Argentina)" },
+      { id: 6, type: "dir", name: "$ALUA (Aluar Aluminio)" },
+      { id: 7, type: "dir", name: "$CRES (Cresud)" },
+      { id: 8, type: "dir", name: "$CEPU (Central Puerto)" },
+      { id: 9, type: "dir", name: "$EDN (Edenor)" },
+      { id: 10, type: "dir", name: "$SUPV (Grupo Supervielle)" },
+      { id: 11, type: "duel", name: "Duelo: $YPF vs $GGAL", optA: "YPF", optB: "GGAL" },
+      { id: 12, type: "duel", name: "Duelo: $PAMP vs $CEPU", optA: "PAMP", optB: "CEPU" },
+      { id: 13, type: "duel", name: "Duelo: $ALUA vs $TXAR", optA: "ALUA", optB: "TXAR" }
+    ];
+
+    const userPicks = {
+      1: "VERDE", 2: "VERDE", 3: "ROJO", 4: "VERDE", 5: "ROJO",
+      6: "VERDE", 7: "NEUTRO", 8: "ROJO", 9: "VERDE", 10: "VERDE",
+      11: "GGAL", 12: "PAMP", 13: "ALUA"
+    };
+
+    function renderSlip() {
+      const tbody = document.getElementById('slip-rows');
+      tbody.innerHTML = '';
+      FIXTURES.forEach(f => {
+        const tr = document.createElement('tr');
+        const currentPick = userPicks[f.id] || '';
+
+        let buttonsHtml = '';
+        if (f.type === 'dir') {
+          buttonsHtml = `
+            <div class="pick-options" style="justify-content:flex-end;">
+              <button class="pick-btn ${currentPick==='VERDE'?'active-green':''}" onclick="setPick(${f.id}, 'VERDE')">▲ VERDE</button>
+              <button class="pick-btn ${currentPick==='NEUTRO'?'active-yellow':''}" onclick="setPick(${f.id}, 'NEUTRO')">■ NEUTRO</button>
+              <button class="pick-btn ${currentPick==='ROJO'?'active-red':''}" onclick="setPick(${f.id}, 'ROJO')">▼ ROJO</button>
+            </div>
+          `;
+        } else {
+          buttonsHtml = `
+            <div class="pick-options" style="justify-content:flex-end;">
+              <button class="pick-btn ${currentPick===f.optA?'active-blue':''}" onclick="setPick(${f.id}, '${f.optA}')">$${f.optA}</button>
+              <button class="pick-btn ${currentPick===f.optB?'active-blue':''}" onclick="setPick(${f.id}, '${f.optB}')">$${f.optB}</button>
+            </div>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td style="font-family:var(--font-mono); color:var(--muted);">${f.id}</td>
+          <td style="font-weight:600;">${f.name}</td>
+          <td>${buttonsHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setPick(id, val) {
+      userPicks[id] = val;
+      renderSlip();
+    }
+
+    function submitTicket() {
+      alert("✅ Boleta confirmada con éxito!\n\nSe registró el hash de pronóstico en el ledger de auditoría Provably Fair. Esperando resolución de las 17:00 hs de Buenos Aires.");
+    }
+
+    function simulate17hsClose() {
+      const card = document.getElementById('resolution-card');
+      card.style.display = 'block';
+
+      // Resultados oficiales simulados según cierre BYMA 17hs
+      const officialOutcomes = {
+        1: { res: "VERDE", detail: "+3.01%" },
+        2: { res: "VERDE", detail: "+1.77%" },
+        3: { res: "ROJO", detail: "-0.95%" },
+        4: { res: "VERDE", detail: "+2.06%" },
+        5: { res: "ROJO", detail: "-0.51%" },
+        6: { res: "VERDE", detail: "+2.94%" },
+        7: { res: "NEUTRO", detail: "0.00%" },
+        8: { res: "ROJO", detail: "-1.05%" },
+        9: { res: "VERDE", detail: "+4.43%" },
+        10: { res: "VERDE", detail: "+3.07%" },
+        11: { res: "GGAL", detail: "GGAL (+3.01%) superó a YPF (+1.77%)" },
+        12: { res: "PAMP", detail: "PAMP (-0.95%) superó a CEPU (-1.05%)" },
+        13: { res: "ALUA", detail: "ALUA (+2.94%) superó a TXAR (-0.51%)" }
+      };
+
+      let hits = 0;
+      let breakdownHtml = '<table style="width:100%; border-collapse:collapse;">';
+      FIXTURES.forEach(f => {
+        const pick = userPicks[f.id];
+        const off = officialOutcomes[f.id];
+        const isHit = (pick === off.res);
+        if (isHit) hits++;
+        breakdownHtml += `
+          <tr style="border-bottom:1px solid #1a2030; padding:4px 0;">
+            <td style="padding:4px;">#${f.id} ${f.name}</td>
+            <td style="padding:4px; text-align:right;">Tu pronóstico: <strong>${pick}</strong></td>
+            <td style="padding:4px; text-align:right; color:${isHit?'var(--accent-green)':'var(--accent-red)'}">
+              ${isHit ? '✓ ACERTASTE' : '✗ ERRADO'} (${off.detail})
+            </td>
+          </tr>
+        `;
+      });
+      breakdownHtml += '</table>';
+
+      document.getElementById('resolution-breakdown').innerHTML = breakdownHtml;
+      document.getElementById('score-badge').innerText = hits + ' / 13 ACIERTOS' + (hits === 13 ? ' (🏆 POZO MAYOR)' : '');
+      document.getElementById('resolution-hash').innerText = 'SHA-256 BYMA 17hs: e8a91fbc73082d449ab812cf6910a340798be128d5f309cb6f9914620a23e981';
+
+      // Update leaderboard
+      const uRank = document.getElementById('user-rank-row');
+      uRank.style.display = 'flex';
+      document.getElementById('user-rank-score').innerText = hits + ' pts ' + (hits === 13 ? '• 🏆 GANADOR POZO' : '');
+      
+      // Update chronicle
+      document.getElementById('chronicle-text').innerHTML = `
+        <h4>CRÓNICA DEFINITIVA DE LAS 17:00 ART</h4>
+        <p>Con el campanazo de cierre en BYMA, el <strong>Prode Bursátil</strong> selló una jornada memorable. El rally bancario encabezado por Galicia (+3.01%) y el batacazo de Edenor (+4.43%) consagraron a los apostadores que jugaron al panel verde.</p>
+        <p style="margin-top:0.4rem; color:var(--accent-green);"><strong>Tu resultado: ${hits} aciertos sobre 13 pronósticos.</strong></p>
+      `;
+
+      card.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    renderSlip();
+  </script>
+</body>
+</html>
