@@ -34,6 +34,17 @@ if (file_put_contents($target_file, $content) === false) {
     die(json_encode(['status' => 'error', 'message' => 'Failed to write index.html locally']));
 }
 
+// Also fetch and deploy prode-bursatil sub-site
+$prode_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/prode-bursatil/index.html';
+$prode_content = @file_get_contents($prode_github_url, false, $context);
+if ($prode_content !== false && strlen($prode_content) > 500) {
+    if (!is_dir(__DIR__ . '/prode-bursatil')) {
+        @mkdir(__DIR__ . '/prode-bursatil', 0755, true);
+    }
+    @file_put_contents(__DIR__ . '/prode-bursatil/index.html', $prode_content);
+    @file_put_contents(__DIR__ . '/prode.html', $prode_content);
+}
+
 header('Content-Type: application/json');
 echo json_encode([
     'status' => 'success',
