@@ -1,13 +1,15 @@
 {
   "meta": {
-    "generated_at": 1791843565,
+    "generated_at": 1791848665,
     "total_hours": 24,
     "simulated_day": "2026-10-12",
     "tickers": [
       "BTC",
       "ETH",
       "NVDA",
-      "YPF"
+      "YPF",
+      "AAPL",
+      "TSLA"
     ]
   },
   "hourly_snapshots": [
@@ -19,20 +21,31 @@
         "close": 68450,
         "high": 68600.0,
         "low": 68080.0,
+        "delta_pct": 0.37,
         "volume_1h": 1450.5
       },
       "eth": {
         "open": 3450,
         "close": 3470,
+        "delta_pct": 0.58,
         "pct_change_1h": 0.58
       },
       "nvda": {
         "price": 128.5,
+        "delta_pct": 0.54,
         "volume_1m_sample": 45200000
       },
       "ypf": {
         "price": 28.2,
-        "delta_pct": 0.0
+        "delta_pct": 1.06
+      },
+      "aapl": {
+        "price": 225.0,
+        "delta_pct": 0.49
+      },
+      "tsla": {
+        "price": 215.0,
+        "delta_pct": 1.58
       }
     },
     {
@@ -43,20 +56,31 @@
         "close": 68100,
         "high": 68600.0,
         "low": 67980.0,
+        "delta_pct": -0.51,
         "volume_1h": 1485.5
       },
       "eth": {
         "open": 3470,
         "close": 3430,
+        "delta_pct": -1.15,
         "pct_change_1h": -1.15
       },
       "nvda": {
         "price": 129.2,
+        "delta_pct": -0.93,
         "volume_1m_sample": 46050000
       },
       "ypf": {
         "price": 28.5,
-        "delta_pct": 1.06
+        "delta_pct": -1.4
+      },
+      "aapl": {
+        "price": 226.1,
+        "delta_pct": -0.27
+      },
+      "tsla": {
+        "price": 218.4,
+        "delta_pct": -1.92
       }
     },
     {
@@ -67,20 +91,31 @@
         "close": 67900,
         "high": 68250.0,
         "low": 67780.0,
+        "delta_pct": -0.29,
         "volume_1h": 1520.5
       },
       "eth": {
         "open": 3430,
         "close": 3410,
+        "delta_pct": -0.58,
         "pct_change_1h": -0.58
       },
       "nvda": {
         "price": 128.0,
+        "delta_pct": -0.16,
         "volume_1m_sample": 46900000
       },
       "ypf": {
         "price": 28.1,
-        "delta_pct": -0.35
+        "delta_pct": -0.71
+      },
+      "aapl": {
+        "price": 225.5,
+        "delta_pct": -0.31
+      },
+      "tsla": {
+        "price": 214.2,
+        "delta_pct": -1.03
       }
     },
     {
@@ -91,20 +126,31 @@
         "close": 68300,
         "high": 68450.0,
         "low": 67780.0,
+        "delta_pct": 0.59,
         "volume_1h": 1555.5
       },
       "eth": {
         "open": 3410,
         "close": 3440,
+        "delta_pct": 0.88,
         "pct_change_1h": 0.88
       },
       "nvda": {
         "price": 127.8,
+        "delta_pct": 0.47,
         "volume_1m_sample": 47750000
       },
       "ypf": {
         "price": 27.9,
-        "delta_pct": -1.06
+        "delta_pct": 1.43
+      },
+      "aapl": {
+        "price": 224.8,
+        "delta_pct": 0.44
+      },
+      "tsla": {
+        "price": 212.0,
+        "delta_pct": 2.12
       }
     },
     {
@@ -115,20 +161,31 @@
         "close": 68900,
         "high": 69050.0,
         "low": 68180.0,
+        "delta_pct": 0.88,
         "volume_1h": 1590.5
       },
       "eth": {
         "open": 3440,
         "close": 3490,
+        "delta_pct": 1.45,
         "pct_change_1h": 1.45
       },
       "nvda": {
         "price": 128.4,
+        "delta_pct": 1.17,
         "volume_1m_sample": 48600000
       },
       "ypf": {
         "price": 28.3,
-        "delta_pct": 0.35
+        "delta_pct": 1.41
+      },
+      "aapl": {
+        "price": 225.8,
+        "delta_pct": 0.53
+      },
+      "tsla": {
+        "price": 216.5,
+        "delta_pct": 2.54
       }
     },
     {
@@ -139,20 +196,31 @@
         "close": 69400,
         "high": 69550.0,
         "low": 68780.0,
+        "delta_pct": 0.73,
         "volume_1h": 1625.5
       },
       "eth": {
         "open": 3490,
         "close": 3520,
+        "delta_pct": 0.86,
         "pct_change_1h": 0.86
       },
       "nvda": {
         "price": 129.9,
+        "delta_pct": 1.0,
         "volume_1m_sample": 49450000
       },
       "ypf": {
         "price": 28.7,
-        "delta_pct": 1.77
+        "delta_pct": 1.39
+      },
+      "aapl": {
+        "price": 227.0,
+        "delta_pct": 0.53
+      },
+      "tsla": {
+        "price": 222.0,
+        "delta_pct": 2.03
       }
     },
     {
@@ -163,20 +231,31 @@
         "close": 69200,
         "high": 69550.0,
         "low": 69080.0,
+        "delta_pct": -0.29,
         "volume_1h": 1660.5
       },
       "eth": {
         "open": 3520,
         "close": 3505,
+        "delta_pct": -0.43,
         "pct_change_1h": -0.43
       },
       "nvda": {
         "price": 131.2,
+        "delta_pct": -0.3,
         "volume_1m_sample": 50300000
       },
       "ypf": {
         "price": 29.1,
-        "delta_pct": 3.19
+        "delta_pct": -0.69
+      },
+      "aapl": {
+        "price": 228.2,
+        "delta_pct": -0.31
+      },
+      "tsla": {
+        "price": 226.5,
+        "delta_pct": -1.1
       }
     },
     {
@@ -187,20 +266,31 @@
         "close": 68800,
         "high": 69350.0,
         "low": 68680.0,
+        "delta_pct": -0.58,
         "volume_1h": 1695.5
       },
       "eth": {
         "open": 3505,
         "close": 3480,
+        "delta_pct": -0.71,
         "pct_change_1h": -0.71
       },
       "nvda": {
         "price": 130.8,
+        "delta_pct": -0.54,
         "volume_1m_sample": 51150000
       },
       "ypf": {
         "price": 28.9,
-        "delta_pct": 2.48
+        "delta_pct": -1.04
+      },
+      "aapl": {
+        "price": 227.5,
+        "delta_pct": -0.31
+      },
+      "tsla": {
+        "price": 224.0,
+        "delta_pct": -1.12
       }
     },
     {
@@ -211,20 +301,31 @@
         "close": 68600,
         "high": 68950.0,
         "low": 68480.0,
+        "delta_pct": -0.29,
         "volume_1h": 1730.5
       },
       "eth": {
         "open": 3480,
         "close": 3460,
+        "delta_pct": -0.57,
         "pct_change_1h": -0.57
       },
       "nvda": {
         "price": 130.1,
+        "delta_pct": -0.46,
         "volume_1m_sample": 52000000
       },
       "ypf": {
         "price": 28.6,
-        "delta_pct": 1.42
+        "delta_pct": -0.7
+      },
+      "aapl": {
+        "price": 226.8,
+        "delta_pct": -0.35
+      },
+      "tsla": {
+        "price": 221.5,
+        "delta_pct": -1.13
       }
     },
     {
@@ -235,20 +336,31 @@
         "close": 68950,
         "high": 69100.0,
         "low": 68480.0,
+        "delta_pct": 0.51,
         "volume_1h": 1765.5
       },
       "eth": {
         "open": 3460,
         "close": 3485,
+        "delta_pct": 0.72,
         "pct_change_1h": 0.72
       },
       "nvda": {
         "price": 129.5,
+        "delta_pct": 0.54,
         "volume_1m_sample": 52850000
       },
       "ypf": {
         "price": 28.4,
-        "delta_pct": 0.71
+        "delta_pct": 1.06
+      },
+      "aapl": {
+        "price": 226.0,
+        "delta_pct": 0.58
+      },
+      "tsla": {
+        "price": 219.0,
+        "delta_pct": 2.05
       }
     },
     {
@@ -259,20 +371,31 @@
         "close": 69300,
         "high": 69450.0,
         "low": 68830.0,
+        "delta_pct": 0.51,
         "volume_1h": 1800.5
       },
       "eth": {
         "open": 3485,
         "close": 3510,
+        "delta_pct": 0.72,
         "pct_change_1h": 0.72
       },
       "nvda": {
         "price": 130.2,
+        "delta_pct": 0.61,
         "volume_1m_sample": 53700000
       },
       "ypf": {
         "price": 28.7,
-        "delta_pct": 1.77
+        "delta_pct": 1.05
+      },
+      "aapl": {
+        "price": 227.3,
+        "delta_pct": 0.53
+      },
+      "tsla": {
+        "price": 223.5,
+        "delta_pct": 1.57
       }
     },
     {
@@ -283,20 +406,31 @@
         "close": 69800,
         "high": 69950.0,
         "low": 69180.0,
+        "delta_pct": 0.72,
         "volume_1h": 1835.5
       },
       "eth": {
         "open": 3510,
         "close": 3550,
+        "delta_pct": 1.14,
         "pct_change_1h": 1.14
       },
       "nvda": {
         "price": 131.0,
+        "delta_pct": 1.15,
         "volume_1m_sample": 54550000
       },
       "ypf": {
         "price": 29.0,
-        "delta_pct": 2.84
+        "delta_pct": 1.38
+      },
+      "aapl": {
+        "price": 228.5,
+        "delta_pct": 0.57
+      },
+      "tsla": {
+        "price": 227.0,
+        "delta_pct": 2.2
       }
     },
     {
@@ -307,20 +441,31 @@
         "close": 70100,
         "high": 70250.0,
         "low": 69680.0,
+        "delta_pct": 0.43,
         "volume_1h": 1870.5
       },
       "eth": {
         "open": 3550,
         "close": 3580,
+        "delta_pct": 0.85,
         "pct_change_1h": 0.85
       },
       "nvda": {
         "price": 132.5,
+        "delta_pct": 0.68,
         "volume_1m_sample": 55400000
       },
       "ypf": {
         "price": 29.4,
-        "delta_pct": 4.26
+        "delta_pct": 1.36
+      },
+      "aapl": {
+        "price": 229.8,
+        "delta_pct": 0.3
+      },
+      "tsla": {
+        "price": 232.0,
+        "delta_pct": 1.51
       }
     },
     {
@@ -331,20 +476,31 @@
         "close": 69950,
         "high": 70250.0,
         "low": 69830.0,
+        "delta_pct": -0.21,
         "volume_1h": 1905.5
       },
       "eth": {
         "open": 3580,
         "close": 3565,
+        "delta_pct": -0.42,
         "pct_change_1h": -0.42
       },
       "nvda": {
         "price": 133.4,
+        "delta_pct": -0.37,
         "volume_1m_sample": 56250000
       },
       "ypf": {
         "price": 29.8,
-        "delta_pct": 5.67
+        "delta_pct": -0.67
+      },
+      "aapl": {
+        "price": 230.5,
+        "delta_pct": -0.17
+      },
+      "tsla": {
+        "price": 235.5,
+        "delta_pct": -1.06
       }
     },
     {
@@ -355,20 +511,31 @@
         "close": 69700,
         "high": 70100.0,
         "low": 69580.0,
+        "delta_pct": -0.36,
         "volume_1h": 1940.5
       },
       "eth": {
         "open": 3565,
         "close": 3540,
+        "delta_pct": -0.7,
         "pct_change_1h": -0.7
       },
       "nvda": {
         "price": 132.9,
+        "delta_pct": -0.68,
         "volume_1m_sample": 57100000
       },
       "ypf": {
         "price": 29.6,
-        "delta_pct": 4.96
+        "delta_pct": -1.01
+      },
+      "aapl": {
+        "price": 230.1,
+        "delta_pct": -0.3
+      },
+      "tsla": {
+        "price": 233.0,
+        "delta_pct": -1.29
       }
     },
     {
@@ -379,20 +546,31 @@
         "close": 69400,
         "high": 69850.0,
         "low": 69280.0,
+        "delta_pct": -0.43,
         "volume_1h": 1975.5
       },
       "eth": {
         "open": 3540,
         "close": 3520,
+        "delta_pct": -0.56,
         "pct_change_1h": -0.56
       },
       "nvda": {
         "price": 132.0,
+        "delta_pct": -0.61,
         "volume_1m_sample": 57950000
       },
       "ypf": {
         "price": 29.3,
-        "delta_pct": 3.9
+        "delta_pct": -1.02
+      },
+      "aapl": {
+        "price": 229.4,
+        "delta_pct": -0.22
+      },
+      "tsla": {
+        "price": 230.0,
+        "delta_pct": -1.09
       }
     },
     {
@@ -403,20 +581,31 @@
         "close": 69100,
         "high": 69550.0,
         "low": 68980.0,
+        "delta_pct": -0.43,
         "volume_1h": 2010.5
       },
       "eth": {
         "open": 3520,
         "close": 3500,
+        "delta_pct": -0.57,
         "pct_change_1h": -0.57
       },
       "nvda": {
         "price": 131.2,
+        "delta_pct": -0.53,
         "volume_1m_sample": 58800000
       },
       "ypf": {
         "price": 29.0,
-        "delta_pct": 2.84
+        "delta_pct": -0.69
+      },
+      "aapl": {
+        "price": 228.9,
+        "delta_pct": -0.35
+      },
+      "tsla": {
+        "price": 227.5,
+        "delta_pct": -1.54
       }
     },
     {
@@ -427,20 +616,31 @@
         "close": 68900,
         "high": 69250.0,
         "low": 68780.0,
+        "delta_pct": -0.29,
         "volume_1h": 2045.5
       },
       "eth": {
         "open": 3500,
         "close": 3490,
+        "delta_pct": -0.29,
         "pct_change_1h": -0.29
       },
       "nvda": {
         "price": 130.5,
+        "delta_pct": -0.38,
         "volume_1m_sample": 59650000
       },
       "ypf": {
         "price": 28.8,
-        "delta_pct": 2.13
+        "delta_pct": -0.35
+      },
+      "aapl": {
+        "price": 228.1,
+        "delta_pct": -0.13
+      },
+      "tsla": {
+        "price": 224.0,
+        "delta_pct": -0.89
       }
     },
     {
@@ -451,20 +651,31 @@
         "close": 69200,
         "high": 69350.0,
         "low": 68780.0,
+        "delta_pct": 0.44,
         "volume_1h": 2080.5
       },
       "eth": {
         "open": 3490,
         "close": 3515,
+        "delta_pct": 0.72,
         "pct_change_1h": 0.72
       },
       "nvda": {
         "price": 130.0,
+        "delta_pct": 0.85,
         "volume_1m_sample": 60500000
       },
       "ypf": {
         "price": 28.7,
-        "delta_pct": 1.77
+        "delta_pct": 1.39
+      },
+      "aapl": {
+        "price": 227.8,
+        "delta_pct": 0.4
+      },
+      "tsla": {
+        "price": 222.0,
+        "delta_pct": 1.58
       }
     },
     {
@@ -475,20 +686,31 @@
         "close": 69500,
         "high": 69650.0,
         "low": 69080.0,
+        "delta_pct": 0.43,
         "volume_1h": 2115.5
       },
       "eth": {
         "open": 3515,
         "close": 3540,
+        "delta_pct": 0.71,
         "pct_change_1h": 0.71
       },
       "nvda": {
         "price": 131.1,
+        "delta_pct": 0.69,
         "volume_1m_sample": 61350000
       },
       "ypf": {
         "price": 29.1,
-        "delta_pct": 3.19
+        "delta_pct": 0.69
+      },
+      "aapl": {
+        "price": 228.7,
+        "delta_pct": 0.35
+      },
+      "tsla": {
+        "price": 225.5,
+        "delta_pct": 1.55
       }
     },
     {
@@ -499,20 +721,31 @@
         "close": 69850,
         "high": 70000.0,
         "low": 69380.0,
+        "delta_pct": 0.5,
         "volume_1h": 2150.5
       },
       "eth": {
         "open": 3540,
         "close": 3570,
+        "delta_pct": 0.85,
         "pct_change_1h": 0.85
       },
       "nvda": {
         "price": 132.0,
+        "delta_pct": 0.83,
         "volume_1m_sample": 62200000
       },
       "ypf": {
         "price": 29.3,
-        "delta_pct": 3.9
+        "delta_pct": 1.02
+      },
+      "aapl": {
+        "price": 229.5,
+        "delta_pct": 0.57
+      },
+      "tsla": {
+        "price": 229.0,
+        "delta_pct": 2.18
       }
     },
     {
@@ -523,20 +756,31 @@
         "close": 70200,
         "high": 70350.0,
         "low": 69730.0,
+        "delta_pct": 0.5,
         "volume_1h": 2185.5
       },
       "eth": {
         "open": 3570,
         "close": 3600,
+        "delta_pct": 0.84,
         "pct_change_1h": 0.84
       },
       "nvda": {
         "price": 133.1,
+        "delta_pct": 0.68,
         "volume_1m_sample": 63050000
       },
       "ypf": {
         "price": 29.6,
-        "delta_pct": 4.96
+        "delta_pct": 1.35
+      },
+      "aapl": {
+        "price": 230.8,
+        "delta_pct": 0.3
+      },
+      "tsla": {
+        "price": 234.0,
+        "delta_pct": 1.92
       }
     },
     {
@@ -547,20 +791,31 @@
         "close": 70050,
         "high": 70350.0,
         "low": 69930.0,
+        "delta_pct": -0.21,
         "volume_1h": 2220.5
       },
       "eth": {
         "open": 3600,
         "close": 3590,
+        "delta_pct": -0.28,
         "pct_change_1h": -0.28
       },
       "nvda": {
         "price": 134.0,
+        "delta_pct": -0.22,
         "volume_1m_sample": 63900000
       },
       "ypf": {
         "price": 30.0,
-        "delta_pct": 6.38
+        "delta_pct": -0.67
+      },
+      "aapl": {
+        "price": 231.5,
+        "delta_pct": -0.22
+      },
+      "tsla": {
+        "price": 238.5,
+        "delta_pct": -1.05
       }
     },
     {
@@ -571,20 +826,31 @@
         "close": 68200,
         "high": 70200.0,
         "low": 68080.0,
+        "delta_pct": -2.64,
         "volume_1h": 2255.5
       },
       "eth": {
         "open": 3590,
         "close": 3450,
+        "delta_pct": -3.9,
         "pct_change_1h": -3.9
       },
       "nvda": {
         "price": 133.7,
+        "delta_pct": -3.89,
         "volume_1m_sample": 64750000
       },
       "ypf": {
         "price": 29.8,
-        "delta_pct": 5.67
+        "delta_pct": -5.37
+      },
+      "aapl": {
+        "price": 231.0,
+        "delta_pct": -2.6
+      },
+      "tsla": {
+        "price": 236.0,
+        "delta_pct": -8.9
       }
     }
   ]
