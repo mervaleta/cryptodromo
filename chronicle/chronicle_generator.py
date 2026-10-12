@@ -216,27 +216,113 @@ class ChronicleGenerator:
       </aside>
     </div>
 
-    <!-- Salones de Juego -->
+    <!-- Salones de Juego Interactivos -->
     <section style="margin-top: 3rem;">
-      <h3 style="font-family: var(--font-mono); color: var(--accent-green); margin-bottom: 1rem; letter-spacing: 2px;">// SALONES ACTIVOS DEL CASINO</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+      <h3 style="font-family: var(--font-mono); color: var(--accent-green); margin-bottom: 1rem; letter-spacing: 2px;">// SALONES ACTIVOS DEL CASINO (MODO SIMULADOR MVP)</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        
+        <!-- Salón 1: Rocket Crash -->
         <div id="rocket-crash" class="widget">
           <h4 style="color: var(--accent-green); margin-bottom: 0.5rem;">🚀 Crypto Rocket Crash</h4>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Salón 1 - Crypto Rush. Velas de 1s de BTC/ETH alimentando el multiplicador de despegue con auditoría SHA-256.</p>
-          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-blue);">STREAM: btcusdt@kline_1s</span>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Multiplicador simulado sobre velas de 1s de BTC/ETH.</p>
+          <div style="background:#090a10; padding:1rem; border-radius:6px; text-align:center; margin-bottom:0.8rem;">
+            <div id="crash-display" style="font-size:2rem; font-family:var(--font-mono); font-weight:bold; color:var(--accent-green);">1.00x</div>
+            <div id="crash-status" style="font-size:0.75rem; color:var(--muted); margin-top:4px;">LISTO PARA DESPEGUE</div>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="number" id="crash-cashout" value="2.00" step="0.1" min="1.1" style="width:70px; background:#1e2235; border:1px solid var(--card-border); color:#fff; padding:0.4rem; border-radius:4px; font-family:var(--font-mono);">
+            <button onclick="launchRocketCrash()" style="flex:1; background:var(--accent-green); color:#050508; border:none; padding:0.5rem; border-radius:4px; font-weight:bold; cursor:pointer;">DESPEGAR</button>
+          </div>
         </div>
+
+        <!-- Salón 2: Wall Street Slots -->
         <div id="wall-street-slots" class="widget">
           <h4 style="color: var(--accent-blue); margin-bottom: 0.5rem;">🎰 Wall Street Slots</h4>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Salón 2 - Wall Street Floor. Carretes de $NVDA, $BTC y $YPF. Jackpots ajustados por volatilidad real de la rueda bursátil.</p>
-          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-green);">CARRETES: 3x3 MULTI-ASSET</span>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Carretes bursátiles: $NVDA, $BTC, $YPF, $ETH, $BULL.</p>
+          <div style="background:#090a10; padding:1rem; border-radius:6px; display:flex; justify-content:space-around; font-size:1.5rem; font-family:var(--font-mono); font-weight:bold; margin-bottom:0.8rem; color:var(--accent-blue);">
+            <span id="slot-r1">$BTC</span>
+            <span id="slot-r2">$NVDA</span>
+            <span id="slot-r3">$YPF</span>
+          </div>
+          <button onclick="spinSlots()" style="width:100%; background:var(--accent-blue); color:#050508; border:none; padding:0.5rem; border-radius:4px; font-weight:bold; cursor:pointer;">TIRAR PALANCA</button>
+          <div id="slot-result" style="font-size:0.75rem; text-align:center; color:var(--muted); margin-top:6px;">Esperando giro...</div>
         </div>
+
+        <!-- Salón 3: CryptoMochi Arcade -->
         <div id="cryptomochi-arcade" class="widget">
           <h4 style="color: var(--accent-pink); margin-bottom: 0.5rem;">👾 CryptoMochi Arcade</h4>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Ecosistema B2C. Mascotas virtuales que evolucionan y combaten con stats vinculados a cotizaciones en vivo.</p>
-          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-pink);">STATS: VELOCIDAD / IMPACTO</span>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Carrera de mascotas mapeadas a momentum bursátil.</p>
+          <div style="background:#090a10; padding:0.8rem; border-radius:6px; font-size:0.8rem; font-family:var(--font-mono); margin-bottom:0.8rem; line-height:1.6;">
+            <div>🐂 GigaBull ($BTC): <span id="mochi-btc-speed">68.2 km/h</span></div>
+            <div>⚡ SiliconBeast ($NVDA): <span id="mochi-nvda-speed">72.4 km/h</span></div>
+            <div>🏇 PampaRunner ($YPF): <span id="mochi-ypf-speed">64.1 km/h</span></div>
+          </div>
+          <button onclick="runMochiRace()" style="width:100%; background:var(--accent-pink); color:#fff; border:none; padding:0.5rem; border-radius:4px; font-weight:bold; cursor:pointer;">INICIAR CARRERA</button>
+          <div id="mochi-winner" style="font-size:0.75rem; text-align:center; color:var(--muted); margin-top:6px;">Pista despejada</div>
         </div>
+
       </div>
     </section>
+
+    <script>
+      // 1. Logica Simulada Rocket Crash
+      function launchRocketCrash() {{
+        const target = parseFloat(document.getElementById('crash-cashout').value) || 2.0;
+        const display = document.getElementById('crash-display');
+        const status = document.getElementById('crash-status');
+        display.style.color = 'var(--accent-green)';
+        status.innerText = 'VOLANDO...';
+        
+        let current = 1.0;
+        const crashAt = +(1.1 + Math.random() * 4.5).toFixed(2);
+        const timer = setInterval(() => {{
+          current = +(current + 0.05).toFixed(2);
+          display.innerText = current.toFixed(2) + 'x';
+          if (current >= target && current <= crashAt) {{
+            clearInterval(timer);
+            status.innerText = '✅ CASHOUT EXITOSO A ' + target.toFixed(2) + 'x';
+            display.style.color = '#00ff87';
+          }} else if (current >= crashAt) {{
+            clearInterval(timer);
+            status.innerText = '💥 CRASHED A ' + crashAt.toFixed(2) + 'x';
+            display.style.color = 'var(--accent-pink)';
+          }}
+        }}, 50);
+      }}
+
+      // 2. Logica Simulada Slots
+      function spinSlots() {{
+        const symbols = ['$BTC', '$NVDA', '$YPF', '$ETH', '$BULL', '$BEAR'];
+        const r1 = symbols[Math.floor(Math.random() * symbols.length)];
+        const r2 = symbols[Math.floor(Math.random() * symbols.length)];
+        const r3 = symbols[Math.floor(Math.random() * symbols.length)];
+        
+        document.getElementById('slot-r1').innerText = r1;
+        document.getElementById('slot-r2').innerText = r2;
+        document.getElementById('slot-r3').innerText = r3;
+        
+        const res = document.getElementById('slot-result');
+        if (r1 === r2 && r2 === r3) {{
+          res.innerText = '🎉 JACKPOT TRIPLE ' + r1 + '! Pago 10x';
+          res.style.color = 'var(--accent-green)';
+        }} else if (r1 === r2 || r2 === r3 || r1 === r3) {{
+          res.innerText = '✨ Par encontrado! Pago 1.5x';
+          res.style.color = 'var(--accent-blue)';
+        }} else {{
+          res.innerText = 'Intenta de nuevo en la siguiente rueda';
+          res.style.color = 'var(--muted)';
+        }}
+      }}
+
+      // 3. Logica Simulada CryptoMochi
+      function runMochiRace() {{
+        const mochis = ['🐂 GigaBull ($BTC)', '⚡ SiliconBeast ($NVDA)', '🏇 PampaRunner ($YPF)'];
+        const winner = mochis[Math.floor(Math.random() * mochis.length)];
+        const el = document.getElementById('mochi-winner');
+        el.innerText = '🏁 Ganador de la carrera: ' + winner + '!';
+        el.style.color = 'var(--accent-pink)';
+      }}
+    </script>
 
     <footer>
       MarketEntropy Operator &bull; Sistema Autónomo Provably Fair &bull; Publicado el {date_str}
