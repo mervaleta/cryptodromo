@@ -153,6 +153,11 @@ class ChronicleGenerator:
   <div class="container">
     <header>
       <div class="newspaper-sub">Órgano Oficial de Liquidación & Arbitraje Cuántico | Edición #{edition_num}</div>
+      <nav class="casino-nav" style="display:flex; justify-content:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+        <a href="#rocket-crash" style="color:var(--accent-green); text-decoration:none; font-family:var(--font-mono); font-size:0.85rem; padding:0.4rem 0.8rem; border:1px solid var(--card-border); border-radius:4px; background:#121420;">🚀 Rocket Crash</a>
+        <a href="#wall-street-slots" style="color:var(--accent-blue); text-decoration:none; font-family:var(--font-mono); font-size:0.85rem; padding:0.4rem 0.8rem; border:1px solid var(--card-border); border-radius:4px; background:#121420;">🎰 Wall Street Slots</a>
+        <a href="#cryptomochi-arcade" style="color:var(--accent-pink); text-decoration:none; font-family:var(--font-mono); font-size:0.85rem; padding:0.4rem 0.8rem; border:1px solid var(--card-border); border-radius:4px; background:#121420;">👾 CryptoMochi Arcade</a>
+      </nav>
       <img src="assets/banner.svg" alt="The Market Entropy Chronicle" class="banner-img" />
     </header>
 
@@ -210,6 +215,28 @@ class ChronicleGenerator:
         </div>
       </aside>
     </div>
+
+    <!-- Salones de Juego -->
+    <section style="margin-top: 3rem;">
+      <h3 style="font-family: var(--font-mono); color: var(--accent-green); margin-bottom: 1rem; letter-spacing: 2px;">// SALONES ACTIVOS DEL CASINO</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        <div id="rocket-crash" class="widget">
+          <h4 style="color: var(--accent-green); margin-bottom: 0.5rem;">🚀 Crypto Rocket Crash</h4>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Salón 1 - Crypto Rush. Velas de 1s de BTC/ETH alimentando el multiplicador de despegue con auditoría SHA-256.</p>
+          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-blue);">STREAM: btcusdt@kline_1s</span>
+        </div>
+        <div id="wall-street-slots" class="widget">
+          <h4 style="color: var(--accent-blue); margin-bottom: 0.5rem;">🎰 Wall Street Slots</h4>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Salón 2 - Wall Street Floor. Carretes de $NVDA, $BTC y $YPF. Jackpots ajustados por volatilidad real de la rueda bursátil.</p>
+          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-green);">CARRETES: 3x3 MULTI-ASSET</span>
+        </div>
+        <div id="cryptomochi-arcade" class="widget">
+          <h4 style="color: var(--accent-pink); margin-bottom: 0.5rem;">👾 CryptoMochi Arcade</h4>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem;">Ecosistema B2C. Mascotas virtuales que evolucionan y combaten con stats vinculados a cotizaciones en vivo.</p>
+          <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-pink);">STATS: VELOCIDAD / IMPACTO</span>
+        </div>
+      </div>
+    </section>
 
     <footer>
       MarketEntropy Operator &bull; Sistema Autónomo Provably Fair &bull; Publicado el {date_str}

@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "casino_name": "Casino de Entropía Bursátil",
+  "rooms": [
+    {
+      "id": "crypto_rush",
+      "name": "Salón 1 - Crypto Rush",
+      "theme": "cyberpunk_hft",
+      "games": [
+        {
+          "id": "crypto_rocket_crash",
+          "name": "Crypto Rocket Crash",
+          "category": "Crash Multiplier",
+          "description": "Multiplicador de velocidad en vivo basado en velas de 1s de BTC/ETH + SHA-256 provably fair.",
+          "feed_sources": ["binance:BTCUSDT:1s", "binance:ETHUSDT:1s"],
+          "entropy_trigger": "kline_close_delta",
+          "min_multiplier": 1.01,
+          "max_multiplier": 500.0,
+          "status": "ready_for_feed"
+        }
+      ]
+    },
+    {
+      "id": "wall_street_floor",
+      "name": "Salón 2 - Wall Street Floor",
+      "theme": "nyse_trading_pit",
+      "games": [
+        {
+          "id": "wall_street_slots",
+          "name": "Wall Street Slot Machine",
+          "category": "Market Slots",
+          "description": "Tragamonedas donde los carretes representan activos ($NVDA, $BTC, $YPF). Combinaciones y Jackpots calculados con precios de la rueda bursátil.",
+          "feed_sources": ["yahoo:NVDA", "binance:BTCUSDT", "byma_or_proxy:YPF"],
+          "reels": 3,
+          "symbols": ["$BTC", "$NVDA", "$YPF", "$ETH", "$BULL", "$BEAR"],
+          "jackpot_trigger": "three_matching_positive_deltas",
+          "status": "ready_for_feed"
+        }
+      ]
+    },
+    {
+      "id": "b2c_arcade",
+      "name": "Ecosistema B2C - CryptoMochi Arcade",
+      "theme": "gamified_pet_battles",
+      "games": [
+        {
+          "id": "cryptomochi_arcade",
+          "name": "CryptoMochi Arcade",
+          "category": "Virtual Pet Battles & Races",
+          "description": "Mascotas virtuales evolutivas cuyas estadísticas (velocidad, ataque, vitalidad) se mapean a cotizaciones y volatilidad real de tickers.",
+          "feed_sources": ["binance:BTCUSDT", "binance:ETHUSDT", "yahoo:NVDA"],
+          "stat_mapping": {
+            "speed": "pct_change_1m",
+            "shield": "orderbook_depth_ratio",
+            "energy": "volume_momentum"
+          },
+          "status": "ready_for_feed"
+        }
+      ]
+    }
+  ]
+}
