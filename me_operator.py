@@ -73,6 +73,16 @@ class MarketEntropyOperator:
             check=False,
         )
 
+    def deploy_to_cryptodromo(self, deploy_url: str = "https://cryptodromo.com/deploy.php?token=RNG_DEPLOY_SECRET_2026") -> Dict[str, Any]:
+        """Pushes to GitHub and triggers Cryptodromo webhook to deploy."""
+        subprocess.run(["git", "add", "cryptodromo/"], cwd=str(ROOT_DIR), check=True)
+        subprocess.run(["git", "commit", "-m", "Auto-deploy Cryptodromo update"], cwd=str(ROOT_DIR), check=False)
+        subprocess.run(["git", "push", "origin", "main"], cwd=str(ROOT_DIR), check=True)
+        req = urllib.request.Request(deploy_url, headers={"User-Agent": "MarketEntropyOperator/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode())
+            return {"status": "deployed", "cryptodromo_response": data}
+
     def deploy_to_hostinger(self, deploy_url: str = "https://rngmarketdriven.com/deploy.php?token=RNG_DEPLOY_SECRET_2026") -> Dict[str, Any]:
         """Pushes to GitHub and triggers Hostinger webhook to deploy in seconds."""
         push_res = self._git("push", "origin", "main")
