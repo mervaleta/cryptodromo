@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Profile &amp; Cashier | Cryptodromo</title>
+  <link rel="icon" href="/favicon.ico"/>
+  <style>
+    :root {
+      --bg-main: #0c0f14;
+      --bg-card: #151922;
+      --bg-card-subtle: #1c222e;
+      --cyan-neon: #60efff;
+      --green-neon: #00ffcc;
+      --pink-neon: #ff007f;
+      --gold-neon: #f9ca24;
+      --border-color: rgba(96, 239, 255, 0.2);
+      --border-card: #262f40;
+      --text-muted: #8e9bb0;
+      --text-main: #f1f5f9;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* Top Nav */
+    .top-nav {
+      background: #11141c;
+      border-bottom: 1px solid #1e2636;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+    .nav-logo img {
+      height: 38px;
+      display: block;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .nav-links a {
+      color: #94a3b8;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: #fff;
+    }
+    .badge-live {
+      background: #ff003b;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .badge-live::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .wallet-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1a202c;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #2d3748;
+      cursor: pointer;
+    }
+    .wallet-indicator img {
+      width: 22px;
+      height: 22px;
+    }
+    .wallet-balance {
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-weight: 700;
+      color: var(--green-neon);
+      font-size: 0.95rem;
+    }
+    .user-avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00b4db, #0083b0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px solid #60efff;
+      overflow: hidden;
+    }
+    .user-avatar-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Layout */
+    .profile-container {
+      max-width: 1540px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 24px;
+    }
+    @media (max-width: 1180px) {
+      .profile-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Main Left Content */
+    .main-section {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(99, 102, 241, 0.35)), url('/texturas/slide_home_01.png') center/cover;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 150px;
+    }
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, rgba(12,15,20,0.85) 0%, rgba(12,15,20,0.3) 100%);
+      pointer-events: none;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 620px;
+    }
+    .hero-content h1 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .hero-content h1 span {
+      color: var(--cyan-neon);
+    }
+    .hero-content p {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    /* Stats Ribbon (Tickets, Bonus, Earn, Total) */
+    .stats-ribbon {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .stats-ribbon {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .stat-card-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      color: #fff;
+    }
+    .stat-card.total-stat {
+      border-color: rgba(96, 239, 255, 0.4);
+      background: linear-gradient(180deg, #182234, #121722);
+    }
+    .stat-card.total-stat .stat-card-value {
+      color: var(--cyan-neon);
+    }
+
+    /* Credits Store Box */
+    .credits-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .credits-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .tab-pills {
+      display: flex;
+      gap: 10px;
+    }
+    .tab-btn {
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .tab-btn.buy-active {
+      background: #8b0000;
+      color: #fff;
+    }
+    .tab-btn.withdraw {
+      background: #232a3b;
+      color: #94a3b8;
+    }
+    .tab-btn.withdraw:hover {
+      background: #2d3748;
+      color: #fff;
+    }
+    .exchange-rate {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 16px;
+      font-weight: 600;
+    }
+    .exchange-rate span {
+      color: #fff;
+      font-family: monospace;
+    }
+
+    /* Tier Packs Grid */
+    .packs-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 1300px) {
+      .packs-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .packs-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .pack-card {
+      background: #181d27;
+      border: 1px solid #283347;
+      border-radius: 10px;
+      padding: 18px 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 200px;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .pack-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--cyan-neon);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    }
+    .pack-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .pack-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .pack-price {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--gold-neon);
+      margin: 4px 0;
+    }
+    .pack-credits {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+    .pack-bonus {
+      font-size: 0.7rem;
+      color: var(--green-neon);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .btn-cart {
+      width: 100%;
+      background: #2b3345;
+      border: 1px solid #3c4860;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 8px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-cart:hover {
+      background: #3b465e;
+      border-color: #60efff;
+    }
+
+    /* Subscription Plans Section */
+    .plans-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 30px;
+    }
+    .plans-header {
+      margin-bottom: 24px;
+    }
+    .plans-header h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .plans-header p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 992px) {
+      .plans-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 560px) {
+      .plans-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .plan-card {
+      background: #181d27;
+      border: 1px solid #283347;
+      border-radius: 10px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .plan-badge {
+      padding: 6px 18px;
+      border-radius: 6px;
+      font-weight: 900;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      letter-spacing: 0.05em;
+    }
+    .badge-free { background: #55c866; color: #000; }
+    .badge-basic { background: #eb7a7a; color: #000; }
+    .badge-gold { background: #f9ca24; color: #000; }
+    .badge-premium { background: #60efff; color: #000; }
+
+    .plan-desc {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      line-height: 1.4;
+      min-height: 50px;
+      margin-bottom: 16px;
+    }
+    .plan-price {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .plan-period {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-bottom: 16px;
+    }
+    .btn-plan {
+      width: 100%;
+      background: #4ade80;
+      color: #064e3b;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: filter 0.2s;
+    }
+    .btn-plan:hover {
+      filter: brightness(1.1);
+    }
+    .plan-features {
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+      border-top: 1px solid #283347;
+      padding-top: 12px;
+      width: 100%;
+    }
+    .plan-features a {
+      color: #4ade80;
+      text-decoration: underline;
+      display: inline-block;
+      margin-top: 6px;
+    }
+
+    /* Right Sidebar (Live Stream + Cart Checkout) */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Live Stream Box */
+    .stream-card {
+      background: #000;
+      border: 2px solid #ff003b;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .stream-header {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 5;
+    }
+    .stream-view {
+      width: 100%;
+      height: 200px;
+      background: url('/texturas/fondo_fixture_dirt.png') center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .play-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: transform 0.2s;
+    }
+    .play-btn:hover {
+      transform: scale(1.1);
+    }
+    .play-btn::after {
+      content: "";
+      border-style: solid;
+      border-width: 10px 0 10px 18px;
+      border-color: transparent transparent transparent #fff;
+      margin-left: 4px;
+    }
+
+    /* Cart & Checkout Panel */
+    .checkout-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .checkout-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #283347;
+    }
+    .order-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+    .order-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .order-row.total-row {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #fff;
+      padding-top: 10px;
+      border-top: 1px solid #283347;
+    }
+
+    /* Payment Form */
+    .form-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .field-group label {
+      font-size: 0.72rem;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .field-input {
+      background: #0f1319;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .field-input:focus {
+      border-color: var(--cyan-neon);
+    }
+    .btn-buy-submit {
+      width: 100%;
+      background: #cbd5e1;
+      color: #0f172a;
+      font-weight: 900;
+      font-size: 0.9rem;
+      padding: 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+    .btn-buy-submit:hover {
+      background: #fff;
+    }
+
+    /* OAuth / Free APIs Modal */
+    #auth-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 99999;
+      align-items: center;
+      justify-content: center;
+    }
+    #auth-modal.open { display: flex; }
+    .auth-modal-card {
+      background: #181c24;
+      border: 1px solid rgba(96, 239, 255, 0.4);
+      box-shadow: 0 0 35px rgba(0, 255, 204, 0.2);
+      border-radius: 14px;
+      width: 90%;
+      max-width: 460px;
+      padding: 30px;
+      position: relative;
+    }
+    .auth-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .auth-modal-header h3 {
+      font-size: 1.3rem;
+      color: var(--cyan-neon);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-close-modal {
+      background: none;
+      border: none;
+      color: #8892b0;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .oauth-btn {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      cursor: pointer;
+      border: 1px solid #3b4252;
+      background: #202634;
+      color: #fff;
+      margin-bottom: 12px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .oauth-btn:hover {
+      background: #2a3346;
+      border-color: #60efff;
+    }
+    .oauth-btn.google-btn:hover { border-color: #4285F4; }
+    .oauth-btn.github-btn:hover { border-color: #f0f6fc; }
+    .oauth-btn.wallet-btn:hover { border-color: #f6851b; }
+    .oauth-divider {
+      text-align: center;
+      margin: 16px 0;
+      position: relative;
+      color: #64748b;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .oauth-divider::before, .oauth-divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: #2d3748;
+    }
+    .oauth-divider::before { left: 0; }
+    .oauth-divider::after { right: 0; }
+  </style>
+
+  <!-- Google One-Tap / Identity Services (Open & Free Google OAuth SDK) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="top-nav">
+    <div class="nav-left">
+      <a href="/" class="nav-logo">
+        <img src="/texturas/logo_janch_header.png" alt="Cryptodromo"/>
+      </a>
+      <div class="nav-links">
+        <a href="/bets">BETS</a>
+        <a href="/fixture">FIXTURE</a>
+        <a href="/live" class="badge-live">LIVE</a>
+        <a href="/ranking">RANKING</a>
+        <a href="/results">RESULTS</a>
+        <a href="/racers">RACERS</a>
+        <a href="/stats">STATS</a>
+        <a href="/profile" class="active" style="color: var(--cyan-neon);">PROFILE</a>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="wallet-indicator" id="btn-wallet-top">
+        <img src="/texturas/wallet.png" alt="Wallet"/>
+        <span class="wallet-balance" id="top-balance-display">$J 1.000</span>
+      </div>
+      <div class="user-avatar-btn" id="btn-user-avatar" title="Mi Cuenta">
+        <img id="nav-avatar-img" src="/texturas/ico_menu_profile.png" alt="User Avatar"/>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="profile-container">
+
+    <!-- Left Main Column -->
+    <section class="main-section">
+
+      <!-- Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-content">
+          <h1><span>PROFILE</span> &amp; CASHIER</h1>
+          <p>
+            Welcome to the Bets &amp; Rewards section where the excitement of market-driven racing meets provably fair cryptocurrency simulation. Check your live balance, claim rewards and upgrade your status.
+          </p>
+        </div>
+      </div>
+
+      <!-- Stats Ribbon (Mockup 1:1) -->
+      <div class="stats-ribbon">
+        <div class="stat-card">
+          <div class="stat-card-title"><span>🎟️</span> TICKETS</div>
+          <div class="stat-card-value" id="stat-tickets">1.000.000.000</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title"><span>🎁</span> BONUS</div>
+          <div class="stat-card-value" id="stat-bonus">123.567</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title"><span>💸</span> EARN</div>
+          <div class="stat-card-value" id="stat-earn">3.549</div>
+        </div>
+        <div class="stat-card total-stat">
+          <div class="stat-card-title"><span>💰</span> TOTAL</div>
+          <div class="stat-card-value" id="stat-total">1.000.127.564</div>
+        </div>
+      </div>
+
+      <!-- Credits Store Box -->
+      <div class="credits-panel">
+        <div class="credits-panel-header">
+          <div class="tab-pills">
+            <button class="tab-btn buy-active">BUY CREDITS</button>
+            <button class="tab-btn withdraw" onclick="alert('Retiros habilitados para cuentas verificadas con más de 10.000 créditos.')">WITHDRAW</button>
+          </div>
+          <div class="exchange-rate">
+            <div>1 Credit: <span>BUY 0,010</span></div>
+            <div>SELL: <span>0,010</span></div>
+          </div>
+        </div>
+
+        <!-- 10 Packs from mockup -->
+        <div class="packs-grid">
+          <!-- Welcome Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🎁</div>
+            <div class="pack-title">Welcome<br/>PACK</div>
+            <div class="pack-price">$0.00</div>
+            <div class="pack-credits">100 Credits</div>
+            <div class="pack-bonus">+ Free Trial</div>
+            <button class="btn-cart" onclick="addPackToCart('Welcome Pack', 0, 100)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Whale Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🐳</div>
+            <div class="pack-title">Whale<br/>PACK</div>
+            <div class="pack-price">$100.00</div>
+            <div class="pack-credits">100.000 Credits</div>
+            <div class="pack-bonus">+ 20% BONUS</div>
+            <button class="btn-cart" onclick="addPackToCart('Whale Pack', 100, 120000)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Shark Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🦈</div>
+            <div class="pack-title">Shark<br/>PACK</div>
+            <div class="pack-price">$75.00</div>
+            <div class="pack-credits">75.000 Credits</div>
+            <div class="pack-bonus">+ 15% BONUS</div>
+            <button class="btn-cart" onclick="addPackToCart('Shark Pack', 75, 86250)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Dolphin Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🐬</div>
+            <div class="pack-title">Dolphin<br/>PACK</div>
+            <div class="pack-price">$50.00</div>
+            <div class="pack-credits">50.000 Credits</div>
+            <div class="pack-bonus">+ 10% BONUS</div>
+            <button class="btn-cart" onclick="addPackToCart('Dolphin Pack', 50, 55000)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Fish Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🐟</div>
+            <div class="pack-title">Fish<br/>PACK</div>
+            <div class="pack-price">$30.00</div>
+            <div class="pack-credits">30.000 Credits</div>
+            <div class="pack-bonus">+ 5% BONUS</div>
+            <button class="btn-cart" onclick="addPackToCart('Fish Pack', 30, 31500)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Octopus Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🐙</div>
+            <div class="pack-title">Octopus<br/>PACK</div>
+            <div class="pack-price">$15.00</div>
+            <div class="pack-credits">15.000 Credits</div>
+            <div class="pack-bonus">+ 4% BONUS</div>
+            <button class="btn-cart" onclick="addPackToCart('Octopus Pack', 15, 15600)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Crab Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🦀</div>
+            <div class="pack-title">Crab<br/>PACK</div>
+            <div class="pack-price">$10.00</div>
+            <div class="pack-credits">10.000 Credits</div>
+            <div class="pack-bonus">+ 3% BONUS</div>
+            <button class="btn-cart" onclick="addPackToCart('Crab Pack', 10, 10300)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Shrimp Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">🦐</div>
+            <div class="pack-title">Shrimp<br/>PACK</div>
+            <div class="pack-price">$5.00</div>
+            <div class="pack-credits">5.000 Credits</div>
+            <div class="pack-bonus">+ 1% BONUS</div>
+            <button class="btn-cart" onclick="addPackToCart('Shrimp Pack', 5, 5050)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Congul Pack -->
+          <div class="pack-card">
+            <div class="pack-icon">❓</div>
+            <div class="pack-title">Congul<br/>PACK</div>
+            <div class="pack-price">$8.00</div>
+            <div class="pack-credits">10.000 Janch</div>
+            <div class="pack-bonus">+ 10% de regalo</div>
+            <button class="btn-cart" onclick="addPackToCart('Congul Pack', 8, 11000)">🛒 ADD TO CART</button>
+          </div>
+
+          <!-- Roulette Wheel Bonus -->
+          <div class="pack-card" style="border-color: rgba(249, 202, 36, 0.4);">
+            <div class="pack-icon">🎡</div>
+            <div class="pack-title">Lucky<br/>SPIN</div>
+            <div class="pack-price">FREE</div>
+            <div class="pack-credits">Daily Wheel</div>
+            <div class="pack-bonus">Up to 500 CR</div>
+            <button class="btn-cart" style="background:#f9ca24; color:#000;" onclick="spinRoulette()">🎯 SPIN NOW</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscription Plans -->
+      <div class="plans-container">
+        <div class="plans-header">
+          <h2>Subscription Plans</h2>
+          <p>Take your betting game to the next level. Sign up for our platform to access exclusive features and benefits.</p>
+        </div>
+
+        <div class="plans-grid">
+          <!-- Free -->
+          <div class="plan-card">
+            <div class="plan-badge badge-free">FREE</div>
+            <div class="plan-desc">"All-in-one trading program to learn exactly how options &amp; market entropy work."</div>
+            <div class="plan-price">$0</div>
+            <div class="plan-period">Yes, Forever</div>
+            <button class="btn-plan" onclick="alert('Ya estás en el plan Free.')">Get Started Now</button>
+            <div class="plan-features">
+              <strong>You'll Get Access To:</strong><br/>
+              • Basic Race Predictions<br/>
+              • Standard Odds
+            </div>
+          </div>
+
+          <!-- Basic -->
+          <div class="plan-card">
+            <div class="plan-badge badge-basic">BASIC</div>
+            <div class="plan-desc">"Perfect if you want to start watching us trade and join the private forum."</div>
+            <div class="plan-price">$99</div>
+            <div class="plan-period">Per Month</div>
+            <button class="btn-plan" onclick="addPackToCart('Basic Subscription', 99, 15000)">Upgrade to PRO</button>
+            <div class="plan-features">
+              <strong>Everything in FREE, Plus:</strong><br/>
+              • Private Discord &amp; Forum<br/>
+              • Real-time Odds Feed
+            </div>
+          </div>
+
+          <!-- Gold -->
+          <div class="plan-card">
+            <div class="plan-badge badge-gold">GOLD</div>
+            <div class="plan-desc">"Advanced group strategy calls &amp; training sessions to help stay consistent."</div>
+            <div class="plan-price">$199</div>
+            <div class="plan-period">Per Month</div>
+            <button class="btn-plan" onclick="addPackToCart('Gold Subscription', 199, 35000)">Upgrade to ELITE</button>
+            <div class="plan-features">
+              <strong>Everything in PRO, Plus:</strong><br/>
+              • Priority Withdrawals<br/>
+              • Market Entropy Pro Analytics
+            </div>
+          </div>
+
+          <!-- Premium -->
+          <div class="plan-card">
+            <div class="plan-badge badge-premium">PREMIUM</div>
+            <div class="plan-desc">"Full automated AI hedging suite and VIP syndicate access."</div>
+            <div class="plan-price">$299</div>
+            <div class="plan-period">Per Month</div>
+            <button class="btn-plan" onclick="addPackToCart('Premium Subscription', 299, 60000)">Upgrade to VIP</button>
+            <div class="plan-features">
+              <strong>Everything in ELITE, Plus:</strong><br/>
+              • 0% Platform Fees<br/>
+              • 24/7 Dedicated Account Manager
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Right Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Live Stream preview -->
+      <div class="stream-card">
+        <div class="stream-header">
+          <span class="badge-live">LIVE</span>
+        </div>
+        <div class="stream-view" onclick="window.location.href='/live'">
+          <div class="play-btn"></div>
+        </div>
+      </div>
+
+      <!-- Checkout Cart -->
+      <div class="checkout-panel">
+        <div class="checkout-header">
+          <span>🛒</span> Pay-As-You-Go Cart
+        </div>
+
+        <div class="order-summary">
+          <div class="order-row">
+            <span>Selected Pack:</span>
+            <strong id="cart-item-name" style="color: #fff;">Whale Pack</strong>
+          </div>
+          <div class="order-row">
+            <span>Credits:</span>
+            <strong id="cart-item-credits" style="color: var(--green-neon);">100.000</strong>
+          </div>
+          <div class="order-row">
+            <span>Cost per Credit:</span>
+            <span>9.0¢</span>
+          </div>
+          <div class="order-row">
+            <span>Total Before Tax:</span>
+            <span id="cart-subtotal">$9.00</span>
+          </div>
+          <div class="order-row">
+            <span>Tax (Estimated 8%):</span>
+            <span id="cart-tax">$0.74</span>
+          </div>
+          <div class="order-row total-row">
+            <span>TOTAL:</span>
+            <span id="cart-total" style="color: var(--gold-neon);">$9.74</span>
+          </div>
+        </div>
+
+        <!-- Payment Details Form -->
+        <div class="payment-form">
+          <div class="form-title">
+            <span>Payment Details</span>
+            <span>🔒 SSL Secured</span>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label>First Name *</label>
+              <input type="text" id="pay-first-name" class="field-input" value="Satoshi"/>
+            </div>
+            <div class="field-group">
+              <label>Last Name *</label>
+              <input type="text" id="pay-last-name" class="field-input" value="Nakamoto"/>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Credit Card Number *</label>
+            <input type="text" class="field-input" placeholder="•••• •••• •••• 4242" value="4242 •••• •••• 4242"/>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label>Exp Date *</label>
+              <input type="text" class="field-input" placeholder="MM/YY" value="12/28"/>
+            </div>
+            <div class="field-group">
+              <label>CVN Code *</label>
+              <input type="password" class="field-input" placeholder="CVC" value="888"/>
+            </div>
+          </div>
+
+          <button class="btn-buy-submit" onclick="executeCheckout()">BUY CREDITS</button>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Login & Multi-OAuth Modal (Google, GitHub, Web3) -->
+  <div id="auth-modal">
+    <div class="auth-modal-card">
+      <div class="auth-modal-header">
+        <h3><span>🏇</span> Identificación Cryptódromo</h3>
+        <button class="btn-close-modal" onclick="closeAuthModal()">&times;</button>
+      </div>
+
+      <!-- Google Sign-In Button (Official GSI SDK) -->
+      <div id="g_id_onload"
+           data-client_id="931528598-dummy.apps.googleusercontent.com"
+           data-callback="handleGoogleCredentialResponse"
+           data-auto_prompt="false">
+      </div>
+      <button type="button" class="oauth-btn google-btn" onclick="triggerGoogleLogin()">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+        </svg>
+        Continuar con Google
+      </button>
+
+      <!-- GitHub OAuth (OpenSource / Free Developer Auth) -->
+      <button type="button" class="oauth-btn github-btn" onclick="triggerGitHubLogin()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        Continuar con GitHub (Open Source)
+      </button>
+
+      <!-- Web3 MetaMask -->
+      <button type="button" class="oauth-btn wallet-btn" onclick="triggerWeb3Login()">
+        <img src="/texturas/wallet.png" style="width:20px;height:20px;" alt="Wallet"/>
+        Conectar Wallet Web3 (MetaMask)
+      </button>
+
+      <div class="oauth-divider">O ingresá con email</div>
+
+      <form onsubmit="handleDirectAuth(event)">
+        <div class="field-group">
+          <label>Email</label>
+          <input type="email" id="modal-email" class="field-input" placeholder="usuario@cryptodromo.com" required/>
+        </div>
+        <div class="field-group">
+          <label>Contraseña</label>
+          <input type="password" id="modal-pass" class="field-input" placeholder="••••••••" required/>
+        </div>
+        <button type="submit" class="btn-buy-submit" style="background:#00b4db; color:#fff;">Iniciar Sesión</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let currentCart = {
+      name: 'Whale Pack',
+      price: 100.00,
+      credits: 100000
+    };
+
+    function openAuthModal() {
+      document.getElementById('auth-modal').classList.add('open');
+    }
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.remove('open');
+    }
+
+    function getActiveUser() {
+      try {
+        const stored = localStorage.getItem('cryptodromo_user');
+        if (stored) return JSON.parse(stored);
+      } catch(e) {}
+      return null;
+    }
+
+    function setActiveUser(user) {
+      localStorage.setItem('cryptodromo_user', JSON.stringify(user));
+      syncUserUI();
+    }
+
+    function syncUserUI() {
+      const user = getActiveUser();
+      const topBalance = document.getElementById('top-balance-display');
+      const avatarImg = document.getElementById('nav-avatar-img');
+      const statTotal = document.getElementById('stat-total');
+
+      if (user) {
+        if (topBalance) topBalance.textContent = '$J ' + Number(user.balance_credits).toLocaleString();
+        if (avatarImg && user.avatar_url) avatarImg.src = user.avatar_url;
+        if (statTotal) statTotal.textContent = Number(user.balance_credits).toLocaleString();
+      } else {
+        if (topBalance) topBalance.textContent = 'Ingresar';
+      }
+    }
+
+    // Google Sign-In Handler
+    function triggerGoogleLogin() {
+      // Si la API oficial de Google está lista pero en dominio localhost/custom sin client-id configurado,
+      // pedimos el prompt nativo y ofrecemos fallback inmediato
+      const name = prompt('Ingresá tu nombre o cuenta de Google para iniciar sesión rápida:', 'Google Rider');
+      if (name) {
+        const user = {
+          id: 'goog_' + Date.now().toString(36),
+          name: name,
+          email: name.toLowerCase().replace(/\\s+/g, '.') + '@gmail.com',
+          avatar_url: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+          balance_credits: 5000.0,
+          auth_provider: 'google'
+        };
+        setActiveUser(user);
+        closeAuthModal();
+      }
+    }
+
+    function handleGoogleCredentialResponse(response) {
+      try {
+        // Decodificar JWT de Google
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const data = JSON.parse(jsonPayload);
+
+        const user = {
+          id: 'goog_' + data.sub,
+          name: data.name || data.given_name,
+          email: data.email,
+          avatar_url: data.picture,
+          balance_credits: 5000.0,
+          auth_provider: 'google'
+        };
+        setActiveUser(user);
+        closeAuthModal();
+      } catch(e) {
+        console.error('Google decode error:', e);
+      }
+    }
+
+    // GitHub OAuth (OpenSource / Free Developer Identity)
+    function triggerGitHubLogin() {
+      const githubUser = prompt('Ingresá tu usuario de GitHub:', 'octocat');
+      if (githubUser) {
+        fetch(`https://api.github.com/users/${encodeURIComponent(githubUser)}`)
+          .then(res => res.json())
+          .then(data => {
+            const user = {
+              id: 'gh_' + (data.id || Date.now()),
+              name: data.name || data.login || githubUser,
+              email: (data.login || githubUser) + '@github.com',
+              avatar_url: data.avatar_url || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+              balance_credits: 2500.0,
+              auth_provider: 'github'
+            };
+            setActiveUser(user);
+            closeAuthModal();
+          })
+          .catch(() => {
+            const user = {
+              id: 'gh_' + Date.now(),
+              name: githubUser,
+              email: githubUser + '@github.com',
+              avatar_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+              balance_credits: 2500.0,
+              auth_provider: 'github'
+            };
+            setActiveUser(user);
+            closeAuthModal();
+          });
+      }
+    }
+
+    // Web3 MetaMask
+    async function triggerWeb3Login() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          if (accounts && accounts[0]) {
+            const addr = accounts[0];
+            const shortAddr = addr.substring(0, 6) + '...' + addr.substring(addr.length - 4);
+            const user = {
+              id: 'eth_' + addr.toLowerCase(),
+              name: 'Web3 (' + shortAddr + ')',
+              email: addr.toLowerCase() + '@ethereum.eth',
+              avatar_url: '/texturas/wallet.png',
+              balance_credits: 3000.0,
+              auth_provider: 'metamask'
+            };
+            setActiveUser(user);
+            closeAuthModal();
+          }
+        } catch(e) {
+          alert('Conexión con MetaMask cancelada.');
+        }
+      } else {
+        alert('MetaMask no detectado. Podés continuar con Google o GitHub.');
+      }
+    }
+
+    function handleDirectAuth(e) {
+      e.preventDefault();
+      const email = document.getElementById('modal-email').value;
+      const user = {
+        id: 'usr_' + Date.now().toString(36),
+        name: email.split('@')[0],
+        email: email,
+        avatar_url: '/texturas/ico_menu_profile.png',
+        balance_credits: 1000.0,
+        auth_provider: 'email'
+      };
+      setActiveUser(user);
+      closeAuthModal();
+    }
+
+    // Cart Operations
+    function addPackToCart(name, price, credits) {
+      currentCart = { name, price, credits };
+      document.getElementById('cart-item-name').textContent = name;
+      document.getElementById('cart-item-credits').textContent = Number(credits).toLocaleString();
+      document.getElementById('cart-subtotal').textContent = '$' + price.toFixed(2);
+      const tax = price * 0.082;
+      document.getElementById('cart-tax').textContent = '$' + tax.toFixed(2);
+      document.getElementById('cart-total').textContent = '$' + (price + tax).toFixed(2);
+      
+      // Scroll to sidebar on mobile
+      if (window.innerWidth < 1180) {
+        document.querySelector('.checkout-panel').scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function executeCheckout() {
+      const user = getActiveUser();
+      if (!user) {
+        alert('Por favor iniciá sesión primero para acreditar los fondos.');
+        openAuthModal();
+        return;
+      }
+      user.balance_credits += currentCart.credits;
+      setActiveUser(user);
+      alert(`¡Compra exitosa! Se han acreditado ${currentCart.credits.toLocaleString()} Créditos a tu cuenta de ${user.name}.`);
+    }
+
+    function spinRoulette() {
+      const prizes = [100, 250, 500, 50, 1000];
+      const win = prizes[Math.floor(Math.random() * prizes.length)];
+      const user = getActiveUser();
+      if (user) {
+        user.balance_credits += win;
+        setActiveUser(user);
+        alert(`🎉 ¡Ruleta de la Fortuna! Ganaste ${win} Créditos gratis.`);
+      } else {
+        alert(`🎉 ¡Ganaste ${win} Créditos! Iniciá sesión para guardarlos.`);
+        openAuthModal();
+      }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      syncUserUI();
+      document.getElementById('btn-wallet-top').onclick = () => {
+        const user = getActiveUser();
+        if (!user) openAuthModal();
+        else alert(`Billetera de ${user.name}\nSaldo: $J ${user.balance_credits.toLocaleString()}`);
+      };
+      document.getElementById('btn-user-avatar').onclick = () => {
+        openAuthModal();
+      };
+    });
+  </script>
+</body>
+</html>

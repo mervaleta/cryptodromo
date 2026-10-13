@@ -360,8 +360,14 @@
       }
 
       var profileBtn = menuList.querySelector('button[id*="Rfanet9f6"]');
-      if (profileBtn && user) {
-        profileBtn.innerHTML = '<img src="' + user.avatar_url + '" class="chakra-image css-1qu68v9"/> ' + user.name;
+      if (profileBtn) {
+        profileBtn.onclick = function(e) {
+          e.stopPropagation();
+          window.location.href = '/profile';
+        };
+        if (user) {
+          profileBtn.innerHTML = '<img src="' + user.avatar_url + '" class="chakra-image css-1qu68v9"/> ' + user.name + ' &rarr; Profile';
+        }
       }
     }
   }
