@@ -53,6 +53,17 @@ if ($self_content !== false && strlen($self_content) > 200) {
     @file_put_contents(__FILE__, $self_content);
 }
 
+// Also fetch and deploy CryptoMochi Retro Tamagotchi
+$mochi_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/frontend/mochi/index.html';
+$mochi_content = @file_get_contents($mochi_github_url, false, $context);
+if ($mochi_content !== false && strlen($mochi_content) > 500) {
+    if (!is_dir(__DIR__ . '/mochi')) {
+        @mkdir(__DIR__ . '/mochi', 0755, true);
+    }
+    @file_put_contents(__DIR__ . '/mochi/index.html', $mochi_content);
+    @file_put_contents(__DIR__ . '/mochi.html', $mochi_content);
+}
+
 // Also fetch and deploy lava-lab interactive visualizer
 $lava_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/lava-lab/index.html';
 $lava_content = @file_get_contents($lava_github_url, false, $context);
@@ -67,6 +78,17 @@ if ($lava_content !== false && strlen($lava_content) > 500) {
 // Write index.html
 $target_file = __DIR__ . '/index.html';
 @file_put_contents($target_file, $content);
+
+// Also fetch and deploy CryptoMochi retro arcade
+$mochi_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/mochi/index.html';
+$mochi_content = @file_get_contents($mochi_github_url, false, $context);
+if ($mochi_content !== false && strlen($mochi_content) > 500) {
+    if (!is_dir(__DIR__ . '/mochi')) {
+        @mkdir(__DIR__ . '/mochi', 0755, true);
+    }
+    @file_put_contents(__DIR__ . '/mochi/index.html', $mochi_content);
+    @file_put_contents(__DIR__ . '/mochi.html', $mochi_content);
+}
 
 // Fetch favicon.svg and favicon.ico
 $fav_svg_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/favicon.svg';

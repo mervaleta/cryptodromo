@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CryptoMochi Virtual Pet | Tamagotchi Bursátil</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: VT323 & Press Start 2P for Retro Pixel Art Console -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: #111422;
+      --border-color: #1e2538;
+      --neon-green: #00ff87;
+      --neon-cyan: #60efff;
+      --neon-pink: #ff007f;
+      --neon-yellow: #ffd000;
+      --lcd-bg: #9ba88d;
+      --lcd-text: #192014;
+      --lcd-shadow: #839174;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .font-pixel {
+      font-family: 'Press Start 2P', cursive;
+    }
+    .font-vt {
+      font-family: 'VT323', monospace;
+    }
+
+    /* Tamagotchi Handheld Console Shell */
+    .tamagotchi-shell {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      background: linear-gradient(165deg, #1b2238 0%, #101424 50%, #090c17 100%);
+      border-radius: 55px 55px 75px 75px;
+      border: 4px solid #28334f;
+      box-shadow: 
+        inset 0 4px 8px rgba(255, 255, 255, 0.15),
+        inset 0 -8px 16px rgba(0, 0, 0, 0.8),
+        0 20px 50px rgba(0, 0, 0, 0.7),
+        0 0 35px rgba(96, 239, 255, 0.15);
+      padding: 2.2rem 1.8rem 2.5rem 1.8rem;
+    }
+
+    /* Console Keychain Loop */
+    .keychain-ring {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 38px;
+      border: 5px solid #28334f;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      z-index: 5;
+    }
+
+    /* LCD Screen Bezel */
+    .lcd-bezel {
+      background: #0d101a;
+      border: 3px solid #1a2236;
+      border-radius: 20px;
+      padding: 1rem;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+
+    /* Authentic 8-bit LCD Screen with Subtle Scanlines */
+    .lcd-screen {
+      background-color: var(--lcd-bg);
+      color: var(--lcd-text);
+      border-radius: 10px;
+      border: 2px solid var(--lcd-shadow);
+      padding: 0.8rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.25);
+    }
+    .lcd-screen::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%);
+      background-size: 100% 3px;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* Physical Action Buttons */
+    .btn-console {
+      background: linear-gradient(180deg, #2d3856 0%, #1a2136 100%);
+      border: 2px solid #3c4c75;
+      border-bottom: 4px solid #111624;
+      color: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      transition: all 0.1s ease;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 9px;
+      padding: 10px 6px;
+      text-transform: uppercase;
+    }
+    .btn-console:active {
+      transform: translateY(2px);
+      border-bottom-width: 2px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    .btn-feed {
+      border-color: #00ff87;
+      color: #00ff87;
+    }
+    .btn-play {
+      border-color: #60efff;
+      color: #60efff;
+    }
+    .btn-switch {
+      border-color: #ffd000;
+      color: #ffd000;
+    }
+    .btn-audit {
+      border-color: #ff007f;
+      color: #ff007f;
+    }
+
+    /* Animated Sprite Container */
+    .mochi-avatar-box {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .mochi-sprite {
+      font-size: 4rem;
+      animation: floatHop 1.2s infinite ease-in-out;
+      user-select: none;
+    }
+    @keyframes floatHop {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.05, 0.95); }
+    }
+
+    /* State Auras */
+    .state-bull {
+      animation: bullPulse 1s infinite alternate;
+    }
+    @keyframes bullPulse {
+      0% { filter: drop-shadow(0 0 4px #2b5c16); }
+      100% { filter: drop-shadow(0 0 14px #1c6b00); }
+    }
+    .state-bear {
+      animation: bearSink 1.5s infinite ease-in-out;
+    }
+    @keyframes bearSink {
+      0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 3px #541919); }
+      50% { transform: translateY(5px); filter: drop-shadow(0 0 8px #850000); }
+    }
+    .state-crash {
+      animation: glitchCrash 0.2s infinite;
+    }
+    @keyframes glitchCrash {
+      0% { transform: translate(2px, -2px); opacity: 0.9; }
+      50% { transform: translate(-2px, 2px); opacity: 0.6; }
+      100% { transform: translate(0, 0); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Top Navigation -->
+  <nav class="border-b border-gray-800 bg-[#0d101a]/90 backdrop-blur px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <a href="/" class="text-xl font-black tracking-wider text-white flex items-center gap-2">
+        <span class="text-[#00ff87]">⚡</span> RNGMarketDriven
+      </a>
+      <span class="text-xs font-mono uppercase bg-cyan-950/80 text-[#60efff] border border-cyan-800/60 px-2 py-0.5 rounded">
+        CryptoMochi &bull; Retro Arcade
+      </span>
+    </div>
+    <div class="flex items-center space-x-6 text-sm">
+      <a href="/" class="text-gray-400 hover:text-white transition">Inicio</a>
+      <a href="/lava-lab/" class="text-gray-400 hover:text-[#ff007f] transition">Lava Lab</a>
+      <a href="/prode-bursatil/" class="text-gray-400 hover:text-[#00ff87] transition">Prode Merval</a>
+      <a href="https://cryptodromo.com/live" target="_blank" class="text-gray-400 hover:text-pink-400 transition">Cryptodromo ↗</a>
+      <a href="/soluciones/#agendar" class="bg-gradient-to-r from-[#00ff87] to-[#60efff] text-black font-extrabold px-3 py-1.5 rounded text-xs uppercase tracking-wider hover:opacity-90">
+        Agendar Charla
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full flex flex-col items-center">
+    
+    <div class="text-center mb-6">
+      <div class="inline-block px-3 py-1 mb-2 rounded-full text-xs font-mono tracking-widest text-[#00ff87] bg-green-950/50 border border-green-800/60 uppercase">
+        Mascota Bursátil Evolutiva &bull; Tamagotchi 8-Bit
+      </div>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 bg-gradient-to-r from-white via-slate-100 to-[#60efff] bg-clip-text text-transparent">
+        CryptoMochi Arcade
+      </h1>
+      <p class="text-gray-400 text-xs md:text-sm font-mono max-w-lg mx-auto">
+        Los signos vitales, humor y evolución de tu Mochi se modulan en tiempo real por el rendimiento del ticker bursátil que le asignes.
+      </p>
+    </div>
+
+    <!-- Handheld Console Device Shell -->
+    <div class="tamagotchi-shell">
+      <div class="keychain-ring"></div>
+
+      <!-- Top Speaker Holes / Brand -->
+      <div class="flex justify-between items-center mb-3 px-2">
+        <div class="flex gap-1.5">
+          <div class="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
+          <div class="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
+          <div class="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
+        </div>
+        <span class="font-pixel text-[8px] text-cyan-400 tracking-widest uppercase">MOCHI-BOY 2026</span>
+        <div class="w-2.5 h-2.5 bg-[#00ff87] rounded-full animate-pulse shadow-[0_0_8px_#00ff87]"></div>
+      </div>
+
+      <!-- LCD Screen Housing -->
+      <div class="lcd-bezel">
+        <div class="lcd-screen">
+          
+          <!-- LCD Header: Name & Market Delta Ticker -->
+          <div class="flex justify-between items-center border-b border-[#839174] pb-1 mb-2 font-vt text-sm">
+            <span class="font-bold tracking-wider" id="lcd-mochi-name">KURO (LVL 1)</span>
+            <div class="flex items-center gap-1 font-bold">
+              <span id="lcd-ticker-tag">$BTC</span>
+              <span id="lcd-ticker-delta">+2.45%</span>
+            </div>
+          </div>
+
+          <!-- LCD Vitals Mini HUD -->
+          <div class="grid grid-cols-3 gap-1 font-vt text-xs mb-2 border-b border-[#839174] pb-1">
+            <div>
+              <span>HAMBRE:</span>
+              <span id="lcd-hunger-val" class="font-bold">40%</span>
+            </div>
+            <div>
+              <span>JOY:</span>
+              <span id="lcd-happiness-val" class="font-bold">75%</span>
+            </div>
+            <div>
+              <span>SALUD:</span>
+              <span id="lcd-health-val" class="font-bold">100%</span>
+            </div>
+          </div>
+
+          <!-- Mochi Character Stage -->
+          <div class="mochi-avatar-box">
+            <div id="mochi-avatar" class="mochi-sprite state-bull">
+              🐂
+            </div>
+            <!-- Stage/Floor shadow -->
+            <div class="absolute bottom-1 w-20 h-2 bg-[#839174] rounded-full opacity-60"></div>
+          </div>
+
+          <!-- LCD Bottom Status Message Ticker -->
+          <div class="mt-2 bg-[#8e9c80] p-1.5 rounded text-center font-vt text-xs tracking-wider border border-[#7f8e71]">
+            <span id="lcd-status-msg">MERCADO ALCISTA: KURO ESTÁ GANANDO XP (+2.45%)</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Live Financial Telemetry Ticker Below Screen -->
+      <div class="mt-4 bg-[#0a0d16] border border-[#1e2538] p-2.5 rounded-xl font-mono text-xs flex justify-between items-center text-gray-300">
+        <div>
+          <span class="text-gray-500 text-[10px] uppercase block">PRECIO SPOT EN VIVO</span>
+          <span class="text-white font-bold" id="console-price-val">$68,540.00 USD</span>
+        </div>
+        <div class="text-right">
+          <span class="text-gray-500 text-[10px] uppercase block">ESTADO BURSÁTIL</span>
+          <span class="text-[#00ff87] font-bold" id="console-state-tag">RALLY BULL (+2.45%)</span>
+        </div>
+      </div>
+
+      <!-- 4 Physical Console Buttons (Tamagotchi Style) -->
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button onclick="feedMochi()" class="btn-console btn-feed flex items-center justify-center gap-1.5">
+          <span>🍔</span> ALIMENTAR
+        </button>
+        <button onclick="playMochiArena()" class="btn-console btn-play flex items-center justify-center gap-1.5">
+          <span>🎮</span> JUGAR ARENA
+        </button>
+        <button onclick="openSwitchTickerModal()" class="btn-console btn-switch flex items-center justify-center gap-1.5">
+          <span>🔄</span> CAMBIAR TICKER
+        </button>
+        <button onclick="openAuditModal()" class="btn-console btn-audit flex items-center justify-center gap-1.5">
+          <span>📊</span> AUDITAR HASH
+        </button>
+      </div>
+
+      <!-- Brand Footer on Case -->
+      <div class="text-center mt-4">
+        <span class="font-pixel text-[7px] text-gray-500 uppercase tracking-widest">
+          PROVABLY FAIR &bull; HARDWARE EMULATOR
+        </span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Switch Ticker Modal -->
+  <div id="switchModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#111422] border border-[#1e2538] rounded-2xl max-w-sm w-full p-6 shadow-2xl relative font-mono text-xs">
+      <button onclick="closeSwitchTickerModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg font-bold">✕</button>
+      
+      <h3 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+        <span>🔄</span> Asignar Activo al Genoma
+      </h3>
+      <p class="text-gray-400 text-[11px] mb-4">El activo seleccionado transmitirá su volatilidad y momentum al Mochi de inmediato.</p>
+
+      <div class="space-y-2 mb-4">
+        <button onclick="selectTicker('BTC')" class="w-full text-left p-2.5 rounded-lg bg-[#090b12] hover:bg-[#1a2136] border border-gray-800 flex justify-between items-center text-white">
+          <span>$BTC (Bitcoin)</span>
+          <span class="text-[#00ff87] font-bold">+2.45%</span>
+        </button>
+        <button onclick="selectTicker('ETH')" class="w-full text-left p-2.5 rounded-lg bg-[#090b12] hover:bg-[#1a2136] border border-gray-800 flex justify-between items-center text-white">
+          <span>$ETH (Ethereum)</span>
+          <span class="text-[#ff3366] font-bold">-1.15%</span>
+        </button>
+        <button onclick="selectTicker('NVDA')" class="w-full text-left p-2.5 rounded-lg bg-[#090b12] hover:bg-[#1a2136] border border-gray-800 flex justify-between items-center text-white">
+          <span>$NVDA (NVIDIA)</span>
+          <span class="text-[#00ff87] font-bold">+3.80%</span>
+        </button>
+        <button onclick="selectTicker('YPF')" class="w-full text-left p-2.5 rounded-lg bg-[#090b12] hover:bg-[#1a2136] border border-gray-800 flex justify-between items-center text-white">
+          <span>$YPF (YPF S.A. BYMA)</span>
+          <span class="text-[#00ff87] font-bold">+1.75%</span>
+        </button>
+        <button onclick="selectTicker('GGAL')" class="w-full text-left p-2.5 rounded-lg bg-[#090b12] hover:bg-[#1a2136] border border-gray-800 flex justify-between items-center text-white">
+          <span>$GGAL (Grupo Galicia BYMA)</span>
+          <span class="text-[#ff3366] font-bold">-2.40%</span>
+        </button>
+        <button onclick="selectTicker('SOL')" class="w-full text-left p-2.5 rounded-lg bg-[#090b12] hover:bg-[#1a2136] border border-gray-800 flex justify-between items-center text-white">
+          <span>$SOL (Solana)</span>
+          <span class="text-[#00ff87] font-bold">+5.10%</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Hash Modal -->
+  <div id="auditModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#111422] border border-[#1e2538] rounded-2xl max-w-xl w-full p-6 shadow-2xl relative font-mono text-xs">
+      <button onclick="closeAuditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg font-bold">✕</button>
+
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-lg">📊</span>
+        <h3 class="text-sm font-bold text-white">Auditoría Criptográfica de la Mascota</h3>
+      </div>
+      <p class="text-gray-400 text-[11px] mb-3">Semilla SHA-256 inmutable derivada del último tick financiero registrado en el ledger.</p>
+
+      <div class="space-y-3">
+        <div>
+          <span class="text-gray-400 text-[10px] block">HASH SHA-256 DEL TICK DE MERCADO:</span>
+          <div class="bg-black/95 p-2.5 rounded border border-green-800 text-[#00ff87] break-all text-[11px]" id="modal-hash-val">
+            Calculando...
+          </div>
+        </div>
+
+        <div class="bg-[#090b12] p-2.5 rounded border border-gray-800 text-[11px] space-y-1">
+          <div class="flex justify-between">
+            <span class="text-gray-500">TICKER AUDITADO:</span>
+            <span class="text-white font-bold" id="modal-ticker-val">$BTC</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">PRECIO DE CORTE:</span>
+            <span class="text-white font-bold" id="modal-price-val">$68,540.00</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">VARIACIÓN CONFIRMADA:</span>
+            <span class="text-[#00ff87] font-bold" id="modal-delta-val">+2.45%</span>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-between items-center">
+          <a href="https://gitlab.com/cryptodromo/rngmarketdriven" target="_blank" class="text-[#60efff] hover:underline text-[11px]">
+            🔗 Ver Commit en GitLab
+          </a>
+          <button onclick="closeAuditModal()" class="bg-[#1e2538] hover:bg-[#2b354f] text-white px-4 py-1.5 rounded font-bold">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-800 py-6 px-4 text-center text-xs text-gray-500 font-mono">
+    &copy; 2026 RNGMarketDriven &bull; CryptoMochi Tamagotchi Engine &bull; Provably Fair B2C
+  </footer>
+
+  <script>
+    // State of active Mochi
+    let mochiState = {
+      name: "KURO",
+      ticker: "BTC",
+      hunger: 40,
+      happiness: 75,
+      health: 100,
+      xp: 45,
+      stage: 1,
+      state: "BULL",
+      price: 68500.0,
+      delta: 2.45,
+      lastHash: "e8a91fbc73082d449ab812cf6910a340798be128d5f309cb6f9914620a23e981"
+    };
+
+    const SPRITES = {
+      ATH_GOD: { icon: "👑", mood: "ATH EUFORIA (GOD MODE)", aura: "state-bull" },
+      BULL: { icon: "🐂", mood: "MERCADO ALCISTA (BULL)", aura: "state-bull" },
+      BEAR: { icon: "🐻", mood: "CORRECCIÓN (BEAR)", aura: "state-bear" },
+      MARGIN_CALL: { icon: "👻", mood: "MARGIN CALL (GHOST-MOCHI)", aura: "state-crash" },
+      NEUTRAL: { icon: "🐱", mood: "MERCADO LATERAL", aura: "" }
+    };
+
+    function updateUI() {
+      document.getElementById("lcd-mochi-name").innerText = `${mochiState.name} (LVL ${mochiState.stage})`;
+      document.getElementById("lcd-ticker-tag").innerText = `$${mochiState.ticker}`;
+      
+      const deltaSign = mochiState.delta > 0 ? "+" : "";
+      const deltaEl = document.getElementById("lcd-ticker-delta");
+      deltaEl.innerText = `${deltaSign}${mochiState.delta}%`;
+
+      document.getElementById("lcd-hunger-val").innerText = `${mochiState.hunger}%`;
+      document.getElementById("lcd-happiness-val").innerText = `${mochiState.happiness}%`;
+      document.getElementById("lcd-health-val").innerText = `${mochiState.health}%`;
+
+      document.getElementById("console-price-val").innerText = `$${mochiState.price.toLocaleString()} USD`;
+      
+      const stateTag = document.getElementById("console-state-tag");
+      const msgEl = document.getElementById("lcd-status-msg");
+      const avatarEl = document.getElementById("mochi-avatar");
+
+      // Sprite determination
+      let conf = SPRITES[mochiState.state] || SPRITES.NEUTRAL;
+      avatarEl.innerText = conf.icon;
+      avatarEl.className = `mochi-sprite ${conf.aura}`;
+
+      if (mochiState.delta >= 3.0) {
+        stateTag.innerText = `ATH EUFORIA (${deltaSign}${mochiState.delta}%)`;
+        stateTag.className = "text-[#ffd000] font-bold";
+        msgEl.innerText = `¡EUFORIA TOTAL! $${mochiState.ticker} EN MÁXIMOS. XP MULTIPLICADA.`;
+      } else if (mochiState.delta > 0) {
+        stateTag.innerText = `RALLY BULL (${deltaSign}${mochiState.delta}%)`;
+        stateTag.className = "text-[#00ff87] font-bold";
+        msgEl.innerText = `MERCADO ALCISTA: ${mochiState.name} ESTÁ GANANDO XP (+${mochiState.delta}%).`;
+      } else if (mochiState.delta <= -20.0) {
+        stateTag.innerText = `MARGIN CALL (${mochiState.delta}%)`;
+        stateTag.className = "text-[#ff007f] font-bold";
+        msgEl.innerText = `¡ALERTA CRÍTICA! GHOST-MOCHI ACTIVO POR DESPLOME.`;
+      } else if (mochiState.delta < -1.5) {
+        stateTag.innerText = `BAJISTA BEAR (${mochiState.delta}%)`;
+        stateTag.className = "text-[#ff3366] font-bold";
+        msgEl.innerText = `MERCADO EN ROJO: STRESS ALTO, BAJANDO ENERGÍA (${mochiState.delta}%).`;
+      } else {
+        stateTag.innerText = `LATERAL (${deltaSign}${mochiState.delta}%)`;
+        stateTag.className = "text-[#60efff] font-bold";
+        msgEl.innerText = `MERCADO EN CALMA: CONDICIONES ESTABLES.`;
+      }
+    }
+
+    // Interaction 1: Feed
+    function feedMochi() {
+      mochiState.hunger = Math.max(0, mochiState.hunger - 35);
+      mochiState.health = Math.min(100, mochiState.health + 15);
+      mochiState.happiness = Math.min(100, mochiState.happiness + 10);
+      document.getElementById("lcd-status-msg").innerText = `🍔 ¡ALIMENTADO! MARGEN RECUPERADO (-35% HAMBRE).`;
+      updateUI();
+    }
+
+    // Interaction 2: Play Arena Mini-game
+    function playMochiArena() {
+      mochiState.xp += 25;
+      mochiState.happiness = Math.min(100, mochiState.happiness + 15);
+      mochiState.hunger = Math.min(100, mochiState.hunger + 10);
+      mochiState.stage = Math.min(4, 1 + Math.floor(mochiState.xp / 100));
+      document.getElementById("lcd-status-msg").innerText = `🎮 ¡ARENA SUPERADA! GANASTE +25 XP Y FELICIDAD.`;
+      updateUI();
+    }
+
+    // Interaction 3: Switch Ticker
+    function openSwitchTickerModal() {
+      document.getElementById("switchModal").classList.remove("hidden");
+    }
+    function closeSwitchTickerModal() {
+      document.getElementById("switchModal").classList.add("hidden");
+    }
+    function selectTicker(t) {
+      mochiState.ticker = t;
+      const prices = {
+        BTC: { p: 68500.0, d: 2.45, s: "BULL" },
+        ETH: { p: 2640.0, d: -1.15, s: "BEAR" },
+        NVDA: { p: 138.2, d: 3.80, s: "ATH_GOD" },
+        YPF: { p: 34500.0, d: 1.75, s: "BULL" },
+        GGAL: { p: 5820.0, d: -2.40, s: "BEAR" },
+        SOL: { p: 182.5, d: 5.10, s: "ATH_GOD" }
+      };
+      const info = prices[t] || { p: 100.0, d: 0.5, s: "NEUTRAL" };
+      mochiState.price = info.p;
+      mochiState.delta = info.d;
+      mochiState.state = info.s;
+      mochiState.lastHash = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2,'0')).join('');
+      closeSwitchTickerModal();
+      document.getElementById("lcd-status-msg").innerText = `🔄 GENOMA VINCULADO AL TICKER $${t}.`;
+      updateUI();
+    }
+
+    // Interaction 4: Audit Hash
+    function openAuditModal() {
+      document.getElementById("modal-hash-val").innerText = mochiState.lastHash;
+      document.getElementById("modal-ticker-val").innerText = `$${mochiState.ticker}`;
+      document.getElementById("modal-price-val").innerText = `$${mochiState.price.toLocaleString()} USD`;
+      document.getElementById("modal-delta-val").innerText = `${mochiState.delta > 0 ? "+" : ""}${mochiState.delta}%`;
+      document.getElementById("auditModal").classList.remove("hidden");
+    }
+    function closeAuditModal() {
+      document.getElementById("auditModal").classList.add("hidden");
+    }
+
+    // Periodic Market Tick Simulation (every 15s)
+    setInterval(() => {
+      const jitter = ((Math.random() - 0.48) * 0.4).toFixed(2);
+      mochiState.delta = +(mochiState.delta + parseFloat(jitter)).toFixed(2);
+      mochiState.price = +(mochiState.price * (1 + parseFloat(jitter)/100)).toFixed(2);
+      updateUI();
+    }, 15000);
+
+    updateUI();
+  </script>
+</body>
+</html>
