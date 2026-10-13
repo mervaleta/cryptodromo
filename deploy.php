@@ -63,6 +63,18 @@ if ($lava_content !== false && strlen($lava_content) > 500) {
     @file_put_contents(__DIR__ . '/lava.html', $lava_content);
 }
 
+// Fetch favicon.svg and favicon.ico
+$fav_svg_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/favicon.svg';
+$fav_svg = @file_get_contents($fav_svg_url, false, $context);
+if ($fav_svg !== false) {
+    @file_put_contents(__DIR__ . '/favicon.svg', $fav_svg);
+}
+$fav_ico_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/favicon.ico';
+$fav_ico = @file_get_contents($fav_ico_url, false, $context);
+if ($fav_ico !== false) {
+    @file_put_contents(__DIR__ . '/favicon.ico', $fav_ico);
+}
+
 // Also fetch and deploy prode-bursatil sub-site
 $prode_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/prode-bursatil/index.html';
 $prode_content = @file_get_contents($prode_github_url, false, $context);

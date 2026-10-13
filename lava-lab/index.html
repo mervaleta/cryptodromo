@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lava Market Lab | RNGMarketDriven EaaS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -156,7 +158,7 @@
 
     </div>
 
-    <!-- Live Telemetry / API Ticker Bar -->
+    <!-- Live Telemetry / API Ticker Bar & Capture Controls -->
     <div class="bg-[#111422] border border-[#1e2538] rounded-xl p-4 flex flex-wrap items-center justify-between text-xs font-mono text-gray-300 gap-4 mb-8">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-[#00ff87] animate-pulse"></span>
@@ -167,10 +169,10 @@
         <span class="text-gray-400">ÚLTIMO SEED DERIVADO:</span>
         <span class="text-[#00ff87] font-semibold tracking-wider" id="global-entropy-hash">c8f102...calculando</span>
       </div>
-      <div>
-        <a href="#auditModal" onclick="openAuditModal(0)" class="text-[#60efff] underline hover:text-white">
-          Inspeccionar Payload Completo &rarr;
-        </a>
+      <div class="flex items-center gap-2">
+        <button onclick="captureLampsSnapshot()" class="bg-gradient-to-r from-[#ff007f] via-[#a855f7] to-[#60efff] hover:opacity-90 text-white font-extrabold px-4 py-2 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition">
+          📸 Capturar 5 Lámparas & Hashear PNG
+        </button>
       </div>
     </div>
 
@@ -243,6 +245,71 @@
           <button onclick="closeAuditModal()" class="bg-[#1e2538] hover:bg-[#2b354f] text-white px-4 py-1.5 rounded font-bold">
             Cerrar Panel
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snapshot Capture & Hash Modal -->
+  <div id="snapshotModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#111422] border border-[#1e2538] rounded-2xl max-w-4xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeSnapshotModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold font-mono">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-2 rounded-lg bg-pink-950/80 border border-pink-800/60 text-[#ff007f] text-lg">
+          📸
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            Captura Cuántica de las 5 Lámparas & Hash Criptográfico
+          </h3>
+          <p class="text-xs text-gray-400">Snapshot instantáneo de las 5 unidades congeladas en un archivo PNG único y auditado.</p>
+        </div>
+      </div>
+
+      <!-- Snapshot Preview -->
+      <div class="mb-4 bg-[#090b12] p-3 rounded-xl border border-gray-800 flex flex-col items-center">
+        <img id="snapshot-img-preview" class="w-full max-h-[280px] object-contain rounded-lg border border-gray-900 shadow-inner" alt="Snapshot 5 Lava Lamps">
+        <div class="mt-2 flex justify-between w-full text-gray-500 font-mono text-[11px] px-1">
+          <span id="snapshot-meta-dims">Resolución: 1200x420 px</span>
+          <span id="snapshot-meta-time">Timestamp: --</span>
+          <span id="snapshot-meta-size">Tamaño: -- KB</span>
+        </div>
+      </div>
+
+      <!-- Hash Data Section -->
+      <div class="space-y-3 font-mono text-xs">
+        <div>
+          <div class="text-gray-400 mb-1 flex justify-between">
+            <span class="text-white font-bold">HASH SHA-256 DEL ARCHIVO PNG (DATOS BINARIOS):</span>
+            <span class="text-[#00ff87]">HUELLA DIGITAL ÚNICA</span>
+          </div>
+          <div class="bg-black/95 p-3 rounded-lg border border-green-800/60 text-[#00ff87] break-all text-xs font-bold tracking-wider" id="snapshot-png-hash">
+            Calculando hash SHA-256...
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[#090b12] p-3 rounded-lg border border-gray-800 text-[11px]">
+          <div>
+            <span class="text-gray-500">MERCADOS ACTIVOS CONGELADOS:</span>
+            <div class="text-white font-semibold mt-0.5" id="snapshot-frozen-assets">--</div>
+          </div>
+          <div>
+            <span class="text-gray-500">PROVABLY FAIR VERIFIER SEED:</span>
+            <div class="text-[#60efff] font-semibold mt-0.5" id="snapshot-combined-seed">--</div>
+          </div>
+        </div>
+
+        <!-- Download & Verify Actions -->
+        <div class="pt-2 flex flex-wrap gap-3 justify-end items-center">
+          <button onclick="copySnapshotHash()" class="bg-[#1e2538] hover:bg-[#2b354f] text-white px-4 py-2 rounded-lg font-bold flex items-center gap-1.5 transition">
+            📋 Copiar Hash
+          </button>
+          <a id="snapshot-download-btn" download="lava_market_snapshot.png" class="bg-gradient-to-r from-[#00ff87] to-[#60efff] text-black font-extrabold px-5 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition">
+            💾 Descargar Imagen PNG
+          </a>
         </div>
       </div>
     </div>
@@ -516,6 +583,130 @@
 
     function closeAuditModal() {
       document.getElementById("auditModal").classList.add("hidden");
+    }
+
+    // Capture the 5 Lava Lamps in an instantaneous composite PNG & Compute SHA-256
+    async function captureLampsSnapshot() {
+      // Dimensions for the 5-lamp horizontal composite
+      const lampWidth = 240;
+      const lampHeight = 380;
+      const padding = 20;
+      const totalWidth = (lampWidth * 5) + (padding * 6);
+      const totalHeight = lampHeight + (padding * 2) + 60; // header info space
+
+      const offCanvas = document.createElement("canvas");
+      offCanvas.width = totalWidth;
+      offCanvas.height = totalHeight;
+      const oCtx = offCanvas.getContext("2d");
+
+      // Draw cyber dark gradient background
+      const bgGrad = oCtx.createLinearGradient(0, 0, totalWidth, totalHeight);
+      bgGrad.addColorStop(0, "#07090e");
+      bgGrad.addColorStop(0.5, "#0f1322");
+      bgGrad.addColorStop(1, "#05070a");
+      oCtx.fillStyle = bgGrad;
+      oCtx.fillRect(0, 0, totalWidth, totalHeight);
+
+      // Header watermark & timestamp
+      oCtx.fillStyle = "#60efff";
+      oCtx.font = "bold 16px monospace";
+      oCtx.fillText("RNGMarketDriven.com • LAVA MARKET LAB (5-LAMP QUANTUM SNAPSHOT)", padding, 32);
+
+      const captureTimestamp = Date.now();
+      const dateStr = new Date(captureTimestamp).toISOString();
+      oCtx.fillStyle = "#8e95aa";
+      oCtx.font = "12px monospace";
+      oCtx.fillText(`UTC: ${dateStr} • Provably Fair Ingest Node: BYMA / Binance / NYSE`, padding, 52);
+
+      let frozenAssetsText = [];
+      let combinedSeedData = [];
+
+      // Render each of the 5 lamps side by side
+      for (let i = 0; i < 5; i++) {
+        const lamp = LAMPS[i];
+        const asset = ASSET_CATALOG.find(a => a.id === lamp.asset) || ASSET_CATALOG[0];
+        const xPos = padding + i * (lampWidth + padding);
+        const yPos = 70;
+
+        // Draw lamp shell background
+        oCtx.save();
+        oCtx.beginPath();
+        oCtx.roundRect(xPos, yPos, lampWidth, lampHeight, [30, 30, 20, 20]);
+        oCtx.clip();
+
+        // Draw the live canvas content of this lamp
+        if (lamp.canvas) {
+          oCtx.drawImage(lamp.canvas, xPos, yPos, lampWidth, lampHeight);
+        }
+
+        // Draw glass reflection glare
+        const glare = oCtx.createLinearGradient(xPos, yPos, xPos + 15, yPos + lampHeight);
+        glare.addColorStop(0, "rgba(255, 255, 255, 0.25)");
+        glare.addColorStop(1, "rgba(255, 255, 255, 0.01)");
+        oCtx.fillStyle = glare;
+        oCtx.fillRect(xPos + 10, yPos + 10, 8, lampHeight - 20);
+
+        oCtx.restore();
+
+        // Draw top & bottom cap
+        oCtx.fillStyle = "#2a344d";
+        oCtx.fillRect(xPos + (lampWidth * 0.15), yPos, lampWidth * 0.7, 14);
+        oCtx.fillRect(xPos + (lampWidth * 0.1), yPos + lampHeight - 16, lampWidth * 0.8, 16);
+
+        // Draw border
+        oCtx.strokeStyle = lamp.delta > 0.5 ? "#00ff87" : (lamp.delta < -0.5 ? "#ff3366" : "#60efff");
+        oCtx.lineWidth = 2;
+        oCtx.strokeRect(xPos, yPos, lampWidth, lampHeight);
+
+        // Label below lamp
+        oCtx.fillStyle = "#ffffff";
+        oCtx.font = "bold 12px monospace";
+        oCtx.fillText(`L#${i + 1}: ${lamp.asset}`, xPos + 10, yPos + lampHeight + 22);
+
+        oCtx.fillStyle = lamp.delta > 0.5 ? "#00ff87" : (lamp.delta < -0.5 ? "#ff3366" : "#60efff");
+        oCtx.font = "11px monospace";
+        oCtx.fillText(`${lamp.delta > 0 ? "+" : ""}${lamp.delta}% ($${lamp.price})`, xPos + 10, yPos + lampHeight + 38);
+
+        frozenAssetsText.push(`${lamp.asset} (${lamp.delta > 0 ? "+" : ""}${lamp.delta}%)`);
+        combinedSeedData.push(`${lamp.asset}_${lamp.price}_${lamp.delta}`);
+      }
+
+      // Export to PNG Blob and ArrayBuffer to calculate exact SHA-256 of the binary file
+      offCanvas.toBlob(async (blob) => {
+        const arrayBuffer = await blob.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const fileSha256 = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+        // Create data URL for preview and download
+        const pngDataUrl = offCanvas.toDataURL("image/png");
+        document.getElementById("snapshot-img-preview").src = pngDataUrl;
+        document.getElementById("snapshot-png-hash").innerText = fileSha256;
+        document.getElementById("snapshot-meta-dims").innerText = `Resolución: ${totalWidth}x${totalHeight} px`;
+        document.getElementById("snapshot-meta-time").innerText = `Timestamp: ${dateStr}`;
+        document.getElementById("snapshot-meta-size").innerText = `Tamaño: ${(blob.size / 1024).toFixed(1)} KB`;
+        document.getElementById("snapshot-frozen-assets").innerText = frozenAssetsText.join(" • ");
+        
+        const combinedSeed = `${combinedSeedData.join("|")}|${captureTimestamp}`;
+        document.getElementById("snapshot-combined-seed").innerText = combinedSeed;
+
+        const dlBtn = document.getElementById("snapshot-download-btn");
+        dlBtn.href = pngDataUrl;
+        dlBtn.download = `lava_market_snapshot_${captureTimestamp}_${fileSha256.substring(0, 8)}.png`;
+
+        document.getElementById("snapshotModal").classList.remove("hidden");
+      }, "image/png");
+    }
+
+    function closeSnapshotModal() {
+      document.getElementById("snapshotModal").classList.add("hidden");
+    }
+
+    function copySnapshotHash() {
+      const hashText = document.getElementById("snapshot-png-hash").innerText;
+      navigator.clipboard.writeText(hashText).then(() => {
+        alert("✓ Hash SHA-256 copiado al portapapeles:\n\n" + hashText);
+      });
     }
 
     // Startup
