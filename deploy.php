@@ -42,6 +42,14 @@ if ($soluciones_content !== false && strlen($soluciones_content) > 500) {
         @mkdir(__DIR__ . '/soluciones', 0755, true);
     }
     @file_put_contents(__DIR__ . '/soluciones/index.html', $soluciones_content);
+    @file_put_contents(__DIR__ . '/soluciones.html', $soluciones_content);
+}
+
+// Self update deploy.php
+$self_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/deploy.php';
+$self_content = @file_get_contents($self_github_url, false, $context);
+if ($self_content !== false && strlen($self_content) > 200) {
+    @file_put_contents(__FILE__, $self_content);
 }
 
 // Also fetch and deploy prode-bursatil sub-site
