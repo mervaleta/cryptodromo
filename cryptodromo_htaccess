@@ -1,0 +1,18 @@
+DirectorySlash Off
+RewriteEngine On
+
+# If request matches .html file directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+
+PassengerAppRoot /home/u931528598/domains/cryptodromo.com/hbuilds/current/nodejs
+PassengerAppType node
+PassengerNodejs /opt/alt/alt-nodejs18/root/bin/node
+PassengerStartupFile server.js
+PassengerBaseURI /
+PassengerRestartDir /home/u931528598/domains/cryptodromo.com/hbuilds/current/nodejs/tmp
+SetEnv NODE_OPTIONS "--require /home/u931528598/domains/cryptodromo.com/hbuilds/config/preload-timestamp.js"
+SetEnv LSNODE_CONSOLE_LOG console.log
+SetEnv TOKIO_WORKER_THREADS 2
