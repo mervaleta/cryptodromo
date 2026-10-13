@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Preguntas Frecuentes (FAQ) | Cryptodromo</title>
+  <link rel="icon" href="/favicon.ico"/>
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --card-bg: #151922;
+      --cyan: #60efff;
+      --green: #00ffcc;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    nav {
+      background: #11141c;
+      border-bottom: 1px solid #1e2636;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+    .nav-links { display: flex; gap: 20px; font-size: 0.85rem; font-weight: 700; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; }
+    .nav-links a:hover { color: #fff; }
+    .container {
+      max-width: 860px;
+      margin: 40px auto;
+      padding: 32px;
+      background: var(--card-bg);
+      border: 1px solid #283347;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.4);
+      flex: 1;
+    }
+    h1 {
+      font-size: 2rem;
+      color: var(--cyan);
+      margin-bottom: 24px;
+      border-bottom: 1px solid #283347;
+      padding-bottom: 12px;
+    }
+    h3 {
+      font-size: 1.2rem;
+      color: var(--green);
+      margin: 20px 0 8px 0;
+    }
+    p, li {
+      line-height: 1.7;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+    ul { margin-left: 20px; margin-top: 10px; }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .btn-back {
+      display: inline-block;
+      margin-top: 30px;
+      background: #232a3b;
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .btn-back:hover { background: #323d54; text-decoration: none; }
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #64748b;
+      font-size: 0.8rem;
+      border-top: 1px solid #1a202c;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/"><img src="/texturas/logo_janch_header.png" style="height:38px;" alt="Cryptodromo"/></a>
+    <div class="nav-links">
+      <a href="/bets">BETS</a>
+      <a href="/fixture">FIXTURE</a>
+      <a href="/live">LIVE</a>
+      <a href="/ranking">RANKING</a>
+      <a href="/results">RESULTS</a>
+      <a href="/racers">RACERS</a>
+      <a href="/stats">STATS</a>
+      <a href="/profile" style="color:var(--cyan);">PROFILE</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1>Preguntas Frecuentes</h1>
+    
+        <h3>1. ¿Cómo funciona Cryptódromo?</h3>
+        <p>Cryptódromo es un hipódromo virtual donde cada caballo representa una criptomoneda del mercado real. La velocidad y aceleración de cada corredor durante los 12 tramos de 5 segundos están determinadas por las variaciones de precio en tiempo real del activo correspondiente.</p>
+        <br/>
+        <h3>2. ¿Las carreras son justas y transparentes?</h3>
+        <p>Absolutamente. No utilizamos generadores de números aleatorios convencionales (RNG) cerrados. Cada carrera se alimenta de feeds de mercado verificables y entropía de bloques, permitiendo una experiencia provably fair donde los resultados son auditables por la comunidad.</p>
+        <br/>
+        <h3>3. ¿Con qué frecuencia se corren las carreras?</h3>
+        <p>Se disputa una carrera cada 3 minutos, totalizando 480 carreras diarias ininterrumpidas. El cronograma completo de la jornada se puede consultar en la sección Fixture.</p>
+        <br/>
+        <h3>4. ¿Qué son los Créditos y Janch?</h3>
+        <p>Los créditos son la unidad interna utilizada para participar en las predicciones y torneos. 1 crédito equivale aproximadamente a $0.01 USD. Podés adquirir paquetes en la sección Profile o ganar créditos en promociones y la ruleta diaria.</p>
+        <br/>
+        <h3>5. ¿Cómo se liquidan las apuestas?</h3>
+        <p>Al finalizar la carrera, el 50% del pozo acumulado de todos los participantes se distribuye entre los apostadores del caballo ganador, calculado de acuerdo al dividendo (odds) correspondiente al momento del cierre de apuestas.</p>
+        
+    <br/>
+    <a href="/" class="btn-back">&larr; Volver al Hip&oacute;dromo</a>
+  </main>
+
+  <footer>
+    &copy; 2026 Crypt&oacute;dromo &middot; Market-Driven Virtual Racing &middot; Provably Fair
+  </footer>
+</body>
+</html>
