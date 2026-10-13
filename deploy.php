@@ -34,6 +34,16 @@ if (file_put_contents($target_file, $content) === false) {
     die(json_encode(['status' => 'error', 'message' => 'Failed to write index.html locally']));
 }
 
+// Also fetch and deploy soluciones landing
+$soluciones_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/soluciones/index.html';
+$soluciones_content = @file_get_contents($soluciones_github_url, false, $context);
+if ($soluciones_content !== false && strlen($soluciones_content) > 500) {
+    if (!is_dir(__DIR__ . '/soluciones')) {
+        @mkdir(__DIR__ . '/soluciones', 0755, true);
+    }
+    @file_put_contents(__DIR__ . '/soluciones/index.html', $soluciones_content);
+}
+
 // Also fetch and deploy prode-bursatil sub-site
 $prode_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/prode-bursatil/index.html';
 $prode_content = @file_get_contents($prode_github_url, false, $context);

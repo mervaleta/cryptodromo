@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soluciones B2B & Precios | RNGMarketDriven</title>
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: #111420;
+      --card-border: #1f2538;
+      --text: #e2e8f0;
+      --muted: #828c9f;
+      --accent-green: #00ff87;
+      --accent-blue: #60efff;
+      --accent-pink: #ff007f;
+      --accent-yellow: #ffd000;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      padding: 0;
+    }
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Nav */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(11, 13, 20, 0.8);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logo span { color: var(--accent-green); }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-left: 1.5rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent-blue); }
+    .btn-cta {
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+      color: #05070a;
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .btn-cta:hover { opacity: 0.9; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 4rem 1rem 3rem 1rem;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      background: rgba(0, 255, 135, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 255, 135, 0.3);
+      margin-bottom: 1.2rem;
+      letter-spacing: 1px;
+    }
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #ffffff, #a5f3fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-p {
+      color: var(--muted);
+      font-size: 1.15rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    /* Showcase Grid */
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    .section-sub {
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    .showcase-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .showcase-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-blue);
+    }
+    .showcase-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+    .showcase-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.6rem;
+      color: #fff;
+    }
+    .showcase-card p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin-bottom: 1.2rem;
+    }
+    .showcase-link {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent-green);
+      text-decoration: none;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .showcase-link:hover { text-decoration: underline; }
+
+    /* Pricing Tiers */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.8rem;
+      margin-bottom: 4rem;
+    }
+    .tier-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .tier-featured {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 25px rgba(0, 255, 135, 0.1);
+    }
+    .featured-badge {
+      position: absolute;
+      top: -12px;
+      right: 20px;
+      background: var(--accent-green);
+      color: #05070a;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .tier-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .tier-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+      min-height: 40px;
+      margin-bottom: 1.5rem;
+    }
+    .tier-price {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      font-family: var(--font-mono);
+      margin-bottom: 0.2rem;
+    }
+    .tier-subprice {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .tier-features {
+      list-style: none;
+      margin-bottom: 2rem;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+    .tier-features li {
+      margin-bottom: 0.7rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .tier-features li::before {
+      content: '✓';
+      color: var(--accent-green);
+      font-weight: bold;
+    }
+    .btn-tier {
+      width: 100%;
+      text-align: center;
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-tier-outline {
+      background: #181d2c;
+      color: #fff;
+      border: 1px solid var(--card-border);
+    }
+    .btn-tier-outline:hover { background: #22293e; }
+    .btn-tier-solid {
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+      color: #05070a;
+    }
+    .btn-tier-solid:hover { opacity: 0.95; }
+
+    /* Booking & Calendar Section */
+    .booking-section {
+      background: linear-gradient(180deg, #131726 0%, #0d101a 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 3rem 2rem;
+      margin-bottom: 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    @media (max-width: 850px) {
+      .booking-section { grid-template-columns: 1fr; }
+    }
+    .booking-info h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      line-height: 1.25;
+    }
+    .booking-info p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .booking-points {
+      list-style: none;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      margin-bottom: 1.5rem;
+    }
+    .booking-points li {
+      margin-bottom: 0.6rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .booking-points li span { color: var(--accent-green); }
+
+    /* Form & Cal */
+    .form-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.8rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      background: #090b12;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 0.65rem 0.8rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+    .btn-submit-booking {
+      width: 100%;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+      color: #05070a;
+      border: none;
+      padding: 0.85rem;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="/" class="logo">
+      <span>⚡</span> RNGMarketDriven
+    </a>
+    <div class="nav-links">
+      <a href="/">Inicio</a>
+      <a href="/#ecosistema">Juegos</a>
+      <a href="/prode-bursatil/">Prode Merval</a>
+      <a href="https://cryptodromo.com/live" target="_blank">Cryptodromo Live ↗</a>
+      <a href="#agendar" class="btn-cta">Agendar Charla</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    
+    <!-- Hero -->
+    <section class="hero">
+      <div class="badge">Infraestructura iGaming B2B &bull; White-Label</div>
+      <h1>Llevá la Entropía Bursátil a tu Casino o Plataforma</h1>
+      <p class="hero-p">
+        Convertimos la volatilidad de los mercados globales (Binance, NYSE, NASDAQ, BYMA) en juegos de alta conversión, retención y transparencia matemática Provably Fair.
+      </p>
+    </section>
+
+    <!-- Showcase Section -->
+    <section>
+      <h2 class="section-title">Casos de Éxito y Ecosistema en Producción</h2>
+      <p class="section-sub">Explorá los verticales de entretenimiento impulsados por nuestro protocolo de aleatoriedad financiera.</p>
+
+      <div class="showcase-grid">
+        <!-- 1. Cryptodromo -->
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Vertical Hípica &bull; Carreras Cripto</div>
+            <h3>Cryptódromo Live</h3>
+            <p>Hipódromo virtual 24/7 donde 12 caballos representan los activos más líquidos ($BTC, $ETH, $SOL). Aceleración y potencia moduladas por la variación de mercado en tiempo real.</p>
+          </div>
+          <a href="https://cryptodromo.com/live" target="_blank" class="showcase-link">Ver Hipódromo en Vivo &rarr;</a>
+        </div>
+
+        <!-- 2. Crypto Rocket Crash -->
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Vertical Fast-Gaming &bull; Crash</div>
+            <h3>Crypto Rocket Crash</h3>
+            <p>Multiplicador exponencial continuo alimentado por velas de 1 segundo de BTC y ETH. Liquidación antes del crash point calculado mediante semilla SHA-256 auditada.</p>
+          </div>
+          <a href="/#sandbox" class="showcase-link">Probar Simulador &rarr;</a>
+        </div>
+
+        <!-- 3. Wall Street Slots -->
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Vertical Casino Clásico &bull; Slots</div>
+            <h3>Wall Street 5-Reel Machine</h3>
+            <p>Tragamonedas de 5 rodillos indexada a activos bursátiles ($NVDA, $BTC, $YPF, $AAPL, $TSLA). Si la rueda del día cierra alcista, se activa el multiplicador SuperBull.</p>
+          </div>
+          <a href="/#sandbox" class="showcase-link">Girar Carretes &rarr;</a>
+        </div>
+
+        <!-- 4. Prode Bursatil -->
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Vertical Predicción &bull; BYMA / Merval</div>
+            <h3>Prode Bursátil Argentino</h3>
+            <p>Boleta de 13 pronósticos diarios/semanales (Verde/Neutro/Rojo y Duelos de Activos). Ingesta automática a las 17:00 hs ART, pozo en USDC y crónica periodística.</p>
+          </div>
+          <a href="/prode-bursatil/" class="showcase-link">Jugar Prode Merval &rarr;</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Tiers -->
+    <section id="precios">
+      <h2 class="section-title">Planes y Tiers de Integración</h2>
+      <p class="section-sub">Modelos flexibles diseñados para startups de predicción o grandes operadores de apuestas.</p>
+
+      <div class="pricing-grid">
+        <!-- Tier 1 -->
+        <div class="tier-card">
+          <div>
+            <div class="tier-name">Seed API (Starter)</div>
+            <div class="tier-desc">Para casinos o casas de apuestas con frontend propio que buscan semillas financieras inmanipulables.</div>
+            <div class="tier-price">$2,500 <span style="font-size:1rem; color:var(--muted);">USDC</span></div>
+            <div class="tier-subprice">$499/mes recurrente + 1.5% GGR</div>
+            <ul class="tier-features">
+              <li>WebSockets & REST feed (Binance, NYSE, NASDAQ, BYMA)</li>
+              <li>Generación de semillas SHA-256 cada 1 segundo</li>
+              <li>Documentación OpenAPI y SDKs (JS / Python / Go)</li>
+              <li>Soporte técnico por canal dedicado</li>
+              <li>Setup e integración en 48 - 72 horas</li>
+            </ul>
+          </div>
+          <a href="#agendar" class="btn-tier btn-tier-outline">Elegir Seed API</a>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="tier-card tier-featured">
+          <div class="featured-badge">Más Popular</div>
+          <div>
+            <div class="tier-name">White-Label Turnkey</div>
+            <div class="tier-desc">Sub-casino completo llave en mano con los 4 juegos listos para operar bajo tu propia marca y dominio.</div>
+            <div class="tier-price">$7,500 <span style="font-size:1rem; color:var(--muted);">USDC</span></div>
+            <div class="tier-subprice">$1,200/mes recurrente + 4% GGR</div>
+            <ul class="tier-features">
+              <li>Los 4 juegos listos (Cryptodromo, Slots, Crash, Prode)</li>
+              <li>Frontend personalizado con tu logo y dominio</li>
+              <li>Pasarela de cobros y retiros en USDC/USDT on-chain</li>
+              <li>Panel Backoffice de métricas, margen y retención</li>
+              <li>Lanzamiento productivo en 7 a 10 días hábiles</li>
+            </ul>
+          </div>
+          <a href="#agendar" class="btn-tier btn-tier-solid">Elegir White-Label</a>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="tier-card">
+          <div>
+            <div class="tier-name">Enterprise Custom</div>
+            <div class="tier-desc">Desarrollo de mecánicas propietarias, nodos dedicados de auditoría y soporte regulatorio integral.</div>
+            <div class="tier-price">A Medida</div>
+            <div class="tier-subprice">Revenue share escalonado (2% a 3% GGR)</div>
+            <ul class="tier-features">
+              <li>Desarrollo de mecánicas y juegos a medida exclusiva</li>
+              <li>Nodos dedicados de entropía en tu propia VPC</li>
+              <li>SLA 99.99% con latencia sub-15ms garantizada</li>
+              <li>Certificación y auditoría para licencias de juego (Curacao, Anjouan, Malta)</li>
+              <li>Gerente técnico de cuenta 24/7</li>
+            </ul>
+          </div>
+          <a href="#agendar" class="btn-tier btn-tier-outline">Consultar Enterprise</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Agendar Charla Section -->
+    <section class="booking-section" id="agendar">
+      <div class="booking-info">
+        <div class="badge">Conversación de 15 Minutos</div>
+        <h2>Hablemos sobre tu proyecto y arquitectura</h2>
+        <p>
+          No te mostramos una demo genérica en video. Nos conectamos para analizar la viabilidad técnica, el modelo de negocio y cómo integrar la aleatoriedad bursátil en tu plataforma en días.
+        </p>
+        <ul class="booking-points">
+          <li><span>✓</span> <strong>Arquitectura Técnica:</strong> Evaluación de latencia, feeds y contratos inteligentes.</li>
+          <li><span>✓</span> <strong>Estimación Financiera:</strong> Simulación de volumen y porcentaje de revenue-share.</li>
+          <li><span>✓</span> <strong>Implementación Rápida:</strong> Plan de despliegue para salir a producción en 1 semana.</li>
+        </ul>
+        <div style="font-size:0.85rem; color:var(--muted);">
+          ¿Preferís chat directo? Escribinos a <strong style="color:#fff;">api@rngmarketdriven.com</strong> o contactanos por Telegram.
+        </div>
+      </div>
+
+      <!-- Booking Form -->
+      <div class="form-box">
+        <h3 style="font-size:1.2rem; margin-bottom:1rem; color:#fff;">Agendar Charla Estratégica</h3>
+        <form action="https://formspree.io/f/xblywazr" method="POST" id="bookingForm" onsubmit="handleBooking(event)">
+          <!-- Hidden destination fallback -->
+          <input type="hidden" name="_to" value="api@rngmarketdriven.com">
+          <input type="hidden" name="_subject" value="Nuevo Agendamiento de Charla B2B - RNGMarketDriven">
+
+          <div class="form-group">
+            <label>NOMBRE Y APELLIDO *</label>
+            <input type="text" name="name" required placeholder="Ej. Alejandro Pérez">
+          </div>
+          <div class="form-group">
+            <label>CORREO ELECTRÓNICO *</label>
+            <input type="email" name="email" required placeholder="nombre@empresa.com">
+          </div>
+          <div class="form-group">
+            <label>EMPRESA / PROYECTO</label>
+            <input type="text" name="company" placeholder="Casino Online, Exchange, Fondo...">
+          </div>
+          <div class="form-group">
+            <label>INTERÉS PRINCIPAL</label>
+            <select name="plan_interest">
+              <option value="White-Label Turnkey (Juegos Completos)">White-Label Turnkey (Juegos Completos)</option>
+              <option value="Seed API (Solo Feeds & Entropía)">Seed API (Solo Feeds & Entropía)</option>
+              <option value="Enterprise Custom (Mecánica a Medida)">Enterprise Custom (Mecánica a Medida)</option>
+              <option value="Integración Cryptódromo / Prode">Integración Cryptódromo / Prode</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>FECHA Y HORA PREFERIDA</label>
+            <input type="datetime-local" name="preferred_time" required>
+          </div>
+          <div class="form-group">
+            <label>NOTAS O PREGUNTAS (OPCIONAL)</label>
+            <textarea name="notes" rows="2" placeholder="Detalles de tu volumen o infraestructura actual..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit-booking" id="btn-submit-txt">Confirmar y Agendar Llamada</button>
+        </form>
+        <div id="booking-msg" style="display:none; margin-top:1rem; padding:0.8rem; border-radius:6px; background:rgba(0,255,135,0.1); border:1px solid var(--accent-green); color:var(--accent-green); font-size:0.85rem; text-align:center;">
+          ✓ ¡Solicitud recibida! Te contactaremos al correo para coordinar el enlace de Google Meet.
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    &copy; 2026 RNGMarketDriven &bull; Infraestructura B2B de Entropía Bursátil y Provably Fair &bull; api@rngmarketdriven.com
+  </footer>
+
+  <script>
+    function handleBooking(e) {
+      e.preventDefault();
+      const form = document.getElementById('bookingForm');
+      const btn = document.getElementById('btn-submit-txt');
+      btn.innerText = 'PROCESANDO...';
+      btn.disabled = true;
+
+      const data = new FormData(form);
+
+      // Usamos el endpoint para notificar al email corporativo
+      fetch("https://formspree.io/f/xblywazr", {
+        method: "POST",
+        body: data,
+        headers: {
+          'Accept': 'application/json'
+        }
+      }).then(response => {
+        form.style.display = 'none';
+        document.getElementById('booking-msg').style.display = 'block';
+      }).catch(error => {
+        // Fallback: abrir cliente de correo directamente con los datos precargados
+        const name = data.get('name');
+        const email = data.get('email');
+        const plan = data.get('plan_interest');
+        const time = data.get('preferred_time');
+        const notes = data.get('notes');
+        const subject = encodeURIComponent("Agendamiento de Charla B2B - " + name);
+        const body = encodeURIComponent(`Hola,\n\nQuisiera agendar una charla estratégica para RNGMarketDriven:\n\n- Nombre: ${name}\n- Email: ${email}\n- Interés: ${plan}\n- Horario preferido: ${time}\n- Notas: ${notes}\n\nSaludos.`);
+        window.location.href = `mailto:api@rngmarketdriven.com?subject=${subject}&body=${body}`;
+        form.style.display = 'none';
+        document.getElementById('booking-msg').style.display = 'block';
+      });
+    }
+  </script>
+</body>
+</html>
