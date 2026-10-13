@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RNGMarketDriven.com | Next-Gen Provably Fair Engine</title>
   <meta name="description" content="Infraestructura iGaming y FinTech B2B que convierte la volatilidad de los mercados globales en aleatoriedad Provably Fair auditada e inmanipulable.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
   <style>
     :root {
       --bg: #0a0a0f;
@@ -523,9 +525,62 @@
       text-align: center;
       font-family: var(--font-mono);
     }
+
+    /* Modal de Login */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-card {
+      background: #111322;
+      border: 1px solid #282e4e;
+      box-shadow: 0 0 40px rgba(0, 210, 255, 0.2);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem; right: 1.2rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Modal de Autenticación Gmail / Google -->
+  <div id="login-modal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+      <div style="font-size:2.5rem; margin-bottom:0.5rem;">🔐</div>
+      <h3 style="color:#fff; font-size:1.4rem; margin-bottom:0.4rem;">Acceso RNGMarketDriven</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.8rem;">
+        Iniciá sesión con tu cuenta de Gmail / Google para sincronizar tus créditos, partidas y genomas de CryptoMochi.
+      </p>
+
+      <form onsubmit="handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:0.8rem;">
+        <input type="email" id="login-email-input" placeholder="tu.correo@gmail.com" required style="background:#0a0b12; border:1px solid #232742; color:#fff; padding:0.75rem 1rem; border-radius:6px; font-family:var(--font-mono); font-size:0.9rem;">
+        <input type="text" id="login-name-input" placeholder="Nombre de Jugador / Trader" required style="background:#0a0b12; border:1px solid #232742; color:#fff; padding:0.75rem 1rem; border-radius:6px; font-family:var(--font-mono); font-size:0.9rem;">
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.8rem; margin-top:0.4rem;">
+          Conectar con Google / Gmail
+        </button>
+      </form>
+      <div id="login-status-msg" style="font-family:var(--font-mono); font-size:0.8rem; color:var(--neon-green); margin-top:1rem;"></div>
+    </div>
+  </div>
 
   <!-- Header -->
   <header class="site-header">
@@ -535,6 +590,7 @@
       </a>
       <nav class="nav-links">
         <a href="#motor">El Motor</a>
+        <a href="/lava-lab/" style="color:var(--neon-green); font-weight:bold;">🔥 Lava Lab</a>
         <a href="#ecosistema">Ecosistema</a>
         <a href="/prode-bursatil/">Prode Merval</a>
         <a href="https://cryptodromo.com/live" target="_blank">Cryptodromo Live ↗</a>
@@ -555,8 +611,9 @@
             Convertimos la volatilidad de los mercados financieros globales (acciones, criptomonedas e índices) en aleatoriedad inmanipulable, auditable y transparente para juegos de azar y predicción institucional.
           </p>
           <div class="cta-group">
-            <a href="/soluciones/#agendar" class="btn-primary" style="background:linear-gradient(90deg, var(--green-neon), var(--cyan-neon)); color:#05070a; font-weight:800;">📅 Agendar Charla Estratégica</a>
-            <a href="/soluciones/" class="btn-secondary" style="border-color:var(--cyan-neon); color:var(--cyan-neon);">Ver Soluciones B2B & Precios</a>
+            <a href="/lava-lab/" class="btn-primary" style="background:linear-gradient(90deg, #ff007f, #60efff); color:#fff; font-weight:800;">🔥 Probar Lava Market Lab</a>
+            <a href="/soluciones/#agendar" class="btn-primary" style="background:linear-gradient(90deg, var(--green-neon), var(--cyan-neon)); color:#05070a; font-weight:800;">📅 Agendar Charla B2B</a>
+            <a href="/soluciones/" class="btn-secondary" style="border-color:var(--cyan-neon); color:var(--cyan-neon);">Ver Soluciones & Precios</a>
           </div>
         </div>
 
@@ -639,9 +696,9 @@
           <div>
             <span class="sat-tag">SALÓN 1 &bull; CRYPTO RUSH &bull; EN PRODUCCIÓN</span>
             <h3>Cryptódromo Live</h3>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Hipódromo virtual de carreras y juegos de multiplicador exponencial alimentados por ticks de velas de 1 segundo de activos cripto.</p>
-            <div style="margin-top:1rem;">
-              <a href="https://cryptodromo.com/live" target="_blank" style="display:inline-block; background:rgba(96, 239, 255, 0.15); border:1px solid var(--cyan-neon); color:var(--cyan-neon); padding:0.4rem 0.9rem; border-radius:6px; font-weight:bold; font-size:0.8rem; text-decoration:none;">VER EN VIVO (CRYPTODROMO.COM) ↗</a>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Hipódromo virtual de carreras en vivo 24/7 y juegos de multiplicador exponencial alimentados por ticks de velas cripto.</p>
+            <div style="margin-top:0.8rem;">
+              <a href="https://cryptodromo.com/live" target="_blank" style="display:inline-block; background:rgba(96, 239, 255, 0.15); border:1px solid var(--cyan-neon); color:var(--cyan-neon); padding:0.35rem 0.8rem; border-radius:6px; font-weight:bold; font-size:0.8rem; text-decoration:none;">VER EN VIVO (CRYPTODROMO.COM) ↗</a>
             </div>
           </div>
           <button onclick="switchGame('crash')" class="btn-secondary" style="font-size:0.85rem; padding:0.4rem 0.8rem; width:fit-content; margin-top:1rem;">Probar Crash</button>
@@ -667,14 +724,26 @@
 
         <div class="satellite-card">
           <div>
-            <span class="sat-tag">PREDICCIÓN SOCIAL • JUEGO 4</span>
+            <span class="sat-tag">PREDICCIÓN SOCIAL &bull; JUEGO 4</span>
             <h3>Financial Prode (BYMA / Merval)</h3>
             <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Boleta de 13 pronósticos diarios/semanales (Verde/Neutro/Rojo y Duelos de Activos). Cierre automatizado a las 17:00 hs ART, pozo USDC y crónica periodística.</p>
-            <div style="margin-top:1rem;">
-              <a href="/prode-bursatil/" style="display:inline-block; background:linear-gradient(90deg, var(--green-neon), var(--cyan-neon)); color:#05070a; padding:0.5rem 1rem; border-radius:6px; font-weight:bold; font-size:0.85rem; text-decoration:none;">JUGAR PRODE BURSÁTIL &rarr;</a>
+            <div style="margin-top:0.8rem;">
+              <a href="/prode-bursatil/" style="display:inline-block; background:linear-gradient(90deg, var(--green-neon), var(--cyan-neon)); color:#05070a; padding:0.4rem 0.9rem; border-radius:6px; font-weight:bold; font-size:0.8rem; text-decoration:none;">JUGAR PRODE BURSÁTIL &rarr;</a>
             </div>
           </div>
           <span style="color:var(--text-muted); font-size:0.8rem; font-family:var(--font-mono); margin-top:1rem;">Q4 2026</span>
+        </div>
+
+        <div class="satellite-card" style="border-color:var(--pink-neon);">
+          <div>
+            <span class="sat-tag" style="color:var(--pink-neon); border-color:var(--pink-neon);">EaaS &bull; VISUALIZADOR CUÁNTICO</span>
+            <h3>Lava Market Lab</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">5 Lámparas de lava interactivas donde las burbujas suben (bull) o bajan (bear) moduladas por variaciones minuto a minuto y auditadas en SHA-256.</p>
+            <div style="margin-top:0.8rem;">
+              <a href="/lava-lab/" style="display:inline-block; background:linear-gradient(90deg, #ff007f, #60efff); color:#fff; padding:0.4rem 0.9rem; border-radius:6px; font-weight:bold; font-size:0.8rem; text-decoration:none;">ENTRAR AL LAVA LAB &rarr;</a>
+            </div>
+          </div>
+          <span style="color:var(--neon-green); font-size:0.8rem; font-family:var(--font-mono); margin-top:1rem;">EN VIVO</span>
         </div>
       </div>
     </section>
@@ -968,12 +1037,6 @@
           <p>Personalización de salones, activos de bolsa locales y reglas de payout para su propia marca.</p>
         </div>
       </div>
-
-      <div style="text-align:center; margin-top:2.5rem;">
-        <a href="/soluciones/" class="btn-primary" style="background:linear-gradient(90deg, var(--green-neon), var(--cyan-neon)); color:#05070a; font-weight:800; padding:0.9rem 2rem; font-size:1rem; text-decoration:none; display:inline-block; border-radius:8px;">
-          VER CATÁLOGO DE SOLUCIONES B2B, TIERS Y PRECIOS &rarr;
-        </a>
-      </div>
     </section>
 
     <!-- CHRONICLE PREVIEW -->
@@ -1253,10 +1316,73 @@
       }, 50);
     }
 
+    // =========================================
+    // 6. GMAIL / USER AUTHENTICATION
+    // =========================================
+    let currentUser = null;
+
+    function openLoginModal() {
+      document.getElementById('login-modal').style.display = 'flex';
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').style.display = 'none';
+    }
+
+    function handleEmailLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email-input').value.trim();
+      const name = document.getElementById('login-name-input').value.trim();
+      const msg = document.getElementById('login-status-msg');
+
+      msg.innerText = 'Autenticando y guardando perfil...';
+
+      fetch('api/auth.php?action=login_google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, name: name, google_id: 'g_' + Date.now() })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          currentUser = data.user;
+          localStorage.setItem('rng_user', JSON.stringify(currentUser));
+          updateAuthUI();
+          msg.innerText = '¡Sesión iniciada con éxito! Balance: $' + currentUser.balance_credits;
+          setTimeout(closeLoginModal, 1200);
+        } else {
+          msg.innerText = 'Error: ' + data.message;
+        }
+      })
+      .catch(() => {
+        // Modo offline / cliente directo si la API no está alcanzable
+        currentUser = { email: email, name: name, balance_credits: 1000.0 };
+        localStorage.setItem('rng_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        msg.innerText = '¡Conectado localmente como ' + name + '!';
+        setTimeout(closeLoginModal, 1000);
+      });
+    }
+
+    function updateAuthUI() {
+      const btn = document.getElementById('auth-nav-btn');
+      if (currentUser) {
+        btn.innerText = '👤 ' + currentUser.name + ' ($' + (currentUser.balance_credits || playerBalance).toFixed(0) + ')';
+        btn.style.background = 'linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 210, 255, 0.2))';
+      }
+    }
+
     // Inicialización al cargar la página
     window.addEventListener('DOMContentLoaded', () => {
       onHourChange(12);
       updateTotalBet();
+      try {
+        const saved = localStorage.getItem('rng_user');
+        if (saved) {
+          currentUser = JSON.parse(saved);
+          updateAuthUI();
+        }
+      } catch (_) {}
     });
   </script>
 </body>

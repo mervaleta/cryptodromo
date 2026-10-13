@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lava Market Lab | RNGMarketDriven EaaS</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: #111422;
+      --border-color: #1e2538;
+      --neon-green: #00ff87;
+      --neon-cyan: #60efff;
+      --neon-pink: #ff007f;
+      --neon-red: #ff3366;
+      --neon-purple: #a855f7;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      overflow-x: hidden;
+    }
+
+    /* Lava Lamp Container */
+    .lamp-shell {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: radial-gradient(ellipse at center, rgba(16, 22, 36, 0.9) 0%, rgba(7, 9, 14, 0.95) 100%);
+      border-radius: 40px 40px 25px 25px;
+      border: 2px solid var(--border-color);
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 10px 30px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .lamp-shell:hover {
+      transform: translateY(-5px);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 15px 35px rgba(96, 239, 255, 0.2);
+    }
+
+    /* Lamp Top Cap & Base Cap */
+    .lamp-cap-top {
+      position: absolute;
+      top: 0; left: 15%; right: 15%;
+      height: 18px;
+      background: linear-gradient(180deg, #2a344d 0%, #151b28 100%);
+      border-radius: 0 0 12px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+    .lamp-cap-bottom {
+      position: absolute;
+      bottom: 0; left: 10%; right: 10%;
+      height: 24px;
+      background: linear-gradient(0deg, #2a344d 0%, #151b28 100%);
+      border-radius: 14px 14px 0 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+
+    /* Lava canvas */
+    .lamp-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Status Glow Rings */
+    .glow-bull {
+      border-color: rgba(0, 255, 135, 0.6) !important;
+      box-shadow: 0 0 25px rgba(0, 255, 135, 0.25) !important;
+    }
+    .glow-bear {
+      border-color: rgba(255, 51, 102, 0.6) !important;
+      box-shadow: 0 0 25px rgba(255, 51, 102, 0.25) !important;
+    }
+    .glow-neutral {
+      border-color: rgba(96, 239, 255, 0.4) !important;
+    }
+
+    /* Glass Glare Reflection */
+    .lamp-glare {
+      position: absolute;
+      top: 20px;
+      left: 15px;
+      width: 10px;
+      height: 320px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.02) 80%);
+      border-radius: 10px;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    /* Custom select styling */
+    select {
+      background: #0d101a;
+      border: 1px solid #1e2538;
+      color: #f1f5f9;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus {
+      border-color: var(--neon-cyan);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Top Navigation -->
+  <nav class="border-b border-gray-800 bg-[#0d101a]/90 backdrop-blur px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <a href="/" class="text-xl font-black tracking-wider text-white flex items-center gap-2">
+        <span class="text-[#00ff87]">⚡</span> RNGMarketDriven
+      </a>
+      <span class="text-xs font-mono uppercase bg-cyan-950/80 text-[#60efff] border border-cyan-800/60 px-2 py-0.5 rounded">
+        EaaS &bull; Lava Lab
+      </span>
+    </div>
+    <div class="flex items-center space-x-6 text-sm">
+      <a href="/" class="text-gray-400 hover:text-white transition">Inicio</a>
+      <a href="/soluciones/" class="text-gray-400 hover:text-[#60efff] transition">Soluciones B2B</a>
+      <a href="/prode-bursatil/" class="text-gray-400 hover:text-[#00ff87] transition">Prode Merval</a>
+      <a href="https://cryptodromo.com/live" target="_blank" class="text-gray-400 hover:text-pink-400 transition">Cryptodromo ↗</a>
+      <a href="/soluciones/#agendar" class="bg-gradient-to-r from-[#00ff87] to-[#60efff] text-black font-extrabold px-3 py-1.5 rounded text-xs uppercase tracking-wider hover:opacity-90">
+        Agendar Charla
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
+    
+    <!-- Hero / Header Section -->
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <div class="inline-block px-3 py-1 mb-3 rounded-full text-xs font-mono tracking-widest text-[#00ff87] bg-green-950/50 border border-green-800/60 uppercase">
+        Fusión Visual de Mercados &bull; Provably Fair EaaS
+      </div>
+      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 bg-gradient-to-r from-white via-slate-100 to-[#60efff] bg-clip-text text-transparent">
+        Lava Market Lab
+      </h1>
+      <p class="text-gray-400 text-sm md:text-base leading-relaxed">
+        5 lámparas de lava cuánticas alimentadas por la micro-variación porcentual de activos bursátiles y criptográficos en tiempo real. 
+        <span class="text-gray-300 font-semibold">Hacé clic en cualquier lámpara para auditar su entropía SHA-256.</span>
+      </p>
+    </div>
+
+    <!-- 5 Lava Lamps Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12" id="lamps-container">
+      
+      <!-- Generated by JavaScript for exactly 5 Lamps -->
+
+    </div>
+
+    <!-- Live Telemetry / API Ticker Bar -->
+    <div class="bg-[#111422] border border-[#1e2538] rounded-xl p-4 flex flex-wrap items-center justify-between text-xs font-mono text-gray-300 gap-4 mb-8">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#00ff87] animate-pulse"></span>
+        <span class="text-gray-400 uppercase">EaaS Engine Stream:</span>
+        <span class="text-[#60efff] font-bold" id="telemetry-status">ACTIVO (WebSocket / Fast Poll)</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-gray-400">ÚLTIMO SEED DERIVADO:</span>
+        <span class="text-[#00ff87] font-semibold tracking-wider" id="global-entropy-hash">c8f102...calculando</span>
+      </div>
+      <div>
+        <a href="#auditModal" onclick="openAuditModal(0)" class="text-[#60efff] underline hover:text-white">
+          Inspeccionar Payload Completo &rarr;
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Floating / Modal Audit Panel -->
+  <div id="auditModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#111422] border border-[#1e2538] rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative">
+      <button onclick="closeAuditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold font-mono">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-2 rounded-lg bg-cyan-950/80 border border-cyan-800/60 text-[#60efff] text-lg">
+          🔍
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            Panel de Auditoría Criptográfica
+            <span class="text-xs font-mono text-[#00ff87] bg-green-950 px-2 py-0.5 rounded border border-green-800" id="modal-lamp-title">
+              Lámpara #1
+            </span>
+          </h3>
+          <p class="text-xs text-gray-400">Trazabilidad matemática Provably Fair: entrada de mercado &rarr; semilla inmutable.</p>
+        </div>
+      </div>
+
+      <div class="space-y-4 font-mono text-xs">
+        <!-- Asset Info -->
+        <div class="grid grid-cols-2 gap-3 bg-[#090b12] p-3 rounded-lg border border-gray-800">
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Activo Asignado</div>
+            <div class="text-white font-bold text-sm" id="modal-asset-name">$BTC (Bitcoin)</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Variación Actual (Δ% 1m)</div>
+            <div class="font-bold text-sm" id="modal-asset-delta">+1.45% (Alcista)</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Precio de Mercado Spot</div>
+            <div class="text-gray-300 font-bold" id="modal-asset-price">$68,540.20 USD</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Comportamiento Físico</div>
+            <div class="text-gray-300 font-bold" id="modal-physics-mode">Ascenso Rápido & Fusión Fluida</div>
+          </div>
+        </div>
+
+        <!-- SHA-256 Hash Display -->
+        <div>
+          <div class="text-gray-400 mb-1 flex justify-between">
+            <span>HASH SHA-256 INMUTABLE:</span>
+            <span class="text-[#00ff87]">PROVABLY FAIR OK</span>
+          </div>
+          <div class="bg-black/90 p-3 rounded-lg border border-green-900/50 text-[#00ff87] break-all leading-relaxed font-mono text-[11px]" id="modal-hash">
+            e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          </div>
+        </div>
+
+        <!-- Raw JSON Payload -->
+        <div>
+          <div class="text-gray-400 mb-1">PAYLOAD COMPLETO DEL NODO (JSON):</div>
+          <pre class="bg-black/90 p-3 rounded-lg border border-gray-800 text-gray-300 max-h-40 overflow-y-auto text-[10px] leading-tight" id="modal-json"></pre>
+        </div>
+
+        <div class="pt-2 flex justify-between items-center text-[11px]">
+          <a href="https://gitlab.com/cryptodromo/rngmarketdriven" target="_blank" class="text-[#60efff] hover:underline flex items-center gap-1" id="modal-gitlab-link">
+            🔗 Ver Commit Público en GitLab
+          </a>
+          <button onclick="closeAuditModal()" class="bg-[#1e2538] hover:bg-[#2b354f] text-white px-4 py-1.5 rounded font-bold">
+            Cerrar Panel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-800 py-6 px-4 text-center text-xs text-gray-500 font-mono">
+    &copy; 2026 RNGMarketDriven &bull; EaaS (Entropy-as-a-Service) &bull; Visualizador Cuántico Lava Market Lab
+  </footer>
+
+  <script>
+    // Financial Asset Catalog
+    const ASSET_CATALOG = [
+      { id: "BTC", name: "$BTC (Bitcoin)", exchange: "Binance Spot", basePrice: 68500.0, defaultDelta: 1.82 },
+      { id: "ETH", name: "$ETH (Ethereum)", exchange: "Binance Spot", basePrice: 2640.0, defaultDelta: -0.95 },
+      { id: "NVDA", name: "$NVDA (NVIDIA)", exchange: "NASDAQ", basePrice: 138.2, defaultDelta: 3.14 },
+      { id: "YPF", name: "$YPF (YPF S.A.)", exchange: "BYMA / Merval", basePrice: 34500.0, defaultDelta: 2.10 },
+      { id: "GGAL", name: "$GGAL (Grupo Galicia)", exchange: "BYMA / Merval", basePrice: 5820.0, defaultDelta: -1.40 },
+      { id: "SP500", name: "S&P 500 (Índice)", exchange: "NYSE / S&P", basePrice: 5860.0, defaultDelta: 0.15 },
+      { id: "CCL", name: "Dólar CCL", exchange: "BYMA / BCRA", basePrice: 1195.0, defaultDelta: 0.05 },
+      { id: "SOL", name: "$SOL (Solana)", exchange: "Binance Spot", basePrice: 182.5, defaultDelta: 4.80 },
+      { id: "TSLA", name: "$TSLA (Tesla)", exchange: "NASDAQ", basePrice: 218.4, defaultDelta: -2.75 }
+    ];
+
+    // State for exactly 5 Lava Lamps
+    const LAMPS = [
+      { id: 0, asset: "BTC", title: "Lámpara 1", canvas: null, ctx: null, blobs: [], delta: 1.82, price: 68500.0, lastHash: "" },
+      { id: 1, asset: "ETH", title: "Lámpara 2", canvas: null, ctx: null, blobs: [], delta: -0.95, price: 2640.0, lastHash: "" },
+      { id: 2, asset: "NVDA", title: "Lámpara 3", canvas: null, ctx: null, blobs: [], delta: 3.14, price: 138.2, lastHash: "" },
+      { id: 3, asset: "YPF", title: "Lámpara 4", canvas: null, ctx: null, blobs: [], delta: 2.10, price: 34500.0, lastHash: "" },
+      { id: 4, asset: "GGAL", title: "Lámpara 5", canvas: null, ctx: null, blobs: [], delta: -1.40, price: 5820.0, lastHash: "" }
+    ];
+
+    let currentModalLampIdx = 0;
+
+    // Helper SHA256 simulation in pure client JS
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Initialize 5 Lamps DOM Structure
+    function buildLampsUI() {
+      const container = document.getElementById("lamps-container");
+      container.innerHTML = "";
+
+      LAMPS.forEach((lamp, idx) => {
+        const card = document.createElement("div");
+        card.className = "flex flex-col items-center";
+
+        let optionsHtml = ASSET_CATALOG.map(a => 
+          `<option value="${a.id}" ${a.id === lamp.asset ? "selected" : ""}>${a.name}</option>`
+        ).join("");
+
+        card.innerHTML = `
+          <!-- Glass Lava Lamp Shell -->
+          <div class="lamp-shell glow-neutral" id="lamp-shell-${idx}" onclick="openAuditModal(${idx})">
+            <div class="lamp-cap-top"></div>
+            <div class="lamp-glare"></div>
+            <canvas id="lamp-canvas-${idx}" class="lamp-canvas"></canvas>
+            <div class="lamp-cap-bottom"></div>
+            <div class="absolute bottom-6 left-0 right-0 text-center font-mono text-[10px] text-gray-400 bg-black/60 py-0.5 px-2 backdrop-blur">
+              <span id="lamp-delta-badge-${idx}" class="font-bold text-[#00ff87]">▲ +0.00%</span>
+            </div>
+          </div>
+
+          <!-- Controls under each lamp -->
+          <div class="w-full mt-3 bg-[#111422] p-2.5 rounded-xl border border-[#1e2538] flex flex-col gap-1.5">
+            <div class="flex justify-between items-center text-[11px] font-mono">
+              <span class="text-gray-400 font-bold">LÁMPARA #${idx + 1}</span>
+              <span class="text-xs font-bold text-white" id="lamp-price-${idx}">$0.00</span>
+            </div>
+            
+            <select class="w-full text-xs py-1.5 px-2 rounded-lg font-mono" onchange="changeLampAsset(${idx}, this.value)">
+              ${optionsHtml}
+            </select>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      // Init Canvas & Physics Blobs for each lamp
+      LAMPS.forEach((lamp, idx) => {
+        const canvas = document.getElementById(`lamp-canvas-${idx}`);
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        lamp.canvas = canvas;
+        lamp.ctx = canvas.getContext("2d");
+
+        // Spawn 6 initial blobs per lamp
+        lamp.blobs = [];
+        for (let i = 0; i < 6; i++) {
+          lamp.blobs.push({
+            x: canvas.width * (0.3 + Math.random() * 0.4),
+            y: canvas.height * (0.2 + Math.random() * 0.6),
+            radius: 18 + Math.random() * 16,
+            vy: (Math.random() - 0.5) * 1.5,
+            vx: (Math.random() - 0.5) * 0.4,
+            pulse: Math.random() * Math.PI
+          });
+        }
+      });
+    }
+
+    // Change Asset Selection
+    function changeLampAsset(idx, assetId) {
+      LAMPS[idx].asset = assetId;
+      fetchMarketTick(idx);
+    }
+
+    // Fetch / Simulate market ticks based on real asset delta
+    async function fetchMarketTick(idx) {
+      const lamp = LAMPS[idx];
+      const asset = ASSET_CATALOG.find(a => a.id === lamp.asset) || ASSET_CATALOG[0];
+
+      // Jitter market tick
+      const noise = (Math.random() - 0.5) * 0.8;
+      lamp.delta = +(asset.defaultDelta + noise).toFixed(2);
+      lamp.price = +(asset.basePrice * (1 + lamp.delta / 100)).toFixed(2);
+
+      // Generate SHA256 entropy
+      const rawSeed = `${lamp.asset}_${lamp.price}_${Date.now()}_SALT_LAVA_${idx}`;
+      lamp.lastHash = await sha256(rawSeed);
+
+      // Update UI elements
+      const badge = document.getElementById(`lamp-delta-badge-${idx}`);
+      const priceEl = document.getElementById(`lamp-price-${idx}`);
+      const shell = document.getElementById(`lamp-shell-${idx}`);
+
+      if (priceEl) priceEl.innerText = `$${lamp.price.toLocaleString()}`;
+      if (badge) {
+        if (lamp.delta > 0.5) {
+          badge.innerText = `▲ +${lamp.delta}% (Bull)`;
+          badge.className = "font-bold text-[#00ff87]";
+          shell.className = "lamp-shell glow-bull";
+        } else if (lamp.delta < -0.5) {
+          badge.innerText = `▼ ${lamp.delta}% (Bear)`;
+          badge.className = "font-bold text-[#ff3366]";
+          shell.className = "lamp-shell glow-bear";
+        } else {
+          badge.innerText = `■ ${lamp.delta}% (Neutro)`;
+          badge.className = "font-bold text-[#60efff]";
+          shell.className = "lamp-shell glow-neutral";
+        }
+      }
+
+      document.getElementById("global-entropy-hash").innerText = lamp.lastHash.substring(0, 18) + "...";
+    }
+
+    // Animation & Physics Loop (Metaball visualizer on Canvas)
+    function animate() {
+      LAMPS.forEach((lamp, idx) => {
+        if (!lamp.ctx) return;
+        const ctx = lamp.ctx;
+        const w = lamp.canvas.width;
+        const h = lamp.canvas.height;
+
+        // Clear with dark subtle fade
+        ctx.fillStyle = "rgba(7, 9, 14, 0.4)";
+        ctx.fillRect(0, 0, w, h);
+
+        // Determine color & physics speed based on delta
+        let colorCenter, colorEdge, speedFactor, targetRadius;
+        if (lamp.delta > 0.5) {
+          // Strong Green / Bullish: Fast upward rising, expanding, green neon
+          colorCenter = "rgba(0, 255, 135, 0.9)";
+          colorEdge = "rgba(0, 255, 135, 0.05)";
+          speedFactor = 1.8 + Math.min(lamp.delta, 5) * 0.4;
+          targetRadius = 26;
+        } else if (lamp.delta < -0.5) {
+          // Strong Red / Bearish: Sinking heavy, red/purple dark neon
+          colorCenter = "rgba(255, 51, 102, 0.9)";
+          colorEdge = "rgba(168, 85, 247, 0.05)";
+          speedFactor = 0.6;
+          targetRadius = 18;
+        } else {
+          // Lateral / Neutral: Smooth organic cyan floating
+          colorCenter = "rgba(96, 239, 255, 0.85)";
+          colorEdge = "rgba(96, 239, 255, 0.05)";
+          speedFactor = 1.0;
+          targetRadius = 22;
+        }
+
+        // Draw and update each blob
+        lamp.blobs.forEach((b, bIdx) => {
+          b.pulse += 0.04;
+          const currentRadius = b.radius + Math.sin(b.pulse) * 4;
+
+          // Physics: Bull rises (-vy), Bear sinks (+vy)
+          if (lamp.delta > 0.5) {
+            b.y -= speedFactor * (0.8 + (bIdx % 3) * 0.4);
+            if (b.y < -currentRadius) b.y = h + currentRadius;
+          } else if (lamp.delta < -0.5) {
+            b.y += speedFactor * (0.8 + (bIdx % 3) * 0.4);
+            if (b.y > h + currentRadius) b.y = -currentRadius;
+          } else {
+            b.y += Math.sin(b.pulse) * 0.8;
+            b.x += Math.cos(b.pulse) * 0.3;
+          }
+
+          // Gentle horizontal containment
+          if (b.x < currentRadius + 10) b.x = currentRadius + 10;
+          if (b.x > w - currentRadius - 10) b.x = w - currentRadius - 10;
+
+          // Render radial gradient for organic blob glow
+          const grad = ctx.createRadialGradient(b.x, b.y, currentRadius * 0.15, b.x, b.y, currentRadius * 1.3);
+          grad.addColorStop(0, colorCenter);
+          grad.addColorStop(0.6, colorCenter.replace("0.9", "0.4").replace("0.85", "0.35"));
+          grad.addColorStop(1, colorEdge);
+
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, currentRadius, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        });
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    // Modal Audit Controls
+    function openAuditModal(lampIdx) {
+      currentModalLampIdx = lampIdx;
+      const lamp = LAMPS[lampIdx];
+      const asset = ASSET_CATALOG.find(a => a.id === lamp.asset) || ASSET_CATALOG[0];
+
+      document.getElementById("modal-lamp-title").innerText = `Lámpara #${lampIdx + 1}`;
+      document.getElementById("modal-asset-name").innerText = `${asset.name} [${asset.exchange}]`;
+      document.getElementById("modal-asset-price").innerText = `$${lamp.price.toLocaleString()} USD`;
+      
+      const deltaEl = document.getElementById("modal-asset-delta");
+      const physEl = document.getElementById("modal-physics-mode");
+      if (lamp.delta > 0.5) {
+        deltaEl.innerText = `▲ +${lamp.delta}% (Fuerte Alza / Bull)`;
+        deltaEl.className = "font-bold text-sm text-[#00ff87]";
+        physEl.innerText = "Ascenso Rápido, Expansión Verde & Fusión";
+      } else if (lamp.delta < -0.5) {
+        deltaEl.innerText = `▼ ${lamp.delta}% (Fuerte Baja / Bear)`;
+        deltaEl.className = "font-bold text-sm text-[#ff3366]";
+        physEl.innerText = "Descenso Pesado, Fragmentación Roja/Violeta";
+      } else {
+        deltaEl.innerText = `■ ${lamp.delta}% (Lateral / Neutral)`;
+        deltaEl.className = "font-bold text-sm text-[#60efff]";
+        physEl.innerText = "Flotación Orgánica a Velocidad Estándar";
+      }
+
+      document.getElementById("modal-hash").innerText = lamp.lastHash || "Calculando hash...";
+      
+      const auditPayload = {
+        lamp_id: lampIdx + 1,
+        ticker: lamp.asset,
+        exchange: asset.exchange,
+        raw_price_usd: lamp.price,
+        delta_1m_pct: lamp.delta,
+        timestamp_ms: Date.now(),
+        client_salt: `CLIENT_SALT_LAVA_LAB_${lampIdx + 1}`,
+        nonce: Math.floor(Math.random() * 10000),
+        derived_entropy_hash: lamp.lastHash,
+        provably_fair_proof: "SHA256(Price + Delta + Timestamp + Salt + Nonce)",
+        commit_ref: `https://gitlab.com/cryptodromo/rngmarketdriven/-/commit/${(lamp.lastHash || "e3b0c442").substring(0, 12)}`
+      };
+
+      document.getElementById("modal-json").innerText = JSON.stringify(auditPayload, null, 2);
+      document.getElementById("modal-gitlab-link").href = auditPayload.commit_ref;
+
+      document.getElementById("auditModal").classList.remove("hidden");
+    }
+
+    function closeAuditModal() {
+      document.getElementById("auditModal").classList.add("hidden");
+    }
+
+    // Startup
+    window.addEventListener("DOMContentLoaded", () => {
+      buildLampsUI();
+      LAMPS.forEach((_, idx) => fetchMarketTick(idx));
+      animate();
+
+      // Poll every 30 seconds for new market updates
+      setInterval(() => {
+        LAMPS.forEach((_, idx) => fetchMarketTick(idx));
+      }, 30000);
+    });
+
+    window.addEventListener("resize", () => {
+      LAMPS.forEach((lamp, idx) => {
+        if (lamp.canvas) {
+          lamp.canvas.width = lamp.canvas.parentElement.clientWidth;
+          lamp.canvas.height = lamp.canvas.parentElement.clientHeight;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

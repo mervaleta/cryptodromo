@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RNGMarketDriven.com | Next-Gen Provably Fair Engine</title>
   <meta name="description" content="Infraestructura iGaming y FinTech B2B que convierte la volatilidad de los mercados globales en aleatoriedad Provably Fair auditada e inmanipulable.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" href="favicon.ico">
   <style>
     :root {
       --bg: #0a0a0f;
@@ -523,9 +525,62 @@
       text-align: center;
       font-family: var(--font-mono);
     }
+
+    /* Modal de Login */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-card {
+      background: #111322;
+      border: 1px solid #282e4e;
+      box-shadow: 0 0 40px rgba(0, 210, 255, 0.2);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem; right: 1.2rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Modal de Autenticación Gmail / Google -->
+  <div id="login-modal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+      <div style="font-size:2.5rem; margin-bottom:0.5rem;">🔐</div>
+      <h3 style="color:#fff; font-size:1.4rem; margin-bottom:0.4rem;">Acceso RNGMarketDriven</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.8rem;">
+        Iniciá sesión con tu cuenta de Gmail / Google para sincronizar tus créditos, partidas y genomas de CryptoMochi.
+      </p>
+
+      <form onsubmit="handleEmailLogin(event)" style="display:flex; flex-direction:column; gap:0.8rem;">
+        <input type="email" id="login-email-input" placeholder="tu.correo@gmail.com" required style="background:#0a0b12; border:1px solid #232742; color:#fff; padding:0.75rem 1rem; border-radius:6px; font-family:var(--font-mono); font-size:0.9rem;">
+        <input type="text" id="login-name-input" placeholder="Nombre de Jugador / Trader" required style="background:#0a0b12; border:1px solid #232742; color:#fff; padding:0.75rem 1rem; border-radius:6px; font-family:var(--font-mono); font-size:0.9rem;">
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.8rem; margin-top:0.4rem;">
+          Conectar con Google / Gmail
+        </button>
+      </form>
+      <div id="login-status-msg" style="font-family:var(--font-mono); font-size:0.8rem; color:var(--neon-green); margin-top:1rem;"></div>
+    </div>
+  </div>
 
   <!-- Header -->
   <header class="site-header">
@@ -539,6 +594,7 @@
         <a href="#sandbox">Sandbox Interactivo</a>
         <a href="#b2b">Soluciones B2B</a>
         <a href="#cronica">Crónica</a>
+        <button id="auth-nav-btn" onclick="openLoginModal()" class="btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; font-family:var(--font-mono);">🔐 Entrar con Gmail</button>
         <a href="default.php" class="btn-nav">Portal Live</a>
       </nav>
     </div>
@@ -1241,10 +1297,73 @@
       }, 50);
     }
 
+    // =========================================
+    // 6. GMAIL / USER AUTHENTICATION
+    // =========================================
+    let currentUser = null;
+
+    function openLoginModal() {
+      document.getElementById('login-modal').style.display = 'flex';
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').style.display = 'none';
+    }
+
+    function handleEmailLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email-input').value.trim();
+      const name = document.getElementById('login-name-input').value.trim();
+      const msg = document.getElementById('login-status-msg');
+
+      msg.innerText = 'Autenticando y guardando perfil...';
+
+      fetch('api/auth.php?action=login_google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, name: name, google_id: 'g_' + Date.now() })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          currentUser = data.user;
+          localStorage.setItem('rng_user', JSON.stringify(currentUser));
+          updateAuthUI();
+          msg.innerText = '¡Sesión iniciada con éxito! Balance: $' + currentUser.balance_credits;
+          setTimeout(closeLoginModal, 1200);
+        } else {
+          msg.innerText = 'Error: ' + data.message;
+        }
+      })
+      .catch(() => {
+        // Modo offline / cliente directo si la API no está alcanzable
+        currentUser = { email: email, name: name, balance_credits: 1000.0 };
+        localStorage.setItem('rng_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        msg.innerText = '¡Conectado localmente como ' + name + '!';
+        setTimeout(closeLoginModal, 1000);
+      });
+    }
+
+    function updateAuthUI() {
+      const btn = document.getElementById('auth-nav-btn');
+      if (currentUser) {
+        btn.innerText = '👤 ' + currentUser.name + ' ($' + (currentUser.balance_credits || playerBalance).toFixed(0) + ')';
+        btn.style.background = 'linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 210, 255, 0.2))';
+      }
+    }
+
     // Inicialización al cargar la página
     window.addEventListener('DOMContentLoaded', () => {
       onHourChange(12);
       updateTotalBet();
+      try {
+        const saved = localStorage.getItem('rng_user');
+        if (saved) {
+          currentUser = JSON.parse(saved);
+          updateAuthUI();
+        }
+      } catch (_) {}
     });
   </script>
 </body>

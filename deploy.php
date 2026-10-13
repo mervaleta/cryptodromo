@@ -52,6 +52,17 @@ if ($self_content !== false && strlen($self_content) > 200) {
     @file_put_contents(__FILE__, $self_content);
 }
 
+// Also fetch and deploy lava-lab interactive visualizer
+$lava_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/lava-lab/index.html';
+$lava_content = @file_get_contents($lava_github_url, false, $context);
+if ($lava_content !== false && strlen($lava_content) > 500) {
+    if (!is_dir(__DIR__ . '/lava-lab')) {
+        @mkdir(__DIR__ . '/lava-lab', 0755, true);
+    }
+    @file_put_contents(__DIR__ . '/lava-lab/index.html', $lava_content);
+    @file_put_contents(__DIR__ . '/lava.html', $lava_content);
+}
+
 // Also fetch and deploy prode-bursatil sub-site
 $prode_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/prode-bursatil/index.html';
 $prode_content = @file_get_contents($prode_github_url, false, $context);
@@ -61,6 +72,24 @@ if ($prode_content !== false && strlen($prode_content) > 500) {
     }
     @file_put_contents(__DIR__ . '/prode-bursatil/index.html', $prode_content);
     @file_put_contents(__DIR__ . '/prode.html', $prode_content);
+}
+
+// Fetch favicon
+$fav_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/favicon.svg';
+$fav_content = @file_get_contents($fav_url, false, $context);
+if ($fav_content !== false) {
+    @file_put_contents(__DIR__ . '/favicon.svg', $fav_content);
+    @file_put_contents(__DIR__ . '/favicon.ico', $fav_content);
+}
+
+// Fetch api/auth.php
+$auth_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/api/auth.php';
+$auth_content = @file_get_contents($auth_url, false, $context);
+if ($auth_content !== false && strlen($auth_content) > 200) {
+    if (!is_dir(__DIR__ . '/api')) {
+        @mkdir(__DIR__ . '/api', 0755, true);
+    }
+    @file_put_contents(__DIR__ . '/api/auth.php', $auth_content);
 }
 
 header('Content-Type: application/json');
