@@ -1,0 +1,14 @@
+# Template only: NOT installed by this task. All scheduled hours below are UTC.
+# Replace /ABS/GACETA with the isolated application directory OUTSIDE public_html.
+# Verify Python >=3.9 and flock exist on the chosen host first.
+# Both jobs share one lock. Capture is ONE network attempt per UTC day.
+CRON_TZ=UTC
+GAZETTE_SITE_URL=https://mediumvioletred-shrew-934553.hostingersite.com
+# Daily network capture + local publication. Default honest observed-snapshot edition.
+2 0 * * * cd /ABS/GACETA && /usr/bin/flock -n private/gazette.lock /usr/bin/python3 collector.py --state private/state.sqlite --output public --capture --rollover-hour 0 >> private/cron.log 2>&1
+# Frequent LOCAL rendering only: NEVER add --capture here.
+*/5 * * * * cd /ABS/GACETA && /usr/bin/flock -n private/gazette.lock /usr/bin/python3 collector.py --state private/state.sqlite --output public >> private/cron.log 2>&1
+# Replay alternative: add --mode replay --replay-days 1 to BOTH commands above.
+# For 15-minute local publication replace */5 with */15.
+# If the host ignores CRON_TZ, convert these UTC times to its configured timezone.
+# Source capture failures do not retry during the same UTC day (minimal-network policy).

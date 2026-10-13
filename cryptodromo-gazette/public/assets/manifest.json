@@ -1,0 +1,50 @@
+[
+  {
+    "path": "assets/illustration-0.svg",
+    "title": "Caballo de papel",
+    "author": "La Gaceta del Cryptódromo · ilustración original generada localmente",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "original local SVG; no third-party material",
+    "source_url": "",
+    "width": 800,
+    "height": 420,
+    "illustrative": true
+  },
+  {
+    "path": "assets/illustration-1.svg",
+    "title": "Óvalo virtual",
+    "author": "La Gaceta del Cryptódromo · ilustración original generada localmente",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "original local SVG; no third-party material",
+    "source_url": "",
+    "width": 800,
+    "height": 420,
+    "illustrative": true
+  },
+  {
+    "path": "assets/illustration-2.svg",
+    "title": "Casco imaginario",
+    "author": "La Gaceta del Cryptódromo · ilustración original generada localmente",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "original local SVG; no third-party material",
+    "source_url": "",
+    "width": 800,
+    "height": 420,
+    "illustrative": true
+  },
+  {
+    "path": "assets/illustration-3.svg",
+    "title": "Herradura de tinta",
+    "author": "La Gaceta del Cryptódromo · ilustración original generada localmente",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "original local SVG; no third-party material",
+    "source_url": "",
+    "width": 800,
+    "height": 420,
+    "illustrative": true
+  }
+]

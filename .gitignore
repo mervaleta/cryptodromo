@@ -21,3 +21,14 @@ env/
 Thumbs.db
 .idea/
 .vscode/
+
+# local backup artifacts
+cryptodromo-current-backup.bundle
+cryptodromo-current-export/.next/
+cryptodromo-gazette/private/*.sqlite
+market-fixture-v1/private/*.sqlite
+market-fixture-v1/private/*.sql.gz
+market-fixture-v1/runtime/
+market-fixture-v1/*.tar.gz
+market-fixture-v1/tests/*.log
+market-fixture-v1/tests/test-output.txt

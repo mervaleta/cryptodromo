@@ -53,8 +53,8 @@ if ($self_content !== false && strlen($self_content) > 200) {
     @file_put_contents(__FILE__, $self_content);
 }
 
-// Also fetch and deploy CryptoMochi Retro Tamagotchi
-$mochi_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/frontend/mochi/index.html';
+// Also fetch and deploy CryptoMochi Retro Tamagotchi & Portfolio Engine
+$mochi_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/mochi/index.html';
 $mochi_content = @file_get_contents($mochi_github_url, false, $context);
 if ($mochi_content !== false && strlen($mochi_content) > 500) {
     if (!is_dir(__DIR__ . '/mochi')) {

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lava Market Lab (10 Lámparas Cuánticas) | RNGMarketDriven EaaS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: #111422;
+      --border-color: #1e2538;
+      --neon-green: #00ff87;
+      --neon-cyan: #60efff;
+      --neon-pink: #ff007f;
+      --neon-red: #ff3366;
+      --neon-purple: #a855f7;
+      --neon-yellow: #ffd000;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      overflow-x: hidden;
+    }
+
+    /* Lava Lamp Container */
+    .lamp-shell {
+      position: relative;
+      width: 100%;
+      height: 330px;
+      background: radial-gradient(ellipse at center, rgba(16, 22, 36, 0.92) 0%, rgba(7, 9, 14, 0.98) 100%);
+      border-radius: 36px 36px 22px 22px;
+      border: 2px solid var(--border-color);
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.85), 0 8px 25px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .lamp-shell:hover {
+      transform: translateY(-4px);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 12px 30px rgba(96, 239, 255, 0.25);
+    }
+
+    /* Lamp Top Cap & Base Cap */
+    .lamp-cap-top {
+      position: absolute;
+      top: 0; left: 16%; right: 16%;
+      height: 16px;
+      background: linear-gradient(180deg, #2a344d 0%, #151b28 100%);
+      border-radius: 0 0 10px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      z-index: 10;
+    }
+    .lamp-cap-bottom {
+      position: absolute;
+      bottom: 0; left: 12%; right: 12%;
+      height: 20px;
+      background: linear-gradient(0deg, #2a344d 0%, #151b28 100%);
+      border-radius: 12px 12px 0 0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      z-index: 10;
+    }
+
+    /* Lava canvas */
+    .lamp-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Status Glow Rings */
+    .glow-bull {
+      border-color: rgba(0, 255, 135, 0.65) !important;
+      box-shadow: 0 0 22px rgba(0, 255, 135, 0.25) !important;
+    }
+    .glow-bear {
+      border-color: rgba(255, 51, 102, 0.65) !important;
+      box-shadow: 0 0 22px rgba(255, 51, 102, 0.25) !important;
+    }
+    .glow-neutral {
+      border-color: rgba(96, 239, 255, 0.4) !important;
+    }
+
+    /* Glass Glare Reflection */
+    .lamp-glare {
+      position: absolute;
+      top: 18px;
+      left: 12px;
+      width: 8px;
+      height: 270px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.02) 80%);
+      border-radius: 8px;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    /* Custom select styling */
+    select {
+      background: #0d101a;
+      border: 1px solid #1e2538;
+      color: #f1f5f9;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus {
+      border-color: var(--neon-cyan);
+    }
+
+    /* Hash string containment guarantee */
+    .safe-hash-tag {
+      display: block;
+      width: 100%;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      box-sizing: border-box;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+  </style>
+<link rel="stylesheet" href="/assets/rng-header.css?v=20261013-1">
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Top Navigation -->
+  <header id="rng-site-header" aria-label="Encabezado de RNGMarketDriven"><div class="rng-header-inner"><a href="/" class="rng-brand" aria-label="RNGMarketDriven — Inicio">RNG<span>MarketDriven</span></a><nav class="rng-navigation" aria-label="Navegación principal"><a href="/">Inicio</a><a href="/#motor">Tecnología</a><a href="/#empresa">Empresa</a><a href="/#ecosistema">Casos de uso</a><a href="/soluciones/">Servicios y precios</a></nav><a href="/soluciones/#agendar" class="rng-schedule">Agendar llamada</a></div></header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
+    
+    <!-- Hero / Header Section -->
+    <div class="text-center max-w-3xl mx-auto mb-8">
+      <div class="inline-block px-3 py-1 mb-2.5 rounded-full text-xs font-mono tracking-widest text-[#00ff87] bg-green-950/50 border border-green-800/60 uppercase">
+        Fusión Cuántica de Mercados &bull; Matriz de 10 Unidades (2 Filas x 5 Lámparas)
+      </div>
+      <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-3 bg-gradient-to-r from-white via-slate-100 to-[#60efff] bg-clip-text text-transparent">
+        Lava Market Lab
+      </h1>
+      <p class="text-gray-400 text-xs md:text-sm leading-relaxed max-w-2xl mx-auto">
+        10 lámparas de lava organizadas en 2 filas de 5 unidades. Seleccioná el tipo de mercado y activo específico para calibrar las burbujas por volatilidad financiera real.
+      </p>
+    </div>
+
+    <!-- Master Controls Toolbar (Customization Options) -->
+    <div class="bg-[#111422] border border-[#1e2538] rounded-xl p-4 mb-8 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="text-gray-400 font-bold uppercase flex items-center gap-1.5">
+          <span>⚙️</span> Personalización:
+        </span>
+        
+        <!-- Theme Palette -->
+        <div class="flex items-center gap-2">
+          <label class="text-gray-400">Paleta:</label>
+          <select id="global-palette-select" class="py-1 px-2 rounded font-mono text-xs" onchange="changeGlobalPalette(this.value)">
+            <option value="cyberpunk" selected>Cyberpunk (Neón Clásico)</option>
+            <option value="synthwave">Synthwave (Rosa & Violeta)</option>
+            <option value="matrix">Matrix Emerald (Verdes puros)</option>
+            <option value="tokyo_night">Tokyo Night (Azul Eléctrico & Dorado)</option>
+          </select>
+        </div>
+
+        <!-- Blob Viscosity / Density -->
+        <div class="flex items-center gap-2">
+          <label class="text-gray-400">Densidad Burbujas:</label>
+          <select id="global-density-select" class="py-1 px-2 rounded font-mono text-xs" onchange="changeBlobDensity(this.value)">
+            <option value="4">Ligera (4 burbujas)</option>
+            <option value="6" selected>Estándar (6 burbujas)</option>
+            <option value="8">Densa (8 burbujas)</option>
+          </select>
+        </div>
+
+        <!-- Speed Sensitivity -->
+        <div class="flex items-center gap-2">
+          <label class="text-gray-400">Sensibilidad Física:</label>
+          <select id="global-sensitivity-select" class="py-1 px-2 rounded font-mono text-xs" onchange="changeSensitivity(this.value)">
+            <option value="1.0" selected>Normal (1.0x)</option>
+            <option value="1.5">Hiperreactiva (1.5x)</option>
+            <option value="0.7">Relajada (0.7x)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="randomizeAllLamps()" class="bg-[#1c2236] hover:bg-[#252e47] text-[#60efff] font-bold px-3 py-1.5 rounded-lg border border-[#2b354f] transition">
+          🎲 Mezclar Activos
+        </button>
+        <button onclick="captureLampsSnapshot()" class="bg-gradient-to-r from-[#ff007f] via-[#a855f7] to-[#60efff] hover:opacity-90 text-white font-extrabold px-4 py-2 rounded-lg uppercase tracking-wider flex items-center gap-2 shadow-lg transition">
+          📸 Capturar 10 Lámparas & Hashear PNG
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 1: Lamps 1 to 5 -->
+    <div class="mb-3 flex items-center justify-between text-xs font-mono text-gray-400 px-1">
+      <span class="font-bold text-[#60efff] uppercase tracking-wider">▲ Fila 1 &bull; Lámparas #1 a #5</span>
+      <span>Hacé clic en cualquier unidad para auditar</span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mb-8" id="row-1-container">
+      <!-- Generated by JavaScript -->
+    </div>
+
+    <!-- Row 2: Lamps 6 to 10 -->
+    <div class="mb-3 flex items-center justify-between text-xs font-mono text-gray-400 px-1">
+      <span class="font-bold text-[#00ff87] uppercase tracking-wider">▼ Fila 2 &bull; Lámparas #6 a #10</span>
+      <span>Trazabilidad Criptográfica SHA-256</span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mb-10" id="row-2-container">
+      <!-- Generated by JavaScript -->
+    </div>
+
+    <!-- Live Telemetry / API Ticker Bar -->
+    <div class="bg-[#111422] border border-[#1e2538] rounded-xl p-4 flex flex-col md:flex-row items-center justify-between text-xs font-mono text-gray-300 gap-3 mb-8">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#00ff87] animate-pulse"></span>
+        <span class="text-gray-400 uppercase">EaaS Engine Stream:</span>
+        <span class="text-[#60efff] font-bold">10 NODOS ACTIVOS (WebSocket / 1s Ingest)</span>
+      </div>
+      <div class="w-full md:w-auto flex items-center gap-2 overflow-hidden">
+        <span class="text-gray-400 whitespace-nowrap">ÚLTIMO SEED DERIVADO:</span>
+        <div class="bg-black/80 px-2 py-1 rounded border border-gray-800 text-[#00ff87] font-semibold text-[11px] truncate max-w-xs md:max-w-md" id="global-entropy-hash">
+          c8f102...calculando
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Floating / Modal Audit Panel for single lamp -->
+  <div id="auditModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#111422] border border-[#1e2538] rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative">
+      <button onclick="closeAuditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold font-mono">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-2 rounded-lg bg-cyan-950/80 border border-cyan-800/60 text-[#60efff] text-lg">
+          🔍
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            Panel de Auditoría Criptográfica
+            <span class="text-xs font-mono text-[#00ff87] bg-green-950 px-2 py-0.5 rounded border border-green-800" id="modal-lamp-title">
+              Lámpara #1
+            </span>
+          </h3>
+          <p class="text-xs text-gray-400">Trazabilidad matemática Provably Fair: entrada de mercado &rarr; semilla inmutable.</p>
+        </div>
+      </div>
+
+      <div class="space-y-4 font-mono text-xs">
+        <div class="grid grid-cols-2 gap-3 bg-[#090b12] p-3 rounded-lg border border-gray-800">
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Activo Asignado</div>
+            <div class="text-white font-bold text-sm" id="modal-asset-name">$BTC (Bitcoin)</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Variación Actual (Δ% 1m)</div>
+            <div class="font-bold text-sm" id="modal-asset-delta">+1.45% (Alcista)</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Precio de Mercado Spot</div>
+            <div class="text-gray-300 font-bold" id="modal-asset-price">$68,540.20 USD</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-[10px] uppercase">Comportamiento Físico</div>
+            <div class="text-gray-300 font-bold" id="modal-physics-mode">Ascenso Rápido & Fusión Fluida</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-gray-400 mb-1 flex justify-between">
+            <span class="text-white font-bold">HASH SHA-256 INMUTABLE:</span>
+            <span class="text-[#00ff87]">PROVABLY FAIR OK</span>
+          </div>
+          <div class="bg-black/95 p-3 rounded-lg border border-green-900/50 text-[#00ff87] safe-hash-tag text-xs font-bold leading-relaxed" id="modal-hash">
+            e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          </div>
+        </div>
+
+        <div>
+          <div class="text-gray-400 mb-1">PAYLOAD COMPLETO DEL NODO (JSON):</div>
+          <pre class="bg-black/95 p-3 rounded-lg border border-gray-800 text-gray-300 max-h-40 overflow-y-auto text-[10px] leading-tight" id="modal-json"></pre>
+        </div>
+
+        <div class="pt-2 flex justify-between items-center text-[11px]">
+          <a href="https://gitlab.com/cryptodromo/rngmarketdriven" target="_blank" class="text-[#60efff] hover:underline flex items-center gap-1" id="modal-gitlab-link">
+            🔗 Ver Commit Público en GitLab
+          </a>
+          <button onclick="closeAuditModal()" class="bg-[#1e2538] hover:bg-[#2b354f] text-white px-4 py-1.5 rounded font-bold">
+            Cerrar Panel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snapshot Capture & Hash Modal (All 10 Lamps Composite) -->
+  <div id="snapshotModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#111422] border border-[#1e2538] rounded-2xl max-w-4xl w-full p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      <button onclick="closeSnapshotModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold font-mono">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-2 rounded-lg bg-pink-950/80 border border-pink-800/60 text-[#ff007f] text-lg">
+          📸
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            Captura Cuántica de las 10 Lámparas & Hash Criptográfico
+          </h3>
+          <p class="text-xs text-gray-400">Composición instantánea de las 10 unidades (2 filas x 5 lámparas) congeladas en un archivo PNG.</p>
+        </div>
+      </div>
+
+      <!-- Snapshot Preview -->
+      <div class="mb-4 bg-[#090b12] p-3 rounded-xl border border-gray-800 flex flex-col items-center">
+        <img id="snapshot-img-preview" class="w-full max-h-[300px] object-contain rounded-lg border border-gray-900 shadow-inner" alt="Snapshot 10 Lava Lamps">
+        <div class="mt-2 flex justify-between w-full text-gray-500 font-mono text-[11px] px-1">
+          <span id="snapshot-meta-dims">Resolución: 1200x800 px</span>
+          <span id="snapshot-meta-time">Timestamp: --</span>
+          <span id="snapshot-meta-size">Tamaño: -- KB</span>
+        </div>
+      </div>
+
+      <!-- Hash Data Section -->
+      <div class="space-y-3 font-mono text-xs">
+        <div>
+          <div class="text-gray-400 mb-1 flex justify-between">
+            <span class="text-white font-bold">HASH SHA-256 DEL ARCHIVO PNG (DATOS BINARIOS):</span>
+            <span class="text-[#00ff87]">HUELLA DIGITAL ÚNICA</span>
+          </div>
+          <div class="bg-black/95 p-3 rounded-lg border border-green-800/60 text-[#00ff87] safe-hash-tag text-xs font-bold tracking-wider leading-relaxed" id="snapshot-png-hash">
+            Calculando hash SHA-256...
+          </div>
+        </div>
+
+        <div class="bg-[#090b12] p-3 rounded-lg border border-gray-800 text-[11px] space-y-2">
+          <div>
+            <span class="text-gray-500 block">MERCADOS CONGELADOS EN EL SNAPSHOT:</span>
+            <div class="text-white font-semibold mt-0.5 leading-relaxed" id="snapshot-frozen-assets">--</div>
+          </div>
+          <div>
+            <span class="text-gray-500 block">PROVABLY FAIR VERIFIER COMBINED SEED:</span>
+            <div class="text-[#60efff] font-semibold mt-0.5 safe-hash-tag" id="snapshot-combined-seed">--</div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex flex-wrap gap-3 justify-end items-center">
+          <button onclick="copySnapshotHash()" class="bg-[#1e2538] hover:bg-[#2b354f] text-white px-4 py-2 rounded-lg font-bold flex items-center gap-1.5 transition">
+            📋 Copiar Hash
+          </button>
+          <a id="snapshot-download-btn" download="lava_10_market_snapshot.png" class="bg-gradient-to-r from-[#00ff87] to-[#60efff] text-black font-extrabold px-5 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition">
+            💾 Descargar Imagen PNG
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-800 py-6 px-4 text-center text-xs text-gray-500 font-mono">
+    &copy; 2026 RNGMarketDriven &bull; EaaS (Entropy-as-a-Service) &bull; Visualizador Cuántico 10 Lava Market Lab
+  </footer>
+
+  <script>
+    // Expanded Categorized Financial Asset Catalog (Double Selector: Market -> Asset)
+    const MARKET_CATEGORIES = {
+      crypto: {
+        name: "Criptomonedas (Spot)",
+        assets: [
+          { id: "BTC", name: "$BTC (Bitcoin)", exchange: "Binance Spot", basePrice: 68500.0, defaultDelta: 1.82 },
+          { id: "ETH", name: "$ETH (Ethereum)", exchange: "Binance Spot", basePrice: 2640.0, defaultDelta: -0.95 },
+          { id: "SOL", name: "$SOL (Solana)", exchange: "Binance Spot", basePrice: 182.5, defaultDelta: 4.80 },
+          { id: "BNB", name: "$BNB (Binance Coin)", exchange: "Binance Spot", basePrice: 592.0, defaultDelta: 0.65 },
+          { id: "DOGE", name: "$DOGE (Dogecoin)", exchange: "Binance Spot", basePrice: 0.145, defaultDelta: 6.20 },
+          { id: "AVAX", name: "$AVAX (Avalanche)", exchange: "Binance Spot", basePrice: 28.5, defaultDelta: -1.85 },
+          { id: "XRP", name: "$XRP (Ripple)", exchange: "Binance Spot", basePrice: 0.54, defaultDelta: 0.40 }
+        ]
+      },
+      stocks: {
+        name: "Acciones Wall Street (NYSE / NASDAQ)",
+        assets: [
+          { id: "NVDA", name: "$NVDA (NVIDIA)", exchange: "NASDAQ", basePrice: 138.2, defaultDelta: 3.14 },
+          { id: "TSLA", name: "$TSLA (Tesla)", exchange: "NASDAQ", basePrice: 218.4, defaultDelta: -2.75 },
+          { id: "AAPL", name: "$AAPL (Apple)", exchange: "NASDAQ", basePrice: 231.0, defaultDelta: 0.85 },
+          { id: "MSFT", name: "$MSFT (Microsoft)", exchange: "NASDAQ", basePrice: 422.5, defaultDelta: -0.45 },
+          { id: "AMZN", name: "$AMZN (Amazon)", exchange: "NASDAQ", basePrice: 189.0, defaultDelta: 1.25 },
+          { id: "GOOGL", name: "$GOOGL (Alphabet)", exchange: "NASDAQ", basePrice: 165.4, defaultDelta: -0.70 }
+        ]
+      },
+      merval: {
+        name: "BYMA / Merval Argentino",
+        assets: [
+          { id: "YPF", name: "$YPF (YPF S.A.)", exchange: "BYMA / Merval", basePrice: 34500.0, defaultDelta: 2.10 },
+          { id: "GGAL", name: "$GGAL (Grupo Galicia)", exchange: "BYMA / Merval", basePrice: 5820.0, defaultDelta: -1.40 },
+          { id: "PAMP", name: "$PAMP (Pampa Energía)", exchange: "BYMA / Merval", basePrice: 3120.0, defaultDelta: 1.15 },
+          { id: "BMA", name: "$BMA (Banco Macro)", exchange: "BYMA / Merval", basePrice: 9400.0, defaultDelta: -0.80 },
+          { id: "ALUA", name: "$ALUA (Aluar)", exchange: "BYMA / Merval", basePrice: 1050.0, defaultDelta: 2.90 },
+          { id: "EDN", name: "$EDN (Edenor)", exchange: "BYMA / Merval", basePrice: 1650.0, defaultDelta: 4.40 }
+        ]
+      },
+      macro: {
+        name: "Macroeconomía & FX (Divisas / Índices)",
+        assets: [
+          { id: "SP500", name: "S&P 500 (Índice)", exchange: "NYSE / S&P", basePrice: 5860.0, defaultDelta: 0.15 },
+          { id: "CCL", name: "Dólar CCL (Argentina)", exchange: "BYMA / BCRA", basePrice: 1195.0, defaultDelta: 0.05 },
+          { id: "MEP", name: "Dólar Bolsa (MEP)", exchange: "BYMA / BCRA", basePrice: 1165.0, defaultDelta: -0.20 },
+          { id: "GOLD", name: "Oro Spot (XAU/USD)", exchange: "COMEX", basePrice: 2650.0, defaultDelta: 0.45 },
+          { id: "OIL", name: "Petróleo WTI", exchange: "NYMEX", basePrice: 71.5, defaultDelta: -1.60 }
+        ]
+      }
+    };
+
+    // Flattened asset list for rapid lookup
+    function getAssetById(id) {
+      for (const catKey in MARKET_CATEGORIES) {
+        const found = MARKET_CATEGORIES[catKey].assets.find(a => a.id === id);
+        if (found) return { ...found, category: catKey };
+      }
+      return { ...MARKET_CATEGORIES.crypto.assets[0], category: "crypto" };
+    }
+
+    // State for exactly 10 Lava Lamps (2 Rows x 5 Units)
+    const LAMPS = [
+      // Row 1
+      { id: 0, category: "crypto", asset: "BTC", title: "Lámpara 1", canvas: null, ctx: null, blobs: [], delta: 1.82, price: 68500.0, lastHash: "" },
+      { id: 1, category: "crypto", asset: "ETH", title: "Lámpara 2", canvas: null, ctx: null, blobs: [], delta: -0.95, price: 2640.0, lastHash: "" },
+      { id: 2, category: "stocks", asset: "NVDA", title: "Lámpara 3", canvas: null, ctx: null, blobs: [], delta: 3.14, price: 138.2, lastHash: "" },
+      { id: 3, category: "merval", asset: "YPF", title: "Lámpara 4", canvas: null, ctx: null, blobs: [], delta: 2.10, price: 34500.0, lastHash: "" },
+      { id: 4, category: "merval", asset: "GGAL", title: "Lámpara 5", canvas: null, ctx: null, blobs: [], delta: -1.40, price: 5820.0, lastHash: "" },
+      // Row 2
+      { id: 5, category: "crypto", asset: "SOL", title: "Lámpara 6", canvas: null, ctx: null, blobs: [], delta: 4.80, price: 182.5, lastHash: "" },
+      { id: 6, category: "stocks", asset: "TSLA", title: "Lámpara 7", canvas: null, ctx: null, blobs: [], delta: -2.75, price: 218.4, lastHash: "" },
+      { id: 7, category: "macro", asset: "SP500", title: "Lámpara 8", canvas: null, ctx: null, blobs: [], delta: 0.15, price: 5860.0, lastHash: "" },
+      { id: 8, category: "macro", asset: "CCL", title: "Lámpara 9", canvas: null, ctx: null, blobs: [], delta: 0.05, price: 1195.0, lastHash: "" },
+      { id: 9, category: "merval", asset: "EDN", title: "Lámpara 10", canvas: null, ctx: null, blobs: [], delta: 4.40, price: 1650.0, lastHash: "" }
+    ];
+
+    // Global customization settings
+    let currentPalette = "cyberpunk";
+    let blobDensity = 6;
+    let physicsSensitivity = 1.0;
+    let currentModalLampIdx = 0;
+
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Build the 10 Lamps DOM structure with double selector (Market Category -> Specific Asset)
+    function buildLampsUI() {
+      const row1Container = document.getElementById("row-1-container");
+      const row2Container = document.getElementById("row-2-container");
+      row1Container.innerHTML = "";
+      row2Container.innerHTML = "";
+
+      LAMPS.forEach((lamp, idx) => {
+        const card = document.createElement("div");
+        card.className = "flex flex-col items-center w-full";
+
+        // Category dropdown options
+        let catOptionsHtml = Object.keys(MARKET_CATEGORIES).map(catKey => 
+          `<option value="${catKey}" ${catKey === lamp.category ? "selected" : ""}>${MARKET_CATEGORIES[catKey].name}</option>`
+        ).join("");
+
+        // Asset dropdown options for current category
+        const currentCatAssets = MARKET_CATEGORIES[lamp.category].assets;
+        let assetOptionsHtml = currentCatAssets.map(a => 
+          `<option value="${a.id}" ${a.id === lamp.asset ? "selected" : ""}>${a.name}</option>`
+        ).join("");
+
+        card.innerHTML = `
+          <!-- Glass Lava Lamp Shell -->
+          <div class="lamp-shell glow-neutral" id="lamp-shell-${idx}" onclick="openAuditModal(${idx})">
+            <div class="lamp-cap-top"></div>
+            <div class="lamp-glare"></div>
+            <canvas id="lamp-canvas-${idx}" class="lamp-canvas"></canvas>
+            <div class="lamp-cap-bottom"></div>
+            <div class="absolute bottom-5 left-0 right-0 text-center font-mono text-[10px] text-gray-400 bg-black/60 py-0.5 px-2 backdrop-blur">
+              <span id="lamp-delta-badge-${idx}" class="font-bold text-[#00ff87]">▲ +0.00%</span>
+            </div>
+          </div>
+
+          <!-- Dual Select Controls under each lamp -->
+          <div class="w-full mt-2.5 bg-[#111422] p-2.5 rounded-xl border border-[#1e2538] flex flex-col gap-1.5 shadow-md">
+            <div class="flex justify-between items-center text-[11px] font-mono">
+              <span class="text-gray-400 font-bold">LÁMPARA #${idx + 1}</span>
+              <span class="text-xs font-bold text-white truncate max-w-[90px]" id="lamp-price-${idx}">$0.00</span>
+            </div>
+            
+            <!-- 1. Market Category Selector -->
+            <select class="w-full text-[10px] py-1 px-1.5 rounded font-mono text-gray-300" onchange="onCategoryChange(${idx}, this.value)">
+              ${catOptionsHtml}
+            </select>
+
+            <!-- 2. Specific Asset Selector -->
+            <select id="lamp-asset-select-${idx}" class="w-full text-xs py-1.5 px-2 rounded-lg font-mono font-bold text-white" onchange="onAssetChange(${idx}, this.value)">
+              ${assetOptionsHtml}
+            </select>
+          </div>
+        `;
+
+        if (idx < 5) {
+          row1Container.appendChild(card);
+        } else {
+          row2Container.appendChild(card);
+        }
+      });
+
+      // Init Canvas & Physics Blobs for all 10 lamps
+      LAMPS.forEach((lamp, idx) => {
+        const canvas = document.getElementById(`lamp-canvas-${idx}`);
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        lamp.canvas = canvas;
+        lamp.ctx = canvas.getContext("2d");
+        spawnBlobsForLamp(lamp);
+      });
+    }
+
+    function spawnBlobsForLamp(lamp) {
+      if (!lamp.canvas) return;
+      lamp.blobs = [];
+      const count = blobDensity;
+      for (let i = 0; i < count; i++) {
+        lamp.blobs.push({
+          x: lamp.canvas.width * (0.3 + Math.random() * 0.4),
+          y: lamp.canvas.height * (0.15 + Math.random() * 0.7),
+          radius: 14 + Math.random() * 14,
+          vy: (Math.random() - 0.5) * 1.5,
+          vx: (Math.random() - 0.5) * 0.4,
+          pulse: Math.random() * Math.PI
+        });
+      }
+    }
+
+    function onCategoryChange(idx, newCategory) {
+      LAMPS[idx].category = newCategory;
+      const firstAsset = MARKET_CATEGORIES[newCategory].assets[0];
+      LAMPS[idx].asset = firstAsset.id;
+
+      // Update asset dropdown options
+      const assetSelect = document.getElementById(`lamp-asset-select-${idx}`);
+      assetSelect.innerHTML = MARKET_CATEGORIES[newCategory].assets.map(a => 
+        `<option value="${a.id}">${a.name}</option>`
+      ).join("");
+
+      fetchMarketTick(idx);
+    }
+
+    function onAssetChange(idx, newAssetId) {
+      LAMPS[idx].asset = newAssetId;
+      fetchMarketTick(idx);
+    }
+
+    // Randomize all 10 lamps across all categories
+    function randomizeAllLamps() {
+      const catKeys = Object.keys(MARKET_CATEGORIES);
+      LAMPS.forEach((lamp, idx) => {
+        const randCat = catKeys[Math.floor(Math.random() * catKeys.length)];
+        lamp.category = randCat;
+        const catAssets = MARKET_CATEGORIES[randCat].assets;
+        const randAsset = catAssets[Math.floor(Math.random() * catAssets.length)];
+        lamp.asset = randAsset.id;
+      });
+      buildLampsUI();
+      LAMPS.forEach((_, idx) => fetchMarketTick(idx));
+    }
+
+    // Customization Toolbar Handlers
+    function changeGlobalPalette(paletteName) {
+      currentPalette = paletteName;
+    }
+
+    function changeBlobDensity(newCount) {
+      blobDensity = parseInt(newCount);
+      LAMPS.forEach(lamp => spawnBlobsForLamp(lamp));
+    }
+
+    function changeSensitivity(factor) {
+      physicsSensitivity = parseFloat(factor);
+    }
+
+    // Fetch / Simulate market ticks based on real asset delta
+    async function fetchMarketTick(idx) {
+      const lamp = LAMPS[idx];
+      const asset = getAssetById(lamp.asset);
+
+      const noise = (Math.random() - 0.5) * 0.8;
+      lamp.delta = +(asset.defaultDelta + noise).toFixed(2);
+      lamp.price = +(asset.basePrice * (1 + lamp.delta / 100)).toFixed(2);
+
+      const rawSeed = `${lamp.asset}_${lamp.price}_${Date.now()}_SALT_LAVA_${idx}`;
+      lamp.lastHash = await sha256(rawSeed);
+
+      const badge = document.getElementById(`lamp-delta-badge-${idx}`);
+      const priceEl = document.getElementById(`lamp-price-${idx}`);
+      const shell = document.getElementById(`lamp-shell-${idx}`);
+
+      if (priceEl) priceEl.innerText = `$${lamp.price.toLocaleString()}`;
+      if (badge) {
+        if (lamp.delta > 0.5) {
+          badge.innerText = `▲ +${lamp.delta}% (Bull)`;
+          badge.className = "font-bold text-[#00ff87]";
+          shell.className = "lamp-shell glow-bull";
+        } else if (lamp.delta < -0.5) {
+          badge.innerText = `▼ ${lamp.delta}% (Bear)`;
+          badge.className = "font-bold text-[#ff3366]";
+          shell.className = "lamp-shell glow-bear";
+        } else {
+          badge.innerText = `■ ${lamp.delta}% (Neutro)`;
+          badge.className = "font-bold text-[#60efff]";
+          shell.className = "lamp-shell glow-neutral";
+        }
+      }
+
+      document.getElementById("global-entropy-hash").innerText = lamp.lastHash;
+    }
+
+    // Animation & Physics Loop with Palette Support
+    function animate() {
+      LAMPS.forEach((lamp) => {
+        if (!lamp.ctx) return;
+        const ctx = lamp.ctx;
+        const w = lamp.canvas.width;
+        const h = lamp.canvas.height;
+
+        ctx.fillStyle = "rgba(7, 9, 14, 0.45)";
+        ctx.fillRect(0, 0, w, h);
+
+        let colorCenter, colorEdge, speedFactor;
+
+        // Custom palette color resolution
+        if (currentPalette === "synthwave") {
+          colorCenter = lamp.delta > 0.5 ? "rgba(255, 0, 127, 0.9)" : (lamp.delta < -0.5 ? "rgba(168, 85, 247, 0.9)" : "rgba(96, 239, 255, 0.85)");
+          colorEdge = "rgba(168, 85, 247, 0.05)";
+        } else if (currentPalette === "matrix") {
+          colorCenter = lamp.delta > 0.5 ? "rgba(0, 255, 135, 0.95)" : (lamp.delta < -0.5 ? "rgba(20, 160, 80, 0.85)" : "rgba(80, 220, 120, 0.85)");
+          colorEdge = "rgba(0, 255, 135, 0.04)";
+        } else if (currentPalette === "tokyo_night") {
+          colorCenter = lamp.delta > 0.5 ? "rgba(0, 210, 255, 0.9)" : (lamp.delta < -0.5 ? "rgba(255, 208, 0, 0.9)" : "rgba(140, 160, 255, 0.85)");
+          colorEdge = "rgba(0, 180, 255, 0.05)";
+        } else {
+          // Cyberpunk default
+          colorCenter = lamp.delta > 0.5 ? "rgba(0, 255, 135, 0.9)" : (lamp.delta < -0.5 ? "rgba(255, 51, 102, 0.9)" : "rgba(96, 239, 255, 0.85)");
+          colorEdge = lamp.delta > 0.5 ? "rgba(0, 255, 135, 0.05)" : (lamp.delta < -0.5 ? "rgba(168, 85, 247, 0.05)" : "rgba(96, 239, 255, 0.05)");
+        }
+
+        if (lamp.delta > 0.5) {
+          speedFactor = (1.8 + Math.min(lamp.delta, 5) * 0.4) * physicsSensitivity;
+        } else if (lamp.delta < -0.5) {
+          speedFactor = 0.6 * physicsSensitivity;
+        } else {
+          speedFactor = 1.0 * physicsSensitivity;
+        }
+
+        lamp.blobs.forEach((b, bIdx) => {
+          b.pulse += 0.04;
+          const currentRadius = b.radius + Math.sin(b.pulse) * 3;
+
+          if (lamp.delta > 0.5) {
+            b.y -= speedFactor * (0.8 + (bIdx % 3) * 0.35);
+            if (b.y < -currentRadius) b.y = h + currentRadius;
+          } else if (lamp.delta < -0.5) {
+            b.y += speedFactor * (0.8 + (bIdx % 3) * 0.35);
+            if (b.y > h + currentRadius) b.y = -currentRadius;
+          } else {
+            b.y += Math.sin(b.pulse) * (0.7 * physicsSensitivity);
+            b.x += Math.cos(b.pulse) * (0.3 * physicsSensitivity);
+          }
+
+          if (b.x < currentRadius + 8) b.x = currentRadius + 8;
+          if (b.x > w - currentRadius - 8) b.x = w - currentRadius - 8;
+
+          const grad = ctx.createRadialGradient(b.x, b.y, currentRadius * 0.15, b.x, b.y, currentRadius * 1.3);
+          grad.addColorStop(0, colorCenter);
+          grad.addColorStop(0.6, colorCenter.replace("0.95", "0.4").replace("0.9", "0.4").replace("0.85", "0.35"));
+          grad.addColorStop(1, colorEdge);
+
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, currentRadius, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        });
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    // Modal Audit Controls (Single Lamp)
+    function openAuditModal(lampIdx) {
+      currentModalLampIdx = lampIdx;
+      const lamp = LAMPS[lampIdx];
+      const asset = getAssetById(lamp.asset);
+
+      document.getElementById("modal-lamp-title").innerText = `Lámpara #${lampIdx + 1}`;
+      document.getElementById("modal-asset-name").innerText = `${asset.name} [${asset.exchange}]`;
+      document.getElementById("modal-asset-price").innerText = `$${lamp.price.toLocaleString()} USD`;
+      
+      const deltaEl = document.getElementById("modal-asset-delta");
+      const physEl = document.getElementById("modal-physics-mode");
+      if (lamp.delta > 0.5) {
+        deltaEl.innerText = `▲ +${lamp.delta}% (Fuerte Alza / Bull)`;
+        deltaEl.className = "font-bold text-sm text-[#00ff87]";
+        physEl.innerText = "Ascenso Rápido, Expansión Verde & Fusión";
+      } else if (lamp.delta < -0.5) {
+        deltaEl.innerText = `▼ ${lamp.delta}% (Fuerte Baja / Bear)`;
+        deltaEl.className = "font-bold text-sm text-[#ff3366]";
+        physEl.innerText = "Descenso Pesado, Fragmentación Roja/Violeta";
+      } else {
+        deltaEl.innerText = `■ ${lamp.delta}% (Lateral / Neutral)`;
+        deltaEl.className = "font-bold text-sm text-[#60efff]";
+        physEl.innerText = "Flotación Orgánica a Velocidad Estándar";
+      }
+
+      document.getElementById("modal-hash").innerText = lamp.lastHash || "Calculando hash...";
+      
+      const auditPayload = {
+        lamp_id: lampIdx + 1,
+        ticker: lamp.asset,
+        exchange: asset.exchange,
+        category: lamp.category,
+        raw_price_usd: lamp.price,
+        delta_1m_pct: lamp.delta,
+        timestamp_ms: Date.now(),
+        client_salt: `CLIENT_SALT_LAVA_LAB_${lampIdx + 1}`,
+        nonce: Math.floor(Math.random() * 10000),
+        derived_entropy_hash: lamp.lastHash,
+        provably_fair_proof: "SHA256(Price + Delta + Timestamp + Salt + Nonce)",
+        commit_ref: `https://gitlab.com/cryptodromo/rngmarketdriven/-/commit/${(lamp.lastHash || "e3b0c442").substring(0, 12)}`
+      };
+
+      document.getElementById("modal-json").innerText = JSON.stringify(auditPayload, null, 2);
+      document.getElementById("modal-gitlab-link").href = auditPayload.commit_ref;
+
+      document.getElementById("auditModal").classList.remove("hidden");
+    }
+
+    function closeAuditModal() {
+      document.getElementById("auditModal").classList.add("hidden");
+    }
+
+    // Capture the 10 Lava Lamps in a 2-Row Composite PNG & Compute SHA-256
+    async function captureLampsSnapshot() {
+      const lampWidth = 220;
+      const lampHeight = 330;
+      const padding = 16;
+      const headerSpace = 65;
+      
+      const totalWidth = (lampWidth * 5) + (padding * 6);
+      const totalHeight = (lampHeight * 2) + (padding * 3) + headerSpace;
+
+      const offCanvas = document.createElement("canvas");
+      offCanvas.width = totalWidth;
+      offCanvas.height = totalHeight;
+      const oCtx = offCanvas.getContext("2d");
+
+      // Draw cyber dark gradient background
+      const bgGrad = oCtx.createLinearGradient(0, 0, totalWidth, totalHeight);
+      bgGrad.addColorStop(0, "#07090e");
+      bgGrad.addColorStop(0.5, "#0e1220");
+      bgGrad.addColorStop(1, "#05070a");
+      oCtx.fillStyle = bgGrad;
+      oCtx.fillRect(0, 0, totalWidth, totalHeight);
+
+      // Watermark & Header text
+      oCtx.fillStyle = "#60efff";
+      oCtx.font = "bold 15px monospace";
+      oCtx.fillText("RNGMarketDriven.com • 10-LAVA-LAMP QUANTUM SNAPSHOT (2x5 MATRIX)", padding, 30);
+
+      const captureTimestamp = Date.now();
+      const dateStr = new Date(captureTimestamp).toISOString();
+      oCtx.fillStyle = "#8e95aa";
+      oCtx.font = "11px monospace";
+      oCtx.fillText(`UTC: ${dateStr} • Multi-Asset Ingestion: Binance, NYSE, NASDAQ, BYMA • SHA-256 Verified`, padding, 48);
+
+      let frozenAssetsText = [];
+      let combinedSeedData = [];
+
+      // Render each of the 10 lamps in a 2x5 grid
+      for (let i = 0; i < 10; i++) {
+        const lamp = LAMPS[i];
+        const col = i % 5;
+        const row = Math.floor(i / 5);
+
+        const xPos = padding + col * (lampWidth + padding);
+        const yPos = headerSpace + row * (lampHeight + padding);
+
+        // Lamp shell clipping
+        oCtx.save();
+        oCtx.beginPath();
+        oCtx.roundRect(xPos, yPos, lampWidth, lampHeight, [28, 28, 18, 18]);
+        oCtx.clip();
+
+        if (lamp.canvas) {
+          oCtx.drawImage(lamp.canvas, xPos, yPos, lampWidth, lampHeight);
+        }
+
+        // Glare
+        const glare = oCtx.createLinearGradient(xPos, yPos, xPos + 12, yPos + lampHeight);
+        glare.addColorStop(0, "rgba(255, 255, 255, 0.28)");
+        glare.addColorStop(1, "rgba(255, 255, 255, 0.01)");
+        oCtx.fillStyle = glare;
+        oCtx.fillRect(xPos + 8, yPos + 8, 6, lampHeight - 16);
+
+        oCtx.restore();
+
+        // Caps
+        oCtx.fillStyle = "#2a344d";
+        oCtx.fillRect(xPos + (lampWidth * 0.16), yPos, lampWidth * 0.68, 12);
+        oCtx.fillRect(xPos + (lampWidth * 0.12), yPos + lampHeight - 14, lampWidth * 0.76, 14);
+
+        // Border outline
+        oCtx.strokeStyle = lamp.delta > 0.5 ? "#00ff87" : (lamp.delta < -0.5 ? "#ff3366" : "#60efff");
+        oCtx.lineWidth = 1.5;
+        oCtx.strokeRect(xPos, yPos, lampWidth, lampHeight);
+
+        // Bottom label inside lamp
+        oCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
+        oCtx.fillRect(xPos, yPos + lampHeight - 38, lampWidth, 24);
+        
+        oCtx.fillStyle = "#ffffff";
+        oCtx.font = "bold 10px monospace";
+        oCtx.fillText(`L#${i + 1}: ${lamp.asset}`, xPos + 8, yPos + lampHeight - 22);
+
+        oCtx.fillStyle = lamp.delta > 0.5 ? "#00ff87" : (lamp.delta < -0.5 ? "#ff3366" : "#60efff");
+        oCtx.font = "10px monospace";
+        oCtx.fillText(`${lamp.delta > 0 ? "+" : ""}${lamp.delta}%`, xPos + lampWidth - 55, yPos + lampHeight - 22);
+
+        frozenAssetsText.push(`L#${i+1}:${lamp.asset}(${lamp.delta > 0 ? "+" : ""}${lamp.delta}%)`);
+        combinedSeedData.push(`${lamp.asset}_${lamp.price}_${lamp.delta}`);
+      }
+
+      // Convert to binary PNG blob & Compute SHA-256
+      offCanvas.toBlob(async (blob) => {
+        const arrayBuffer = await blob.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const fileSha256 = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+        const pngDataUrl = offCanvas.toDataURL("image/png");
+        document.getElementById("snapshot-img-preview").src = pngDataUrl;
+        document.getElementById("snapshot-png-hash").innerText = fileSha256;
+        document.getElementById("snapshot-meta-dims").innerText = `Resolución: ${totalWidth}x${totalHeight} px`;
+        document.getElementById("snapshot-meta-time").innerText = `Timestamp: ${dateStr}`;
+        document.getElementById("snapshot-meta-size").innerText = `Tamaño: ${(blob.size / 1024).toFixed(1)} KB`;
+        document.getElementById("snapshot-frozen-assets").innerText = frozenAssetsText.join(" • ");
+        
+        const combinedSeed = `${combinedSeedData.join("|")}|${captureTimestamp}`;
+        document.getElementById("snapshot-combined-seed").innerText = combinedSeed;
+
+        const dlBtn = document.getElementById("snapshot-download-btn");
+        dlBtn.href = pngDataUrl;
+        dlBtn.download = `lava_10_market_snapshot_${captureTimestamp}_${fileSha256.substring(0, 8)}.png`;
+
+        document.getElementById("snapshotModal").classList.remove("hidden");
+      }, "image/png");
+    }
+
+    function closeSnapshotModal() {
+      document.getElementById("snapshotModal").classList.add("hidden");
+    }
+
+    function copySnapshotHash() {
+      const hashText = document.getElementById("snapshot-png-hash").innerText;
+      navigator.clipboard.writeText(hashText).then(() => {
+        alert("✓ Hash SHA-256 copiado al portapapeles:\n\n" + hashText);
+      });
+    }
+
+    // Startup
+    window.addEventListener("DOMContentLoaded", () => {
+      buildLampsUI();
+      LAMPS.forEach((_, idx) => fetchMarketTick(idx));
+      animate();
+
+      setInterval(() => {
+        LAMPS.forEach((_, idx) => fetchMarketTick(idx));
+      }, 30000);
+    });
+
+    window.addEventListener("resize", () => {
+      LAMPS.forEach((lamp) => {
+        if (lamp.canvas) {
+          lamp.canvas.width = lamp.canvas.parentElement.clientWidth;
+          lamp.canvas.height = lamp.canvas.parentElement.clientHeight;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

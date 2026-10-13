@@ -1,0 +1,32 @@
+{
+  "posts": 38,
+  "categories": {
+    "Actualidad / Previas": 22,
+    "Archivo / Replay": 4,
+    "Escuela del Turf Virtual": 4,
+    "Stud del Humor": 4,
+    "Vidriera ficticia": 4
+  },
+  "article_pages": 38,
+  "safe_snapshots": 1,
+  "safe_races": 21,
+  "confirmed_result_articles": 0,
+  "html_pages": 41,
+  "http_files_verified": 48,
+  "illustrations": 4,
+  "svg_total_bytes": 1704,
+  "safe_race_schema": [
+    "end",
+    "id",
+    "name",
+    "participants",
+    "standings",
+    "start",
+    "status"
+  ],
+  "safe_runner_schema": [
+    "label",
+    "name"
+  ],
+  "source_observed_at": "2026-10-13T06:19:52.257494+00:00"
+}

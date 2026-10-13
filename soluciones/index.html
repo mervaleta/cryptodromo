@@ -371,22 +371,12 @@
       font-family: var(--font-mono);
     }
   </style>
+<link rel="stylesheet" href="/assets/rng-header.css?v=20261013-1">
 </head>
 <body>
 
   <!-- Nav -->
-  <nav>
-    <a href="/" class="logo">
-      <span>⚡</span> RNGMarketDriven
-    </a>
-    <div class="nav-links">
-      <a href="/">Inicio</a>
-      <a href="/#ecosistema">Juegos</a>
-      <a href="/prode-bursatil/">Prode Merval</a>
-      <a href="https://cryptodromo.com/live" target="_blank">Cryptodromo Live ↗</a>
-      <a href="#agendar" class="btn-cta">Agendar Charla</a>
-    </div>
-  </nav>
+  <header id="rng-site-header" aria-label="Encabezado de RNGMarketDriven"><div class="rng-header-inner"><a href="/" class="rng-brand" aria-label="RNGMarketDriven — Inicio">RNG<span>MarketDriven</span></a><nav class="rng-navigation" aria-label="Navegación principal"><a href="/">Inicio</a><a href="/#motor">Tecnología</a><a href="/#empresa">Empresa</a><a href="/#ecosistema">Casos de uso</a><a href="/soluciones/">Servicios y precios</a></nav><a href="/soluciones/#agendar" class="rng-schedule">Agendar llamada</a></div></header>
 
   <div class="container">
     
@@ -399,10 +389,32 @@
       </p>
     </section>
 
-    <!-- Showcase Section -->
+    <!-- Insert this fragment once inside the existing solutions page. No global header or resets. -->
+<link rel="stylesheet" href="/assets/usecases.css?v=20261013-1">
+<div class="rng-uc-root" lang="es"><h2>Del caso de uso a la prueba verificable</h2><p>Probá cada aplicación y guardá su comprobante. Después podés repetir el cálculo sin depender de una explicación del operador.</p><div class="rng-uc-context"><strong>Cómo verificar después de jugar</strong><ol><li>Generá una demostración y abrí «Verificar ex post».</li><li>Descargá el JSON: contiene los datos de origen, las reglas, la semilla y el resultado.</li><li>Pulsá «Recomputar y comparar»: se recalculan el hash y el resultado por separado.</li><li>Cambiá un dato del JSON editable y volvé a verificar: debe indicar que no coincide.</li></ol><p>El código del ejemplo es <a href="/assets/usecases.js" style="color:#b0f4df">público y descargable</a>, para poder verificar también fuera de esta página.</p></div>
+  <div class="rng-uc-context"><strong>Laboratorio B2B · simulación fija</strong><p>CRYPTO:BTC · 2026-10-05T00:00:00Z · USD «100.00000000» (precio ficticio). Snapshot público simulado registrado una vez durante la construcción. No es un feed en vivo; no se consulta al generar.</p><p>SHA-256 de UTF-8 del payload canónico → semilla → generador separado por dominio, con rechazo de uint32 para rangos sin sesgo modular.</p></div>
+  <section id="dados" class="rng-uc-section" data-rng-uc-kind="dados"><h2>Dados reproducibles</h2><p>Valor para estudios: reconstruir decisiones de una sesión a partir de un registro exportable. Elija D6, D20 o D100 y genere una tirada simulada.</p><div class="rng-uc-demo"></div></section>
+  <section id="mapas" class="rng-uc-section" data-rng-uc-kind="mapas"><h2>Mapas procedurales</h2><p>Valor para QA: reproducir un mapa 8×8. Un camino monotónico conecta inicio y fin; los obstáculos se eligen sólo fuera de ese camino. No afirma distribución uniforme de todos los mapas.</p><div class="rng-uc-demo"></div></section>
+  <section id="torneos" class="rng-uc-section" data-rng-uc-kind="torneos"><h2>Escenarios de torneos</h2><p>Valor para operaciones: escenarios auditables con cargas iguales y la misma semilla; arena reflejada para ambos lados. Simetría de entradas no demuestra equilibrio competitivo ni corrige ventaja de habilidad, conexión o diseño.</p><div class="rng-uc-demo"></div></section>
+  <section id="sorteos" class="rng-uc-section" data-rng-uc-kind="sorteos"><h2>Sorteo ficticio cerrado</h2><p>Valor para auditoría: reconstruir la selección de una lista ficticia cerrada a las 2026-10-04T23:00:00Z, antes del tick histórico simulado. Sólo nombres «Persona A», «Persona B», etc. Sin dinero ni premios reales. Esta demo no acredita un cierre real.</p><div class="rng-uc-demo"></div></section>
+  <section id="bonus" class="rng-uc-section" data-rng-uc-kind="bonus"><h2>Rasgos cosméticos</h2><p>Valor para equipos de contenido: repetir una asignación estética con tablas explícitas. Común 75%, raro 20%, épico 5%; color y patrón 1/3 cada uno. Son parámetros del ejemplo, no promesas de valor, premios o resultados futuros.</p><div class="rng-uc-demo"></div></section>
+  <aside class="rng-uc-disclaimer"><strong>Demostrador simulado; no es prueba de equidad.</strong><p>La verificación ex post prueba coherencia con el registro, no imparcialidad, autenticidad del proveedor ni ausencia de búsqueda de semillas. En producción las entradas deben cerrar antes de un tick futuro predeterminado, con registro del proveedor y recibo de compromiso verificable. Aquí el tick ya es conocido y todos los datos son ficticios.</p></aside>
+</div>
+<script src="/assets/usecases.js?v=20261013-1" defer></script>
+
+<section id="entropia" class="container" style="padding:4rem 1.5rem;scroll-margin-top:150px">
+  <div class="section-title"><span class="badge">Entropy as a Service</span><h2>Entropía como servicio para experiencias que se pueden demostrar</h2><p>RNGMarketDriven conecta una fuente de mercado definida con reglas versionadas, resultados reproducibles y evidencia que tu equipo y tus usuarios pueden revisar.</p></div>
+  <div class="steps-grid">
+    <article class="step-card"><span class="sat-tag">01 · Integrar</span><h3 style="color:#fff;margin:.6rem 0">Elegí la fuente y el caso</h3><p style="color:#cbd5e1">Mercado, activos, frecuencia, reglas y formato de entrega. Empezamos por el resultado que tu producto necesita, no por una demo genérica.</p></article>
+    <article class="step-card"><span class="sat-tag">02 · Ejecutar</span><h3 style="color:#fff;margin:.6rem 0">Generá experiencias</h3><p style="color:#cbd5e1">Dados, mapas, sorteos, torneos, bonus o mecánicas propias con una semilla y un algoritmo versionados.</p></article>
+    <article class="step-card"><span class="sat-tag">03 · Verificar</span><h3 style="color:#fff;margin:.6rem 0">Publicá la evidencia</h3><p style="color:#cbd5e1">Cada resultado puede quedar acompañado por su payload, hash, timestamp y comprobante exportable. Transparencia que se entiende y se puede repetir.</p></article>
+  </div>
+</section>
+
+<!-- Showcase Section -->
     <section>
-      <h2 class="section-title">Casos de Éxito y Ecosistema en Producción</h2>
-      <p class="section-sub">Explorá los verticales de entretenimiento impulsados por nuestro protocolo de aleatoriedad financiera.</p>
+      <h2 class="section-title">Catálogo de juegos y experiencias</h2>
+      <p class="section-sub">Cada experiencia tiene su propia página para desplegar, probar y evolucionar. Esta sección funciona como landing del catálogo, no como sala de juego embebida.</p>
 
       <div class="showcase-grid">
         <!-- 1. Cryptodromo -->
@@ -422,7 +434,7 @@
             <h3>Crypto Rocket Crash</h3>
             <p>Multiplicador exponencial continuo alimentado por velas de 1 segundo de BTC y ETH. Liquidación antes del crash point calculado mediante semilla SHA-256 auditada.</p>
           </div>
-          <a href="/#sandbox" class="showcase-link">Probar Simulador &rarr;</a>
+          <a href="/casino/" class="showcase-link">Abrir catálogo de juegos &rarr;</a>
         </div>
 
         <!-- 3. Wall Street Slots -->
@@ -432,7 +444,7 @@
             <h3>Wall Street 5-Reel Machine</h3>
             <p>Tragamonedas de 5 rodillos indexada a activos bursátiles ($NVDA, $BTC, $YPF, $AAPL, $TSLA). Si la rueda del día cierra alcista, se activa el multiplicador SuperBull.</p>
           </div>
-          <a href="/#sandbox" class="showcase-link">Girar Carretes &rarr;</a>
+          <a href="/casino/" class="showcase-link">Abrir catálogo de juegos &rarr;</a>
         </div>
 
         <!-- 4. Prode Bursatil -->
@@ -444,39 +456,137 @@
           </div>
           <a href="/prode-bursatil/" class="showcase-link">Jugar Prode Merval &rarr;</a>
         </div>
+
+        <!-- 5. CryptoMochi Portfolio Pet -->
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Vertical Web3 Gaming &bull; Cartera Viva</div>
+            <h3>CryptoMochi Tamagotchi</h3>
+            <p>Consola retro de 8 bits donde la mascota virtual es la propia cartera del jugador: temperamento genético por cruza de activos, salud por diversificación y arena por turnos.</p>
+          </div>
+          <a href="/mochi/" class="showcase-link">Abrir Consola Retro &rarr;</a>
+        </div>
+
+        <!-- 6. Lava Market Lab -->
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Vertical EaaS &bull; Visualizador Cuántico</div>
+            <h3>Lava Market Lab (10 Unidades)</h3>
+            <p>Matriz de 10 lámparas cuánticas en 2 filas con doble selector por mercado y activo. Captura instantánea de composiciones PNG y certificación SHA-256 de archivo.</p>
+          </div>
+          <a href="/lava-lab/" class="showcase-link">Entrar a Lava Lab &rarr;</a>
+        </div>
       </div>
+    </section>
+
+    <!-- NEW SECTION: Casos de Uso del Hash Bursátil (Beyond Gaming) -->
+    <section class="mb-16">
+      <div class="badge" style="display:table; margin:0 auto 0.8rem auto;">Infraestructura Universal de Aleatoriedad</div>
+      <h2 class="section-title">¿Para Qué Más Sirve la Entropía Financiera SHA-256?</h2>
+      <p class="section-sub">Casos de aplicación en gaming, torneos esports, sorteos institucionales y generación procedimental.</p>
+
+      <div class="showcase-grid">
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Gaming &bull; Tabletop RPGs</div>
+            <h3>🎲 Dados Cuánticos para Rol</h3>
+            <p>Tiradas d6, d20 y d100 reproducibles: fijá antes de jugar la fuente, el tick futuro y el número de tirada. Cada jugador puede recalcular el resultado con la misma semilla y reglas publicadas.</p>
+          </div>
+          <span style="color:var(--accent-green); font-size:0.75rem; font-family:var(--font-mono);">✓ Tiradas reproducibles y auditables</span>
+        </div>
+
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Generación Procedimental</div>
+            <h3>🗺️ Creación de Mapas & Mazmorras</h3>
+            <p>Semillas para generación de mundos procedurales (roguelikes, MMOs) derivadas de la volatilidad del día. Mapas únicos vinculados a fechas financieras históricas.</p>
+          </div>
+          <span style="color:var(--accent-blue); font-size:0.75rem; font-family:var(--font-mono);">✓ Semillas Reproducibles</span>
+        </div>
+
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">eSports & Torneos Competitivos</div>
+            <h3>⚔️ Semilla Idéntica para Ambos Equipos</h3>
+            <p>Ambos equipos usan la misma semilla, versión del generador y secuencia de eventos para reproducir mapas, loot y clima. Para igualdad competitiva se agregan escenarios simétricos y reglas preestablecidas; la semilla compartida por sí sola no garantiza equilibrio.</p>
+          </div>
+          <span style="color:var(--accent-pink); font-size:0.75rem; font-family:var(--font-mono);">✓ Fair-Play Competitivo</span>
+        </div>
+
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Loterías & Marketing</div>
+            <h3>🎟️ Sorteos Honestos & Giveaways</h3>
+            <p>Asignación de premios de marketing donde la selección del ganador depende del cierre de un mercado público (ej: cierre del S&P 500 o Bitcoin a una hora prefijada).</p>
+          </div>
+          <span style="color:var(--accent-green); font-size:0.75rem; font-family:var(--font-mono);">✓ Verificable por la Comunidad</span>
+        </div>
+
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">iGaming & Retención</div>
+            <h3>🎁 Bonus & Ruedas de la Fortuna</h3>
+            <p>Bonus, ruedas y recompensas con probabilidades publicadas y resultados recalculables. Ejemplo: sortear un bonus entre participantes elegibles usando un tick futuro fijado antes del cierre. El hash no certifica por sí solo el RTP ni la legalidad.</p>
+          </div>
+          <span style="color:var(--accent-yellow); font-size:0.75rem; font-family:var(--font-mono);">✓ Reglas y probabilidades explícitas</span>
+        </div>
+
+        <div class="showcase-card">
+          <div>
+            <div class="showcase-tag">Streaming & Live Feeds</div>
+            <h3>🌐 Feeds por Mercado Específico</h3>
+            <p>Hashes dedicados por sector: Cripto (Binance), Acciones de EE.UU. (NYSE/NASDAQ), Mercado Chino (SSE/HKEX), Merval Argentino (BYMA) o Macro Global (Dólar/Oro/Petróleo).</p>
+          </div>
+          <span style="color:var(--accent-cyan); font-size:0.75rem; font-family:var(--font-mono);">✓ Fuentes y cobertura configurables</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="fuentes" class="card" style="margin-bottom:3rem;overflow-wrap:anywhere">
+      <h2 class="section-title">Una semilla pública. Tu mercado. Tu canasta.</h2>
+      <p class="section-sub">Oferta propuesta: disponibilidad sujeta a integración, licencias de datos y validación técnica. No presentamos feeds pendientes como servicios activos.</p>
+      <h3>🌐 Beacon público gratuito — objetivo: 1 hash por segundo</h3>
+      <p>Una canasta multiactivo representativa, con composición y pesos publicados; no equivale a capturar todas las transacciones del mundo. Cada registro debe incluir timestamp, datos de origen, antigüedad de cotizaciones y versión del método. Un hash nuevo cada segundo no significa precios nuevos cada segundo en mercados cerrados.</p>
+      <h3 style="margin-top:1rem">📊 Hashes por mercado</h3>
+      <p>Cripto; acciones de Estados Unidos; China y Hong Kong; BYMA/Merval; y otros mercados según cobertura. Cada flujo conserva su identidad, moneda, horario y política para cotizaciones faltantes.</p>
+      <h3 style="margin-top:1rem">🏢 Canasta elegida por tu empresa</h3>
+      <p>Elegí tipo de mercado, activos, pesos y frecuencia. Ejemplos: BTC + ETH para un RPG; acciones estadounidenses para mundos procedimentales; una canasta argentina para promociones locales. La configuración se fija antes del evento y queda versionada para su auditoría.</p>
+      <h3 style="margin-top:1rem">🔎 Cómo verificar un sorteo o torneo</h3>
+      <p>1. Publicar participantes, reglas y tick futuro. 2. Cerrar las inscripciones antes del tick. 3. Registrar el snapshot y su hash. 4. Aplicar un generador versionado con conversión sin sesgo. 5. Publicar evidencia para recalcular. SHA-256 aporta una huella verificable: no demuestra por sí solo impredecibilidad, ausencia de manipulación o equidad.</p>
+      <p style="margin-top:1rem">También puede alimentar personalidades y cosméticos coleccionables, emparejamientos de torneos y desafíos diarios compartidos. Datos de mercado para entretenimiento; no es asesoramiento financiero.</p>
     </section>
 
     <!-- Pricing Tiers -->
     <section id="precios">
-      <h2 class="section-title">Planes y Tiers de Integración</h2>
+      <h2 class="section-title">Entropy as a Service: elegí cómo empezar</h2>
+      <p class="section-sub">Tres caminos para pasar de una idea a una integración verificable. Los valores y alcances finales se definen después de validar fuentes, licencias y requisitos técnicos.</p>
       <p class="section-sub">Modelos flexibles diseñados para startups de predicción o grandes operadores de apuestas.</p>
 
       <div class="pricing-grid">
         <!-- Tier 1 -->
         <div class="tier-card">
           <div>
-            <div class="tier-name">Seed API (Starter)</div>
-            <div class="tier-desc">Para casinos o casas de apuestas con frontend propio que buscan semillas financieras inmanipulables.</div>
+            <div class="tier-name">Entropy Core</div>
+            <div class="tier-desc">Para equipos que necesitan una capa de entropía verificable y un punto de partida claro, sin operar un producto completo.</div>
             <div class="tier-price">$2,500 <span style="font-size:1rem; color:var(--muted);">USDC</span></div>
             <div class="tier-subprice">$499/mes recurrente + 1.5% GGR</div>
             <ul class="tier-features">
-              <li>WebSockets & REST feed (Binance, NYSE, NASDAQ, BYMA)</li>
+              <li>Feeds por sector elegible: Cripto, EE.UU., China, Merval o Macro</li>
               <li>Generación de semillas SHA-256 cada 1 segundo</li>
+              <li>Hash global continuo de mercado disponible para todos</li>
               <li>Documentación OpenAPI y SDKs (JS / Python / Go)</li>
-              <li>Soporte técnico por canal dedicado</li>
               <li>Setup e integración en 48 - 72 horas</li>
             </ul>
           </div>
-          <a href="#agendar" class="btn-tier btn-tier-outline">Elegir Seed API</a>
+          <a href="#agendar" class="btn-tier btn-tier-outline">Elegir Entropy Core</a>
         </div>
 
         <!-- Tier 2 -->
         <div class="tier-card tier-featured">
           <div class="featured-badge">Más Popular</div>
           <div>
-            <div class="tier-name">White-Label Turnkey</div>
-            <div class="tier-desc">Sub-casino completo llave en mano con los 4 juegos listos para operar bajo tu propia marca y dominio.</div>
+            <div class="tier-name">Entropy Studio</div>
+            <div class="tier-desc">La opción para lanzar una experiencia white-label con casos de uso, auditoría y una capa de marca propia.</div>
             <div class="tier-price">$7,500 <span style="font-size:1rem; color:var(--muted);">USDC</span></div>
             <div class="tier-subprice">$1,200/mes recurrente + 4% GGR</div>
             <ul class="tier-features">
@@ -493,8 +603,8 @@
         <!-- Tier 3 -->
         <div class="tier-card">
           <div>
-            <div class="tier-name">Enterprise Custom</div>
-            <div class="tier-desc">Desarrollo de mecánicas propietarias, nodos dedicados de auditoría y soporte regulatorio integral.</div>
+            <div class="tier-name">Entropy Enterprise</div>
+            <div class="tier-desc">Diseño a medida para plataformas que necesitan una arquitectura propia, fuentes específicas y controles de auditoría.</div>
             <div class="tier-price">A Medida</div>
             <div class="tier-subprice">Revenue share escalonado (2% a 3% GGR)</div>
             <ul class="tier-features">
@@ -514,9 +624,9 @@
     <section class="booking-section" id="agendar">
       <div class="booking-info">
         <div class="badge">Conversación de 15 Minutos</div>
-        <h2>Hablemos sobre tu proyecto y arquitectura</h2>
+        <h2>Agendemos una conversación sobre tu producto</h2>
         <p>
-          No te mostramos una demo genérica en video. Nos conectamos para analizar la viabilidad técnica, el modelo de negocio y cómo integrar la aleatoriedad bursátil en tu plataforma en días.
+          No te mostramos una demo genérica en video. En la llamada definimos qué querés construir, qué fuente y reglas necesita y cómo convertirlo en una integración clara, reproducible y auditable.
         </p>
         <ul class="booking-points">
           <li><span>✓</span> <strong>Arquitectura Técnica:</strong> Evaluación de latencia, feeds y contratos inteligentes.</li>
@@ -530,7 +640,7 @@
 
       <!-- Booking Form -->
       <div class="form-box">
-        <h3 style="font-size:1.2rem; margin-bottom:1rem; color:#fff;">Agendar Charla Estratégica</h3>
+        <h3 style="font-size:1.2rem; margin-bottom:1rem; color:#fff;">Agendar conversación</h3>
         <form action="https://formspree.io/f/xblywazr" method="POST" id="bookingForm" onsubmit="handleBooking(event)">
           <!-- Hidden destination fallback -->
           <input type="hidden" name="_to" value="api@rngmarketdriven.com">
@@ -549,12 +659,35 @@
             <input type="text" name="company" placeholder="Casino Online, Exchange, Fondo...">
           </div>
           <div class="form-group">
-            <label>INTERÉS PRINCIPAL</label>
+            <label>MERCADO O ACTIVO DE INTERÉS (PERSONALIZABLE)</label>
+            <select name="market_sector">
+              <option value="Total Market Global (Índice Multiactivo)">Hash Global de Mercado Total (1s)</option>
+              <option value="Criptomonedas (Binance Spot / Perp)">Criptomonedas (BTC, ETH, SOL, altcoins)</option>
+              <option value="Wall Street (NYSE / NASDAQ)">Acciones EE.UU. (Tech, S&P 500, MegaCaps)</option>
+              <option value="China & Asia (SSE / HKEX)">Mercado Chino y Asiático (Alibaba, Tencent, Hang Seng)</option>
+              <option value="BYMA / Merval (Argentina)">Mercado Argentino (BYMA, Merval, Dólar CCL)</option>
+              <option value="Custom Basket (Canasta a Medida)">Canasta personalizada de activos</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>CASO DE USO / TIPO DE INTEGRACIÓN</label>
+            <select name="use_case">
+              <option value="Torneos eSports (Semilla Idéntica Fair-Play)">Torneos eSports (Misma Semilla entre Equipos)</option>
+              <option value="Dados para Rol / Tabletop RPGs">Dados para Juegos de Rol (d20, d100 inmanipulables)</option>
+              <option value="Generación de Mapas y Mazmorras">Generación Procedimental de Mapas / Roguelikes</option>
+              <option value="Sorteos Honestos y Giveaways">Sorteos Honestos y Loterías Transparentes</option>
+              <option value="Bonus y Ruedas de Fortuna">Bonus, Ruedas y Cajas de Recompensa</option>
+              <option value="Entropy Studio (Experiencia White-Label)">Entropy Studio (Experiencia White-Label)</option>
+              <option value="Entropy Core (Integración de Entropía)">Entropy Core (Integración de Entropía)</option>
+              <option value="Entropy Enterprise (Arquitectura a Medida)">Entropy Enterprise (Arquitectura a Medida)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>TIER DE PRECIO PREFERIDO</label>
             <select name="plan_interest">
-              <option value="White-Label Turnkey (Juegos Completos)">White-Label Turnkey (Juegos Completos)</option>
-              <option value="Seed API (Solo Feeds & Entropía)">Seed API (Solo Feeds & Entropía)</option>
-              <option value="Enterprise Custom (Mecánica a Medida)">Enterprise Custom (Mecánica a Medida)</option>
-              <option value="Integración Cryptódromo / Prode">Integración Cryptódromo / Prode</option>
+              <option value="Entropy Core (propuesta económica a validar)">Entropy Core (propuesta a validar)</option>
+              <option value="Entropy Studio (propuesta económica a validar)">Entropy Studio (propuesta a validar)</option>
+              <option value="Entropy Enterprise (a medida)">Entropy Enterprise (a medida)</option>
             </select>
           </div>
           <div class="form-group">

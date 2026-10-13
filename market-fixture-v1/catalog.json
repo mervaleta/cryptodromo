@@ -1,0 +1,479 @@
+[
+  {
+    "asset_id": "CRYPTO:BTC",
+    "ticker": "BTC",
+    "market": "CRYPTO",
+    "name": "BTC fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 10000000000
+  },
+  {
+    "asset_id": "CRYPTO:ETH",
+    "ticker": "ETH",
+    "market": "CRYPTO",
+    "name": "ETH fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 11300000000
+  },
+  {
+    "asset_id": "CRYPTO:SOL",
+    "ticker": "SOL",
+    "market": "CRYPTO",
+    "name": "SOL fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 12600000000
+  },
+  {
+    "asset_id": "CRYPTO:IOTA",
+    "ticker": "IOTA",
+    "market": "CRYPTO",
+    "name": "IOTA fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 13900000000
+  },
+  {
+    "asset_id": "CRYPTO:AVAX",
+    "ticker": "AVAX",
+    "market": "CRYPTO",
+    "name": "AVAX fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 15200000000
+  },
+  {
+    "asset_id": "CRYPTO:DOT",
+    "ticker": "DOT",
+    "market": "CRYPTO",
+    "name": "DOT fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 16500000000
+  },
+  {
+    "asset_id": "CRYPTO:ADA",
+    "ticker": "ADA",
+    "market": "CRYPTO",
+    "name": "ADA fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 17800000000
+  },
+  {
+    "asset_id": "CRYPTO:CAKE",
+    "ticker": "CAKE",
+    "market": "CRYPTO",
+    "name": "CAKE fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 19100000000
+  },
+  {
+    "asset_id": "CRYPTO:BNB",
+    "ticker": "BNB",
+    "market": "CRYPTO",
+    "name": "BNB fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 20400000000
+  },
+  {
+    "asset_id": "CRYPTO:POL",
+    "ticker": "POL",
+    "market": "CRYPTO",
+    "name": "Polygon POL",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 21700000000
+  },
+  {
+    "asset_id": "CRYPTO:MATIC",
+    "ticker": "MATIC",
+    "market": "CRYPTO",
+    "name": "Legacy MATIC label (separate simulated asset, not POL)",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 23000000000
+  },
+  {
+    "asset_id": "CRYPTO:DOGE",
+    "ticker": "DOGE",
+    "market": "CRYPTO",
+    "name": "DOGE fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 24300000000
+  },
+  {
+    "asset_id": "CRYPTO:SUSHI",
+    "ticker": "SUSHI",
+    "market": "CRYPTO",
+    "name": "SUSHI fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 25600000000
+  },
+  {
+    "asset_id": "CRYPTO:XRP",
+    "ticker": "XRP",
+    "market": "CRYPTO",
+    "name": "XRP fictional fixture",
+    "currency": "USD",
+    "scale": 8,
+    "anchor_units": 26900000000
+  },
+  {
+    "asset_id": "NASDAQ:NVDA",
+    "ticker": "NVDA",
+    "market": "NASDAQ",
+    "name": "NVDA fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1000000
+  },
+  {
+    "asset_id": "NASDAQ:TSLA",
+    "ticker": "TSLA",
+    "market": "NASDAQ",
+    "name": "TSLA fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1130000
+  },
+  {
+    "asset_id": "NASDAQ:AAPL",
+    "ticker": "AAPL",
+    "market": "NASDAQ",
+    "name": "AAPL fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1260000
+  },
+  {
+    "asset_id": "NASDAQ:MSFT",
+    "ticker": "MSFT",
+    "market": "NASDAQ",
+    "name": "MSFT fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1390000
+  },
+  {
+    "asset_id": "NASDAQ:AMZN",
+    "ticker": "AMZN",
+    "market": "NASDAQ",
+    "name": "AMZN fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1520000
+  },
+  {
+    "asset_id": "NASDAQ:GOOGL",
+    "ticker": "GOOGL",
+    "market": "NASDAQ",
+    "name": "GOOGL fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1650000
+  },
+  {
+    "asset_id": "HKEX:0700",
+    "ticker": "0700",
+    "market": "HKEX",
+    "name": "0700 fictional fixture",
+    "currency": "HKD",
+    "scale": 4,
+    "anchor_units": 1000000
+  },
+  {
+    "asset_id": "HKEX:9988",
+    "ticker": "9988",
+    "market": "HKEX",
+    "name": "9988 fictional fixture",
+    "currency": "HKD",
+    "scale": 4,
+    "anchor_units": 1130000
+  },
+  {
+    "asset_id": "SSE:600519",
+    "ticker": "600519",
+    "market": "SSE",
+    "name": "600519 fictional fixture",
+    "currency": "CNY",
+    "scale": 4,
+    "anchor_units": 1000000
+  },
+  {
+    "asset_id": "SSE:601318",
+    "ticker": "601318",
+    "market": "SSE",
+    "name": "601318 fictional fixture",
+    "currency": "CNY",
+    "scale": 4,
+    "anchor_units": 1130000
+  },
+  {
+    "asset_id": "SSE:600036",
+    "ticker": "600036",
+    "market": "SSE",
+    "name": "600036 fictional fixture",
+    "currency": "CNY",
+    "scale": 4,
+    "anchor_units": 1260000
+  },
+  {
+    "asset_id": "BYMA:YPFD",
+    "ticker": "YPFD",
+    "market": "BYMA",
+    "name": "YPFD fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1000000
+  },
+  {
+    "asset_id": "BYMA:GGAL",
+    "ticker": "GGAL",
+    "market": "BYMA",
+    "name": "GGAL fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1130000
+  },
+  {
+    "asset_id": "BYMA:PAMP",
+    "ticker": "PAMP",
+    "market": "BYMA",
+    "name": "PAMP fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1260000
+  },
+  {
+    "asset_id": "BYMA:BMA",
+    "ticker": "BMA",
+    "market": "BYMA",
+    "name": "BMA fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1390000
+  },
+  {
+    "asset_id": "BYMA:ALUA",
+    "ticker": "ALUA",
+    "market": "BYMA",
+    "name": "ALUA fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1520000
+  },
+  {
+    "asset_id": "BYMA:TXAR",
+    "ticker": "TXAR",
+    "market": "BYMA",
+    "name": "TXAR fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1650000
+  },
+  {
+    "asset_id": "BYMA:CEPU",
+    "ticker": "CEPU",
+    "market": "BYMA",
+    "name": "CEPU fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1780000
+  },
+  {
+    "asset_id": "BYMA:EDN",
+    "ticker": "EDN",
+    "market": "BYMA",
+    "name": "EDN fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 1910000
+  },
+  {
+    "asset_id": "BYMA:CRES",
+    "ticker": "CRES",
+    "market": "BYMA",
+    "name": "CRES fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 2040000
+  },
+  {
+    "asset_id": "BYMA:SUPV",
+    "ticker": "SUPV",
+    "market": "BYMA",
+    "name": "SUPV fictional fixture",
+    "currency": "ARS",
+    "scale": 4,
+    "anchor_units": 2170000
+  },
+  {
+    "asset_id": "NYSE-ADR:YPF",
+    "ticker": "YPF",
+    "market": "NYSE-ADR",
+    "name": "YPF fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1000000
+  },
+  {
+    "asset_id": "NYSE-ADR:GGAL",
+    "ticker": "GGAL",
+    "market": "NYSE-ADR",
+    "name": "GGAL fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1130000
+  },
+  {
+    "asset_id": "INDEX:SPX",
+    "ticker": "SPX",
+    "market": "INDEX",
+    "name": "SPX fictional fixture",
+    "currency": "POINTS",
+    "scale": 4,
+    "anchor_units": 1000000
+  },
+  {
+    "asset_id": "INDEX:NDX",
+    "ticker": "NDX",
+    "market": "INDEX",
+    "name": "NDX fictional fixture",
+    "currency": "POINTS",
+    "scale": 4,
+    "anchor_units": 1130000
+  },
+  {
+    "asset_id": "INDEX:DJI",
+    "ticker": "DJI",
+    "market": "INDEX",
+    "name": "DJI fictional fixture",
+    "currency": "POINTS",
+    "scale": 4,
+    "anchor_units": 1260000
+  },
+  {
+    "asset_id": "INDEX:HSI",
+    "ticker": "HSI",
+    "market": "INDEX",
+    "name": "HSI fictional fixture",
+    "currency": "POINTS",
+    "scale": 4,
+    "anchor_units": 1390000
+  },
+  {
+    "asset_id": "INDEX:CSI300",
+    "ticker": "CSI300",
+    "market": "INDEX",
+    "name": "CSI300 fictional fixture",
+    "currency": "POINTS",
+    "scale": 4,
+    "anchor_units": 1520000
+  },
+  {
+    "asset_id": "INDEX:MERVAL",
+    "ticker": "MERVAL",
+    "market": "INDEX",
+    "name": "MERVAL fictional fixture",
+    "currency": "POINTS",
+    "scale": 4,
+    "anchor_units": 1650000
+  },
+  {
+    "asset_id": "FX:EURUSD",
+    "ticker": "EURUSD",
+    "market": "FX",
+    "name": "EURUSD fictional fixture",
+    "currency": "QUOTE",
+    "scale": 6,
+    "anchor_units": 100000000
+  },
+  {
+    "asset_id": "FX:GBPUSD",
+    "ticker": "GBPUSD",
+    "market": "FX",
+    "name": "GBPUSD fictional fixture",
+    "currency": "QUOTE",
+    "scale": 6,
+    "anchor_units": 113000000
+  },
+  {
+    "asset_id": "FX:USDJPY",
+    "ticker": "USDJPY",
+    "market": "FX",
+    "name": "USDJPY fictional fixture",
+    "currency": "QUOTE",
+    "scale": 6,
+    "anchor_units": 126000000
+  },
+  {
+    "asset_id": "FX:USDCNY",
+    "ticker": "USDCNY",
+    "market": "FX",
+    "name": "USDCNY fictional fixture",
+    "currency": "QUOTE",
+    "scale": 6,
+    "anchor_units": 139000000
+  },
+  {
+    "asset_id": "FX:USDARS",
+    "ticker": "USDARS",
+    "market": "FX",
+    "name": "USDARS fictional fixture",
+    "currency": "QUOTE",
+    "scale": 6,
+    "anchor_units": 152000000
+  },
+  {
+    "asset_id": "COMMODITY:XAU",
+    "ticker": "XAU",
+    "market": "COMMODITY",
+    "name": "XAU fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1000000
+  },
+  {
+    "asset_id": "COMMODITY:XAG",
+    "ticker": "XAG",
+    "market": "COMMODITY",
+    "name": "XAG fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1130000
+  },
+  {
+    "asset_id": "COMMODITY:WTI",
+    "ticker": "WTI",
+    "market": "COMMODITY",
+    "name": "WTI fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1260000
+  },
+  {
+    "asset_id": "COMMODITY:BRENT",
+    "ticker": "BRENT",
+    "market": "COMMODITY",
+    "name": "BRENT fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1390000
+  },
+  {
+    "asset_id": "COMMODITY:COPPER",
+    "ticker": "COPPER",
+    "market": "COMMODITY",
+    "name": "COPPER fictional fixture",
+    "currency": "USD",
+    "scale": 4,
+    "anchor_units": 1520000
+  }
+]

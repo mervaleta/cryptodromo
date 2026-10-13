@@ -1,0 +1,13 @@
+{
+  "version": "market-fixture-v1",
+  "simulation": true,
+  "price_semantics": "Fictional anchors; synthetic 24/7 minute grid, NOT live prices or official sessions. Deterministic bidirectional integer-unit simulated paths.",
+  "start": "2026-10-05T00:00:00Z",
+  "end": "2026-10-11T23:59:00Z",
+  "minutes_per_asset": 10080,
+  "asset_count": 53,
+  "row_count": 534240,
+  "database_sha256": "bee921c8070d3644c90ecb9052c39b9de8cddca623e3d7e9e748e538c5fd556a",
+  "catalog_sha256": "cfa21c1d9f4c3afa11caf57d1f2e20a5384e1f1d0321719cdada9b59ed091e71",
+  "generator": "sha256 asset seed + fixed LCG signed basis-point steps; build-time only"
+}

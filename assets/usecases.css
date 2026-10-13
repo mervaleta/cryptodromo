@@ -1,0 +1,26 @@
+.rng-uc-root { color:#e9eef7; background:#101827; font-family:system-ui,sans-serif; line-height:1.6; padding:clamp(16px,4vw,40px); border-radius:20px; max-width:1100px; margin:24px auto; }
+.rng-uc-root .rng-uc-context, .rng-uc-root .rng-uc-disclaimer { padding:20px; border:1px solid #557185; border-radius:14px; background:#17283a; }
+.rng-uc-root .rng-uc-section { border-top:1px solid #3d5168; margin-top:32px; padding-top:24px; scroll-margin-top:160px; }
+.rng-uc-root h2 { color:#eef5ff; font-size:clamp(22px,3vw,30px); margin:0 0 10px; }
+.rng-uc-root p { margin:8px 0 18px; }
+.rng-uc-root .rng-uc-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+.rng-uc-root .rng-uc-label { display:flex; flex-direction:column; gap:6px; max-width:100%; }
+.rng-uc-root .rng-uc-input, .rng-uc-root .rng-uc-textarea { font:inherit; color:#f2f6ff; background:#0b1220; border:1px solid #7e91a7; padding:10px; border-radius:8px; max-width:100%; box-sizing:border-box; }
+.rng-uc-root .rng-uc-textarea { width:100%; min-height:150px; font:13px/1.5 ui-monospace,monospace; }
+.rng-uc-root .rng-uc-button { cursor:pointer; background:#b0f4df; color:#10271f; border:1px solid #b0f4df; border-radius:8px; font:600 15px system-ui,sans-serif; padding:12px 16px; }
+.rng-uc-root .rng-uc-button:disabled { opacity:.5; cursor:wait; }
+.rng-uc-root .rng-uc-retry { background:#152b3e; color:#b0f4df; border-color:#4da58c; margin:0 0 12px; }
+.rng-uc-root .rng-uc-retry[hidden] { display:none; }
+.rng-uc-root .rng-uc-button:focus-visible, .rng-uc-root .rng-uc-input:focus-visible, .rng-uc-root .rng-uc-textarea:focus-visible, .rng-uc-root .rng-uc-audit summary:focus-visible { outline:3px solid #ffd883; outline-offset:3px; }
+.rng-uc-root .rng-uc-result { padding:16px 0; font-weight:600; overflow-wrap:anywhere; }
+.rng-uc-root .rng-uc-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:4px; width:min(100%,360px); margin:12px 0; }
+.rng-uc-root .rng-uc-cell { display:flex; align-items:center; justify-content:center; aspect-ratio:1; border-radius:4px; background:#263d52; color:#fff; font-size:14px; }
+.rng-uc-root .rng-uc-path { background:#1a7058; }
+.rng-uc-root .rng-uc-obstacle { background:#4d465d; }
+.rng-uc-root .rng-uc-left { background:#215f9f; }
+.rng-uc-root .rng-uc-right { background:#7b4b24; }
+.rng-uc-root .rng-uc-audit { margin:16px 0 28px; }
+.rng-uc-root .rng-uc-audit summary { cursor:pointer; font-weight:600; padding:8px 0; }
+.rng-uc-root .rng-uc-audit .rng-uc-label { margin:12px 0; width:100%; }
+.rng-uc-root .rng-uc-status { min-height:24px; overflow-wrap:anywhere; }
+@media(max-width:480px) { .rng-uc-root .rng-uc-controls { align-items:stretch; flex-direction:column; } .rng-uc-root .rng-uc-button { width:100%; } }
