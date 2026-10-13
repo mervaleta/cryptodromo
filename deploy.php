@@ -28,13 +28,14 @@ if ($content === false || strlen($content) < 500) {
     die(json_encode(['status' => 'error', 'message' => 'Failed to fetch index.html from GitHub']));
 }
 
-$target_file = __DIR__ . '/index.html';
-if (file_put_contents($target_file, $content) === false) {
-    http_response_code(500);
-    die(json_encode(['status' => 'error', 'message' => 'Failed to write index.html locally']));
+// Self update deploy.php FIRST before anything else
+$self_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/deploy.php';
+$self_content = @file_get_contents($self_github_url, false, $context);
+if ($self_content !== false && strlen($self_content) > 200 && $self_content !== file_get_contents(__FILE__)) {
+    @file_put_contents(__FILE__, $self_content);
 }
 
-// Also fetch and deploy soluciones landing
+// Fetch and deploy latest index.html
 $soluciones_github_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/soluciones/index.html';
 $soluciones_content = @file_get_contents($soluciones_github_url, false, $context);
 if ($soluciones_content !== false && strlen($soluciones_content) > 500) {
@@ -62,6 +63,10 @@ if ($lava_content !== false && strlen($lava_content) > 500) {
     @file_put_contents(__DIR__ . '/lava-lab/index.html', $lava_content);
     @file_put_contents(__DIR__ . '/lava.html', $lava_content);
 }
+
+// Write index.html
+$target_file = __DIR__ . '/index.html';
+@file_put_contents($target_file, $content);
 
 // Fetch favicon.svg and favicon.ico
 $fav_svg_url = 'https://raw.githubusercontent.com/mervaleta/rngmarketdriven/main/favicon.svg';
