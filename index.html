@@ -1,764 +1,92 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RNGMarketDriven.com | Next-Gen Provably Fair Engine</title>
-  <meta name="description" content="Infraestructura iGaming y FinTech B2B que convierte la volatilidad de los mercados globales en aleatoriedad Provably Fair auditada e inmanipulable.">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="alternate icon" href="favicon.ico">
-  <style>
-    :root {
-      --bg: #0a0a0f;
-      --bg-card: #12131d;
-      --bg-card-hover: #181928;
-      --border: #212438;
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --neon-green: #00ff88;
-      --neon-blue: #00d2ff;
-      --neon-purple: #9d4edd;
-      --neon-pink: #ff007f;
-      --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#06120f" />
+    <meta name="description" content="Demo 3D de carreras Cryptodromo con clima y mercado configurables." />
+    <title>Cryptodromo — 3D Race Lab</title>
+    <script type="module" crossorigin src="./race-lab/assets/index-B8MfVpCh.js"></script>
+    <link rel="stylesheet" crossorigin href="./race-lab/assets/index-CBhyMvUz.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="Cryptodromo 3D Race Lab">
+          <span class="brand-mark">C</span><span>cryptodromo</span><small>3D RACE LAB</small>
+        </a>
+        <nav class="main-nav" aria-label="Navegación principal">
+          <span class="nav-item">BETS</span><span class="nav-item">FIXTURE</span>
+          <span class="nav-item active"><i></i> LIVE</span><span class="nav-item">RANKING</span>
+          <span class="nav-item">RESULTS</span>
+        </nav>
+        <div class="account"><span class="wallet">◈</span><span>1000.00</span><span class="avatar">D</span></div>
+      </header>
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: var(--font-main);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-
-    /* Header */
-    header.site-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(10, 10, 15, 0.9);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 0;
-    }
-    .nav-wrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .brand-logo {
-      font-family: var(--font-mono);
-      font-size: 1.25rem;
-      font-weight: 900;
-      text-decoration: none;
-      color: #fff;
-    }
-    .brand-logo span.accent { color: var(--neon-green); }
-    nav.nav-links {
-      display: flex;
-      gap: 1.5rem;
-      align-items: center;
-    }
-    nav.nav-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-    nav.nav-links a:hover { color: var(--neon-blue); }
-    .btn-nav {
-      background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 210, 255, 0.15));
-      border: 1px solid var(--neon-green);
-      color: var(--neon-green) !important;
-      padding: 0.4rem 1rem;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-    }
-
-    /* Hero */
-    .hero { padding: 5rem 0 4rem; }
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 3rem;
-      align-items: center;
-    }
-    @media (max-width: 900px) {
-      .hero-grid { grid-template-columns: 1fr; }
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(157, 78, 221, 0.15);
-      border: 1px solid var(--neon-purple);
-      color: var(--neon-purple);
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      font-weight: bold;
-      padding: 0.35rem 0.85rem;
-      border-radius: 999px;
-      margin-bottom: 1.5rem;
-    }
-    .hero h1 {
-      font-size: 2.8rem;
-      font-weight: 900;
-      line-height: 1.15;
-      margin-bottom: 1.2rem;
-      background: linear-gradient(135deg, #ffffff 40%, var(--neon-blue) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p.lead {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-      margin-bottom: 2rem;
-    }
-    .cta-group { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .btn-primary {
-      background: var(--neon-green);
-      color: #050508;
-      text-decoration: none;
-      padding: 0.8rem 1.8rem;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.95rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-    }
-    .btn-secondary {
-      background: transparent;
-      color: var(--neon-blue);
-      border: 1px solid var(--neon-blue);
-      text-decoration: none;
-      padding: 0.8rem 1.8rem;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.95rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn-secondary:hover {
-      background: rgba(0, 210, 255, 0.1);
-    }
-
-    /* Terminal */
-    .terminal-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-    }
-    .terminal-header {
-      background: #181928;
-      padding: 0.75rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot.red { background: #ff5f56; }
-    .dot.yellow { background: #ffbd2e; }
-    .dot.green { background: #27c93f; }
-    .terminal-title {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-left: 0.5rem;
-    }
-    .terminal-body {
-      padding: 1.25rem;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-    }
-    .stream-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      border-bottom: 1px dashed #1e2235;
-      padding-bottom: 0.35rem;
-    }
-    .stream-label { color: var(--text-muted); }
-    .stream-val { color: var(--neon-blue); font-weight: bold; }
-    .hash-highlight {
-      background: #090a10;
-      border: 1px solid var(--neon-green);
-      padding: 0.6rem;
-      border-radius: 4px;
-      color: var(--neon-green);
-      word-break: break-all;
-      margin-top: 0.75rem;
-      font-size: 0.75rem;
-    }
-
-    /* Sections */
-    .section-title {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-    .section-title h2 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      margin-bottom: 0.8rem;
-      background: linear-gradient(135deg, #fff, var(--text-muted));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .section-title p {
-      color: var(--text-muted);
-      max-width: 650px;
-      margin: 0 auto;
-    }
-
-    /* Steps Grid */
-    .steps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
-    }
-    .step-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 2rem 1.5rem;
-      position: relative;
-    }
-    .step-num {
-      font-family: var(--font-mono);
-      font-size: 2.5rem;
-      font-weight: 900;
-      color: rgba(157, 78, 221, 0.2);
-      position: absolute;
-      top: 1rem;
-      right: 1.5rem;
-    }
-
-    /* Satellite Brands */
-    .satellite-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
-    }
-    .satellite-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.8rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .sat-tag {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--neon-green);
-      background: rgba(0, 255, 136, 0.1);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      display: inline-block;
-      margin-bottom: 0.6rem;
-    }
-
-    /* =========================================
-       MARKET MATRIX & 24H DATASET CONTROLS
-       ========================================= */
-    .matrix-box {
-      background: #0d0e18;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 2.5rem;
-    }
-    .matrix-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.8rem;
-    }
-    .hour-slider-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-    }
-    .tickers-live-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.8rem;
-    }
-    .ticker-chip {
-      background: #141624;
-      border: 1px solid #232742;
-      padding: 0.6rem 0.8rem;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      text-align: center;
-    }
-    .chip-name { font-weight: bold; color: #fff; }
-    .chip-delta.pos { color: var(--neon-green); }
-    .chip-delta.neg { color: var(--neon-pink); }
-
-    /* =========================================
-       5-REEL WALL STREET SLOTS
-       ========================================= */
-    .slots-machine-container {
-      background: radial-gradient(circle at center, #17192c 0%, #0c0d16 100%);
-      border: 2px solid #2e3458;
-      box-shadow: 0 0 30px rgba(0, 210, 255, 0.15);
-      border-radius: 16px;
-      padding: 2rem;
-      max-width: 850px;
-      margin: 0 auto;
-    }
-    .slots-cabinet-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #252b48;
-      padding-bottom: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .jackpot-banner {
-      font-family: var(--font-mono);
-      font-size: 1.1rem;
-      color: var(--neon-green);
-      font-weight: bold;
-      letter-spacing: 1px;
-      text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-    }
-
-    .reels-frame {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 0.75rem;
-      background: #06070a;
-      padding: 1rem;
-      border-radius: 12px;
-      border: 2px solid #30375a;
-      margin-bottom: 1.5rem;
-      box-shadow: inset 0 0 20px #000;
-    }
-    .reel-col {
-      background: #111322;
-      border: 1px solid #242944;
-      border-radius: 8px;
-      overflow: hidden;
-      height: 140px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    .reel-symbol {
-      font-family: var(--font-mono);
-      font-size: 1.6rem;
-      font-weight: 900;
-      color: #fff;
-      transition: transform 0.2s, filter 0.2s;
-      text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-    }
-    .reel-col.spinning .reel-symbol {
-      animation: slotBlur 0.15s infinite alternate ease-in-out;
-      filter: blur(3px);
-      transform: translateY(-20px);
-    }
-    @keyframes slotBlur {
-      0% { transform: translateY(-30px); opacity: 0.6; }
-      100% { transform: translateY(30px); opacity: 0.9; }
-    }
-
-    .slots-dashboard {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 1rem;
-      background: #0a0b12;
-      padding: 1rem;
-      border-radius: 8px;
-      border: 1px solid #1c2035;
-      margin-bottom: 1.5rem;
-      font-family: var(--font-mono);
-      text-align: center;
-    }
-    .dash-label { font-size: 0.75rem; color: var(--text-muted); }
-    .dash-val { font-size: 1.15rem; font-weight: bold; color: var(--neon-blue); margin-top: 2px; }
-
-    .slots-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .bet-selector-group {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-    }
-    .select-dark {
-      background: #181b2c;
-      color: #fff;
-      border: 1px solid #2f3657;
-      padding: 0.5rem 0.8rem;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-    }
-
-    /* =========================================
-       CRYPTOMOCHI CUSTOM TRAIT-BY-TRAIT MENU
-       ========================================= */
-    .mochi-lab-container {
-      background: #10121d;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2rem;
-      display: grid;
-      grid-template-columns: 1fr 1.3fr;
-      gap: 2.5rem;
-      align-items: center;
-    }
-    @media (max-width: 850px) {
-      .mochi-lab-container { grid-template-columns: 1fr; }
-    }
-    .mochi-avatar-card {
-      background: #08090f;
-      border: 1px solid #232742;
-      border-radius: 12px;
-      padding: 2rem 1.5rem;
-      text-align: center;
-    }
-    .mochi-sprite {
-      font-size: 4.5rem;
-      margin-bottom: 1rem;
-      animation: floatPet 2s ease-in-out infinite alternate;
-    }
-    @keyframes floatPet {
-      from { transform: translateY(0); }
-      to { transform: translateY(-10px); }
-    }
-    .trait-list-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .trait-row {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr;
-      align-items: center;
-      gap: 0.8rem;
-      background: #0b0c14;
-      border: 1px solid #1c1f33;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-    }
-    .trait-name {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .trait-bar-wrap {
-      background: #161929;
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-      width: 100%;
-    }
-    .trait-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
-      width: 75%;
-      transition: width 0.3s;
-    }
-
-    /* Footer */
-    footer.site-footer {
-      border-top: 1px solid var(--border);
-      padding: 3rem 0;
-      margin-top: 5rem;
-      background: #08080d;
-    }
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr;
-      gap: 2.5rem;
-    }
-    .copy-text {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 2rem;
-      border-top: 1px solid #181928;
-      padding-top: 1.5rem;
-      text-align: center;
-      font-family: var(--font-mono);
-    }
-
-    /* Modal de Login */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-card {
-      background: #111322;
-      border: 1px solid #282e4e;
-      box-shadow: 0 0 40px rgba(0, 210, 255, 0.2);
-      border-radius: 16px;
-      padding: 2.5rem 2rem;
-      max-width: 440px;
-      width: 90%;
-      text-align: center;
-      position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      top: 1rem; right: 1.2rem;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-  </style>
-<link rel="stylesheet" href="/assets/rng-header.css?v=20261013-1">
-</head>
-<body>
-
-  <!-- Header -->
-  <header id="rng-site-header" aria-label="Encabezado de RNGMarketDriven"><div class="rng-header-inner"><a href="/" class="rng-brand" aria-label="RNGMarketDriven — Inicio">RNG<span>MarketDriven</span></a><nav class="rng-navigation" aria-label="Navegación principal"><a href="/">Inicio</a><a href="/#motor">Tecnología</a><a href="/#empresa">Empresa</a><a href="/#ecosistema">Casos de uso</a><a href="/soluciones/">Servicios y precios</a></nav><a href="/soluciones/#agendar" class="rng-schedule">Agendar llamada</a></div></header>
-
-  <main>
-    <!-- HERO -->
-    <section class="hero container">
-      <div class="hero-grid">
-        <div class="hero-content">
-          <div class="badge">PROVABLY FAIR 2.0 &bull; FINANCIAL ENTROPY INFRASTRUCTURE</div>
-          <h1>Tecnología de semillas verificables para tu plataforma</h1>
-          <p class="lead">
-            Diseñamos integraciones de datos de mercado y hashes SHA-256 para experiencias reproducibles, sorteos auditables y generación procedimental. Elegí mercados y activos según tu proyecto.
-          </p>
-          <div class="cta-group">
-            <a href="#ecosistema" class="btn-secondary">Explorar casos de uso</a>
-            <a href="/soluciones/#agendar" class="btn-primary" style="background:linear-gradient(90deg, var(--green-neon), var(--cyan-neon)); color:#05070a; font-weight:800;">Agendar llamada</a>
-            <a href="/soluciones/" class="btn-secondary" style="border-color:var(--cyan-neon); color:var(--cyan-neon);">Ver Soluciones & Precios</a>
+      <main id="top" class="page">
+        <section class="race-heading">
+          <div>
+            <div class="eyebrow"><span class="live-dot"></span> TRANSMISIÓN DE PRUEBA</div>
+            <h1>Gran Premio <em>Cripto</em></h1>
+            <p class="race-meta">12 corredores <span>·</span> Demo de mercado <span>·</span> <span id="raceStatus">EN VIVO</span></p>
           </div>
-        </div>
+          <div class="race-clock"><span>VUELTA</span><strong id="raceClock">00:00</strong></div>
+        </section>
 
-        <!-- Terminal Telemetría Hero -->
-        <div class="terminal-card">
-          <div class="terminal-header">
-            <div class="dot red"></div>
-            <div class="dot yellow"></div>
-            <div class="dot green"></div>
-            <span class="terminal-title">EJEMPLO DE SNAPSHOT · DATOS ILUSTRATIVOS</span>
+        <section class="race-layout">
+          <div class="main-column">
+            <div class="viewer-card">
+              <div class="viewer-topline">
+                <div class="view-title"><span class="signal">●</span> CRYPTODROMO LIVE <span class="tag">3D</span></div>
+                <div class="viewer-actions"><span class="market-state"><b></b> MOTOR DE PRECIOS · DEMO</span><button id="soundToggle" class="icon-button" aria-label="Activar o desactivar sonido" title="Silenciar / activar audio">♫</button><button id="fullscreen" class="icon-button" aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
+              </div>
+              <div id="sceneWrap" class="scene-wrap">
+                <div class="scene-vignette"></div>
+                <div class="scene-label"><span class="label-live">LIVE</span><span id="weatherLabel">CÉSPED · DESPEJADO</span></div>
+                <div class="scene-caption">SIMULACIÓN VISUAL · COTIZACIONES DE MUESTRA</div>
+                <canvas id="raceCanvas" aria-label="Carrera 3D de doce caballos construidos con geometría procedural"></canvas>
+                <div class="center-callout" id="callout">¡A SUS MARCAS!</div>
+              </div>
+              <div class="race-progress"><span>INICIO</span><div class="progress-line"><i id="progressFill"></i></div><span>META</span></div>
+            </div>
+
+            <section class="control-card">
+              <div class="section-head">
+                <div><div class="eyebrow">DIRECCIÓN DE ESCENA</div><h2>Clima y ambiente</h2></div>
+                <button id="resetEnvironment" class="text-button">Restablecer</button>
+              </div>
+              <div class="controls-grid">
+                <label class="control-block"><span class="control-name">Hora del día <b id="timeReadout">17:30</b></span><input id="timeOfDay" type="range" min="0" max="143" value="105" /><span class="range-ends"><small>00:00</small><small>23:50</small></span></label>
+                <label class="control-block"><span class="control-name">Clima</span><select id="weather"><option value="clear">Despejado</option><option value="cloudy">Nublado</option><option value="rain">Lluvia</option><option value="storm">Tormenta</option><option value="snow">Nieve</option><option value="fog">Neblina</option></select></label>
+                <label class="control-block"><span class="control-name">Superficie</span><select id="surface"><option value="grass">Césped</option><option value="dirt">Tierra</option><option value="sand">Arena</option></select></label>
+                <label class="control-block"><span class="control-name">Nubosidad <b id="cloudReadout">32%</b></span><input id="clouds" type="range" min="0" max="100" value="32" /><span class="range-ends"><small>Despejado</small><small>Cubierto</small></span></label>
+                <label class="control-block"><span class="control-name">Viento <b id="windReadout">12 km/h</b></span><input id="wind" type="range" min="0" max="80" value="12" /><span class="range-ends"><small>Calma</small><small>80 km/h</small></span></label>
+              </div>
+            </section>
           </div>
-          <div class="terminal-body">
-            <div class="stream-row">
-              <span class="stream-label">BTC/USDT (1s Spot)</span>
-              <span class="stream-val" id="t-btc">$68,565.40</span>
-            </div>
-            <div class="stream-row">
-              <span class="stream-label">NVDA (1m Volume)</span>
-              <span class="stream-val" id="t-nvda">69,908,781</span>
-            </div>
-            <div class="stream-row">
-              <span class="stream-label">ETH/USDT (1h Delta)</span>
-              <span class="stream-val" id="t-eth">+1.81%</span>
-            </div>
-            <div class="stream-row">
-              <span class="stream-label">YPF (ByMA / NYSE Delta)</span>
-              <span class="stream-val" id="t-ypf">+3.20%</span>
-            </div>
-            <div style="margin-top:0.8rem; font-size:0.75rem; color:var(--text-muted);">
-              LAST DERIVED ENTROPY SEED (SHA-256):
-            </div>
-            <div class="hash-highlight" id="t-hash">
-              25a6198f4ad2b526b655ea2895c8f3c97b409ce0ffb4698b54a2e5cd108c2ae2
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- EL MOTOR -->
-    <section id="motor" class="container" style="padding: 4rem 1.5rem;">
-      <div class="section-title">
-        <h2>Nuestro Motor (The Entropy Engine)</h2>
-        <p>Un pipeline matemático desacoplado que sustituye los pseudo-generadores por entropía real de los mercados mundiales.</p>
-      </div>
+          <aside class="side-column">
+            <section class="market-card">
+              <div class="section-head compact"><div><div class="eyebrow">INPUT DE MERCADO</div><h2>Pulso de precios</h2></div><span class="demo-pill">DEMO</span></div>
+              <p class="helper-text">La variación impulsa el ritmo de cada corredor. Ajustá el pulso para ver cómo cambia la carrera.</p>
+              <label class="market-input-label" for="marketMove">Variación de muestra <strong id="moveValue">+1.2%</strong></label>
+              <input id="marketMove" class="market-slider" type="range" min="-50" max="50" value="12" />
+              <div class="range-ends"><small>−5.0%</small><small>+5.0%</small></div>
+              <div class="market-foot"><span class="pulse-icon">⌁</span> <span id="marketMessage">Mercado alcista</span><span class="pulse-live">ACTIVO</span></div>
+            </section>
 
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-num">01</div>
-          <h3>Ingesta en Tiempo Real</h3>
-          <p>Consumo streaming de feeds de alta frecuencia vía WebSockets y REST (Binance, NYSE, NASDAQ, BYMA).</p>
-        </div>
-        <div class="step-card">
-          <div class="step-num">02</div>
-          <h3>Generación SHA-256</h3>
-          <p>Síntesis criptográfica instantánea combinando precio spot, volumen, variaciones, timestamp y sal de servidor.</p>
-        </div>
-        <div class="step-card">
-          <div class="step-num">03</div>
-          <h3>Determinación Provably Fair</h3>
-          <p>Mapeo matemático directo sobre multiplicadores de crash, carretes de slots o estadísticas de carreras.</p>
-        </div>
-        <div class="step-card">
-          <div class="step-num">04</div>
-          <h3>Registro Inmutable</h3>
-          <p>Almacenamiento público append-only del bloque para auditoría retrospectiva de cada jugador o regulador.</p>
-        </div>
-      </div>
-    </section>
+            <section class="standings-card">
+              <div class="section-head compact"><div><div class="eyebrow">EN PISTA</div><h2>Clasificación</h2></div><span class="runner-count">12</span></div>
+              <div class="standings-head"><span>#</span><span>PARTICIPANTE</span><span>Δ PRECIO</span></div>
+              <ol id="standings" class="standings-list"></ol>
+            </section>
 
-<section id="empresa" class="container" aria-labelledby="empresa-title" style="padding:4rem 1.5rem;scroll-margin-top:150px">
-  <div class="section-title">
-    <span class="badge">RNGMarketDriven · Empresa</span>
-    <h2 id="empresa-title">El mercado se mueve. La confianza se demuestra.</h2>
-    <p>Una idea distinta para una nueva generación de plataformas: convertir el movimiento de los mercados en semillas verificables y transformar cada resultado en evidencia. Más transparencia para tus usuarios. Más herramientas para diferenciar tu negocio.</p>
-  </div>
-  <div class="steps-grid">
-    <article class="step-card" style="border-top:3px solid #00ff88">
-      <span class="sat-tag">Lo que nos mueve</span>
-      <h3 style="color:#fff;font-size:1.5rem;margin-bottom:1rem">Nuestra misión</h3>
-      <p style="color:#cbd5e1">Convertir la incertidumbre de los mercados en una ventaja de confianza para los ecosistemas digitales. Desarrollamos tecnología que conecta datos, semillas y resultados para que empresas de juegos, finanzas y experiencias digitales puedan ofrecer algo más que una promesa: procesos que sus usuarios pueden reproducir y auditar.</p>
-    </article>
-    <article class="step-card" style="border-top:3px solid #00d2ff">
-      <span class="sat-tag" style="color:#00d2ff">El futuro que buscamos</span>
-      <h3 style="color:#fff;font-size:1.5rem;margin-bottom:1rem">Nuestra visión</h3>
-      <p style="color:#cbd5e1">Liderar una nueva forma de entender la aleatoriedad digital: abierta a la verificación, conectada con los mercados y respaldada por evidencia. Aspiramos a convertirnos en una referencia mundial para las plataformas que quieran hacer de la transparencia una fortaleza de su marca y de la confianza una experiencia que las personas puedan comprobar.</p>
-    </article>
-  </div>
-  <div class="steps-grid" style="margin-top:1.5rem">
-    <article class="step-card"><h3 style="margin-bottom:.6rem">Una idea que cambia el punto de partida</h3><p style="color:#94a3b8">En lugar de pedir confianza en una caja negra, proponemos conectar el resultado con datos de mercado registrados. Una historia verificable desde la semilla hasta la experiencia.</p></article>
-    <article class="step-card"><h3 style="margin-bottom:.6rem">Tu usuario también puede verificar</h3><p style="color:#94a3b8">La transparencia no termina en un sello: se convierte en una herramienta. Tus usuarios pueden revisar los datos y repetir el cálculo, incluso después de participar.</p></article>
-    <article class="step-card"><h3 style="margin-bottom:.6rem">Una tecnología. Muchas oportunidades.</h3><p style="color:#94a3b8">Dados, mundos procedimentales, sorteos, torneos y coleccionables: una misma propuesta de trazabilidad para crear experiencias distintas y darle a tu plataforma un argumento de confianza.</p></article>
-  </div>
-  <p style="text-align:center;color:#00ff88;font-size:1.2rem;font-weight:800;margin-top:2rem">No solo resultados. Evidencia para tu marca.</p>
-  <div class="cta-group" style="margin-top:2rem;justify-content:center">
-    <a class="btn-secondary" href="/soluciones/#dados">Explorar ejemplos verificables</a>
-    <a class="btn-primary" href="/soluciones/#agendar">Conversemos sobre tu plataforma</a>
-  </div>
-  <p style="color:#94a3b8;font-size:.78rem;max-width:900px;margin:1.5rem auto 0;text-align:center">La verificación acredita la coherencia con los datos y reglas registrados; no garantiza por sí sola ausencia de manipulación ni equidad. Las demos actuales utilizan datos simulados. Las integraciones productivas requieren definir fuentes, compromisos y controles adecuados.</p>
-</section>
-
-<section id="juegos" class="container" style="padding:4rem 1.5rem;scroll-margin-top:150px"><div class="section-title"><span class="badge">Juegos y experiencias</span><h2>Un catálogo para explorar. Cada juego, en su propia página.</h2><p>Acá presentamos la propuesta. Las experiencias desplegables viven separadas, con espacio para sus controles, lógica, auditoría y evolución.</p></div><div class="showcase-grid"><article class="showcase-card"><div><div class="showcase-tag">Catálogo de experiencias</div><h3>Explorá nuestros juegos</h3><p>Entrá al catálogo para elegir una experiencia y abrir su página individual.</p></div><a href="/casino/" class="showcase-link">Ver catálogo de juegos →</a></article><article class="showcase-card"><div><div class="showcase-tag">Mercado · Visualización</div><h3>Lava Market Lab</h3><p>Laboratorio visual independiente para experimentar con composiciones de mercado y exportaciones.</p></div><a href="/lava-lab/" class="showcase-link">Abrir laboratorio →</a></article><article class="showcase-card"><div><div class="showcase-tag">Aplicaciones de la entropía</div><h3>Dados, mapas, torneos y sorteos</h3><p>Casos de uso que muestran cómo una capa de entropía verificable puede integrarse en productos distintos.</p></div><a href="/soluciones/#dados" class="showcase-link">Ver casos verificables →</a></article></div></section>
-    <!-- B2B SOLUTIONS -->
-    <section id="b2b" class="container" style="padding: 4rem 1.5rem;">
-      <div class="section-title">
-        <h2>Soluciones B2B / White-Label</h2>
-        <p>Infraestructura para operadores de juego online, plataformas de apuestas y fondos de predicción.</p>
-      </div>
-
-      <div class="steps-grid">
-        <div class="step-card">
-          <h4>⚡ Integración en Minutos</h4>
-          <p>Conexión vía REST API y WebSockets bidireccionales con SDKs listos para Node.js, Python y Go.</p>
-        </div>
-        <div class="step-card">
-          <h4>💵 Pagos Cripto USDC / USDT</h4>
-          <p>Acreditaciones y liquidaciones automáticas 100% on-chain con conciliación instantánea.</p>
-        </div>
-        <div class="step-card">
-          <h4>🛡️ Auditoría Inmutable</h4>
-          <p>Exportación de hashes a libros contables públicos y repositorios para certificación regulatoria.</p>
-        </div>
-        <div class="step-card">
-          <h4>🎨 Marca Blanca Total</h4>
-          <p>Personalización de salones, activos de bolsa locales y reglas de payout para su propia marca.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- CHRONICLE PREVIEW -->
-    <section id="cronica" class="container" style="padding: 3rem 1.5rem;">
-      <div style="background:var(--bg-card); border:1px solid var(--neon-green); border-radius:12px; padding:2rem; display:grid; grid-template-columns:2fr 1fr; gap:2rem; align-items:center;">
-        <div>
-          <span style="font-family:var(--font-mono); color:var(--neon-green); font-size:0.8rem; letter-spacing:1px;">ÓRGANO OFICIAL DE AUDITORÍA & ARBITRAJE</span>
-          <h3 style="color:#fff; font-size:1.5rem; margin:0.4rem 0 0.8rem;">The Market Entropy Chronicle</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">
-            Publicación diaria del agente de IA: cobertura financiera satírica, tablas de posiciones y auditoría de hashes Provably Fair.
-          </p>
-          <a href="/gazette/" class="btn-primary">Leer Última Edición</a>
-        </div>
-        <div style="background:#090a10; padding:1.2rem; border-radius:8px; border:1px solid var(--border); font-family:var(--font-mono); font-size:0.8rem;">
-          <div style="color:var(--neon-blue); font-weight:bold; margin-bottom:0.4rem;">AUDITORÍA DE MESA:</div>
-          <div>Ruleta: <span style="color:var(--neon-pink);">Casilla #35</span></div>
-          <div>Crash Máximo: <span style="color:var(--neon-green);">32.74x</span></div>
-          <div style="color:var(--text-muted); font-size:0.75rem; margin-top:0.4rem;">SHA-256: 25a6198f4ad2b5...</div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <div>
-        <div class="brand-logo" style="margin-bottom:0.8rem;">RNG<span class="accent">MarketDriven</span></div>
-        <p style="color:var(--text-muted); font-size:0.85rem;">Plataforma madre B2B de entropía bursátil y aleatoriedad institucional provably fair.</p>
-      </div>
-      <div>
-        <h5 style="color:#fff; font-family:var(--font-mono); margin-bottom:0.8rem;">Plataforma</h5>
-        <ul style="list-style:none; font-size:0.85rem; color:var(--text-muted); line-height:1.8;">
-          <li><a href="#motor" style="color:inherit; text-decoration:none;">The Engine</a></li>
-          <li><a href="#ecosistema" style="color:inherit; text-decoration:none;">Sub-Casinos</a></li>
-          <li><a href="#sandbox" style="color:inherit; text-decoration:none;">Sandbox Games</a></li>
-        </ul>
-      </div>
-      <div>
-        <h5 style="color:#fff; font-family:var(--font-mono); margin-bottom:0.8rem;">Auditoría</h5>
-        <ul style="list-style:none; font-size:0.85rem; color:var(--text-muted); line-height:1.8;">
-          <li><a href="https://github.com/mervaleta/rngmarketdriven" target="_blank" style="color:inherit; text-decoration:none;">GitHub Repository</a></li>
-          <li><a href="/gazette/" style="color:inherit; text-decoration:none;">Crónica del Mercado</a></li>
-          <li><a href="#" style="color:inherit; text-decoration:none;">Términos & Licencias</a></li>
-        </ul>
-      </div>
+            <div class="race-actions"><button id="startButton" class="primary-button"><span>▶</span> INICIAR CARRERA</button><button id="resetRace" class="secondary-button" title="Reiniciar carrera">↺</button></div>
+            <p class="demo-note">Las cotizaciones son datos ficticios precargados para esta demostración. No hay conexión a precios en vivo.</p>
+          </aside>
+        </section>
+        <footer class="footer"><span>CRYPTODROMO <b>3D RACE LAB</b></span><span>Prototipo visual · Motor modular en Three.js</span></footer>
+      </main>
     </div>
-    <div class="container copy-text">
-      Copyright &copy; 2026 RNGMarketDriven.com &bull; Next-Gen Provably Fair Engine &bull; Todos los derechos reservados.
-    </div>
-  </footer>
-
-  <!-- SCRIPT ENGINE CLIENTE -->
-  
-</body>
+  </body>
 </html>
