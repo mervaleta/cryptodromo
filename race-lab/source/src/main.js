@@ -52,9 +52,20 @@ const fill = new THREE.DirectionalLight(0x8bb6c2, .42); fill.position.set(15,10,
 
 const skyMaterial = new THREE.ShaderMaterial({uniforms:{topColor:{value:new THREE.Color(0x5a91a7)},horizonColor:{value:new THREE.Color(0xc6b99c)}},vertexShader:'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'uniform vec3 topColor;uniform vec3 horizonColor;varying vec2 vUv;void main(){vec3 c=mix(horizonColor,topColor,smoothstep(0.02,0.98,vUv.y));gl_FragColor=vec4(c,1.0);}',depthWrite:false,depthTest:false});
 const skyPlane=new THREE.Mesh(new THREE.PlaneGeometry(170,42),skyMaterial);skyPlane.position.set(0,8,-40);skyPlane.renderOrder=-10;scene.add(skyPlane);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(160,18), new THREE.MeshStandardMaterial({color:0x49663f,roughness:1}));
+let visualSeed=0x4d595df4;
+function seededRandom(){visualSeed=(visualSeed+0x6d2b79f5)|0;let t=visualSeed;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;}
+function proceduralSurface(base,grain,kind){
+ const c=document.createElement('canvas');c.width=512;c.height=256;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,c.width,c.height);
+ for(let i=0;i<9000;i++){const a=.035+seededRandom()*.12;x.fillStyle=`rgba(${grain},${a})`;const px=seededRandom()*c.width,py=seededRandom()*c.height;const w=kind==='grass'?1+seededRandom()*3:1+seededRandom()*2;x.fillRect(px,py,w,kind==='grass'?2+seededRandom()*6:1);}
+ if(kind==='grass'){for(let i=0;i<220;i++){x.strokeStyle=`rgba(201,228,145,${.08+seededRandom()*.13})`;x.lineWidth=1;x.beginPath();const px=seededRandom()*c.width,py=seededRandom()*c.height;x.moveTo(px,py);x.lineTo(px-2,py-5-seededRandom()*4);x.stroke();}}
+ if(kind==='sand'||kind==='dirt'){for(let i=0;i<160;i++){x.strokeStyle=`rgba(235,199,143,${.06+seededRandom()*.12})`;x.lineWidth=1;x.beginPath();const px=seededRandom()*c.width,py=seededRandom()*c.height;x.moveTo(px,py);x.lineTo(px+8+seededRandom()*20,py+(seededRandom()-.5)*4);x.stroke();}}
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(20,2);tex.anisotropy=renderer.capabilities?.getMaxAnisotropy?.()||1;return tex;
+}
+const surfaces={grass:proceduralSurface('#596b3b','220,235,176','grass'),dirt:proceduralSurface('#78513a','241,190,145','dirt'),sand:proceduralSurface('#b29a68','255,240,191','sand')};
+const fieldTexture=proceduralSurface('#3f633c','181,226,144','grass');
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(160,18), new THREE.MeshStandardMaterial({color:0xffffff,map:fieldTexture,roughness:1}));
 ground.position.set(0,-15,-8);ground.receiveShadow=true;scene.add(ground);
-const track = new THREE.Mesh(new THREE.PlaneGeometry(150,12), new THREE.MeshStandardMaterial({color:surfaceStyles.grass.track,roughness:1}));
+const track = new THREE.Mesh(new THREE.PlaneGeometry(150,12), new THREE.MeshStandardMaterial({color:0xffffff,map:surfaces.grass,roughness:1}));
 track.position.set(0,0,0);track.receiveShadow=true;scene.add(track);
 const laneMat = new THREE.MeshStandardMaterial({color:0xe7d7af,roughness:.9});
 for(let i=0;i<=12;i++){const line=new THREE.Mesh(new THREE.BoxGeometry(150,.025,.025),laneMat);line.position.set(0,-5.5+i*(11/12),.13);scene.add(line);}
@@ -107,22 +118,71 @@ function makeHorse(racer,index){
 const horses=racers.map(makeHorse);
 horses.forEach((h,i)=>{h.laneY=5.35-i*.97;h.root.scale.y=.38;h.root.position.set(-14,h.laneY,.52);h.base=.21+(i%4)*.008;});
 
-// Finish gate and modular grandstand blocks.
-const gateMat=new THREE.MeshStandardMaterial({color:0xf0e9d5,roughness:.6});
-for(const x of [39,43]){const post=new THREE.Mesh(new THREE.BoxGeometry(.23,13,.35),gateMat);post.position.set(x,0,.55);post.castShadow=true;scene.add(post);}
-const lintel=new THREE.Mesh(new THREE.BoxGeometry(4.3,.3,.6),new THREE.MeshStandardMaterial({color:0x0b1812,roughness:.6}));lintel.position.set(41,6.45,.55);scene.add(lintel);
-const finishCanvas=document.createElement('canvas');finishCanvas.width=512;finishCanvas.height=128;const fctx=finishCanvas.getContext('2d');fctx.fillStyle='#092216';fctx.fillRect(0,0,512,128);fctx.fillStyle='#1bce91';fctx.font='900 66px Arial';fctx.textAlign='center';fctx.textBaseline='middle';fctx.fillText('FINISH',256,66);const finishTex=new THREE.CanvasTexture(finishCanvas);finishTex.colorSpace=THREE.SRGBColorSpace;
-const finishSign=new THREE.Mesh(new THREE.PlaneGeometry(4.1,1),new THREE.MeshBasicMaterial({map:finishTex,side:THREE.DoubleSide}));finishSign.position.set(41,7.1,.72);scene.add(finishSign);
-const finishLine=new THREE.Mesh(new THREE.PlaneGeometry(.6,12),new THREE.MeshStandardMaterial({color:0xf6efe2,roughness:.9}));finishLine.position.set(40.7,0,.21);scene.add(finishLine);
-const stand=new THREE.Group();scene.add(stand);
-for(let row=0;row<5;row++){
-  const box=new THREE.Mesh(new THREE.BoxGeometry(35,.7,1.2),new THREE.MeshStandardMaterial({color:[0x252e2d,0x36403b,0x41433a][row%3],roughness:.92}));box.position.set(0,7.5+row*.52,-12-row*.2);box.castShadow=true;box.receiveShadow=true;stand.add(box);
+// Full procedural stadium: tiered bowl, roof trusses, crowd, LEDs, pylons and field dressing.
+const stadium = new THREE.Group();
+scene.add(stadium);
+const mat=(color,roughness=.8,metalness=0,extra={})=>new THREE.MeshStandardMaterial({color,roughness,metalness,...extra});
+const concrete=mat(0x333c3b,.92), concreteLight=mat(0x65706a,.86), steel=mat(0x172a2b,.52,.65), steelEdge=mat(0x466064,.4,.72), seatMats=[0x1a7b70,0x236d75,0x385a79,0x783b70,0xc16b42].map(c=>mat(c,.72));
+// A distant city silhouette gives the bowl a sense of scale.
+const skyline=new THREE.Group();scene.add(skyline);
+const cityMats=[0x31474a,0x405657,0x52635f].map(c=>mat(c,.98));
+for(let i=0;i<34;i++){
+  const w=1.2+(i*17%13)/10,h=2+(i*31%17)/5,d=1.4+(i*7%8)/10;
+  const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),cityMats[i%3]);b.position.set(-47+i*2.9,4+h/2,-36-(i%4)*2);skyline.add(b);
+  for(let y=0;y<Math.floor(h*1.2);y++)for(let x=0;x<2;x++){
+    const win=new THREE.Mesh(new THREE.PlaneGeometry(.1,.13),mat((i+x+y)%5===0?0xf2c77a:0x6d8987,.4,0,{emissive:(i+x+y)%5===0?0x95693c:0x132b31,emissiveIntensity:.28}));
+    win.position.set(b.position.x+(x-.5)*w*.45,5+y*.38,-35.2-(i%4)*2);skyline.add(win);
+  }
 }
-const crowdGeo=new THREE.SphereGeometry(.12,5,4),crowdMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1}),crowdInstances=new THREE.InstancedMesh(crowdGeo,crowdMat,240),crowdMatrix=new THREE.Matrix4(),crowdColor=new THREE.Color();const crowdPalette=[0xf0b76f,0xe7e3d7,0x88bab1,0xa6a1d8,0xd07162];let crowdIndex=0;
-for(let row=0;row<5;row++)for(let i=0;i<48;i++){crowdMatrix.makeScale(1,1,1);crowdMatrix.setPosition(-16.5+i*.7,7.9+row*.52,-12-row*.2);crowdInstances.setMatrixAt(crowdIndex,crowdMatrix);crowdInstances.setColorAt(crowdIndex,crowdColor.setHex(crowdPalette[(i*3+row)%5]));crowdIndex++;}crowdInstances.instanceMatrix.needsUpdate=true;stand.add(crowdInstances);
+// Main covered grandstand and its repeating structural ribs.
+for(let tier=0;tier<6;tier++){
+  const y=6.8+tier*.8,z=-12.4-tier*.65;
+  const step=new THREE.Mesh(new THREE.BoxGeometry(48,.52,1.55),tier%2?concrete:concreteLight);step.position.set(0,y,z);step.receiveShadow=true;step.castShadow=true;stadium.add(step);
+  const fascia=new THREE.Mesh(new THREE.BoxGeometry(48,.13,.1),steel);fascia.position.set(0,y-.23,z+.77);stadium.add(fascia);
+}
+// A dense, deterministic crowd with colored shirts and varied heights.
+const crowdCount=1500,crowdGeo=new THREE.CapsuleGeometry(.105,.24,2,5),crowdInstances=new THREE.InstancedMesh(crowdGeo,seatMats[0],crowdCount),crowdMatrix=new THREE.Matrix4(),crowdColor=new THREE.Color();
+let ci=0;for(let row=0;row<6;row++)for(let col=0;col<250;col++){
+  const x=-23.5+col*.188+(row%2)*.08,y=7.16+row*.8,z=-11.8-row*.65+(col%3)*.05;
+  const scale=.72+((col*17+row*29)%9)/22;crowdMatrix.makeScale(scale,scale,scale);crowdMatrix.setPosition(x,y,z);crowdInstances.setMatrixAt(ci,crowdMatrix);
+  crowdInstances.setColorAt(ci,crowdColor.setHex([0xf2ba8a,0xe5e4d9,0x5db7a3,0x6f90d1,0xc87878,0xe3c85e,0x9c74bc][(col*7+row*3)%7]));ci++;
+}
+crowdInstances.instanceMatrix.needsUpdate=true;crowdInstances.castShadow=true;stadium.add(crowdInstances);
+const roofMat=mat(0x15292e,.48,.72,{side:THREE.DoubleSide});
+function curveBeam(points,radius,material){const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,48,radius,8,false),material);mesh.castShadow=true;stadium.add(mesh);return mesh;}
+for(let x=-25;x<=25;x+=5){
+  curveBeam([[x,5.6,-10.7],[x,10,-13],[x,14.2,-18],[x,16.5,-22],[x,15.8,-25]],.16,steelEdge);
+  curveBeam([[x,15.8,-25],[x+2.5,16.2,-24],[x+5,15.8,-22]],.13,steel);
+  const mast=new THREE.Mesh(new THREE.BoxGeometry(.16,8,.18),steelEdge);mast.position.set(x,10.2,-14.4);stadium.add(mast);
+}
+// Continuous canopy with ribs and underside lighting.
+const canopy=new THREE.Mesh(new THREE.BoxGeometry(54,.48,13),roofMat);canopy.position.set(0,16.1,-21);canopy.rotation.x=-.12;canopy.castShadow=true;stadium.add(canopy);
+for(let x=-25;x<=25;x+=2.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(.08,.12,13.4),steelEdge);rib.position.set(x,15.78,-21);rib.rotation.x=-.12;stadium.add(rib);}
+const ribbonCanvas=document.createElement('canvas');ribbonCanvas.width=1024;ribbonCanvas.height=128;const rctx=ribbonCanvas.getContext('2d');
+rctx.fillStyle='#061d1c';rctx.fillRect(0,0,1024,128);rctx.fillStyle='#04b88a';rctx.fillRect(0,0,14,128);rctx.fillRect(1010,0,14,128);rctx.font='900 48px Arial';rctx.textAlign='center';rctx.textBaseline='middle';
+for(let i=0;i<4;i++){rctx.fillStyle=i%2?'#eea748':'#eaf7f4';rctx.fillText(i%2?'CRYPTO · CRYPTO · CRYPTO':'CRYPTODROMO  /  GRAN PREMIO DIGITAL',128+i*256,66);}
+const ribbonTex=new THREE.CanvasTexture(ribbonCanvas);ribbonTex.colorSpace=THREE.SRGBColorSpace;
+const ribbon=new THREE.Mesh(new THREE.PlaneGeometry(48,.95),new THREE.MeshBasicMaterial({map:ribbonTex,side:THREE.DoubleSide}));ribbon.position.set(0,6.1,-11.3);stadium.add(ribbon);
+// Floodlight towers and warm point sources under the roof.
+for(const x of [-25,25]){
+ const tower=new THREE.Group();tower.position.set(x,0,-16);stadium.add(tower);
+ for(const y of [4,9,14]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.18,y,.18),steelEdge);leg.position.set(0,y/2,0);tower.add(leg);}
+ const crown=new THREE.Mesh(new THREE.BoxGeometry(1.9,.55,.65),steel);crown.position.set(0,14.5,0);tower.add(crown);
+ for(let i=0;i<8;i++){const lamp=new THREE.Mesh(new THREE.PlaneGeometry(.28,.22),new THREE.MeshBasicMaterial({color:0xffe2a2}));lamp.position.set(-.75+(i%4)*.5,14.5, .35+Math.floor(i/4)*.02);tower.add(lamp);}
+ const spot=new THREE.SpotLight(0xffe0b0,95,64,.65,.55,1.4);spot.position.set(x,14.5,-15.5);spot.target.position.set(x*.5,0,0);spot.castShadow=false;scene.add(spot,spot.target);
+}
+// Modular finish gate, checker stripe and illuminated timing board.
+const gateMat=mat(0xe9eee7,.38,.35);
+for(const x of [39,43]){const post=new THREE.Mesh(new THREE.BoxGeometry(.3,14,.48),gateMat);post.position.set(x,0,.65);post.castShadow=true;stadium.add(post);}
+const lintel=new THREE.Mesh(new THREE.BoxGeometry(4.5,.42,.8),steel);lintel.position.set(41,7,.65);stadium.add(lintel);
+const finishCanvas=document.createElement('canvas');finishCanvas.width=768;finishCanvas.height=192;const fctx=finishCanvas.getContext('2d');
+fctx.fillStyle='#08231b';fctx.fillRect(0,0,768,192);fctx.fillStyle='#19d59b';fctx.fillRect(0,0,18,192);fctx.fillStyle='#f5f8ef';fctx.font='900 92px Arial';fctx.textAlign='center';fctx.textBaseline='middle';fctx.fillText('CRYPTODROMO',384,98);
+const finishTex=new THREE.CanvasTexture(finishCanvas);finishTex.colorSpace=THREE.SRGBColorSpace;
+const finishSign=new THREE.Mesh(new THREE.PlaneGeometry(4.25,1.07),new THREE.MeshBasicMaterial({map:finishTex,side:THREE.DoubleSide}));finishSign.position.set(41,7.85,1.1);stadium.add(finishSign);
+const finishLine=new THREE.Mesh(new THREE.PlaneGeometry(.7,12),mat(0xf7f0e3,.92));finishLine.position.set(40.7,0,.23);stadium.add(finishLine);
 const cloudGroup=new THREE.Group();scene.add(cloudGroup);const cloudMat=new THREE.MeshStandardMaterial({color:0xf3f6f4,roughness:1,transparent:true,opacity:.88});
 for(let i=0;i<12;i++){const cloud=new THREE.Group();const cx=(i%4)*14-20,cy=11+Math.floor(i/4)*2,cz=-24-(i%3)*4;for(let j=0;j<5;j++){const puff=new THREE.Mesh(new THREE.SphereGeometry(1,9,7),cloudMat.clone());puff.scale.set(2.2+(j%2)*.4,1+(j%3)*.15,1);puff.position.set((j-2)*1.6,(j%2)*.4,0);cloud.add(puff);}cloud.position.set(cx,cy,cz);cloudGroup.add(cloud);}
-const weatherCount=1000;const weatherPositions=new Float32Array(weatherCount*3);const weatherVelocities=[];for(let i=0;i<weatherCount;i++){weatherPositions[i*3]=(Math.random()-.5)*80;weatherPositions[i*3+1]=Math.random()*30;weatherPositions[i*3+2]=(Math.random()-.5)*32;weatherVelocities.push(.08+Math.random()*.16);}
+const weatherCount=1000;const weatherPositions=new Float32Array(weatherCount*3);const weatherVelocities=[];for(let i=0;i<weatherCount;i++){weatherPositions[i*3]=(Math.random()-.5)*80;weatherPositions[i*3+1]=seededRandom()*30;weatherPositions[i*3+2]=(Math.random()-.5)*32;weatherVelocities.push(.08+seededRandom()*.16);}
 const weatherGeo=new THREE.BufferGeometry();weatherGeo.setAttribute('position',new THREE.BufferAttribute(weatherPositions,3));const weatherMat=new THREE.PointsMaterial({color:0xd7f4ff,size:.12,transparent:true,opacity:.75,sizeAttenuation:true});const weatherParticles=new THREE.Points(weatherGeo,weatherMat);weatherParticles.visible=false;scene.add(weatherParticles);
 
 let running=false,finished=false,elapsed=0,raceTime=0,lastTick=0,marketInput=.012,cloudAmount=.32,wind=12,weather='clear',surface='grass',clockTimer=0,soundOn=false;
@@ -139,7 +199,7 @@ document.querySelector('#marketMove').addEventListener('input',e=>{marketInput=N
 
 function timeColors(value){const hour=value/6;const stops=[{h:0,sky:0x07101d,sun:0x7a90d1,intensity:.3},{h:5,sky:0x382a4e,sun:0xf68a62,intensity:.72},{h:7,sky:0x86a9c0,sun:0xffd6a0,intensity:1.45},{h:12,sky:0x74b5d3,sun:0xfff3d4,intensity:2.15},{h:17,sky:0xe18463,sun:0xffac67,intensity:1.35},{h:20,sky:0x252e55,sun:0xc28ca7,intensity:.65},{h:24,sky:0x07101d,sun:0x7a90d1,intensity:.3}];let a=stops[0],b=stops[1];for(let i=0;i<stops.length-1;i++)if(hour>=stops[i].h&&hour<=stops[i+1].h){a=stops[i];b=stops[i+1];break;}const t=THREE.MathUtils.clamp((hour-a.h)/(b.h-a.h),0,1);return{sky:new THREE.Color(a.sky).lerp(new THREE.Color(b.sky),t),sun:new THREE.Color(a.sun).lerp(new THREE.Color(b.sun),t),intensity:THREE.MathUtils.lerp(a.intensity,b.intensity,t)};}
 function duskColor(hour){if(hour<5||hour>=20)return 0x657397;if((hour>=5&&hour<8)||(hour>=16&&hour<20))return 0xe9a37a;return 0xd8e5dd;}
-function updateEnvironment(){const time=Number(document.querySelector('#timeOfDay').value),hour=Math.floor(time/6),minute=(time%6)*10;document.querySelector('#timeReadout').textContent=`${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;cloudAmount=Number(document.querySelector('#clouds').value)/100;document.querySelector('#cloudReadout').textContent=`${Math.round(cloudAmount*100)}%`;wind=Number(document.querySelector('#wind').value);document.querySelector('#windReadout').textContent=`${wind} km/h`;weather=document.querySelector('#weather').value;surface=document.querySelector('#surface').value;const colors=timeColors(time);scene.background=colors.sky;skyMaterial.uniforms.topColor.value.copy(colors.sky.clone().multiplyScalar(.77));skyMaterial.uniforms.horizonColor.value.copy(colors.sky.clone().lerp(new THREE.Color(duskColor(hour)),.36));scene.fog.color.copy(colors.sky);sun.color.copy(colors.sun);sun.intensity=colors.intensity*(weather==='storm'?.58:weather==='cloudy'?.77:weather==='rain'?.83:1);hemi.intensity=weather==='fog'?1.05:1.5;cloudGroup.visible=weather==='cloudy'||weather==='storm'||weather==='rain'||cloudAmount>.13;cloudGroup.children.forEach((c,i)=>{const n=(i*17%31)/31;const alpha=weather==='storm'?.84:weather==='rain'?.64:THREE.MathUtils.clamp((cloudAmount-n)*2.3,0,.85);c.visible=alpha>.03;c.scale.setScalar(.7+alpha*.7);c.children.forEach(p=>{p.material.opacity=alpha;});});weatherParticles.visible=['rain','storm','snow'].includes(weather);weatherMat.color.set(weather==='snow'?0xffffff:0xbcdced);weatherMat.size=weather==='snow'?.2:.1;weatherMat.opacity=weather==='storm'?.9:.7;weatherParticles.material=weatherMat;weatherParticles.userData.kind=weather;track.material.color.set(surfaceStyles[surface].track);ground.material.color.set(surfaceStyles[surface].field);document.querySelector('#weatherLabel').textContent=`${surfaceStyles[surface].label} · ${weather==='clear'?'DESPEJADO':weather==='cloudy'?'NUBLADO':weather==='rain'?'LLUVIA':weather==='storm'?'TORMENTA':weather==='snow'?'NIEVE':'NEBLINA'}`;if(weather==='fog'){scene.fog.near=10;scene.fog.far=60;}else if(weather==='storm'){scene.fog.near=40;scene.fog.far=110;}else{scene.fog.near=43;scene.fog.far=112;}}
+function updateEnvironment(){const time=Number(document.querySelector('#timeOfDay').value),hour=Math.floor(time/6),minute=(time%6)*10;document.querySelector('#timeReadout').textContent=`${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;cloudAmount=Number(document.querySelector('#clouds').value)/100;document.querySelector('#cloudReadout').textContent=`${Math.round(cloudAmount*100)}%`;wind=Number(document.querySelector('#wind').value);document.querySelector('#windReadout').textContent=`${wind} km/h`;weather=document.querySelector('#weather').value;surface=document.querySelector('#surface').value;const colors=timeColors(time);scene.background=colors.sky;skyMaterial.uniforms.topColor.value.copy(colors.sky.clone().multiplyScalar(.77));skyMaterial.uniforms.horizonColor.value.copy(colors.sky.clone().lerp(new THREE.Color(duskColor(hour)),.36));scene.fog.color.copy(colors.sky);sun.color.copy(colors.sun);sun.intensity=colors.intensity*(weather==='storm'?.58:weather==='cloudy'?.77:weather==='rain'?.83:1);hemi.intensity=weather==='fog'?1.05:1.5;cloudGroup.visible=weather==='cloudy'||weather==='storm'||weather==='rain'||cloudAmount>.13;cloudGroup.children.forEach((c,i)=>{const n=(i*17%31)/31;const alpha=weather==='storm'?.84:weather==='rain'?.64:THREE.MathUtils.clamp((cloudAmount-n)*2.3,0,.85);c.visible=alpha>.03;c.scale.setScalar(.7+alpha*.7);c.children.forEach(p=>{p.material.opacity=alpha;});});weatherParticles.visible=['rain','storm','snow'].includes(weather);weatherMat.color.set(weather==='snow'?0xffffff:0xbcdced);weatherMat.size=weather==='snow'?.2:.1;weatherMat.opacity=weather==='storm'?.9:.7;weatherParticles.material=weatherMat;weatherParticles.userData.kind=weather;track.material.map=surfaces[surface];track.material.needsUpdate=true;track.material.color.set(0xffffff);ground.material.color.set(0xffffff);document.querySelector('#weatherLabel').textContent=`${surfaceStyles[surface].label} · ${weather==='clear'?'DESPEJADO':weather==='cloudy'?'NUBLADO':weather==='rain'?'LLUVIA':weather==='storm'?'TORMENTA':weather==='snow'?'NIEVE':'NEBLINA'}`;if(weather==='fog'){scene.fog.near=10;scene.fog.far=60;}else if(weather==='storm'){scene.fog.near=40;scene.fog.far=110;}else{scene.fog.near=43;scene.fog.far=112;}}
 document.querySelectorAll('#timeOfDay,#clouds,#wind,#weather,#surface').forEach(el=>el.addEventListener('input',updateEnvironment));document.querySelectorAll('#weather,#surface').forEach(el=>el.addEventListener('change',updateEnvironment));
 document.querySelector('#resetEnvironment').addEventListener('click',()=>{document.querySelector('#timeOfDay').value=105;document.querySelector('#clouds').value=32;document.querySelector('#wind').value=12;document.querySelector('#weather').value='clear';document.querySelector('#surface').value='grass';updateEnvironment();});
 updateEnvironment();
@@ -199,7 +259,7 @@ function animate(){
   let mean=0;horses.forEach(h=>{const phase=t*10+h.index*.62;const travel=-14+h.progress*54;mean+=travel;h.root.position.x=travel;h.root.position.y=h.laneY+Math.max(0,Math.sin(phase*2)*.028);h.legs.forEach(leg=>{const cyc=phase+leg.phase;leg.pivot.rotation.z=Math.sin(cyc)*.58;});});mean/=horses.length;
   camera.position.x=THREE.MathUtils.lerp(camera.position.x,Math.max(-7,Math.min(22,mean+7)),dt*.7);camera.lookAt(camera.position.x,0,0);
   cloudGroup.position.x-=wind*dt*.003;if(cloudGroup.position.x<-18)cloudGroup.position.x=12;
-  if(weatherParticles.visible){const pos=weatherGeo.attributes.position;for(let i=0;i<weatherCount;i++){let x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);const kind=weatherParticles.userData.kind;if(kind==='snow'){y-=weatherVelocities[i]*dt*7;x+=Math.sin(t+i)*dt*.35;}else{y-=weatherVelocities[i]*dt*(kind==='storm'?31:22);x-=dt*(2+wind*.12);}if(y<-.2){y=22+Math.random()*8;x=(Math.random()-.5)*80;}if(x<-42)x=42;pos.setXYZ(i,x,y,z);}pos.needsUpdate=true;}
+  if(weatherParticles.visible){const pos=weatherGeo.attributes.position;for(let i=0;i<weatherCount;i++){let x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);const kind=weatherParticles.userData.kind;if(kind==='snow'){y-=weatherVelocities[i]*dt*7;x+=Math.sin(t+i)*dt*.35;}else{y-=weatherVelocities[i]*dt*(kind==='storm'?31:22);x-=dt*(2+wind*.12);}if(y<-.2){y=22+seededRandom()*8;x=(seededRandom()-.5)*80;}if(x<-42)x=42;pos.setXYZ(i,x,y,z);}pos.needsUpdate=true;}
   if(weather==='fog'){scene.fog.density=.018+cloudAmount*.011;}else scene.fog.density=0;
   if(hasWebGL){renderer.render(scene,camera);if(t<1)diagnostics.textContent=`THREE OK · ${renderer.info.render.calls} DRAW CALLS · ${scene.children.length} OBJECTS`;}else drawFallback(t);requestAnimationFrame(animate);
 }

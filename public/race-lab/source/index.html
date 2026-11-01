@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#06120f" />
+    <meta name="description" content="Demo 3D de carreras Cryptodromo con clima y mercado configurables." />
+    <title>Cryptodromo — 3D Race Lab</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="Cryptodromo 3D Race Lab">
+          <span class="brand-mark">C</span><span>cryptodromo</span><small>3D RACE LAB</small>
+        </a>
+        <nav class="main-nav" aria-label="Navegación principal">
+          <span class="nav-item">BETS</span><span class="nav-item">FIXTURE</span>
+          <span class="nav-item active"><i></i> LIVE</span><span class="nav-item">RANKING</span>
+          <span class="nav-item">RESULTS</span>
+        </nav>
+        <div class="account"><span class="wallet">◈</span><span>1000.00</span><span class="avatar">D</span></div>
+      </header>
+
+      <main id="top" class="page">
+        <section class="race-heading">
+          <div>
+            <div class="eyebrow"><span class="live-dot"></span> TRANSMISIÓN DE PRUEBA</div>
+            <h1>Gran Premio <em>Cripto</em></h1>
+            <p class="race-meta">12 corredores <span>·</span> Demo de mercado <span>·</span> <span id="raceStatus">EN VIVO</span></p>
+          </div>
+          <div class="race-clock"><span>VUELTA</span><strong id="raceClock">00:00</strong></div>
+        </section>
+
+        <section class="race-layout">
+          <div class="main-column">
+            <div class="viewer-card">
+              <div class="viewer-topline">
+                <div class="view-title"><span class="signal">●</span> CRYPTODROMO LIVE <span class="tag">3D</span></div>
+                <div class="viewer-actions"><span class="market-state"><b></b> MOTOR DE PRECIOS · DEMO</span><button id="soundToggle" class="icon-button" aria-label="Activar o desactivar sonido" title="Silenciar / activar audio">♫</button><button id="fullscreen" class="icon-button" aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
+              </div>
+              <div id="sceneWrap" class="scene-wrap">
+                <div class="scene-vignette"></div>
+                <div class="scene-label"><span class="label-live">LIVE</span><span id="weatherLabel">CÉSPED · DESPEJADO</span></div>
+                <div class="scene-caption">SIMULACIÓN VISUAL · COTIZACIONES DE MUESTRA</div>
+                <canvas id="raceCanvas" aria-label="Carrera 3D de doce caballos construidos con geometría procedural"></canvas>
+                <div class="center-callout" id="callout">¡A SUS MARCAS!</div>
+              </div>
+              <div class="race-progress"><span>INICIO</span><div class="progress-line"><i id="progressFill"></i></div><span>META</span></div>
+            </div>
+
+            <section class="control-card">
+              <div class="section-head">
+                <div><div class="eyebrow">DIRECCIÓN DE ESCENA</div><h2>Clima y ambiente</h2></div>
+                <button id="resetEnvironment" class="text-button">Restablecer</button>
+              </div>
+              <div class="controls-grid">
+                <label class="control-block"><span class="control-name">Hora del día <b id="timeReadout">17:30</b></span><input id="timeOfDay" type="range" min="0" max="143" value="105" /><span class="range-ends"><small>00:00</small><small>23:50</small></span></label>
+                <label class="control-block"><span class="control-name">Clima</span><select id="weather"><option value="clear">Despejado</option><option value="cloudy">Nublado</option><option value="rain">Lluvia</option><option value="storm">Tormenta</option><option value="snow">Nieve</option><option value="fog">Neblina</option></select></label>
+                <label class="control-block"><span class="control-name">Superficie</span><select id="surface"><option value="grass">Césped</option><option value="dirt">Tierra</option><option value="sand">Arena</option></select></label>
+                <label class="control-block"><span class="control-name">Nubosidad <b id="cloudReadout">32%</b></span><input id="clouds" type="range" min="0" max="100" value="32" /><span class="range-ends"><small>Despejado</small><small>Cubierto</small></span></label>
+                <label class="control-block"><span class="control-name">Viento <b id="windReadout">12 km/h</b></span><input id="wind" type="range" min="0" max="80" value="12" /><span class="range-ends"><small>Calma</small><small>80 km/h</small></span></label>
+              </div>
+            </section>
+          </div>
+
+          <aside class="side-column">
+            <section class="market-card">
+              <div class="section-head compact"><div><div class="eyebrow">INPUT DE MERCADO</div><h2>Pulso de precios</h2></div><span class="demo-pill">DEMO</span></div>
+              <p class="helper-text">La variación impulsa el ritmo de cada corredor. Ajustá el pulso para ver cómo cambia la carrera.</p>
+              <label class="market-input-label" for="marketMove">Variación de muestra <strong id="moveValue">+1.2%</strong></label>
+              <input id="marketMove" class="market-slider" type="range" min="-50" max="50" value="12" />
+              <div class="range-ends"><small>−5.0%</small><small>+5.0%</small></div>
+              <div class="market-foot"><span class="pulse-icon">⌁</span> <span id="marketMessage">Mercado alcista</span><span class="pulse-live">ACTIVO</span></div>
+            </section>
+
+            <section class="standings-card">
+              <div class="section-head compact"><div><div class="eyebrow">EN PISTA</div><h2>Clasificación</h2></div><span class="runner-count">12</span></div>
+              <div class="standings-head"><span>#</span><span>PARTICIPANTE</span><span>Δ PRECIO</span></div>
+              <ol id="standings" class="standings-list"></ol>
+            </section>
+
+            <div class="race-actions"><button id="startButton" class="primary-button"><span>▶</span> INICIAR CARRERA</button><button id="resetRace" class="secondary-button" title="Reiniciar carrera">↺</button></div>
+            <p class="demo-note">Las cotizaciones son datos ficticios precargados para esta demostración. No hay conexión a precios en vivo.</p>
+          </aside>
+        </section>
+        <footer class="footer"><span>CRYPTODROMO <b>3D RACE LAB</b></span><span>Prototipo visual · Motor modular en Three.js</span></footer>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

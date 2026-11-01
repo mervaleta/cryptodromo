@@ -1,12 +1,9 @@
-# Cryptodromo — Race Lab
+# Cryptodromo 3D Race Lab
 
-Demo independiente de carrera modular en Three.js, con controles de clima, hora, superficie y variación de precios ficticios.
+Procedural Three.js race scene based on reusable geometry rather than external art files. The stadium now has a modular covered grandstand, crowd instancing, roof trusses, LED boards, floodlights, city silhouette and generated surface textures. The scene remains configurable for time, weather, wind and track surface. Race input uses deterministic sample-price fixtures.
 
-- `index.html` y `assets/`: versión estática lista para servir en `/race-lab/`.
-- `source/`: proyecto Vite editable completo.
+- `index.html` and `assets/`: static deployment at `/race-lab/`.
+- `source/`: editable Vite project.
+- `source/src/main.js`: scene, procedural materials and race simulation.
 
-El render utiliza WebGL cuando está disponible y Canvas 2D como compatibilidad. Los precios son de muestra y no hay apuestas con dinero real.
-
-Para trabajar en el código: ejecutar `npm ci` y `npm run dev` desde `source/`. Para compilar: `npm run build`; el resultado queda en `source/dist/`.
-
-La publicación en cryptodromo.com requiere que el hosting despliegue esta carpeta; un commit en GitHub no garantiza que el servidor esté conectado a este repo.
+Run `npm ci && npm run dev` from `source/`; build with `npm run build`. No external art assets are fetched. Three.js is bundled. The 2D canvas mode is only a compatibility fallback for environments where WebGL is unavailable.
