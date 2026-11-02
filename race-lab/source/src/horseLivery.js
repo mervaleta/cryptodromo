@@ -75,9 +75,18 @@ function tattoo(mesh,material,uniforms){
    'float sideMask=smoothstep(.15,.62,abs('+sideAxis+'-'+sideCenter.toFixed(5)+')/'+halfSide.toFixed(5)+');'+
    'vec4 tattoo=texture2D(cryptoFurLogo,clamp(furUV,0.,1.));'+
    'float ink=tattoo.a*inFlank*sideMask*.90;'+
-   'diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*.17+tattoo.rgb*.63,ink);';
+   'diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*.17+tattoo.rgb*.63,ink);'+
+   // Two scales of pigment grain and fiber direction, evaluated in rest-mesh
+   // coordinates so the texture travels with the skinned body while galloping.
+   'float furPigment=fract(sin(dot(floor(vFurLocal*94.),vec3(12.9898,78.233,43.719)))*43758.5453);'+
+   'float furFine=sin(vFurLocal.y*510.+vFurLocal.x*113.)*sin(vFurLocal.z*196.+vFurLocal.y*91.);'+
+   'diffuseColor.rgb*=1.0+(furPigment-.5)*.10+furFine*.022;';
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
     '#include <color_fragment>\n'+source);
+  shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
+    '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+(furPigment-.5)*.12,.62,.99);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
+    '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(furFine*.019,(furPigment-.5)*.014,furFine*.013));');
  };
  material.customProgramCacheKey=()=>('crypto-fur-dye-'+long+side);
  material.needsUpdate=true;
