@@ -5,7 +5,7 @@ import {createAlternativeTracks} from './trackVisuals.js?v=a08-1';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha06-1';
 import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
-import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha06-1';
+import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha08-1';
 import {createNightLights} from './nightLights.js?v=alpha05-lighting-4';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha07-1';
 import {createHorse} from '/race-lab/source/src/horse.js?v=alpha07-brand-2';
@@ -27,14 +27,22 @@ const resultMeta=document.getElementById('result-meta'),narrationDisplay=documen
 const statContent=document.getElementById('race-stat-content'),bioContent=document.getElementById('race-biography');
 const voiceButton=document.getElementById('voice'),soundButton=document.getElementById('sound');
 const soundtrack=createRaceAudio(),narrator=createNarration();
+let soundManuallyMuted=false,voiceManuallyMuted=false;
+const volumeControl=document.querySelector('#audio-volume');
+soundtrack.setVolume(Number(volumeControl.value)/100);
+volumeControl.addEventListener('input',()=>soundtrack.setVolume(Number(volumeControl.value)/100));
+function activateBroadcastAudio(){
+ if(!soundManuallyMuted&&!soundtrack.enabled){soundtrack.start();soundButton.textContent='♫ SILENCIAR AMBIENTE';soundButton.setAttribute('aria-pressed','true');}
+ if(!voiceManuallyMuted&&!narrator.active){narrator.toggle();voiceButton.textContent='🔊 SILENCIAR RELATO';voiceButton.setAttribute('aria-pressed','true');}
+}
 voiceButton.addEventListener('click',()=>{
- narrator.toggle();voiceButton.setAttribute('aria-pressed',String(narrator.active));
+ narrator.toggle();voiceManuallyMuted=!narrator.active;voiceButton.setAttribute('aria-pressed',String(narrator.active));
  voiceButton.textContent=narrator.active?'🔊 SILENCIAR RELATO':'🔊 ACTIVAR RELATO';
  if(narrator.active)narrator.say(narrationDisplay.textContent);
 });
 soundButton.addEventListener('click',()=>{
- if(soundtrack.enabled){soundtrack.stop();soundButton.textContent='♫ AMBIENTE Y CASCOS';}
- else if(soundtrack.start())soundButton.textContent='♫ SILENCIAR AMBIENTE';
+ if(soundtrack.enabled){soundManuallyMuted=true;soundtrack.stop();soundButton.textContent='♫ HABILITAR AUDIO';}
+ else if(soundtrack.start()){soundManuallyMuted=false;soundButton.textContent='♫ SILENCIAR AMBIENTE';}
  soundButton.setAttribute('aria-pressed',String(soundtrack.enabled));
 });
 document.querySelector('#result-close').addEventListener('click',()=>{resultsOverlay.classList.remove('is-visible');resultsOverlay.hidden=true;});
@@ -236,7 +244,7 @@ let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
 const biographyStats=buildRosterStats();
-function speakBroadcast(phrase){narrationDisplay.textContent=phrase;narrator.say(phrase);}
+function speakBroadcast(phrase){narrationDisplay.textContent=phrase;narrator.say(phrase,{urgent:phrase.includes('Largaron')||phrase.includes('Cruzaron')});}
 function showBiography(token){
  if(!token)return;
  const stats=biographyStats.get(token.symbol);
@@ -337,6 +345,7 @@ standings.addEventListener('click',event=>{
 });
 start.addEventListener('click',()=>{
  if(!horses.length)return;
+ activateBroadcastAudio();
  if(liveFollowing){liveFollowing=false;liveNowButton.textContent='● SINTONIZAR LIVE';}
  if(finished){setRace(raceIndex+1);resultsOverlay.hidden=true;}
  running=!running;for(const h of horses)h.model.play(running?'Gallop':'Idle');
@@ -375,7 +384,7 @@ function updateLiveProgram(){
 liveNowButton.addEventListener('click',()=>{
  liveFollowing=!liveFollowing;
  liveNowButton.textContent=liveFollowing?'■ SALIR DEL LIVE':'● SINTONIZAR LIVE';
- if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}
+ if(liveFollowing){activateBroadcastAudio();lastLiveIndex=-1;updateLiveProgram();}
  else liveState.textContent+=' · MODO REPLAY LIBRE';
 });
 for(const [id,offset] of [['#live-prev',-1],['#live-next',1]]){
@@ -569,7 +578,7 @@ function animate(now){
     lastAnnouncedLeader=lead.entry.symbol;
    }
    soundtrack.update(elapsed,weatherSelect.value,
-     horses.reduce((total,h)=>total+h.visualSpeed,0)/Math.max(1,horses.length));
+     horses.reduce((total,h)=>total+h.visualSpeed,0)/Math.max(1,horses.length),trackType.value);
    if(Math.floor(elapsed)%5===0&&Math.floor((elapsed-realSeconds))!==Math.floor(elapsed)){
     statContent.textContent='Líder: '+lead.entry.symbol+' · adelantamientos '+overtakeCount+
      ' · dosis '+Math.min(12,slot+1)+'/12 · velocidad de crucero positiva.';
@@ -579,7 +588,7 @@ function animate(now){
    if(!finished){finished=true;updateStandings();}
    // Give the athletes a full second to cross and clear the camera.
    if(elapsed>=61)showOfficialResult();
-   soundtrack.update(elapsed,weatherSelect.value,.65);
+   soundtrack.update(elapsed,weatherSelect.value,.65,trackType.value);
    if(elapsed>=60+RUNOUT_SECONDS){
     running=false;
     // The animals leave the shot; never leave twelve idle horses on the finish.
