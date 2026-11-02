@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=a11-oval-1';
 import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
-import {createAlternativeTracks} from './trackVisuals.js?v=a11-oval-1';
+import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
 import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
@@ -722,7 +722,10 @@ function particles(dt){
   const attr=dustGeo.attributes.position;
   for(let i=0;i<dustN;i++){
    const h=horses[i%horses.length],r=seeded(i*13+Math.floor(elapsed*15));
-   attr.setXYZ(i,h.model.root.position.x-1-r()*7,r()*.40,h.model.root.position.z+(r()-.5)*1.3);
+   const direction=trackPoint(layoutMode,h.progress,h.index);
+    const trail=1+r()*7,lateral=(r()-.5)*1.3;
+    attr.setXYZ(i,h.model.root.position.x-direction.tangentX*trail+direction.sideX*lateral,
+      r()*.40,h.model.root.position.z-direction.tangentZ*trail+direction.sideZ*lateral);
   }
   attr.needsUpdate=true;dust.visible=true;
   dust.material.opacity=weatherSelect.value==='rain'?.08:(trackType.value==='grass'?.14:.48);
