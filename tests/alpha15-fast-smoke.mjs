@@ -68,7 +68,24 @@ try{
  assert.equal(splitState.preset,'quarters');
  assert.equal(stage.horses,12);
  assert.ok(stage.clouds&&stage.fog&&stage.quality);
- assert.match(stage.script||'',/alpha15-cinematic-3/);
+ assert.match(stage.script||'',/alpha16-village-1/);
  assert.equal(faults.length,0,'3D runtime faults '+faults.join('; ').slice(0,800));
- console.log('PASS Alpha15 quick production smoke test');
+ // Alpha16 is a separate contemplative path: never replaces LIVE.
+ faults.length=0;
+ const paradeResponse=await page.goto('https://race.cryptodromo.com/parade/?fast-qa=alpha16',{waitUntil:'domcontentloaded',timeout:30000});
+ assert.equal(paradeResponse?.status(),200,'Parade public page');
+ await page.waitForFunction(()=>window.__cryptodromoParadeQA?.snapshot().ready,{timeout:45000});
+ const parade=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot());
+ assert.equal(parade.parade.totalParaders,100);
+ assert.equal(parade.models,12);
+ assert.ok(parade.walkClips.every(clip=>/walk/i.test(clip)), 'GLB walk mode must be available');
+ assert.equal(parade.village.stands,3);
+ assert.equal(parade.village.foodStalls,6);
+ assert.equal(parade.village.bulbs,48);
+ console.log('PARADE_LIVE',JSON.stringify({
+  models:parade.models,active:parade.parade.horses.length,
+  total:parade.parade.totalParaders,clips:parade.walkClips.slice(0,2)
+ }));
+ assert.equal(faults.length,0,'Parade JS runtime faults: '+faults.join('; ').slice(0,800));
+ console.log('PASS Alpha16 public quick production smoke test');
 }finally{await browser.close();}
