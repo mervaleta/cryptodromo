@@ -1,0 +1,39 @@
+name: Snapshot backup Cryptódromo · Alpha15
+on:
+  push:
+    branches: ['backup/main-2026-11-02-alpha15']
+    paths: ['.github/workflows/snapshot-backup.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout complete history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Assemble reproducible source backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          ORIGINAL_SHA=0d217ad043f8bbfbf8cbeeb410472b9af4e24111
+          git cat-file -e "$ORIGINAL_SHA^{commit}"
+          git archive --format=zip --output=backup/cryptodromo-source-alpha15-20261102.zip "$ORIGINAL_SHA"
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --tags --prune
+          git bundle create backup/cryptodromo-full-history-20261102.bundle --all
+          git bundle verify backup/cryptodromo-full-history-20261102.bundle
+          printf 'Snapshot main: %s\nCreated by GitHub Actions on branch: %s\nIncludes: source files and Git history. Excludes Hostinger account configuration, secrets and unpublished databases.\n' "$ORIGINAL_SHA" "$GITHUB_REF" > backup/README.txt
+          (cd backup && sha256sum *.zip *.bundle > SHA256SUMS.txt)
+          ls -lh backup
+      - name: Store ZIP + full Git bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptodromo-alpha15-full-source-and-history-backup
+          path: backup/*
+          retention-days: 90
+          if-no-files-found: error
