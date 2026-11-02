@@ -42,11 +42,11 @@ try{
  await page.keyboard.up('ArrowUp');
  const poseAfter=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
  assert.ok(Math.hypot(poseAfter.x-poseBefore.x,poseAfter.z-poseBefore.z)>2,'Drone did not advance with arrows');
- await page.locator('#height').fill('130');
+ await page.locator('#height').evaluate(el=>{el.value='130';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.locator('#height-label').innerText()).trim(),'130 m');
- await page.locator('#fov').fill('34');
+ await page.locator('#fov').evaluate(el=>{el.value='34';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.locator('#fov-label').innerText()).trim(),'34°');
- await page.locator('#yaw').fill('90');
+ await page.locator('#yaw').evaluate(el=>{el.value='90';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.locator('#yaw-label').innerText()).trim(),'90°');
  await page.selectOption('#camera-mode','orbit');
  await page.selectOption('#sight','comida');
@@ -56,7 +56,7 @@ try{
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'follow');
  await page.selectOption('#quality','eco');
  await page.locator('#weather').selectOption('night');
- await page.locator('#lights').fill('145');
+ await page.locator('#lights').evaluate(el=>{el.value='145';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.locator('#light-label').innerText()).trim(),'145%');
  await page.selectOption('#camera-mode','orbit');
  await page.selectOption('#sight','tribunas');
