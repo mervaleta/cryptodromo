@@ -71,3 +71,10 @@ Ejecutar en la raíz del repositorio (Node 22):
     node --experimental-default-type=module --test tests/track-splits.mjs
 
 La preparación se mantiene en esta rama feature. No se debe fusionar ni copiar estos scripts al sitio LIVE hasta coordinar con el otro agente.
+
+
+## Integración efectiva Alpha 15 (2 de noviembre de 2026)
+
+Se integró con el motor y la transmisión existentes, sin sobrescribir el trabajo de estadio: scene.js invoca el módulo sobre perfiles broadcastDistance de raceChoreography, y respeta la autorización de llegada de finishOrchestrator. El tablero se ubica entre la clasificación y el programa LIVE. Hay postes y líneas de marca en la pista (trackSplitMarkers.js), reposicionados al seleccionar un trazado recto, en S u oval, o al alternar el reglamento. Los postes son exclusivamente escénicos.
+
+Los datos de la carrera se publican además en /resultados/ y se agregan por ciclo de 3.360 competencias sintéticas en /estadisticas/, con procesamiento por tandas asíncronas. Ambos usan por defecto los cuartos 250/500/750 m (+3 máx.). El modo de puntuación histórica de 200/400/600/800 m (+4 máx.) permanece disponible en el tablero de carrera. La meta de 1.000 m siempre utiliza finishTime oficial y sólo se revela después del control de cruce de los 12 caballos.
