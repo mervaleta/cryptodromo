@@ -16,7 +16,7 @@ export function createStadiumBackdrop(scene,{softwareGPU=false,mobile=false}={})
  const dummy=new THREE.Object3D();
  for(let i=0;i<buildingN;i++){
   const back=i%2===0;
-  const x=(rand()-.5)*1100,z=back?-190-rand()*95:175+rand()*115;
+  const x=(rand()-.5)*1100,z=back?-315-rand()*95:315+rand()*105;
   const w=7+rand()*20,h=9+rand()*49,d=8+rand()*14;
   dummy.position.set(x,h/2-.25,z);dummy.rotation.set(0,0,0);dummy.scale.set(w,h,d);dummy.updateMatrix();
   skyline.setMatrixAt(i,dummy.matrix);skyline.setColorAt(i,new THREE.Color(colors[Math.floor(rand()*colors.length)]));
@@ -31,7 +31,7 @@ export function createStadiumBackdrop(scene,{softwareGPU=false,mobile=false}={})
  const greens=['#34563b','#496d42','#375f4b','#567149','#2e5142'];
  for(let i=0;i<forestN;i++){
   const back=i%2===0;
-  const x=(rand()-.5)*1100,z=back?-126-rand()*43:123+rand()*42;
+  const x=(rand()-.5)*1100,z=back?-290-rand()*35:245+rand()*34;
   const h=8+rand()*16,r=3+rand()*4.5;
   dummy.position.set(x,h*.24,z);dummy.scale.set(1,h*.48,1);dummy.updateMatrix();trunks.setMatrixAt(i,dummy.matrix);
   dummy.position.set(x,h*.69,z);dummy.scale.set(r,h*.73,r);dummy.updateMatrix();crowns.setMatrixAt(i,dummy.matrix);
@@ -45,11 +45,11 @@ export function createStadiumBackdrop(scene,{softwareGPU=false,mobile=false}={})
  // Service road, maintenance buildings and race-day equipment beyond the outer fence.
  const roadMaterial=new THREE.MeshStandardMaterial({color:'#56625b',roughness:1});
  const road=new THREE.Mesh(new THREE.BoxGeometry(1060,.07,9),roadMaterial);
- road.position.set(0,-.08,109);road.receiveShadow=false;root.add(road);
+ road.position.set(0,-.08,268);road.receiveShadow=false;root.add(road);
  const barnMat=new THREE.MeshStandardMaterial({color:'#a2a296',roughness:.88});
  const roofMat=new THREE.MeshStandardMaterial({color:'#374e48',roughness:.83});
  for(let i=0;i<7;i++){
-  const x=-430+i*133,y=4.5,z=128+(i%2)*10;
+  const x=-430+i*133,y=4.5,z=285+(i%2)*17;
   const barn=new THREE.Mesh(new THREE.BoxGeometry(26,9,13),barnMat);
   barn.position.set(x,y,z);root.add(barn);
   const roof=new THREE.Mesh(new THREE.ConeGeometry(18,5.5,4),roofMat);
@@ -58,7 +58,7 @@ export function createStadiumBackdrop(scene,{softwareGPU=false,mobile=false}={})
  const bannerMaterial=new THREE.MeshBasicMaterial({color:'#d2b779',side:THREE.DoubleSide});
  for(let i=0;i<16;i++){
   const banner=new THREE.Mesh(new THREE.PlaneGeometry(2.8,5.2),bannerMaterial);
-  banner.position.set(-405+i*54,5,92);root.add(banner);
+  banner.position.set(-405+i*54,5,234);root.add(banner);
  }
  return {root};
 }
