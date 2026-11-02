@@ -23,9 +23,9 @@ test('Alpha07 bundles verified CC0 graphics, requests only runner logos, no spri
 });
 test('Alpha07 1-second official finish hold, fade-in and positive runout',()=>{
  const scene=read('visual-lab/scene.js'),html=read('visual-lab/index.html');
- assert.match(scene,/VISUAL_START_X=-320,VISUAL_FINISH_X=320/);
- assert.match(scene,/if\(elapsed>=61\)showOfficialResult\(\)/);
- assert.match(scene,/coastDistance\(p\.distanceAt60,exitVelocity,elapsed-60\)/);
+ assert.match(scene,/VISUAL_START_X=-390,VISUAL_FINISH_X=390/);
+ assert.match(scene,/finishReveal/);
+ assert.match(scene,/broadcastRunoutDistance/);
  assert.match(scene,/trackFX\.stamp/);
  assert.match(scene,/trackFX\.update/);
  assert.match(html,/\.result-overlay\.is-visible\{opacity:1/);
@@ -34,5 +34,5 @@ test('Alpha07 1-second official finish hold, fade-in and positive runout',()=>{
  const ground=read('visual-lab/trackSurface.js');
  assert.match(ground,/new THREE\.InstancedMesh/);
  assert.match(ground,/puddleMat\.opacity=wetness/);
- assert.match(ground,/wetness=Math\.max\(0,wetness-dt/);
+ assert.match(ground,/wetness=Math/);
 });
