@@ -803,7 +803,8 @@ if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
  window.__cryptodromoQA={
   jumpNearFinish(){if(!running)throw new Error('Start race before seeking');elapsed=59.7;},
   state(){return {elapsed,finished,finishShown,positions:horses.map(h=>h.model.root.position.x),
-    winners:officialSnapshot?.entries?.map(x=>x.symbol)};}
+    crossed:horses.filter(h=>h.visualMeters>=officialRanking(profiles)[0].distanceAt60).length,
+    lastCrossedAt,winners:officialSnapshot?.entries?.map(x=>x.symbol)};}
  };
 }
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
