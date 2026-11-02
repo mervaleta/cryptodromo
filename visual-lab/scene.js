@@ -713,6 +713,8 @@ function applyQualityPreset(next){
   }
  }
  activeQuality=next;
+ graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
+  (graphicsModeSelect.value==='auto'?' · AUTO':'');
  resize();
 }
 graphicsModeSelect.addEventListener('change',()=>{
@@ -900,6 +902,7 @@ function updateEnvironment(){
 
 }
 setInterval(updateEnvironment,180);
+let lastRenderedAt=performance.now();
 function animate(now,draw=true){
  const realSeconds=Math.max(0,(now-last)/1000),dt=Math.min(realSeconds,.08);last=now;
  if(running){
@@ -996,7 +999,8 @@ function animate(now,draw=true){
   nightLights.update(now/1000);
   cloudLayer.update(now/1000);
   updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
-  const feedback=qualityGovernor.sample(realSeconds*1000,now);
+  const feedback=qualityGovernor.sample(Math.max(1,now-lastRenderedAt),now);
+  lastRenderedAt=now;
   if(graphicsModeSelect.value==='auto'&&feedback.changed){
    applyQualityPreset(softwareGPU?'eco':feedback.level);
   }
