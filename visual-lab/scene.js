@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=a09-1';
+import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a09-1';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
@@ -637,13 +638,18 @@ document.querySelector('#light-preview').addEventListener('click',()=>{
 });
 weatherSelect.addEventListener('change',applyLightingControls);
 applyLightingControls();
-const target=new THREE.Vector3(),goal=new THREE.Vector3();
+const target=new THREE.Vector3(),goal=new THREE.Vector3(),cameraFocus=new THREE.Vector3();
+let cameraFocusReady=false;
 function adjustCamera(dt){
  const avg=horses.length?horses.reduce((a,h)=>a+Math.min(1.12,h.progress),0)/horses.length:0;
  const point=trackPoint(layoutMode,avg,5.5);
  const tx=point.tangentX,tz=point.tangentZ,nx=point.sideX,nz=point.sideZ;
- const mode=camSelect.value;
- if(mode==='aerial'){
+ const selectedMode=camSelect.value;
+ const mode=selectedMode==='broadcast'?tvShot(elapsed,{running}):selectedMode;
+ if(mode==='paddock'){
+   goal.set(point.x+nx*38,12,point.z+nz*38);
+   target.set(point.x,2.1,point.z);
+ }else if(mode==='aerial'){
    goal.set(0,layoutMode==='oval'?285:300,layoutMode==='oval'?145:155);
    target.set(0,0,layoutMode==='oval'?35:0);
  }else if(mode==='finish'){
@@ -660,8 +666,11 @@ function adjustCamera(dt){
    goal.set(point.x-tx*8+nx*29,4.2,point.z-tz*8+nz*29);
    target.set(point.x+tx*17,2.05,point.z+tz*17);
  }
- camera.position.lerp(goal,Math.min(1,dt*2.7));
- camera.lookAt(target);
+ const blend=cameraBlend(dt,mode==='finish'?1.8:2.7);
+ camera.position.lerp(goal,blend);
+ if(!cameraFocusReady){cameraFocus.copy(target);cameraFocusReady=true;}
+ else cameraFocus.lerp(target,cameraBlend(dt,3.8));
+ camera.lookAt(cameraFocus);
 }
 function particles(dt){
  if(running&&horses.length){
