@@ -7,7 +7,7 @@ export const RUNNERS_PER_RACE = 12;
 export const RACE_INTERVAL_MINUTES = 3;
 export const RACE_DURATION_SECONDS = 60;
 
-const FIRST_DECK = [-20, -10, 0, 10, 20, 30, 40, 50, 60];
+const FIRST_DECK = [-10, -5, 1, 5, 10, 15, 20, 25, 30];
 const SECOND_DECK = [20, 40, 60];
 const hashText = (value) => {
   let h = 2166136261;
