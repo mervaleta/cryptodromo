@@ -35,6 +35,15 @@ try{
  assert.match(result.status,/RESULTADO OFICIAL/);
  assert.ok(errors.length===0,'Browser JS: '+errors.join('; '));
  await mkdir('artifacts',{recursive:true});
- await page.screenshot({path:'artifacts/alpha06-official-finish.png',fullPage:false,timeout:60000});
+ await page.locator('#stage').screenshot({path:'artifacts/alpha06-official-finish.png',timeout:60000});
+ const winner=await page.evaluate(()=>({
+  official:document.querySelector('#status').textContent,
+  leaderboardFirst:document.querySelector('#standings li')?.textContent,
+  broadcastLeader:document.querySelector('#leader')?.textContent
+ }));
+ console.log('FROZEN_RESULT_QA',JSON.stringify(winner));
+ assert.ok(winner.leaderboardFirst?.includes(winner.broadcastLeader),
+    'Leaderboard leader must always equal the official winner after finish');
+ assert.ok(winner.official.includes(winner.broadcastLeader),'Official winner must not change during runout');
  console.log('PASS: +60 seconds official overlay, 12 results, complete narration, no page errors');
 }finally{await browser.close();}
