@@ -14,7 +14,7 @@ import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceCho
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 
 // Alpha 05: +20% physical/visual course (410 → 492 units), same official race and 60s.
-const VISUAL_START_X=-320,VISUAL_FINISH_X=320,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
+const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
 // Alpha 03: a real XZ-plane, Y-up stadium, not a vertical XY theater.
 // Visual effects and frame rate are deliberately isolated from the finance engine.
 const canvas=document.getElementById('raceCanvas'), stage=document.getElementById('stage');
@@ -107,28 +107,28 @@ function makeTexture(kind){
 const grassTexture=makeTexture('grass'),earthTexture=makeTexture('earth');
 const grass=mat('#e0eed6',1);grass.map=grassTexture;
 const earth=mat('#f0e2d4',.93);earth.map=earthTexture;
-box(750,.35,260,0,-.33,0,grass);
+box(850,.35,260,0,-.33,0,grass);
 const straightSceneIndex=scene.children.length;
-box(680,.13,38,0,-.06,0,earth);
+box(812,.13,38,0,-.06,0,earth);
 // Galloping ruts, run-off strips and painted distance marks.
 const lanePaint=mat('#e2d0ae',1),sod=mat('#3e7f49',1);
-for(const z of [-18,18])box(680,.12,4,0,.02,z,sod);
+for(const z of [-18,18])box(812,.12,4,0,.02,z,sod);
 for(let i=0;i<12;i++){
  const z=-14.9+i*2.65;
- box(676,.016,.027,0,.025,z,lanePaint).castShadow=false;
+ box(809,.016,.027,0,.025,z,lanePaint).castShadow=false;
 }
-for(let x=-310;x<=310;x+=20)for(const z of [-17,17]){
+for(let x=-380;x<=380;x+=20)for(const z of [-17,17]){
  const slab=box(.34,.017,1.3,x,.025,z,mat('#efe4c6'));slab.castShadow=false;
 }
 function rail(z){
- for(const y of [.65,1.23])box(680,.115,.115,0,y,z,C.rail);
- for(let x=-342;x<=342;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
+ for(const y of [.65,1.23])box(812,.115,.115,0,y,z,C.rail);
+ for(let x=-402;x<=402;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
 }
 rail(-20.2);rail(20.2);
 // Outer track lawn, sculpted hedges and paddock fencing.
-for(let x=-339;x<=339;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
-for(let x=-339;x<=339;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
-box(680,.12,.13,0,1.25,53,C.steel);
+for(let x=-399;x<=399;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
+for(let x=-399;x<=399;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
+box(812,.12,.13,0,1.25,53,C.steel);
 const straightCourse=new THREE.Group();straightCourse.name='Straight track assets';
 const straightChildren=scene.children.slice(straightSceneIndex);scene.add(straightCourse);
 straightChildren.forEach(child=>straightCourse.add(child));
@@ -137,7 +137,7 @@ const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a'
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=softwareGPU?55:mobile?90:155;
 for(let i=0;i<treeN;i++){
- const r=seeded(i*761+49),x=r()*690-345,back=r()>.40,z=back?-74-r()*34:75+r()*25;
+ const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-74-r()*34:75+r()*25;
  const h=5+r()*9;
  cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
  cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
@@ -145,20 +145,20 @@ for(let i=0;i<treeN;i++){
 }
 // Stadium Satoshi Nakamoto: concrete amphitheater, deep stands, VIP facade and twin spires.
 const venue=new THREE.Group();venue.name='Estadio Satoshi Nakamoto · Pista Eadweard Muybridge';scene.add(venue);
-box(690,2.6,36,0,1.2,-57,C.concrete,venue);
-box(682,5.2,12,0,5,-73,C.stone,venue);
+box(820,2.6,36,0,1.2,-57,C.concrete,venue);
+box(812,5.2,12,0,5,-73,C.stone,venue);
 for(let row=0;row<17;row++){
  const y=3.4+row*.75,z=-38-row*1.8;
- box(678,.29,1.9,0,y,z,row%3===0?C.ivory:C.seat,venue);
- box(678,.15,.13,0,y+.3,z+.87,C.steel,venue);
+ box(810,.29,1.9,0,y,z,row%3===0?C.ivory:C.seat,venue);
+ box(810,.15,.13,0,y+.3,z+.87,C.steel,venue);
 }
-for(let x=-330;x<=330;x+=9){
+for(let x=-397;x<=397;x+=9){
  box(.28,16,.4,x,11.0,-71,C.steel,venue);
  box(.28,9,.5,x,6.9,-33,C.steel,venue);
 }
-box(695,.55,24,0,22.5,-67,C.roof,venue);
-box(695,.22,1.0,0,22.9,-54.6,C.bronze,venue);
-for(let x=-336;x<=336;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
+box(824,.55,24,0,22.5,-67,C.roof,venue);
+box(824,.22,1.0,0,22.9,-54.6,C.bronze,venue);
+for(let x=-398;x<=398;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
 // Center VIP house framed with ornamental stone, patterned windows and copper roofing.
 const vip=new THREE.Group();vip.position.set(0,0,-78);venue.add(vip);
 box(69,13,9,0,11,0,C.ivory,vip);
@@ -239,7 +239,7 @@ const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THR
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false}));
 dust.visible=false;scene.add(dust);
 const rainN=softwareGPU?180:mobile?280:650,rainPos=new Float32Array(rainN*3),rr=seeded(624);
-for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*690;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
+for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*820;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
 rain.visible=false;scene.add(rain);
