@@ -29,7 +29,7 @@ try{
  const deployedScript=await page.evaluate(async()=>{
   const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha07-'+Date.now(),{cache:'no-store'})).text();
   return {hasRunout:source.includes('coastDistance(p.distanceAt60,exitVelocity,elapsed-60)'),
-   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha07-brand-2'),
+   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha08-surface-1'),
    length:source.length,engineStatus:document.querySelector('#race-biography')?.textContent};
  });
  console.log('PUBLIC_ENGINE_VERSION',JSON.stringify(deployedScript));
