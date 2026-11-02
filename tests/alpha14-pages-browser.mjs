@@ -13,7 +13,19 @@ try{
  for(const item of targets){
   const response=await page.goto('https://race.cryptodromo.com'+item.path+'?alpha14='+Date.now(),{waitUntil:'domcontentloaded',timeout:30000});
   assert.equal(response?.status(),200,'Cannot open '+item.path);
-  await page.waitForSelector(item.ready,{timeout:20000});
+  try {
+   await page.waitForSelector(item.ready,{timeout:12000});
+  }catch(error){
+   console.error('PUBLIC_PAGE_FAILURE',JSON.stringify({
+    target:item.path,responseUrl:response?.url(),status:response?.status(),
+    documentUrl:page.url(),title:await page.title(),
+    domIds:await page.locator('[id]').evaluateAll(elements=>elements.map(e=>e.id).slice(0,40)),
+    scripts:await page.locator('script[src]').evaluateAll(elements=>elements.map(e=>e.src)),
+    faults:faults.slice(-12),
+    bodyPreview:(await page.locator('body').innerText()).slice(0,850)
+   }));
+   throw error;
+  }
   const actual=await page.locator(item.ready).count();
   if(item.path==='/fixture/')assert.ok(actual>0&&actual<=item.expected);
   else assert.equal(actual,item.expected,item.path+' count');
