@@ -78,6 +78,19 @@ export function drawHorse(ctx,master,{frame=0,palette={},dustLevel=.5,shadowLeve
  fill(ctx,layers.ink,c.outline);
  if(layers.ink){ctx.save();ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.strokeStyle='#07080b';ctx.stroke(layers.ink);ctx.restore();}
  fill(ctx,layers.coat,c.coat);
+ // BTC: layered, clipped reflected light instead of a thick orange inner stroke.
+ if(c.toonBTC&&layers.coat){
+   ctx.save();ctx.clip(layers.coat,'evenodd');
+   const coatLight=ctx.createLinearGradient(85,78,109,161);
+   coatLight.addColorStop(0,'rgba(255,190,110,.31)');
+   coatLight.addColorStop(.38,'rgba(255,148,57,.13)');
+   coatLight.addColorStop(1,'rgba(35,17,19,.38)');
+   ctx.fillStyle=coatLight;ctx.fillRect(20,74,155,100);
+   fillEllipse(ctx,83,107,26,15,'rgba(255,208,153,.18)');
+   fillEllipse(ctx,126,110,18,23,'rgba(255,200,122,.14)');
+   fillEllipse(ctx,92,136,28,15,'rgba(36,16,19,.29)');
+   ctx.restore();
+ }
  if(detail&&layers.coat){
    ctx.save();ctx.clip(layers.coat,'evenodd');
    fillEllipse(ctx,103,108,47,24,'rgba(255,248,220,.31)');
@@ -90,19 +103,43 @@ export function drawHorse(ctx,master,{frame=0,palette={},dustLevel=.5,shadowLeve
  const maneGrad=ctx.createLinearGradient(70,80,130,125);
  maneGrad.addColorStop(0,shade(c.mane,1.16));maneGrad.addColorStop(.72,c.mane);maneGrad.addColorStop(1,shade(c.mane,.78));
  fill(ctx,layers.mane,maneGrad);
- if(c.toonBTC&&layers.mane){ctx.save();ctx.strokeStyle='rgba(255,143,34,.88)';ctx.lineWidth=1.35;ctx.lineJoin='round';ctx.stroke(layers.mane);ctx.restore();}
+ if(c.toonBTC&&layers.mane){
+   ctx.save();ctx.clip(layers.mane,'evenodd');
+   const sheen=ctx.createLinearGradient(48,81,135,115);
+   sheen.addColorStop(0,'rgba(255,153,68,.05)');
+   sheen.addColorStop(.5,'rgba(255,175,75,.22)');
+   sheen.addColorStop(1,'rgba(255,195,118,.04)');
+   ctx.fillStyle=sheen;ctx.fillRect(12,65,151,76);
+   // Thin swept strands remain inside each original mane silhouette.
+   for(let strand=0;strand<9;strand++){
+     const y=84+strand*2.2;
+     ctx.beginPath();ctx.moveTo(53,y+8);
+     ctx.bezierCurveTo(78,y-9,99,y+8,129,y-4);
+     ctx.strokeStyle=strand%3===0?'rgba(255,176,88,.30)':'rgba(255,123,52,.16)';
+     ctx.lineWidth=strand%3===0?.6:.35;ctx.stroke();
+   }
+   ctx.restore();
+   ctx.save();ctx.strokeStyle='rgba(255,143,45,.26)';ctx.lineWidth=.7;
+   ctx.shadowColor='rgba(255,126,34,.52)';ctx.shadowBlur=3.8;
+   ctx.lineJoin='round';ctx.stroke(layers.mane);ctx.restore();
+ }
  fill(ctx,layers.maneDark,c.maneDark);
  // Tail occupies the leftmost part of the mane mask. Colorize its area independently.
  if(layers.mane){ctx.save();ctx.beginPath();ctx.rect(0,55,90,80);ctx.clip();fill(ctx,layers.mane,c.tail);ctx.restore();}
  fill(ctx,layers.hoof,c.hoof);
  if(c.toonBTC&&layers.hoof){ctx.save();ctx.strokeStyle='#0e1018';ctx.lineWidth=2.2;ctx.stroke(layers.hoof);ctx.restore();}
  fill(ctx,layers.gear,c.bridle);
- if(c.toonBTC&&layers.coat){ctx.save();ctx.strokeStyle='rgba(255,151,53,.72)';ctx.lineWidth=1.45;ctx.lineJoin='round';ctx.stroke(layers.coat);ctx.restore();}
+ if(c.toonBTC&&layers.coat){
+   ctx.save();ctx.clip(layers.coat,'evenodd');
+   ctx.strokeStyle='rgba(255,155,72,.22)';ctx.lineWidth=1;
+   ctx.shadowColor='rgba(244,130,45,.35)';ctx.shadowBlur=4.5;
+   ctx.lineJoin='round';ctx.stroke(layers.coat);ctx.restore();
+ }
  // Thin warm reflected light on the inside of the silhouette reads clearly on black.
  if(layers.coat){
    ctx.save();ctx.clip(layers.coat,'evenodd');
-   ctx.strokeStyle=rgba(shade(c.coat,1.32),.62);
-   ctx.lineWidth=1.3;ctx.lineJoin='round';ctx.stroke(layers.coat);
+   ctx.strokeStyle=rgba(shade(c.coat,1.2),c.toonBTC?.15:.62);
+   ctx.lineWidth=c.toonBTC?.75:1.3;ctx.lineJoin='round';ctx.stroke(layers.coat);
    ctx.restore();
  }
  // Ink contours are deliberately redrawn last to preserve the 12 original key poses.
