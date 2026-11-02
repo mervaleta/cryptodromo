@@ -35,6 +35,14 @@ try{
   assert.ok(count>=min&&count<=max,'rows '+url+': '+count);
   console.log('FAST_PASS',url,{count,errors:faults});
   assert.equal(faults.length,0,'JS '+url+': '+faults.join('; ').slice(0,900));
+  if(url==='/resultados/'){
+   assert.equal(await page.locator('#results tr:first-child td').count(),7,'Expected split bonus and points columns');
+   assert.match(await page.locator('thead').innerText(),/Bonus parciales/i);
+  }
+  if(url==='/estadisticas/'){
+   await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('puntos calculados'),{timeout:45000});
+   assert.equal(await page.locator('#ranking tr:first-child td').count(),10,'Expected complete championship scores');
+  }
  }
  faults.length=0;
  const response=await page.goto('https://race.cryptodromo.com/visual-lab/?fast-qa=alpha15',
@@ -50,6 +58,14 @@ try{
   status:document.querySelector('#status')?.textContent
  }));
  console.log('3D_FAST',stage, faults);
+ await page.waitForSelector('#race-splits .crp-split-checkpoint',{timeout:12000});
+ const splitState=await page.evaluate(()=>({
+  checkpoints:document.querySelectorAll('#race-splits .crp-split-checkpoint').length,
+  preset:document.querySelector('#split-mode')?.value,
+  markersModule:document.querySelector('script[src*="scene.js"]')?.src
+ }));
+ assert.equal(splitState.checkpoints,4,'Four split checkpoints must render');
+ assert.equal(splitState.preset,'quarters');
  assert.equal(stage.horses,12);
  assert.ok(stage.clouds&&stage.fog&&stage.quality);
  assert.match(stage.script||'',/alpha15-cinematic-3/);
