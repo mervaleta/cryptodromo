@@ -64,8 +64,8 @@ try{
  await page.screenshot({path:'artifacts/parade-alpha16-stadium.png',timeout:40000});
  await page.selectOption('#sight','comida');
  await page.screenshot({path:'artifacts/parade-alpha16-foodcourt.png',timeout:40000});
- const paused=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().parade.elapsed);
  await page.click('#pause');
+ const paused=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().parade.elapsed);
  await page.waitForTimeout(550);
  const pausedAfter=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().parade.elapsed);
  assert.equal(pausedAfter,paused,'Parade should pause, independent of drone');
