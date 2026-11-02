@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
-import {trackPoint} from './trackMath.js?v=alpha14-runout-1';
+import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
 import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
