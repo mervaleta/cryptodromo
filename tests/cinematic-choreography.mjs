@@ -7,7 +7,7 @@ import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed,overtakeEvents,M
 
 test('alpha07 extends visible straight by another 12% without changing the two-price financial engine',()=>{
  const scene=readFileSync(new URL('../visual-lab/scene.js',import.meta.url),'utf8');
- assert.match(scene,/VISUAL_START_X=-275,VISUAL_FINISH_X=275/);
+ assert.match(scene,/VISUAL_START_X=-320,VISUAL_FINISH_X=320/);
  assert.doesNotMatch(scene,/VISUAL_SPAN\*Math\.min\(1\.025/);
  assert.match(scene,/goal\.set\(0,290,155\)/);
  assert.match(scene,/createNightLights/);
