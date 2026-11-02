@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {trackPoint} from './trackMath.js?v=a08-2';
+import {trackPoint} from './trackMath.js?v=a09-1';
 
 function ribbon(mode,material,width=40){
  const n=250,positions=[],uv=[],idx=[];
