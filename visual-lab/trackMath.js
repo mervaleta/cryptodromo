@@ -13,10 +13,28 @@ export function trackPoint(mode,progress,lane=5.5){
   x=-390+780*p;z=24*Math.sin(TWO_PI*p)+side;
   dx=780;dz=24*TWO_PI*Math.cos(TWO_PI*p);
  }else if(mode==='oval'){
-  const angle=TWO_PI*p,rx=325,rz=50;
-  // Stadium's stand is on its north side; the complete oval lives south.
-  const cx=-rx*Math.cos(angle),cz=35-rz*Math.sin(angle);
-  const vx=rx*TWO_PI*Math.sin(angle),vz=-rz*TWO_PI*Math.cos(angle);
+  // Rounded stadium oval: two tangential straights + two semicircles.
+  // The previous 325x50 ellipse had a curvature radius of only ~7.7
+  // at its tips, smaller than the lane offsets, folding its ribbons over
+  // themselves into the black triangle artifacts seen from above.
+  const halfStraight=250,radius=72;
+  const straightLength=2*halfStraight,arcLength=Math.PI*radius;
+  const loopLength=2*(straightLength+arcLength);
+  const distance=(p%1)*loopLength;
+  let cx,cz,vx,vz;
+  if(distance<straightLength){
+   cx=-halfStraight+distance;cz=radius;vx=1;vz=0;
+  }else if(distance<straightLength+arcLength){
+   const a=Math.PI/2-(distance-straightLength)/radius;
+   cx=halfStraight+radius*Math.cos(a);cz=radius*Math.sin(a);
+   vx=Math.sin(a);vz=-Math.cos(a);
+  }else if(distance<2*straightLength+arcLength){
+   cx=halfStraight-(distance-straightLength-arcLength);cz=-radius;vx=-1;vz=0;
+  }else{
+   const a=-Math.PI/2-(distance-2*straightLength-arcLength)/radius;
+   cx=-halfStraight+radius*Math.cos(a);cz=radius*Math.sin(a);
+   vx=Math.sin(a);vz=-Math.cos(a);
+  }
   const len=Math.hypot(vx,vz)||1,nx=-vz/len,nz=vx/len;
   x=cx+side*nx;z=cz+side*nz;dx=vx;dz=vz;
  }else{
