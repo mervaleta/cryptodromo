@@ -23,8 +23,8 @@ try{
  assert.equal(await page.locator('#panel-light').isVisible(),true);
  await page.click('#light-preview');
  assert.equal(await page.locator('#weather').inputValue(),'night');
- await page.locator('#light-dimmer').fill('58');
- await page.locator('#light-color').fill('#55bbff');
+ await page.locator('#light-dimmer').evaluate(el=>{el.value='58';el.dispatchEvent(new Event('input',{bubbles:true}));});
+ await page.locator('#light-color').evaluate(el=>{el.value='#55bbff';el.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.selectOption('#light-pattern','wave');
  assert.match(await page.locator('#light-status').innerText(),/58%/);
  await page.waitForTimeout(700);
