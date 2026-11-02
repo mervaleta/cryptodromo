@@ -8,6 +8,11 @@ try{
  const errors=[],requestedLogos=[];
  const debuggerSession=await page.context().newCDPSession(page);
  await debuggerSession.send('Debugger.enable');
+ await debuggerSession.send('Runtime.enable');
+ debuggerSession.on('Runtime.exceptionThrown',e=>{
+  const d=e.exceptionDetails;
+  console.log('RUNTIME_EXCEPTION_LOCATION',JSON.stringify({url:d.url,line:d.lineNumber,column:d.columnNumber,description:d.exception?.description,text:d.text}));
+ });
  debuggerSession.on('Debugger.scriptFailedToParse',e=>{
    console.log('FAILED_SCRIPT_TO_PARSE',JSON.stringify({url:e.url,line:e.lineNumber,column:e.columnNumber,start:e.startLine,end:e.endLine}));
  });
@@ -28,6 +33,11 @@ try{
     scripts:[...document.scripts].map(s=>s.src).filter(Boolean)
    }))));
    console.log('SCENE_START_ERRORS',JSON.stringify(errors));
+   const actual=await page.evaluate(()=>({
+    scripts:[...document.scripts].map(s=>({src:s.src,type:s.type})),
+    importMap:document.querySelector('script[type="importmap"]')?.textContent?.slice(0,200)
+   }));
+   console.log('SCRIPT_CONTEXT',JSON.stringify(actual));
    const diagnostics=await page.evaluate(async()=>{
     const paths=['/visual-lab/scene.js','/visual-lab/trackMath.js','/visual-lab/trackVisuals.js','/visual-lab/liveSchedule.js','/visual-lab/raceAudio.js','/race-lab/source/src/horse.js','/race-lab/source/src/horseSurface.js'];
     return Promise.all(paths.map(async path=>{
