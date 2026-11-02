@@ -3,8 +3,8 @@
  * A computed result is NOT proof that a live race was transmitted.
  * Never substitute this for a persisted, time-stamped transmission ledger.
  */
-import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS,PRICE_FIXTURE} from '../race-lab/source/src/data/raceFixture.js';
-import {createOfficialRace,officialRanking,officialAudit} from '../race-lab/source/src/data/officialRace.js';
+import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS,PRICE_FIXTURE} from '../race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
+import {createOfficialRace,officialRanking,officialAudit} from '../race-lab/source/src/data/officialRace.js?v=crp-20261102';
 
 const integerIn=(n,max)=>Number.isInteger(n)&&n>=0&&n<max;
 const round=(n,places)=>Number(n.toFixed(places));
