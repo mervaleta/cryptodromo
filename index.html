@@ -106,10 +106,17 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 .auto-label{font-size:12px;font-weight:850;color:#e4bc7c;letter-spacing:.08em}
 #replay-mode{color:#e3c38b;border-color:#81683f}
 @media(max-width:680px){.present-roster{grid-template-columns:repeat(6,minmax(0,1fr))}.present-spotlight strong{font-size:57px}.presentation-overlay{padding:14px}.present-roster>div{min-height:33px}}
+
+/* Alpha 15 broadcast design cohesion: original crest and legible telemetry. */
+.brand{display:inline-flex;align-items:center;gap:9px}.brand:before{content:none}.brand-mark{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 0 12px #56e0ac30)}
+.top nav{gap:clamp(8px,1.2vw,17px)}.top nav a{font-size:10px;letter-spacing:.09em}.top nav a:hover,.top nav a:focus-visible{color:#f1d6a0}
+.stage{box-shadow:0 25px 75px #000a,0 0 0 1px #c5ae7252;background:#617781}
+.controlrow input:focus-visible,.controlrow select:focus-visible,.controlrow button:focus-visible,.top a:focus-visible{outline:2px solid #e0c383;outline-offset:2px}
+@media(max-width:860px){.top{align-items:flex-start;flex-direction:column}.top nav{gap:10px}.top nav a{font-size:10px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head><body>
-<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera LIVE</a><a href="/racers/">Corredores</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/cronicas/">Crónicas</a><a href="/apuestas/">Favoritos · demo</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a><a href="/visual-lab/">Visual Lab</a></nav><span class="overline">TRANSMISIÓN 3D · EN VIVO</span></header>
+<header class="top"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="" class="brand-mark" width="38" height="38">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera LIVE</a><a href="/racers/">Corredores</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/cronicas/">Crónicas</a><a href="/apuestas/">Favoritos · demo</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a><a href="/visual-lab/">Visual Lab</a></nav><span class="overline">TRANSMISIÓN 3D · EN VIVO</span></header>
 <main class="shell">
 <div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS · 780 UNIDADES VISUALES · LIVE AUTOMÁTICO</small></div>
 <div class="stage" id="stage">
