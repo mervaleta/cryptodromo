@@ -15,17 +15,17 @@ export function createNightLights(scene,{start=-246,finish=246}={}){
  ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
  const poolTex=new THREE.CanvasTexture(poolCanvas);poolTex.colorSpace=THREE.SRGBColorSpace;
  const positions=[];
- for(let x=start+20;x<=finish-10;x+=69)for(const side of [-1,1])positions.push({x,z:side<0?-33:34,side});
+ for(const x of [start+28,0,finish-28])for(const side of [-1,1])positions.push({x,z:side<0?-33:34,side});
  const lampGeo=new THREE.BoxGeometry(4.0,.62,1.65);
  const beamGeo=new THREE.ConeGeometry(13,29,12,1,true);beamGeo.translate(0,-14.5,0);
- const poolGeo=new THREE.PlaneGeometry(29,28);
+ const poolGeo=new THREE.PlaneGeometry(78,35);
  for(let i=0;i<positions.length;i++){
   const {x,z,side}=positions[i];
   const support=new THREE.Mesh(new THREE.CylinderGeometry(.19,.26,23,8),stem);
   support.position.set(x,11.5,z);support.castShadow=true;root.add(support);supports.push(support);
   const luminaire=new THREE.Mesh(lampGeo,lightMat.clone());luminaire.position.set(x,23.1,z);
   luminaire.castShadow=false;root.add(luminaire);
-  const light=new THREE.SpotLight('#fff5d7',0,76,Math.PI/3,.87,1.5);
+  const light=new THREE.SpotLight('#fff5d7',0,130,Math.PI/2.5,.88,1.3);
   light.position.set(x,22.8,z);
   light.castShadow=false;
   light.target.position.set(x,0,0);
@@ -60,7 +60,7 @@ export function createNightLights(scene,{start=-246,finish=246}={}){
    if(state.effect==='wave')gain=.50+.50*Math.sin(theta*1.9+f.baseX*.024)**2;
    if(state.effect==='rainbow'){tmp.setHSL((phase+theta*.055)%1,.65,.72);color=tmp;gain=.80;}
    const intensity=base*gain;
-   f.light.intensity=intensity*980;
+   f.light.intensity=intensity*1600;
    f.light.color.copy(color);
    f.luminaire.material.emissive.copy(color);
    f.luminaire.material.emissiveIntensity=intensity*2.8;
