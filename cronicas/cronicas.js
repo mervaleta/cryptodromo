@@ -1,6 +1,6 @@
 import {liveSlot} from '../visual-lab/liveSchedule.js';
-import {RACES_PER_DAY} from '../race-lab/source/src/data/raceFixture.js';
-import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js';
+import {RACES_PER_DAY} from '../race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
+import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js?v=coat-20261102';
 import {buildSyntheticChronicle} from '../alpha15/chronicle.js';
 import {buildSyntheticCareers} from '../alpha15/careers.js';
 const $=id=>document.getElementById(id);
