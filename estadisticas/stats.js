@@ -1,8 +1,8 @@
-import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js';
-import {getRaceFixture} from '../race-lab/source/src/data/raceFixture.js';
-import {buildRosterStats} from '../visual-lab/rosterStats.js';
+import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js?v=coat-20261102';
+import {getRaceFixture} from '../race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
+import {buildRosterStats} from '../visual-lab/rosterStats.js?v=alpha16-championship-1';
 import {liveSlot,formatCountdown} from '../visual-lab/liveSchedule.js';
-import {createOfficialRace} from '../race-lab/source/src/data/officialRace.js';
+import {createOfficialRace} from '../race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {buildBroadcastProfiles} from '../visual-lab/raceChoreography.js';
 import {buildTrackSplits} from '../race-lab/source/src/data/trackSplits.js?v=alpha15-splits-1';
 const $=id=>document.getElementById(id);
