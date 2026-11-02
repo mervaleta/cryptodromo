@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {createGaitRefiner} from './gaitRefiner.js?v=alpha09-1';
-import {createFurIdentity} from './horseLivery.js?v=alpha09-pattern-1';
+import {createFurIdentity} from './horseLivery.js?v=alpha14-ticker-1';
 import {smoothHorseNormals} from './horseSurface.js?v=alpha08-1';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
