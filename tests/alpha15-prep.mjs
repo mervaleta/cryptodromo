@@ -59,7 +59,7 @@ test('chronicle uses past-only synthetic records, no fabricated real-world obser
  assert.equal(early.provenance.publicationStatus,'draft');
  assert.ok(early.highlights.length>=1);
  assert.ok(early.highlights.every(s=>s.day===1&&s.slot<=0&&s.provenance.synthetic));
- assert.match(asTextBrief(early.highlights[0]),/Simulación/);
+ assert.match(asTextBrief(early.highlights[0]),/simulación/i);
  const later=buildSyntheticChronicle({dayIndex:0,throughSlot:15,limit:12});
  assert.equal(later.racesExamined,16);
  assert.ok(later.highlights.every(s=>s.slot<=15));
