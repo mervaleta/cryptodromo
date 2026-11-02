@@ -48,21 +48,42 @@ export function createNightLights(scene,{start=-246,finish=246}={}){
   fixtures.push({light,luminaire,baseX:x,baseZ:z});
   beams.push(beam);pools.push(pool);
  }
- const state={enabled:true,dimmer:.84,color:'#fff3d4',effect:'steady',night:false};
+ // Additional perimeter masts are batched into two draw calls; no extra spotlights.
+ const poleCount=16,poleDummy=new THREE.Object3D();
+ const mastMaterial=new THREE.MeshStandardMaterial({color:'#3b554a',metalness:.52,roughness:.47});
+ const mastMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(.14,.19,1,6),mastMaterial,poleCount);
+ const perimeterHeadsMat=new THREE.MeshStandardMaterial({color:'#f5e6c7',emissive:'#fff2cd',emissiveIntensity:0,roughness:.35});
+ const perimeterHeads=new THREE.InstancedMesh(new THREE.BoxGeometry(2.3,.66,1.2),perimeterHeadsMat,poleCount);
+ for(let i=0;i<poleCount;i++){
+  const rank=Math.floor(i/2),x=-365+rank*(730/7),z=i%2?-114:114;
+  poleDummy.position.set(x,9.8,z);poleDummy.scale.set(1,19.6,1);
+  poleDummy.updateMatrix();mastMesh.setMatrixAt(i,poleDummy.matrix);
+  poleDummy.position.set(x,19.9,z);poleDummy.scale.set(1,1,1);poleDummy.updateMatrix();
+  perimeterHeads.setMatrixAt(i,poleDummy.matrix);
+ }
+ mastMesh.instanceMatrix.needsUpdate=true;perimeterHeads.instanceMatrix.needsUpdate=true;
+ mastMesh.castShadow=false;perimeterHeads.castShadow=false;root.add(mastMesh,perimeterHeads);
+ const state={enabled:true,dimmer:.84,color:'#fff3d4',effect:'steady',night:false,spread:62,ambient:1,perimeter:true};
  const tmp=new THREE.Color(),original=new THREE.Color();
  const blend=new THREE.Color();
- function configure({enabled=state.enabled,dimmer=state.dimmer,color=state.color,effect=state.effect,night=state.night}={}){
+ function configure({enabled=state.enabled,dimmer=state.dimmer,color=state.color,effect=state.effect,night=state.night,spread=state.spread,ambient=state.ambient,perimeter=state.perimeter}={}){
   state.enabled=!!enabled;state.dimmer=Math.max(0,Math.min(1,Number(dimmer)||0));
   state.color=color;state.effect=effect;state.night=!!night;
+  state.spread=Math.max(25,Math.min(88,Number(spread)||62));
+  state.ambient=Math.max(0,Math.min(2,Number(ambient)||0));state.perimeter=!!perimeter;
   update(0);
  }
  function update(seconds=0){
   const base=state.enabled?(state.night?1:.30)*state.dimmer:0;
   original.set(state.color);
   courseFill.color.copy(original).lerp(new THREE.Color('#c4dff5'),.34);
-  courseFill.intensity=base*.85;
+  courseFill.intensity=base*.85*state.ambient;
   arenaBounce.color.copy(original).lerp(new THREE.Color('#bcd6eb'),.6);
-  arenaBounce.intensity=base*.42;
+  arenaBounce.intensity=base*.42*state.ambient;
+  perimeterHeadsMat.emissive.copy(original);
+  perimeterHeadsMat.emissiveIntensity=state.perimeter?base*4.8:0;
+  perimeterHeads.visible=state.perimeter;
+  for(const f of fixtures)f.light.angle=state.spread*Math.PI/360;
   for(let i=0;i<fixtures.length;i++){
    const f=fixtures[i],phase=i/fixtures.length,theta=seconds;
    let gain=1,color=original;
@@ -86,6 +107,7 @@ export function createNightLights(scene,{start=-246,finish=246}={}){
    for(const f of fixtures){f.luminaire.material.dispose();f.light.dispose();}
    for(const mesh of [...beams,...pools])mesh.material.dispose();
    lampGeo.dispose();beamGeo.dispose();poolGeo.dispose();poolTex.dispose();stem.dispose();lightMat.dispose();
+   mastMesh.geometry.dispose();perimeterHeads.geometry.dispose();mastMaterial.dispose();perimeterHeadsMat.dispose();
    root.removeFromParent();
  }};
 }
