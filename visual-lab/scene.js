@@ -283,7 +283,9 @@ function setRace(index){
  race=getRaceFixture(raceIndex%RACES_PER_DAY,Math.floor(raceIndex/RACES_PER_DAY));
  profiles=createOfficialRace(race.entries);
  broadcastProfiles=buildBroadcastProfiles(profiles);
- overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;
+ overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
+ lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
+ resultsOverlay.hidden=true;
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
@@ -293,17 +295,25 @@ function setRace(index){
   });
  }
  status.textContent='A SUS MARCAS · DÍA '+race.day;
+ narrationDisplay.textContent='LOS DOCE CORREDORES ESPERAN LA LARGADA';
+ statContent.textContent='12 corredores · 9 dosis iniciales y 3 finales · dos precios sintéticos.';
+ showBiography(race.entries[0]);
  start.textContent='▶ INICIAR CARRERA';updateStandings();
 }
 function updateStandings(){
  const order=horses.slice().sort((a,b)=>b.progress-a.progress||a.index-b.index);
- standings.innerHTML=order.map((h,i)=>'<li><i style="background:'+h.entry.color+'"></i><b>'+String(i+1).padStart(2,'0')+' '+h.entry.symbol+'</b><small>'+(h.progress*100).toFixed(1)+'%</small></li>').join('');
+ standings.innerHTML=order.map((h,i)=>'<li data-symbol="'+h.entry.symbol+'" title="Ver biografía" style="cursor:pointer"><i style="background:'+h.entry.color+'"></i><b>'+String(i+1).padStart(2,'0')+' '+h.entry.symbol+'</b><small>'+(h.progress*100).toFixed(1)+'%</small></li>').join('');
  const lead=order[0];leaderEl.textContent=lead?lead.entry.symbol:'—';
 }
+standings.addEventListener('click',event=>{
+ const li=event.target.closest('li[data-symbol]');
+ if(li){const entry=race.entries.find(e=>e.symbol===li.dataset.symbol);showBiography(entry);}
+});
 start.addEventListener('click',()=>{
  if(!horses.length)return;
- if(finished)setRace(raceIndex+1);
+ if(finished){setRace(raceIndex+1);resultsOverlay.hidden=true;}
  running=!running;for(const h of horses)h.model.play(running?'Gallop':'Idle');
+ if(running&&elapsed===0)speakBroadcast(narrateEvent({type:'start'}));
  start.textContent=running?'Ⅱ PAUSAR':'▶ CONTINUAR';
  status.textContent=running?'CARRERA EN CURSO · DOS INPUTS DE PRECIO':'EN PAUSA';
 });
