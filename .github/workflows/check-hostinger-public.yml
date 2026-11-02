@@ -24,3 +24,9 @@ jobs:
             fi
             echo "::endgroup::"
           done
+      - name: Inspect live fixture and game engine versions
+        run: |
+          echo "Public price fixture coefficient deck:"
+          curl -fsSL "https://race.cryptodromo.com/race-lab/source/src/data/raceFixture.js?verify=20261102" | grep -E -m 1 'const FIRST_DECK'
+          echo "Public official engine coefficient deck:"
+          curl -fsSL "https://race.cryptodromo.com/race-lab/source/src/data/officialRace.js?verify=20261102" | grep -E -m 1 'FIRST_COEFFICIENTS'
