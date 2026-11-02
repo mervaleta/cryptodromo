@@ -19,9 +19,23 @@ export function liveryPalette(coat,accent){
  return {fur,mane,tail,fleck:fur.clone().lerp(new THREE.Color('#d8ddcd'),.13)};
 }
 export function supportedLogo(symbol){return available.has(String(symbol||'').toUpperCase());}
+/** Distinct, honest fallback for missing source artwork: a ticker seal, NOT an official logo. */
+function makeTickerSeal(symbol){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
+ const ctx=canvas.getContext('2d');const text=String(symbol||'?').slice(0,7).toUpperCase();
+ ctx.clearRect(0,0,128,128);
+ ctx.fillStyle='rgba(9,23,20,.88)';ctx.beginPath();ctx.arc(64,64,55,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='rgba(246,231,182,.85)';ctx.lineWidth=5;ctx.beginPath();ctx.arc(64,64,51,0,Math.PI*2);ctx.stroke();
+ const size=text.length>=6?23:text.length>=5?26:text.length>=4?31:text.length>=3?37:44;
+ ctx.font='900 '+size+'px system-ui,Arial,sans-serif';ctx.textBaseline='middle';ctx.textAlign='center';
+ ctx.fillStyle='#f5e6ba';ctx.fillText(text,64,64,103);
+ const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+ texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;
+ return texture;
+}
 function getLogo(symbol){
  const key=String(symbol||'').toUpperCase();
- if(!supportedLogo(key))return Promise.resolve(null);
+ // All 100 racers receive a mark. Only locally bundled SVGs are official-style artwork.
  if(cache.has(key)){
    const promise=cache.get(key);
    cache.delete(key);cache.set(key,promise);return promise;
@@ -37,8 +51,9 @@ function getLogo(symbol){
    texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;
    resolve(texture);
   };
-  image.onerror=()=>resolve(null);
-  image.src='/assets/crypto-logos/'+key.toLowerCase()+'.svg';
+  image.onerror=()=>resolve(makeTickerSeal(key));
+  if(supportedLogo(key))image.src='/assets/crypto-logos/'+key.toLowerCase()+'.svg';
+  else resolve(makeTickerSeal(key));
  });
  cache.set(key,promise);
  while(cache.size>MAX_TEXTURES){
@@ -49,7 +64,7 @@ function getLogo(symbol){
  }
  return promise;
 }
-export const liveryCacheStats=()=>({textures:cache.size,maxTextures:MAX_TEXTURES,iconsBundled:available.size});
+export const liveryCacheStats=()=>({textures:cache.size,maxTextures:MAX_TEXTURES,iconsBundled:available.size,tickerFallbacks:100-available.size});
 
 /** Apply additive dyed pattern to material shader; follows skinned vertices. */
 function tattoo(mesh,material,uniforms){
