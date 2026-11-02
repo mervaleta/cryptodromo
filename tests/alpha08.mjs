@@ -68,5 +68,9 @@ test('procedural fur, normals, original token tattoo and audio work without adde
  assert.match(scene,/VISUAL_START_X=-390,VISUAL_FINISH_X=390/);
  assert.match(scene,/softwareGPU/);
  assert.match(scene,/setInterval\(\(\)=>/);
- assert.match(scene,/for\(let x=-398;x<=398;x\+=8\)box/);
+ // Alpha16 deliberately retires the continuous 810 m roof; the replacement
+ // introduces three shorter stands and keeps the twelve-horse race untouched.
+ assert.match(scene,/createParadeVillage\(scene,/);
+ assert.doesNotMatch(scene,/for\(let x=-398;x<=398;x\+=8\)box/);
+ assert.match(read('parade/scenery.js'),/standW=\[101,122,101\]/);
 });
