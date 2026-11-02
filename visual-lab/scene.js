@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
-import {trackPoint} from './trackMath.js?v=a08-2';
-import {createAlternativeTracks} from './trackVisuals.js?v=a08-2';
+import {trackPoint} from './trackMath.js?v=a09-1';
+import {createAlternativeTracks} from './trackVisuals.js?v=a09-1';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
 import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
