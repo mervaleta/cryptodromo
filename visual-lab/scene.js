@@ -3,6 +3,7 @@ import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=a11-oval-1';
 import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
+import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
 import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
@@ -136,6 +137,7 @@ const straightChildren=scene.children.slice(straightSceneIndex);scene.add(straig
 straightChildren.forEach(child=>straightCourse.add(child));
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
+createStadiumBackdrop(scene,{softwareGPU,mobile});
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=softwareGPU?55:mobile?90:155;
 for(let i=0;i<treeN;i++){
