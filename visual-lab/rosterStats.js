@@ -1,5 +1,5 @@
 import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js?v=coat-20261102';
-import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '../race-lab/source/src/data/raceFixture.js?v=alpha05-coats';
+import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '../race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js?v=crp-20261102';
 
 let cache;
