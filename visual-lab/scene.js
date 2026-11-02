@@ -52,8 +52,14 @@ try {renderer=new THREE.WebGLRenderer({canvas,antialias:!mobile,powerPreference:
 catch(e){status.textContent='NECESITÁS WEBGL PARA ESTA VISTA';msg.textContent=String(e);throw e;}
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobile?1.2:1.65));
-renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+// Preserve high quality on dedicated GPUs, but make headless/CPU and entry-level
+// renderers viable. The engine clock is independent of graphics quality.
+const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');
+const gpuName=String(ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER));
+const softwareGPU=/swiftshader|llvmpipe|software|lavapipe/i.test(gpuName);
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,softwareGPU?.78:mobile?1.10:1.42));
+renderer.shadowMap.enabled=!softwareGPU;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#a5bbc3');
 scene.fog=new THREE.FogExp2(0xc9d2c6,.0036);
@@ -68,7 +74,7 @@ camera.position.set(-256,4.4,21);camera.lookAt(-236,2,0);
 const hemi=new THREE.HemisphereLight(0xc1e2ff,0x39412e,2.0);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe0aa,3.6);
 sun.position.set(-75,125,62);sun.castShadow=true;
-sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
+sun.shadow.mapSize.set(softwareGPU?512:mobile?768:1536,softwareGPU?512:mobile?768:1536);
 Object.assign(sun.shadow.camera,{left:-160,right:160,top:110,bottom:-110,near:1,far:320});
 sun.shadow.bias=-.00014;sun.shadow.normalBias=.018;scene.add(sun);scene.add(sun.target);
 const fill=new THREE.DirectionalLight(0x91c5df,.8);fill.position.set(30,20,-65);scene.add(fill);
@@ -129,7 +135,7 @@ straightChildren.forEach(child=>straightCourse.add(child));
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
 const treeGroup=new THREE.Group();scene.add(treeGroup);
-const treeN=mobile?90:155;
+const treeN=softwareGPU?55:mobile?90:155;
 for(let i=0;i<treeN;i++){
  const r=seeded(i*761+49),x=r()*690-345,back=r()>.40,z=back?-74-r()*34:75+r()*25;
  const h=5+r()*9;
@@ -190,7 +196,7 @@ function sign(text,x,y,z,w=24,h=3,fg='#f3ecd7',bg='#0e3028'){
 sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7);
 sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0);
 // Spectators: shared-instanced bodies and heads, individual colors, multi-tier seating.
-const crowdN=mobile?1400:3400,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
+const crowdN=softwareGPU?950:mobile?1400:3400,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
 const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.InstancedMesh(headG,mat('#dbb78b'),crowdN)];
 const dummy=new THREE.Object3D(),palette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
 const rnd=seeded(641903);
@@ -228,11 +234,11 @@ const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUA
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode='straight';
 // Dust particles when running; no effect on outcomes.
-const dustN=mobile?160:450,dustData=new Float32Array(dustN*3);
+const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false}));
 dust.visible=false;scene.add(dust);
-const rainN=mobile?280:650,rainPos=new Float32Array(rainN*3),rr=seeded(624);
+const rainN=softwareGPU?180:mobile?280:650,rainPos=new Float32Array(rainN*3),rr=seeded(624);
 for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*690;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
@@ -526,7 +532,7 @@ function particles(dt){
   if(y<0)y=29;attr.setY(i,y);
  }attr.needsUpdate=true;}
 }
-function animate(now){
+function animate(now,draw=true){
  const realSeconds=Math.max(0,(now-last)/1000),dt=Math.min(realSeconds,.08);last=now;
  if(running){
   // Runout is strictly VISUAL. At t=60 the score is frozen, but
@@ -597,15 +603,23 @@ function animate(now){
   }
  }
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
- nightLights.update(now/1000);
- trackFX.update(realSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
- if(layoutMode!=='straight')trackFX.puddles.visible=false;
- particles(dt);adjustCamera(dt);renderer.render(scene,camera);
+ if(draw){
+  nightLights.update(now/1000);
+  trackFX.update(realSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
+  if(layoutMode!=='straight')trackFX.puddles.visible=false;
+  particles(dt);adjustCamera(dt);renderer.render(scene,camera);
+ }
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
- raf=requestAnimationFrame(animate);
+ if(draw)raf=requestAnimationFrame(animate);
 }
 function resize(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(stage);resize();raf=requestAnimationFrame(animate);
+// Gameplay ticker is a safety net if an integrated GPU/browser throttles rAF:
+// all horses still advance on wall time and the 60-second official result holds.
+setInterval(()=>{
+ const now=performance.now();
+ if(running&&now-last>140)animate(now,false);
+},85);
 // Opt-in QA seek for deterministic replay verification. Only present with
 // ?finish-qa=alpha06 and never changes official prices, doses or ranking.
 if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
