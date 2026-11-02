@@ -22,14 +22,6 @@ async function loadHorseAsset(){
   return assetPromise;
 }
 
-function makeBadgeTexture(symbol,accent){
-  const canvas=document.createElement('canvas');canvas.width=384;canvas.height=128;
-  const ctx=canvas.getContext('2d');ctx.fillStyle='#081b16';ctx.fillRect(0,0,384,128);
-  ctx.fillStyle=accent;ctx.fillRect(0,0,13,128);ctx.fillStyle='#f6f4e8';
-  ctx.font='bold 62px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(symbol,198,68);
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture;
-}
-
 export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop'}={}){
   const asset=await loadHorseAsset(),model=clone(asset.scene);model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model,true),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
