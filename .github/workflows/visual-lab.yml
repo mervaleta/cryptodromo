@@ -2,7 +2,7 @@ name: Cinematic visual lab verification
 on:
   push:
     branches: [main]
-    paths: ['visual-lab/**','race-lab/source/src/horse.js','race-lab/source/src/gaitRefiner.js','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','.github/workflows/visual-lab.yml']
+    paths: ['visual-lab/**','race-lab/source/src/horse.js','race-lab/source/src/gaitRefiner.js','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,6 +34,8 @@ jobs:
         run: node --test tests/cinematic-choreography.mjs
       - name: Verify live cinematic scene
         run: node tests/visual-lab-browser.mjs
+      - name: Verify live official finish after 60s and overlay
+        run: node tests/finish-browser.mjs
       - name: Save reference screenshots
         if: always()
         uses: actions/upload-artifact@v4
