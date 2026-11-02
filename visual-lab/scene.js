@@ -21,8 +21,8 @@ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#a5bbc3');
 scene.fog=new THREE.FogExp2(0xc9d2c6,.0036);
-const camera=new THREE.PerspectiveCamera(46,1,.1,700);
-camera.position.set(-76,9,44);camera.lookAt(-54,2.3,0);
+const camera=new THREE.PerspectiveCamera(50,1,.1,700);
+camera.position.set(-115,4.4,21);camera.lookAt(-94,2,0);
 const hemi=new THREE.HemisphereLight(0xc1e2ff,0x39412e,2.0);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe0aa,3.6);
 sun.position.set(-75,125,62);sun.castShadow=true;
@@ -268,8 +268,8 @@ function adjustCamera(dt){
  const camMode=camSelect.value;
  if(camMode==='aerial'){goal.set(follow-34,68,54);target.set(follow+24,0,-7);}
  else if(camMode==='finish'){goal.set(119,7,31);target.set(104,2,0);}
- else if(camMode==='rail'){goal.set(follow-14,3.2,18);target.set(follow+12,2.2,0);}
- else {goal.set(follow-23,8.2,33);target.set(follow+12,2.4,-2);}
+ else if(camMode==='rail'){goal.set(follow-6,2.75,14.5);target.set(follow+8,2.0,0);}
+ else {goal.set(follow-10,4.4,21);target.set(follow+10,2.0,-1.5);}
  camera.position.lerp(goal,Math.min(1,dt*1.9));camera.lookAt(target);
 }
 function particles(dt){
@@ -287,9 +287,9 @@ function particles(dt){
  }attr.needsUpdate=true;}
 }
 function animate(now){
- const dt=Math.min((now-last)/1000,.08);last=now;
+ const realSeconds=Math.max(0,(now-last)/1000),dt=Math.min(realSeconds,.08);last=now;
  if(running){
-  elapsed=Math.min(60,elapsed+dt);
+  elapsed=Math.min(60,elapsed+realSeconds);
   const leaderMeters=officialRanking(profiles)[0].distanceAt60;
   horses.forEach((h,i)=>{
    const dist=positionAt(profiles[i],elapsed),pr=dist/leaderMeters;
