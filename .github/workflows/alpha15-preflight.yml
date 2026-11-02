@@ -26,6 +26,6 @@ jobs:
           node-version: '22'
       - name: Parse isolated Alpha15 modules
         run: |
-          for p in alpha15/*.js tests/alpha15-prep.mjs; do node --check "$p"; done
+          for p in alpha15/*.js alpha15/preview/*.js tests/alpha15-prep.mjs; do node --check "$p"; done
       - name: Test synthetic racing records, editorial, TV direction and stable finish
         run: node --test tests/alpha15-prep.mjs
