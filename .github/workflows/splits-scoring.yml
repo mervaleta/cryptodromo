@@ -5,6 +5,7 @@ on:
     paths:
       - 'race-lab/source/src/data/trackSplits.js'
       - 'visual-lab/scene.js'
+      - 'visual-lab/trackSplitMarkers.js'
       - 'visual-lab/trackSplitsPanel.js'
       - 'estadisticas/stats.js'
       - 'resultados/resultados.js'
@@ -26,6 +27,7 @@ jobs:
         run: |
           node --check visual-lab/scene.js
           node --check visual-lab/trackSplitsPanel.js
+          node --check visual-lab/trackSplitMarkers.js
           node --check race-lab/source/src/data/trackSplits.js
           node --check estadisticas/stats.js
           node --check resultados/resultados.js
