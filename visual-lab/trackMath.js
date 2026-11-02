@@ -42,7 +42,7 @@ export function trackPoint(mode,progress,lane=5.5){
   // Distance is scaled to the visual course, not the finance engine.
   if(p>1){
    const tangentLength=Math.hypot(dx,dz)||1;
-   const overrun=Math.min(120,(p-1)*COURSE_LENGTH);
+   const overrun=Math.min(350,(p-1)*COURSE_LENGTH);
    x+=overrun*dx/tangentLength;
    z+=overrun*dz/tangentLength;
   }
