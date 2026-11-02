@@ -1,9 +1,17 @@
-name: Alpha15 public fast smoke
+name: Alpha16 public fast smoke
 on:
   push:
     branches: [main]
     paths:
       - 'tests/alpha15-fast-smoke.mjs'
+      - 'parade/**'
+      - 'index.html'
+      - 'visual-lab/**'
+      - 'resultados/**'
+      - 'estadisticas/**'
+      - 'cronicas/**'
+      - 'fixture/**'
+      - 'apuestas/**'
       - '.github/workflows/alpha15-fast-smoke.yml'
   workflow_dispatch:
 permissions:
