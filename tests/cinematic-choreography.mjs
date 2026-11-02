@@ -9,11 +9,11 @@ test('alpha07 extends visible straight by another 12% without changing the two-p
  const scene=readFileSync(new URL('../visual-lab/scene.js',import.meta.url),'utf8');
  assert.match(scene,/VISUAL_START_X=-320,VISUAL_FINISH_X=320/);
  assert.doesNotMatch(scene,/VISUAL_SPAN\*Math\.min\(1\.025/);
- assert.match(scene,/goal\.set\(0,290,155\)/);
+ assert.match(scene,/goal\.set\(0,layoutMode===/);
  assert.match(scene,/createNightLights/);
  assert.match(scene,/VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X/);
  assert.match(scene,/broadcastPosition\(p,elapsed\)/);
- assert.match(scene,/VISUAL_START_X\+VISUAL_SPAN/);
+ assert.match(scene,/trackPoint\(layoutMode,pr,i\)/);
  assert.doesNotMatch(scene,/function jockey\s*\(/);
  assert.doesNotMatch(scene,/const rider=jockey/);
 });
