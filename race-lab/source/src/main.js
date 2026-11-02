@@ -200,8 +200,8 @@ function animate(){
       lastTick=sampleStep;
       horses.forEach(h=>{
         const lateInput=sampleStep>=9;
-        const priceMove=lateInput?h.input2:h.input1;
-        const coefficient=lateInput?h.coefficients2[sampleStep-9]:h.coefficients1[sampleStep];
+        const priceMove=lateInput?h.racer.input2:h.racer.input1;
+        const coefficient=lateInput?h.racer.coefficients2[sampleStep-9]:h.racer.coefficients1[sampleStep];
         h.latestMove=priceMove+marketInput*100;
         h.delta=THREE.MathUtils.clamp((priceMove/100+marketInput)*coefficient*8,-4.8,4.8);
       });
