@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { getRaceFixture, RACES_PER_DAY, FIXTURE_DAYS, RACE_DURATION_SECONDS } from './data/raceFixture.js';
+import { getRaceFixture, RACES_PER_DAY, FIXTURE_DAYS, RACE_DURATION_SECONDS } from './data/raceFixture.js?v=crp-20261102';
 import { createHorse } from './horse.js';
 import { createChurchillStadium } from './churchillStadium.js';
-import { createOfficialRace, positionAt, officialRanking, officialAudit } from './data/officialRace.js';
+import { createOfficialRace, positionAt, officialRanking, officialAudit } from './data/officialRace.js?v=crp-20261102';
 // CRYPTODROMO_SATOSHI_STADIUM_V1
 
 let absoluteRaceIndex = 0;
