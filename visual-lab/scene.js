@@ -250,6 +250,7 @@ let broadcastProfiles=buildBroadcastProfiles(profiles);
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
+let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
 const biographyStats=buildRosterStats();
 function speakBroadcast(phrase){narrationDisplay.textContent=phrase;narrator.say(phrase,{urgent:phrase.includes('Largaron')||phrase.includes('Cruzaron')});}
 function showBiography(token){
@@ -269,10 +270,11 @@ function showOfficialResult(){
      ';width:7px;height:22px"></i><b>'+row.symbol+'</b><span>'+row.finishTime.toFixed(3)+' s</span>';
    return el;
  }));
+ finishCelebration.hidden=true;
  resultMeta.textContent='12 CABALLOS · VENTAJA '+stats.leadGapMeters.toFixed(2)+
    ' m · '+race.day+'ª JORNADA · DATOS SINTÉTICOS';
  resultsOverlay.hidden=false;requestAnimationFrame(()=>resultsOverlay.classList.add('is-visible'));
- start.textContent='▶ SIGUIENTE CARRERA';
+ if(!liveFollowing)start.textContent='▶ SIGUIENTE CARRERA';
  speakBroadcast(narrateEvent({type:'finish',leader:stats.leader}));
  status.textContent='RESULTADO OFICIAL · '+stats.leader+' GANADOR';
  msg.textContent='El resultado se congeló a 60 s; los caballos desaceleran después de la meta.';
@@ -305,6 +307,7 @@ async function bootHorses(){
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
  setRace(0);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
+ lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
  status.textContent='CAMPO PREPARADO · 12 CORREDORES';
 }
 function setRace(index){
@@ -314,6 +317,8 @@ function setRace(index){
  broadcastProfiles=buildBroadcastProfiles(profiles);
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
+ lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
+ finishCelebration.hidden=true;presentation.hidden=true;
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
@@ -623,7 +628,7 @@ function animate(now,draw=true){
    const meterSpeed=inRunout?coastSpeed(exitVelocity,elapsed-60):
      broadcastSpeed(p,elapsed);
    const pr=dist/leaderMeters;
-   h.progress=pr;
+   h.progress=pr;h.visualMeters=dist;
    const world=trackPoint(layoutMode,pr,i);
    h.model.root.position.set(world.x,0,world.z);h.model.root.rotation.y=world.heading;
    // Slightly faster hoof cadence makes 550 world units in 60s read as a sprint.
@@ -667,10 +672,21 @@ function animate(now,draw=true){
   }
   if(inRunout){
    if(!finished){finished=true;updateStandings();}
-   // Give the athletes a full second to cross and clear the camera.
-   if(elapsed>=61)showOfficialResult();
+   const count=horses.filter(h=>h.visualMeters>=leaderMeters-1e-6).length;
+   if(count>previousCrossCount){previousCrossCount=count;finishCrossCount.textContent=count+' / 12';}
+   if(!finishShown)finishCelebration.hidden=false;
+   if(!finishRoarPlayed){
+     finishRoarPlayed=true;
+     status.textContent='¡META! · EL PÚBLICO SE PONE DE PIE';
+     msg.textContent='Esperamos el cruce del último corredor para mostrar el acta.';
+     soundtrack.celebrate?.();
+   }
+   if(count===12&&lastCrossedAt===null)lastCrossedAt=elapsed;
+   if(finishReveal({allCrossed:count===12,elapsed,firstCrossAt:lastCrossedAt??60,minimumHold:1.75}))
+     showOfficialResult();
    soundtrack.update(elapsed,weatherSelect.value,.65,trackType.value);
    if(elapsed>=60+RUNOUT_SECONDS){
+    if(!finishShown)showOfficialResult();
     running=false;
     // The animals leave the shot; never leave twelve idle horses on the finish.
     for(const h of horses){h.model.root.visible=false;h.model.play('Idle');}
