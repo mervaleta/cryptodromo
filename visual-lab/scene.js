@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
+import {coastDistance,coastSpeed,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha06-1';
+import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
+import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha06-1';
 import {createNightLights} from './nightLights.js?v=alpha05-lighting-4';
-import {createHorse} from '/race-lab/source/src/horse.js';
+import {createHorse} from '/race-lab/source/src/horse.js?v=alpha06-gait-1';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -15,6 +18,22 @@ const clockEl=document.getElementById('clock'),status=document.getElementById('s
 const start=document.getElementById('start'),resetButton=document.getElementById('reset');
 const nextButton=document.getElementById('next'),camSelect=document.getElementById('camera'),weatherSelect=document.getElementById('weather');
 const standings=document.getElementById('standings'),msg=document.getElementById('message');
+const resultsOverlay=document.getElementById('result-overlay'),resultList=document.getElementById('result-list');
+const resultMeta=document.getElementById('result-meta'),narrationDisplay=document.getElementById('narrator-text');
+const statContent=document.getElementById('race-stat-content'),bioContent=document.getElementById('race-biography');
+const voiceButton=document.getElementById('voice'),soundButton=document.getElementById('sound');
+const soundtrack=createRaceAudio(),narrator=createNarration();
+voiceButton.addEventListener('click',()=>{
+ narrator.toggle();voiceButton.setAttribute('aria-pressed',String(narrator.active));
+ voiceButton.textContent=narrator.active?'🔊 SILENCIAR RELATO':'🔊 ACTIVAR RELATO';
+ if(narrator.active)narrator.say(narrationDisplay.textContent);
+});
+soundButton.addEventListener('click',()=>{
+ if(soundtrack.enabled){soundtrack.stop();soundButton.textContent='♫ AMBIENTE Y CASCOS';}
+ else if(soundtrack.start())soundButton.textContent='♫ SILENCIAR AMBIENTE';
+ soundButton.setAttribute('aria-pressed',String(soundtrack.enabled));
+});
+document.querySelector('#result-close').addEventListener('click',()=>{resultsOverlay.hidden=true;});
 const mobile=matchMedia('(max-width:700px)').matches;
 let renderer;
 try {renderer=new THREE.WebGLRenderer({canvas,antialias:!mobile,powerPreference:'high-performance'});}
@@ -204,6 +223,35 @@ let raceIndex=0,race=getRaceFixture(0,0),profiles=createOfficialRace(race.entrie
 let broadcastProfiles=buildBroadcastProfiles(profiles);
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
+let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
+const biographyStats=buildRosterStats();
+function speakBroadcast(phrase){narrationDisplay.textContent=phrase;narrator.say(phrase);}
+function showBiography(token){
+ if(!token)return;
+ const stats=biographyStats.get(token.symbol);
+ bioContent.textContent=horseBiography(token,stats);
+ if(stats)bioContent.textContent+=' Posición media: '+stats.averagePlace.toFixed(2)+
+   ' · mejor puesto: '+stats.bestPlace+' · '+stats.winRatePct.toFixed(1)+'% de victorias.';
+}
+function showOfficialResult(){
+ if(finishShown)return;
+ finishShown=true;finished=true;
+ const stats=raceStatistics(profiles);officialSnapshot=stats;
+ resultList.replaceChildren(...stats.entries.map(row=>{
+   const el=document.createElement('div');el.className='result-row';
+   el.innerHTML='<strong>'+String(row.place).padStart(2,'0')+'</strong><i style="background:'+row.color+
+     ';width:7px;height:22px"></i><b>'+row.symbol+'</b><span>'+row.finishTime.toFixed(3)+' s</span>';
+   return el;
+ }));
+ resultMeta.textContent='12 CABALLOS · VENTAJA '+stats.leadGapMeters.toFixed(2)+
+   ' m · '+race.day+'ª JORNADA · DATOS SINTÉTICOS';
+ resultsOverlay.hidden=false;start.textContent='▶ SIGUIENTE CARRERA';
+ speakBroadcast(narrateEvent({type:'finish',leader:stats.leader}));
+ status.textContent='RESULTADO OFICIAL · '+stats.leader+' GANADOR';
+ msg.textContent='El resultado se congeló a 60 s; los caballos desaceleran después de la meta.';
+ statContent.textContent='Ganador: '+stats.leader+' · margen '+stats.leadGapMeters.toFixed(2)+
+    ' m · dispersión '+stats.spreadMeters.toFixed(2)+' m · variación media '+stats.averageChangePct.toFixed(3)+'%.';
+}
 const horseCoats=['#6c4731','#b18053','#342a26','#d3b48f','#a65f36','#5d5d62','#a78c66','#332c2a','#a28467','#c49a74','#5b4134','#d4bda8'];
 async function bootHorses(){
  const entries=race.entries;const results=await Promise.allSettled(entries.map((e,i)=>createHorse({
