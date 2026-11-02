@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {Sky} from 'three/addons/objects/Sky.js';
 import {createHorse} from '/race-lab/source/src/horse.js';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {createOfficialRace,positionAt,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -21,6 +22,12 @@ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#a5bbc3');
 scene.fog=new THREE.FogExp2(0xc9d2c6,.0036);
+// Physical sky dome replaces the washed-out single-color prototype backdrop.
+const sky=new Sky();sky.scale.setScalar(450);scene.add(sky);
+sky.material.uniforms.turbidity.value=5.5;
+sky.material.uniforms.rayleigh.value=2.1;
+sky.material.uniforms.mieCoefficient.value=.005;
+sky.material.uniforms.mieDirectionalG.value=.81;
 const camera=new THREE.PerspectiveCamera(50,1,.1,700);
 camera.position.set(-115,4.4,21);camera.lookAt(-94,2,0);
 const hemi=new THREE.HemisphereLight(0xc1e2ff,0x39412e,2.0);scene.add(hemi);
@@ -255,6 +262,11 @@ function setWeather(mode){
  const night=mode==='night',wet=mode==='rain';
  sun.intensity=night?.28:wet?1.6:mode==='noon'?4.1:3.2;
  sun.color.set(night?'#769bc0':wet?'#b8c5d0':mode==='noon'?'#fff7e4':'#ffdaa7');
+ const sunPos=night?[-100,-5,10]:wet?[-60,30,65]:mode==='noon'?[25,120,45]:[-100,43,100];
+ sun.position.set(...sunPos);sky.material.uniforms.sunPosition.value.copy(sun.position);
+ sky.visible=!night&&!wet;
+ sky.material.uniforms.turbidity.value=wet?11:mode==='noon'?2.2:6.2;
+ sky.material.uniforms.rayleigh.value=mode==='noon'?1.25:2.55;
  hemi.intensity=night?.5:wet?1.05:1.9;scene.background=new THREE.Color(night?'#101b2c':wet?'#849a9f':mode==='noon'?'#91c7e7':'#c1c9ba');
  scene.fog.color.set(night?'#172130':wet?'#92a6a8':'#b9c6b8');scene.fog.density=wet?.0075:.0036;
  rain.visible=wet;
@@ -269,7 +281,7 @@ function adjustCamera(dt){
  if(camMode==='aerial'){goal.set(follow-34,68,54);target.set(follow+24,0,-7);}
  else if(camMode==='finish'){goal.set(119,7,31);target.set(104,2,0);}
  else if(camMode==='rail'){goal.set(follow-6,2.75,14.5);target.set(follow+8,2.0,0);}
- else {goal.set(follow-10,4.4,21);target.set(follow+10,2.0,-1.5);}
+ else {goal.set(follow+14,4.6,24);target.set(follow-9,2.0,-1.5);}
  camera.position.lerp(goal,Math.min(1,dt*1.9));camera.lookAt(target);
 }
 function particles(dt){
