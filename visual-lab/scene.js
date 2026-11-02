@@ -210,6 +210,18 @@ for(let i=0;i<crowdN;i++){
  crowds[1].setColorAt(i,new THREE.Color(rnd()>.55?'#d9b798':'#b99573'));
 }
 for(const inst of crowds){inst.castShadow=false;inst.receiveShadow=false;inst.instanceMatrix.needsUpdate=true;venue.add(inst);}
+// The stands erupt at the finish: 128 tiny waving pennants in one draw call.
+const flagsN=softwareGPU?48:128;
+const flagGeom=new THREE.PlaneGeometry(.82,.55),flagMat=new THREE.MeshBasicMaterial({color:'#f1cf86',side:THREE.DoubleSide,transparent:true,opacity:.92});
+const cheerFlags=new THREE.InstancedMesh(flagGeom,flagMat,flagsN),flagMatrix=new THREE.Object3D();
+cheerFlags.frustumCulled=false;cheerFlags.visible=false;cheerFlags.name='Crowd · photo finish cheering';
+const flagPositions=[];
+for(let i=0;i<flagsN;i++){
+ const row=i%12,x=-340+(i*97%680),z=-38-row*1.8,y=4.6+row*.75;
+ flagPositions.push({x,z,y,phase:i*.64});
+ flagMatrix.position.set(x,y,z);flagMatrix.updateMatrix();cheerFlags.setMatrixAt(i,flagMatrix.matrix);
+}
+cheerFlags.instanceMatrix.needsUpdate=true;venue.add(cheerFlags);
 for(const x of [-285,285]){
  cyl(.35,.55,31,x,15,-33,C.steel,venue);
  const bank=box(11,.8,2.1,x,30,-33,C.ivory,venue);
@@ -242,7 +254,17 @@ const finishGlow=new THREE.PointLight(0xffd68a,0,95,1.8);scene.add(finishGlow);
 function updateFinishBurst(){
  const t=elapsed-60,active=running&&t>=0&&t<6.8&&!finishShown;
  finishBurst.visible=active;
+ cheerFlags.visible=active;
  finishGlow.intensity=active?Math.max(0,24*(1-t/7)):0;
+ if(active){
+   for(let i=0;i<flagsN;i++){
+     const p=flagPositions[i];
+     flagMatrix.position.set(p.x,p.y+Math.sin(t*9+p.phase)*.24,p.z);
+     flagMatrix.rotation.set(0,0,Math.sin(t*10+p.phase)*.75);
+     flagMatrix.updateMatrix();cheerFlags.setMatrixAt(i,flagMatrix.matrix);
+   }
+   cheerFlags.instanceMatrix.needsUpdate=true;
+ }
  if(!active)return;
  const f=trackPoint(layoutMode,1,5.5);finishGlow.position.set(f.x,6,f.z);
  const a=burstGeo.attributes.position;
