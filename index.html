@@ -147,7 +147,7 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <button id="voice" type="button" aria-pressed="false">🔊 ACTIVAR RELATO</button>
 <button id="sound" type="button" aria-pressed="false">♫ HABILITAR AUDIO</button>
 <label>VOLUMEN <input type="range" id="audio-volume" min="0" max="100" step="5" value="90" aria-label="Volumen del hipódromo"/></label>
-<label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Aérea fija · vista de carrera</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta</option></select></label>
+<label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Aérea fija · vista de carrera</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta</option><option value="leader">Líder · persecución</option><option value="pack">Pelotón · gran angular</option><option value="grandstand">Tribuna · fija</option><option value="orbit">Órbita del estadio</option></select></label>
 <label>TRAZADO<select id="layout"><option value="straight">Recta central</option><option value="s-bend">Curva en S</option><option value="oval">Óvalo completo</option></select></label>
 <label>SUPERFICIE<select id="surface"><option value="dirt">Tierra compactada</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
 <label>ZOOM / CAMPO VISUAL <output id="camera-zoom-label">50°</output><input id="camera-zoom" type="range" min="25" max="85" value="50" step="1" aria-label="Zoom campo visual"/></label>
@@ -162,6 +162,9 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <div class="light-controls"><label class="light-switch"><input type="checkbox" id="light-power" checked/> REFLECTORES ENCENDIDOS</label>
 <label>POTENCIA / DIMMER <span id="light-level" aria-live="polite">84%</span><input id="light-dimmer" type="range" min="0" max="100" value="84" step="1"/></label>
 <label>COLOR DEL HAZ <input id="light-color" type="color" value="#fff3d4" aria-label="Color de los reflectores"/></label>
+<label>APERTURA DEL HAZ <span id="light-spread-label">62°</span><input id="light-spread" type="range" min="25" max="88" value="62" step="1" aria-label="Ángulo de cobertura de reflectores"/></label>
+<label>LUZ AMBIENTE <span id="light-ambient-label">100%</span><input id="light-ambient" type="range" min="0" max="200" value="100" step="5" aria-label="Luz ambiente adicional del estadio"/></label>
+<label class="light-switch"><input type="checkbox" id="light-perimeter" checked/> FAROLES DEL PERÍMETRO</label>
 <label>JUEGO DE LUCES <select id="light-pattern"><option value="steady">Fijo / transmisión TV</option><option value="pulse">Pulsación</option><option value="chase">Secuencial</option><option value="wave">Barrido</option><option value="rainbow">Festival cromático</option></select></label>
 <button id="light-preview" type="button">☾ VER EL ESTADIO DE NOCHE</button></div>
 <p class="micro" id="light-status" role="status">Los reflectores iluminan el piso y los caballos. En modo noche el sistema regula la exposición visual de la pista. Efectos cosméticos, nunca alteran el ganador.</p>
@@ -180,4 +183,4 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 </section>
 <section class="panel info-panel"><h2>Los protagonistas</h2><p>Historias y estadísticas calculadas para los cien caballos del Cryptódromo. Cada identidad es ficticia; las victorias y los podios corresponden a las 3.360 carreras sintéticas.</p><div id="race-biography" aria-live="polite">Seleccioná un caballo en la clasificación para ver su biografía.</div><a href="/racers/">Explorar los 100 caballos y sus estadísticas ↗</a></section>
 <footer class="foot">CRYPTÓDROMO · transmisión 3D. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
-</main><script type="module" src="/visual-lab/scene.js?v=alpha13-home-1"></script></body></html>
+</main><script type="module" src="/visual-lab/scene.js?v=alpha14-home-1"></script></body></html>
