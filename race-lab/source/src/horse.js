@@ -40,14 +40,26 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   });
   // The token identity is pigment in the model's own fur, never a hovering sign.
   const identity=createFurIdentity(colorBindings);
+  const originalTones=new Map();let currentWetness=0;
+  function tintWetness(){
+    for(const {material} of colorBindings){
+      const base=originalTones.get(material);if(!base)continue;
+      material.color.copy(base).multiplyScalar(1-currentWetness*.24);
+      material.roughness=.87-currentWetness*.27;
+      material.clearcoat&&(material.clearcoat=currentWetness*.15);
+    }
+  }
   const mixer=new THREE.AnimationMixer(model),clips=asset.animations.filter(clip=>!clip.name.includes('|'));let action;
   const gait=createGaitRefiner(model,{strength:.40});
   const api={
     root,clips:clips.map(clip=>clip.name),
     get hoofPhase(){return gait.phase;},
+    setWetness(level){currentWetness=Math.max(0,Math.min(1,Number(level)||0));tintWetness();},
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
     setAppearance({coat:nextCoat=coat,accent:nextAccent=accent,symbol:nextSymbol=symbol}={}){
       identity.apply({coat:nextCoat,accent:nextAccent,symbol:nextSymbol});
+      for(const {material} of colorBindings)originalTones.set(material,material.color.clone());
+      tintWetness();
       coat=nextCoat;accent=nextAccent;symbol=nextSymbol;
     },
     update(delta,speed=1){
