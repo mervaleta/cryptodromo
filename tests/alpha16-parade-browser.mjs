@@ -43,7 +43,7 @@ try{
  const poseAfter=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
  assert.ok(Math.hypot(poseAfter.x-poseBefore.x,poseAfter.z-poseBefore.z)>2,'Drone did not advance with arrows');
  await page.locator('#height').evaluate(el=>{el.value='130';el.dispatchEvent(new Event('input',{bubbles:true}));});
- assert.equal((await page.locator('#height-label').innerText()).trim(),'130 m');
+ assert.equal((await page.locator('#height-label').textContent()).trim(),'130 m');
  await page.locator('#fov').evaluate(el=>{el.value='34';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.locator('#fov-label').innerText()).trim(),'34°');
  await page.locator('#yaw').evaluate(el=>{el.value='90';el.dispatchEvent(new Event('input',{bubbles:true}));});
