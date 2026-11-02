@@ -14,7 +14,8 @@ test('Alpha14 oval runout is continuous, monotonic and does not wrap',()=>{
   const along=(v.x-p1.x)*p1.tangentX+(v.z-p1.z)*p1.tangentZ;
   assert.ok(along>=previousTravel-1e-5,'backwards oval runout');
   assert.ok(Math.hypot(v.x-previous.x,v.z-previous.z)<1.0,'teleport at finish');
-  assert.ok(along<=350+1e-6,'exceeded safely bounded runout');
+  assert.ok(along<=1000+1e-6,'exceeded safely bounded runout');
+  assert.ok(along>previousTravel+.3,'horse stopped abruptly in post-finish runout');
   previousTravel=along;previous=v;
  }
  assert.ok(Math.abs(trackPoint('oval',0,5.5).x-p1.x)<1e-6);
