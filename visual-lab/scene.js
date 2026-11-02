@@ -289,7 +289,7 @@ function setRace(index){
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
-   const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.position.set(VISUAL_START_X,0,(i-5.5)*2.55);
+   const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.visible=true;h.model.root.position.set(VISUAL_START_X,0,(i-5.5)*2.55);
    h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
    h.visualSpeed=1;h.model.play('Idle');
   });
@@ -409,36 +409,65 @@ function particles(dt){
 function animate(now){
  const realSeconds=Math.max(0,(now-last)/1000),dt=Math.min(realSeconds,.08);last=now;
  if(running){
-  elapsed=Math.min(60,elapsed+realSeconds);
-  const leaderMeters=officialRanking(profiles)[0].distanceAt60;
+  // Runout is strictly VISUAL. At t=60 the score is frozen, but
+  // all horses still travel and slow beyond the post until off-camera.
+  elapsed=Math.min(60+RUNOUT_SECONDS,elapsed+realSeconds);
+  const inRunout=elapsed>=60,leaderMeters=officialRanking(profiles)[0].distanceAt60;
   horses.forEach((h,i)=>{
-   const dist=broadcastPosition(broadcastProfiles[i],elapsed);
+   const p=broadcastProfiles[i];
+   const exitVelocity=broadcastSpeed(p,59.99);
+   const dist=inRunout?
+     coastDistance(p.distanceAt60,exitVelocity,elapsed-60):
+     broadcastPosition(p,elapsed);
+   const meterSpeed=inRunout?coastSpeed(exitVelocity,elapsed-60):
+     broadcastSpeed(p,elapsed);
    const pr=dist/leaderMeters;
    h.progress=pr;
    h.model.root.position.x=VISUAL_START_X+VISUAL_SPAN*pr;
-   // Motor of the limbs is calibrated from actual positive world velocity,
-   // not from a fixed global animation multiplier (prevents on-the-spot gallop).
-   const meterSpeed=broadcastSpeed(broadcastProfiles[i],elapsed);
-   const nominalSpeed=leaderMeters/60;
-   const speedRatio=meterSpeed/nominalSpeed;
-   h.visualSpeed=Math.max(.85,Math.min(2.35,1.30*speedRatio));
-   h.model.root.position.y=Math.abs(Math.sin(now*.009*h.visualSpeed+i*.48))*.022;
+   h.visualSpeed=Math.max(.43,Math.min(2.35,1.30*meterSpeed/(leaderMeters/60)));
+   // The GLB + eight corrective keyframes now provide the flight and impact;
+   // avoid a second oversized global vertical bounce in the scene.
+   h.model.root.position.y=Math.abs(Math.sin(now*.009*h.visualSpeed+i*.48))*.012;
   });
-  const currentOrder=horses.slice().sort((a,b)=>b.progress-a.progress||a.index-b.index).map(h=>h.index).join(',');
-  if(previousOrder&&currentOrder!==previousOrder){
-   overtakeCount++;
-   const front=horses.slice().sort((a,b)=>b.progress-a.progress)[0];
-   msg.textContent='ADELANTAMIENTOS '+overtakeCount+' · '+front.entry.symbol+' al frente · dosis cada 5 s';
+  clockEl.textContent=elapsed>=60?'01:00':'00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
+  if(!inRunout){
+   const ranked=horses.slice().sort((a,b)=>b.progress-a.progress||a.index-b.index);
+   const lead=ranked[0],currentOrder=ranked.map(h=>h.index).join(',');
+   if(previousOrder&&currentOrder!==previousOrder){
+    overtakeCount++;
+    msg.textContent='ADELANTAMIENTOS '+overtakeCount+' · '+lead.entry.symbol+' al frente · dosis cada 5 s';
+   }
+   previousOrder=currentOrder;
+   const slot=Math.floor(elapsed/5);
+   if(slot>lastNarrationSlot){
+    lastNarrationSlot=slot;
+    if(slot>0){
+     const phrase=slot>=11?narrateEvent({type:'close'}):
+       narrateEvent({type:'dose',elapsed:slot*5});
+     speakBroadcast(phrase);
+    }
+   }
+   if(lead.entry.symbol!==lastAnnouncedLeader){
+    if(lastAnnouncedLeader&&elapsed>3&&elapsed<55&&Math.floor(elapsed)%9===0){
+     speakBroadcast(narrateEvent({type:'lead',leader:lead.entry.symbol,previous:lastAnnouncedLeader}));
+    }
+    lastAnnouncedLeader=lead.entry.symbol;
+   }
+   soundtrack.update(elapsed,weatherSelect.value,
+     horses.reduce((total,h)=>total+h.visualSpeed,0)/Math.max(1,horses.length));
+   if(Math.floor(elapsed)%5===0&&Math.floor((elapsed-realSeconds))!==Math.floor(elapsed)){
+    statContent.textContent='Líder: '+lead.entry.symbol+' · adelantamientos '+overtakeCount+
+     ' · dosis '+Math.min(12,slot+1)+'/12 · velocidad de crucero positiva.';
+   }
   }
-  previousOrder=currentOrder;
-  clockEl.textContent='00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
-  if(elapsed>=60){
-   clockEl.textContent='01:00';running=false;finished=true;
-   horses.forEach(h=>h.model.play('Idle'));
-   start.textContent='▶ SIGUIENTE CARRERA';
-   const win=officialRanking(profiles)[0].entry.symbol;
-   status.textContent='RESULTADO · '+win+' GANADOR';
-   msg.textContent='Llegada calculada con los dos inputs financieros sintéticos';
+  if(inRunout){
+   showOfficialResult();
+   soundtrack.update(elapsed,weatherSelect.value,.65);
+   if(elapsed>=60+RUNOUT_SECONDS){
+    running=false;
+    // The animals leave the shot; never leave twelve idle horses on the finish.
+    for(const h of horses){h.model.root.visible=false;h.model.play('Idle');}
+   }
   }
  }
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
