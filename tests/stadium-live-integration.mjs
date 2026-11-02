@@ -23,7 +23,7 @@ test('Alpha14 uses one camera, race controller, sky, weather, crowd and course',
   assert.match(scene,/broadcastPosition/);
   assert.doesNotMatch(scene,/createStadiumVenue/);
   for(const html of ['index.html','visual-lab/index.html'])
-    assert.match(read(html),/scene\.js\?v=alpha14-stadium-world-1/);
+    assert.match(read(html),/scene\.js\?v=alpha15-live-1/);
 });
 for(const venueId of STADIUM_IDS){
   test('live exterior '+venueId+' stays off-course, changes weather and disposes safely',()=>{
@@ -49,9 +49,12 @@ for(const venueId of STADIUM_IDS){
     assert.equal(district.root.children.length,0);
   });
 }
-test('Alpha15 remains isolated: no imports from its draft modules in live race',()=>{
+test('Alpha15 director and finish controller compose with stadium without changing finance engine',()=>{
   const source=read('visual-lab/scene.js');
-  assert.doesNotMatch(source,/from ['"](?:\.\.\/)?alpha15\//);
+  assert.match(source,/from ['"]\.\.\/alpha15\/director\.js/);
+  assert.match(source,/from ['"]\.\.\/alpha15\/finishOrchestrator\.js/);
+  assert.match(source,/from ['"]\.\.\/alpha15\/quality\.js/);
+  assert.match(source,/createOfficialRace\(race\.entries\)/);
   const district=read('visual-lab/stadiumDistrict.js');
   assert.doesNotMatch(district,/Math\.random|fetch\(|createOfficialRace|RACES_PER_DAY|createHorse/);
 });
