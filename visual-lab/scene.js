@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
-import {trackPoint} from './trackMath.js?v=a11-oval-1';
+import {trackPoint} from './trackMath.js?v=alpha14-runout-1';
 import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
@@ -9,9 +9,9 @@ import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateE
 import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
 import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
-import {createNightLights} from './nightLights.js?v=alpha05-lighting-4';
+import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
-import {createHorse} from '/race-lab/source/src/horse.js?v=alpha09-gait-2';
+import {createHorse} from '/race-lab/source/src/horse.js?v=alpha14-seals-1';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -255,10 +255,10 @@ const finishBurst=new THREE.Points(burstGeo,new THREE.PointsMaterial({
 finishBurst.visible=false;finishBurst.frustumCulled=false;scene.add(finishBurst);
 const finishGlow=new THREE.PointLight(0xffd68a,0,95,1.8);scene.add(finishGlow);
 function updateFinishBurst(){
- const t=elapsed-60,active=running&&t>=0&&t<6.8&&!finishShown;
+ const t=elapsed-60,active=running&&t>=0&&t<13.8&&!finishShown;
  finishBurst.visible=active;
  cheerFlags.visible=active;
- finishGlow.intensity=active?Math.max(0,24*(1-t/7)):0;
+ finishGlow.intensity=active?Math.max(0,22*(1-t/14)):0;
  if(active){
    for(let i=0;i<flagsN;i++){
      const p=flagPositions[i];
@@ -277,7 +277,7 @@ function updateFinishBurst(){
     f.z+Math.sin(angle)*r);
  }
  a.needsUpdate=true;
- finishBurst.material.opacity=.68*Math.max(0,1-t/6.8);
+ finishBurst.material.opacity=.68*Math.max(0,1-t/14);
 }
 
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
@@ -651,16 +651,21 @@ const lightPower=document.querySelector('#light-power');
 const lightDimmer=document.querySelector('#light-dimmer');
 const lightColor=document.querySelector('#light-color');
 const lightPattern=document.querySelector('#light-pattern');
+const lightSpread=document.querySelector('#light-spread'),lightAmbient=document.querySelector('#light-ambient');
+const lightPerimeter=document.querySelector('#light-perimeter');
+const spreadLabel=document.querySelector('#light-spread-label'),ambientLabel=document.querySelector('#light-ambient-label');
 const lightLevel=document.querySelector('#light-level');
 const lightStatus=document.querySelector('#light-status');
 function applyLightingControls(){
  const intensity=Number(lightDimmer.value);
  lightLevel.textContent=intensity+'%';
+ spreadLabel.textContent=lightSpread.value+'°';ambientLabel.textContent=lightAmbient.value+'%';
  nightLights.configure({
   enabled:lightPower.checked,
   dimmer:intensity/100,
   color:lightColor.value,
   effect:lightPattern.value,
+  spread:Number(lightSpread.value),ambient:Number(lightAmbient.value)/100,perimeter:lightPerimeter.checked,
   night:isSolarNight()||weatherSelect.value==='night'
  });
  const mode=(isSolarNight()||weatherSelect.value==='night')?'noche':'día';
@@ -668,7 +673,7 @@ function applyLightingControls(){
    ' · '+intensity+'% · '+mode+' · '+lightPattern.options[lightPattern.selectedIndex].textContent+
    ' · sin influencia en la clasificación.';
 }
-for(const input of [lightPower,lightDimmer,lightColor,lightPattern]){
+for(const input of [lightPower,lightDimmer,lightColor,lightPattern,lightSpread,lightAmbient,lightPerimeter]){
  input.addEventListener('input',applyLightingControls);
  input.addEventListener('change',applyLightingControls);
 }
@@ -703,6 +708,22 @@ function adjustCamera(dt){
  }else if(mode==='rail'){
    goal.set(point.x-tx*8+nx*14,2.8,point.z-tz*8+nz*14);
    target.set(point.x+tx*11,2,point.z+tz*11);
+ }else if(mode==='leader'){
+   // Follow the actual leader, but never modify official positions.
+   const lead=horses.reduce((best,h)=>!best||h.progress>best.progress?h:best,null);
+   const focus=trackPoint(layoutMode,lead?Math.min(1.16,lead.progress):avg,lead?.index??5.5);
+   goal.set(focus.x-focus.tangentX*24+focus.sideX*14,5.7,focus.z-focus.tangentZ*24+focus.sideZ*14);
+   target.set(focus.x+focus.tangentX*9,2.2,focus.z+focus.tangentZ*9);
+ }else if(mode==='pack'){
+   goal.set(point.x-tx*52+nx*32,23,point.z-tz*52+nz*32);
+   target.set(point.x+tx*8,1.8,point.z+tz*8);
+ }else if(mode==='grandstand'){
+   goal.set(0,27,-68);
+   target.set(point.x,1.7,point.z);
+ }else if(mode==='orbit'){
+   const angle=elapsed*.09,offset=55;
+   goal.set(point.x+Math.cos(angle)*offset,24,point.z+Math.sin(angle)*offset);
+   target.set(point.x,2.0,point.z);
  }else{
    goal.set(point.x-tx*8+nx*29,4.2,point.z-tz*8+nz*29);
    target.set(point.x+tx*17,2.05,point.z+tz*17);
