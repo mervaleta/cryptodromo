@@ -12,7 +12,12 @@ try{
  await page.click('#start');
  // Same deterministic precomputed race: jump only the playback clock.
  await page.evaluate(()=>window.__cryptodromoQA.jumpNearFinish());
- await page.waitForFunction(()=>!document.querySelector('#result-overlay').hidden,{timeout:15000});
+ await page.waitForFunction(()=>!document.querySelector('#result-overlay').hidden,{timeout:26000});
+ const crossing=await page.evaluate(()=>window.__cryptodromoQA.state());
+ console.log('LAST_HORSE_CROSSING_QA',JSON.stringify({crossed:crossing.crossed,lastCrossedAt:crossing.lastCrossedAt,revealedAt:crossing.elapsed}));
+ assert.equal(crossing.crossed,12,'Result panel must wait for the very last horse to cross the stripe');
+ assert.ok(crossing.lastCrossedAt!==null&&crossing.elapsed-crossing.lastCrossedAt>=1.6,
+   'Result panel must hold at least 1.6s after the last crossing');
  const result=await page.evaluate(()=>({
   clock:document.querySelector('#clock').textContent,
   status:document.querySelector('#status').textContent,
