@@ -26,4 +26,27 @@ try{
  assert.notEqual(clock,'00:00','Race timeline did not advance');
  assert.ok(!errors.length,'Browser errors: '+errors.join('; ').slice(0,1200));
  console.log('PASS: interactive live Three.js race, 12 horses, scene screenshot');
+ // The paddock must use the exact shared animated horse and token color set.
+ const paddock=await page.goto('https://race.cryptodromo.com/racers/#BTC',{waitUntil:'domcontentloaded',timeout:30000});
+ assert.equal(paddock?.status(),200);
+ await page.waitForFunction(()=>document.querySelector('#preview-state')?.textContent?.includes('3D ANIMADO'),{timeout:30000});
+ await page.waitForTimeout(2000);
+ const paddockState=await page.evaluate(()=>({
+  state:document.querySelector('#preview-state').textContent,
+  fallback:document.querySelector('#preview-fallback').hidden,
+  canvasVisible:!document.querySelector('#horse-canvas').hidden,
+  total:document.querySelectorAll('.runner').length,
+  symbol:document.querySelector('#horse-symbol').textContent
+ }));
+ console.log('PADDOCK_3D',JSON.stringify(paddockState));
+ assert.equal(paddockState.total,100);
+ assert.equal(paddockState.symbol,'BTC');
+ assert.ok(paddockState.fallback&&paddockState.canvasVisible,'Paddock 3D preview did not load');
+ await page.screenshot({path:'artifacts/alpha4-racers-btc.png',fullPage:false});
+ await page.locator('.runner[data-symbol="ETH"]').click();
+ await page.waitForTimeout(1000);
+ assert.equal(await page.locator('#horse-symbol').innerText(),'ETH');
+ assert.equal((await page.locator('#horse-color').innerText()).toLowerCase(),'#627eea');
+ assert.equal(errors.length,0,'Live browser JS failures: '+errors.join('; ').slice(0,1200));
+ console.log('PASS: 100-runner catalog uses riderless animated horse, synced token coats/colors');
 }finally{await browser.close();}
