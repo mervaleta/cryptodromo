@@ -1,0 +1,35 @@
+name: Cryptodromo splits scoring regression
+on:
+  push:
+    branches: [main, feature/integrar-parciales-alpha15-20261102]
+    paths:
+      - 'race-lab/source/src/data/trackSplits.js'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/trackSplitMarkers.js'
+      - 'visual-lab/trackSplitsPanel.js'
+      - 'estadisticas/stats.js'
+      - 'resultados/resultados.js'
+      - 'tests/track-splits.mjs'
+      - 'tests/track-splits-integration.mjs'
+      - '.github/workflows/splits-scoring.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-scoring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate integrated JavaScript syntax
+        run: |
+          node --check visual-lab/scene.js
+          node --check visual-lab/trackSplitsPanel.js
+          node --check visual-lab/trackSplitMarkers.js
+          node --check race-lab/source/src/data/trackSplits.js
+          node --check estadisticas/stats.js
+          node --check resultados/resultados.js
+      - name: Verify points, checkpoints and immutable official race results
+        run: node --experimental-default-type=module --test tests/track-splits.mjs tests/track-splits-integration.mjs tests/official-race.mjs

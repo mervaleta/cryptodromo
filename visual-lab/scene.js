@@ -20,6 +20,8 @@ import {createHorse} from '/race-lab/source/src/horse.js?v=alpha14-banking-1';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
+import {mountTrackSplitsPanel} from './trackSplitsPanel.js?v=alpha15-splits-1';
+import {createSplitTrackMarkers} from './trackSplitMarkers.js?v=alpha15-splits-1';
 
 // Alpha 05: +20% physical/visual course (410 → 492 units), same official race and 60s.
 const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
@@ -298,6 +300,7 @@ const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FI
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode='straight';
+const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
 // Dust particles when running; no effect on outcomes.
 const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
@@ -317,6 +320,14 @@ const initialRaceIndex=initialQa?0:
 let raceIndex=initialRaceIndex,race=getRaceFixture(initialRaceIndex%RACES_PER_DAY,Math.floor(initialRaceIndex/RACES_PER_DAY)),
     profiles=createOfficialRace(race.entries);
 let broadcastProfiles=buildBroadcastProfiles(profiles);
+const splitModeSelect=document.querySelector('#split-mode');
+const splitPanel=mountTrackSplitsPanel(document.querySelector('#race-splits'),{mode:splitModeSelect.value});
+splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
+splitModeSelect.addEventListener('change',()=>{
+ splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
+ trackSplitMarkers.update({layout:layoutMode,splitMode:splitModeSelect.value});
+ splitPanel.update(elapsed,{finishAuthorized:finishShown});
+});
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
@@ -336,6 +347,7 @@ function showBiography(token){
 function showOfficialResult(){
  if(finishShown)return;
  finishShown=true;finished=true;
+ splitPanel.update(Math.max(60,elapsed),{finishAuthorized:true});
  const stats=raceStatistics(profiles);officialSnapshot=stats;
  resultList.replaceChildren(...stats.entries.map(row=>{
    const el=document.createElement('div');el.className='result-row';
@@ -388,6 +400,7 @@ function setRace(index){
  race=getRaceFixture(raceIndex%RACES_PER_DAY,Math.floor(raceIndex/RACES_PER_DAY));
  profiles=createOfficialRace(race.entries);
  broadcastProfiles=buildBroadcastProfiles(profiles);
+ splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
  lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
@@ -659,6 +672,7 @@ const roofBase=C.roof.color.clone(),stoneBase=C.concrete.color.clone(),grassBase
 const layoutSelect=document.querySelector('#layout');
 function setLayout(mode){
  layoutMode=mode;
+ trackSplitMarkers.update({layout:mode,splitMode:splitModeSelect.value});
  straightCourse.visible=mode==='straight';
  alternateTracks.select(mode);
  gateFrames.visible=mode!=='oval';
@@ -1012,6 +1026,8 @@ function animate(now,draw=true){
      (graphicsModeSelect.value==='auto'?' · AUTO':'');
   }
  }
+ // Rendering is throttled by the panel to 2Hz, and finish results remain gated.
+ splitPanel.update(elapsed,{finishAuthorized:finishShown});
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
  if(draw)raf=requestAnimationFrame(animate);
 }
