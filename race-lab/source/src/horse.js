@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {createGaitRefiner} from './gaitRefiner.js?v=alpha06-2';
+import {createFurIdentity} from './horseLivery.js?v=alpha07-1';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -38,40 +39,19 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
     if(!object.isMesh)return;object.castShadow=true;object.receiveShadow=true;
     const source=Array.isArray(object.material)?object.material:[object.material];
     const assigned=source.map(original=>{
-      const material=original.clone();material.metalness=0;material.roughness=.78;colorBindings.push({material,name:original.name});materials.add(material);return material;
+      const material=original.clone();material.metalness=0;material.roughness=.78;colorBindings.push({material,name:original.name,mesh:object});materials.add(material);return material;
     });
     object.material=Array.isArray(object.material)?assigned:assigned[0];
   });
-  // Token identity rides on the horse, NEVER on a jockey.
-  // Until authentic token SVG files are approved, use the verified symbol and roster color.
-  const badgeMaterial=new THREE.SpriteMaterial({map:makeBadgeTexture(symbol,accent),depthTest:true});
-  const badge=new THREE.Sprite(badgeMaterial);badge.position.set(0,height+.55,0);badge.scale.set(1.25,.42,1);root.add(badge);
-  const clothGeom=new THREE.PlaneGeometry(height*.43,height*.25);
-  const clothTexture=makeBadgeTexture(symbol,accent);
-  const clothMaterial=new THREE.MeshStandardMaterial({
-    map:clothTexture,roughness:.96,metalness:0,side:THREE.DoubleSide,transparent:false,depthWrite:true
-  });
-  const clothPanels=[];
-  for(const side of [-1,1]){
-    const panel=new THREE.Mesh(clothGeom,clothMaterial);
-    panel.name='token-racing-livery-'+symbol;
-    panel.position.set(-height*.065,height*.57,side*height*.20);
-    panel.rotation.y=side<0?Math.PI:0;
-    panel.castShadow=false;panel.receiveShadow=true;
-    root.add(panel);clothPanels.push(panel);
-  }
+  // The token identity is pigment in the model's own fur, never a hovering sign.
+  const identity=createFurIdentity(colorBindings);
   const mixer=new THREE.AnimationMixer(model),clips=asset.animations.filter(clip=>!clip.name.includes('|'));let action;
   const gait=createGaitRefiner(model,{strength:.27});
   const api={
     root,clips:clips.map(clip=>clip.name),
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
     setAppearance({coat:nextCoat=coat,accent:nextAccent=accent,symbol:nextSymbol=symbol}={}){
-      const base=new THREE.Color(nextCoat);
-      for(const binding of colorBindings){if(binding.name==='Main')binding.material.color.copy(base);else if(binding.name==='Main_Dark')binding.material.color.copy(base).multiplyScalar(.64);else if(binding.name==='Main_Light')binding.material.color.copy(base).lerp(new THREE.Color('#e9c6a0'),.2);}
-      const old=badgeMaterial.map;badgeMaterial.map=makeBadgeTexture(nextSymbol,nextAccent);badgeMaterial.needsUpdate=true;old?.dispose();
-      const prevCloth=clothMaterial.map;clothMaterial.map=makeBadgeTexture(nextSymbol,nextAccent);
-      clothMaterial.needsUpdate=true;prevCloth?.dispose();
-      for(const panel of clothPanels)panel.name='token-racing-livery-'+nextSymbol;
+      identity.apply({coat:nextCoat,accent:nextAccent,symbol:nextSymbol});
       coat=nextCoat;accent=nextAccent;symbol=nextSymbol;
     },
     update(delta,speed=1){
@@ -83,7 +63,8 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
         gait.refine(step,rate,action.time/action.getClip().duration);
       }
     },
-    dispose(){gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);materials.forEach(material=>material.dispose());badgeMaterial.map?.dispose();badgeMaterial.dispose();clothMaterial.map?.dispose();clothMaterial.dispose();clothGeom.dispose();root.removeFromParent();}
+    dispose(){gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };
+  api.setAppearance({coat,accent,symbol});
   api.play(mode,0);mixer.update(phase);return api;
 }
