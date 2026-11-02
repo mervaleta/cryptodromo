@@ -478,6 +478,15 @@ function animate(now){
 }
 function resize(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(stage);resize();raf=requestAnimationFrame(animate);
+// Opt-in QA seek for deterministic replay verification. Only present with
+// ?finish-qa=alpha06 and never changes official prices, doses or ranking.
+if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
+ window.__cryptodromoQA={
+  jumpNearFinish(){if(!running)throw new Error('Start race before seeking');elapsed=59.7;},
+  state(){return {elapsed,finished,finishShown,positions:horses.map(h=>h.model.root.position.x),
+    winners:officialSnapshot?.entries?.map(x=>x.symbol)};}
+ };
+}
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
