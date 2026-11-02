@@ -25,7 +25,7 @@ html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 
 .site-width{width:min(1480px,calc(100% - 48px));margin-left:auto;margin-right:auto}
 .app-shell{max-width:none!important;margin:0!important;min-height:100vh}
 main.page{width:min(1480px,calc(100% - 48px));max-width:none!important;margin:0 auto!important;padding:24px 0 16px!important}
-body>main#main-content:not(.page):not(.site-width){width:min(1480px,calc(100% - 48px));max-width:none!important;margin:0 auto!important;padding:0!important}
+body>main#main-content:not(.page):not(.site-width):not(.institutional-page){width:min(1480px,calc(100% - 48px));max-width:none!important;margin:0 auto!important;padding:0!important}
 .wrap{width:min(1480px,calc(100% - 48px))!important;max-width:1480px!important}
 .page-body{width:min(850px,calc(100% - 48px))!important;max-width:850px!important;margin-left:auto!important;margin-right:auto!important}
 body>main,body>div#app{max-width:1480px}
