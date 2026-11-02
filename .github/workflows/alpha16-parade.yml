@@ -1,0 +1,50 @@
+name: Alpha16 Parade and stadium life preflight
+on:
+  push:
+    branches: ['prep/alpha16-parade-stadium-life']
+    paths:
+      - 'parade/**'
+      - 'tests/alpha16-parade.mjs'
+      - 'tests/alpha16-parade-browser.mjs'
+      - '.github/workflows/alpha16-parade.yml'
+  pull_request:
+    branches: [main]
+    paths: ['parade/**','tests/alpha16-parade.mjs','tests/alpha16-parade-browser.mjs']
+  workflow_dispatch:
+concurrency:
+  group: alpha16-parade-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  source-and-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source syntax, 100 runners and independent drone controls
+        run: |
+          for f in parade/*.js tests/alpha16-parade.mjs tests/alpha16-parade-browser.mjs; do node --check "$f"; done
+          node --test tests/alpha16-parade.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Preview Parade 3D from branch, without production deployment
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/alpha16-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          node tests/alpha16-parade-browser.mjs
+      - name: Keep visual reference screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptodromo-alpha16-parade-visual-reference
+          path: artifacts/
+          retention-days: 30
+          if-no-files-found: ignore

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081711">
+<meta name="description" content="Modo desfile del Cryptódromo: los cien caballos pasean por el óvalo y podés explorar en dron el estadio y su vida cotidiana.">
+<title>Modo Parade · Cryptódromo</title>
+<link rel="icon" href="/assets/cryptodromo-logo.png">
+<link rel="stylesheet" href="/assets/race-site-hub.css?v=parade16">
+<style>
+:root{color-scheme:dark;--gold:#e8ca8d;--green:#67d6aa;--ink:#0a1c16}
+*{box-sizing:border-box}body{background:radial-gradient(ellipse at top,#19352c,#07130f 70%);color:#e8efe9}
+.parade-nav{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px}.parade-nav a{text-decoration:none;color:#bdd4c6}
+.parade-nav a[aria-current=page]{color:#eed7a0;font-weight:850}.brand-link{display:flex;align-items:center;gap:8px;text-decoration:none;font-weight:900;letter-spacing:.05em;color:#f3eedc}.brand-link img{width:40px;height:40px;object-fit:contain}
+.page{max-width:1520px;margin:auto;padding:26px clamp(14px,2.5vw,38px) 65px}.headline{display:flex;justify-content:space-between;gap:30px;align-items:end;margin:10px 0 19px;flex-wrap:wrap}
+.headline h1{font:500 clamp(37px,5vw,69px)/1 Georgia,serif;margin:8px 0;color:#f8e9c7;letter-spacing:-.04em}
+.headline h1 em{font-weight:400;color:var(--green)}.headline p{max-width:650px;color:#a6c5b4;line-height:1.55;margin:10px 0}
+.stage{height:clamp(420px,59vw,770px);position:relative;border:1px solid #719f7b64;border-radius:11px;background:#7a9b9b;box-shadow:0 32px 95px #000b;overflow:hidden}
+#parade-canvas{display:block;width:100%;height:100%;touch-action:none}
+.stage:before{position:absolute;inset:0;content:'';pointer-events:none;z-index:1;box-shadow:inset 0 0 110px #08100b6c}
+.overlay{z-index:2;pointer-events:none;position:absolute;left:17px;right:17px;top:16px;display:flex;justify-content:space-between;gap:15px;align-items:start}
+.hud{display:inline-flex;flex-direction:column;gap:5px;background:#071915c9;border:1px solid #ffffff30;border-radius:8px;padding:11px 13px;backdrop-filter:blur(10px)}
+.hud strong{font-size:14px;color:var(--gold)}.hud small{font-size:10px;color:#c6dfcf;letter-spacing:.11em}
+.drift{position:absolute;right:20px;bottom:18px;z-index:3;background:#081a17e0;border:1px solid #d5b97b78;border-radius:9px;padding:10px;display:grid;grid-template-columns:repeat(3,48px);gap:5px}
+.drift button{min-width:45px;min-height:40px;border:1px solid #607c65;border-radius:5px;background:#1c342b;color:#f1e3bf;font-size:21px;cursor:pointer;touch-action:none}
+.drift button:active,.drift button[aria-pressed=true]{background:#346448}.drift .wide{font-size:11px;font-weight:800}.drift button:focus-visible{outline:2px solid var(--gold)}
+.cockpit{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.9fr);gap:16px;margin:18px 0}
+.controls-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.controls-grid label{display:grid;gap:7px;font-size:11px;letter-spacing:.07em;color:#c7dfd0;text-transform:uppercase}
+.controls-grid input,.controls-grid select{font:inherit;min-height:38px;padding:7px;background:#0a1e16;color:#f2ede5;border:1px solid #4d6e5b;border-radius:6px;width:100%}
+.controls-grid input[type=range]{min-height:27px;padding:0;accent-color:var(--gold)}
+.control-panel{background:#10241c;border:1px solid #385943;border-radius:9px;padding:17px}
+.control-panel h2{font-size:16px;margin:0 0 14px;color:#e5d1a4}
+.btnrow{display:flex;flex-wrap:wrap;gap:9px;margin:10px 0 18px}
+.btnrow button{cursor:pointer;border:1px solid #607c69;background:#1b3b2d;color:#f0e2c8;border-radius:7px;padding:9px 12px;font:600 12px system-ui;min-height:39px}
+.btnrow button:hover{background:#28543d}
+.btnrow button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.pill-runner{font-size:11px;border:1px solid #73977b70;background:#152e24;padding:5px 9px;border-radius:100px;white-space:nowrap}
+.pill-runner b{color:var(--gold)}
+.bar{height:7px;border-radius:100px;background:#355547;overflow:hidden;margin:10px 0}
+.bar span{display:block;height:100%;width:0%;background:linear-gradient(90deg,#4ac18f,#e8cb84);transition:width .35s}
+.keyboard{font-size:12px;color:#b9d2c0;line-height:1.75}.keyboard kbd{font-family:inherit;background:#223d31;border:1px solid #5a7561;border-radius:4px;padding:2px 5px;color:#ffe7b3}
+.is-preview{display:inline-block;border:1px solid #c4a169;background:#282517;color:#f2d9a2;padding:6px 11px;border-radius:20px;letter-spacing:.06em;font-size:10px;font-weight:800}
+.notice{margin-top:14px;border-left:3px solid var(--gold);padding:12px 18px;background:#23281e;color:#e3d3ac;font-size:12px;line-height:1.6}
+@media(max-width:1100px){.cockpit{grid-template-columns:1fr}.controls-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.controls-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.drift{right:8px;bottom:8px;grid-template-columns:repeat(3,40px)}.drift button{min-width:38px;min-height:37px}.headline h1{font-size:41px}.overlay{left:9px;right:9px;top:9px}.hud{padding:8px}.hud small{font-size:9px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header class="sitebar"><div class="sitebar-inner">
+<a class="brand-link" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO</a>
+<nav class="parade-nav" aria-label="Navegación"><a href="/">Carrera LIVE</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/visual-lab/">Visual Lab</a><a href="/parade/" aria-current="page">Modo Parade</a></nav>
+</div></header>
+<main class="page">
+<div class="headline">
+<div><span class="eyebrow">EL ESTADIO VIVE · EXPLORACIÓN CONTEMPLATIVA</span><h1>Modo <em>Parade.</em></h1><p>Un desfile tranquilo de los cien caballos por el óvalo. Tomá el dron, recorré las tribunas, el paseo gastronómico, las carpas, las caballerizas y los camiones de mantenimiento.</p></div>
+<div><span class="is-preview">ALPHA 16 · VISTA DE PREPARACIÓN</span><p style="font-size:12px">Sin apuestas ni carrera financiera. El LIVE sigue independiente.</p></div>
+</div>
+<div class="stage" id="stage" aria-label="Recorrido 3D contemplativo del Cryptódromo">
+<canvas id="parade-canvas" aria-label="Vista del estadio y desfile de caballos, cámara libre por teclado o ratón"></canvas>
+<div class="overlay">
+<div class="hud"><small>DESFILE EN EL ÓVALO</small><strong id="wave-label">Cargando caballos…</strong><small id="parade-status">Iniciando escena 3D</small></div>
+<div class="hud" style="text-align:right"><small>DRON / RENDIMIENTO</small><strong id="fps">FPS …</strong><small id="camera-readout">Altura 100 m · 48°</small></div>
+</div>
+<div class="drift" role="group" aria-label="Controles táctiles del dron">
+<div></div><button type="button" data-move="ArrowUp" aria-label="Avanzar">↑</button><div></div>
+<button type="button" data-move="ArrowLeft" aria-label="Desplazarse a la izquierda">←</button>
+<button type="button" data-move="ArrowDown" aria-label="Retroceder">↓</button>
+<button type="button" data-move="ArrowRight" aria-label="Desplazarse a la derecha">→</button>
+<button class="wide" type="button" data-move="KeyQ" aria-label="Girar izquierda">↶</button>
+<button class="wide" type="button" data-move="KeyR" aria-label="Subir">SUBIR</button>
+<button class="wide" type="button" data-move="KeyE" aria-label="Girar derecha">↷</button>
+</div>
+</div>
+<div class="cockpit">
+<section class="control-panel">
+<h2>Desfile y vida del estadio</h2>
+<div class="controls-grid">
+<label>Grupo de corredores<select id="wave"></select></label>
+<label>Velocidad del tiempo <output id="time-scale-label">1×</output><input id="time-scale" type="range" min=".25" max="6" value="1" step=".25"></label>
+<label>Calidad visual<select id="quality"><option value="eco">Económica</option><option value="balanced" selected>Equilibrada</option><option value="cinematic">Cinematográfica</option></select></label>
+<label>Hora solar <output id="daytime-label">Auto</output><input id="daytime" type="range" min="0" max="1439" value="840" step="5"></label>
+<label>Iluminación <output id="light-label">100%</output><input id="lights" type="range" min="0" max="200" value="100" step="5"></label>
+<label>Ambiente<select id="weather"><option value="clear">Despejado</option><option value="sunset">Atardecer</option><option value="night">Noche</option><option value="wet">Pista húmeda</option></select></label>
+</div>
+<div class="btnrow">
+<button id="pause" type="button">Pausar desfile</button>
+<button id="next-wave" type="button">Siguiente grupo</button>
+<button id="reset-parade" type="button">Volver al comienzo</button>
+<label style="font-size:12px;display:inline-flex;align-items:center;gap:7px"><input id="daytime-auto" type="checkbox" checked>Seguir el reloj de Buenos Aires</label>
+</div>
+<p class="small muted" id="wave-progress">Cada caballo recorre una vuelta antes de pasar al siguiente grupo.</p>
+<div class="bar" role="progressbar" aria-label="Progreso del grupo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><span id="progress-inner"></span></div>
+<div class="pills" id="runner-list" aria-label="Caballos en el desfile"></div>
+</section>
+<section class="control-panel">
+<h2>Dron de exploración</h2>
+<div class="controls-grid">
+<label>Modo de cámara<select id="camera-mode"><option value="free">Vuelo manual</option><option value="orbit">Órbita del edificio</option><option value="follow">Seguir caballo</option></select></label>
+<label>Lugar de interés<select id="sight"></select></label>
+<label>Caballo a seguir<select id="follow-horse"></select></label>
+<label>Altura <output id="height-label">80 m</output><input id="height" type="range" min="4" max="190" value="95"></label>
+<label>Rotación horizontal <output id="yaw-label">0°</output><input id="yaw" type="range" min="-180" max="180" value="0"></label>
+<label>Ángulo vertical <output id="pitch-label">-35°</output><input id="pitch" type="range" min="-85" max="24" value="-35"></label>
+<label>Zoom / FOV <output id="fov-label">48°</output><input id="fov" type="range" min="19" max="89" value="48"></label>
+<label>Velocidad del dron <output id="speed-label">32 m/s</output><input id="camera-speed" type="range" min="4" max="130" value="32"></label>
+<label>Distancia de órbita <output id="distance-label">95 m</output><input id="distance" type="range" min="14" max="390" value="95"></label>
+</div>
+<div class="btnrow"><button type="button" id="reset-drone">Restablecer dron</button><button type="button" id="visit-sight">Sobrevolar lugar elegido</button></div>
+<div class="keyboard">
+<kbd>↑↓←→</kbd> o <kbd>W A S D</kbd> para mover · <kbd>Q E</kbd> para girar · <kbd>R F</kbd> subir o bajar · <kbd>T G</kbd> inclinar · <kbd>Shift</kbd> acelerar · arrastrar el ratón para orientar y rueda para hacer zoom.
+</div>
+</section>
+</div>
+<p class="notice"><strong>Modo contemplativo independiente.</strong> Los cien corredores se presentan en grupos de hasta doce; cada uno da una vuelta completa a ritmo de paseo. Esta visualización no cambia el fixture, precios sintéticos, ganadores ni horarios de la transmisión principal. Los camiones son ambientación, no obstáculos de la pista.</p>
+<footer>CRYPTÓDROMO · Alpha 16 preparada en rama independiente. <a href="/">Regresar a la carrera LIVE</a> · <a href="/estadio/">Explorar el estadio institucional</a></footer>
+</main>
+<script type="module" src="./parade.js?v=alpha16-1"></script>
+</body></html>
