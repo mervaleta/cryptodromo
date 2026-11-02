@@ -10,7 +10,8 @@ import * as THREE from 'three';
  * trailing hind, leading hind, trailing fore, leading fore, then flight.
  */
 export const GAIT_POSE_COUNT=8;
-const deg=values=>values.map(v=>v*Math.PI/180);
+// Remove the duplicated final contact pose that created a pause every cycle.
+const deg=values=>values.map((v,i)=>(i===7?.38*v+.62*values[6]:v)*Math.PI/180);
 export const POSES=Object.freeze({
  'FrontShoulder.L':deg([-11,-24,-15, 12, 26, 10, -8,-11]),
  'FrontShoulder.R':deg([-21,-10, 16, 25, 11,-17,-26,-21]),
@@ -57,14 +58,17 @@ export function createGaitRefiner(model,{strength=.36}={}){
  }
  function refine(delta=0,relativeSpeed=1,clipPhase=null){
   const stride=Math.max(.25,Math.min(2.7,relativeSpeed));
-  phase=clipPhase===null?(phase+Math.max(0,delta)*(1.72*stride))%1:((clipPhase%1)+1)%1;
+  const raw=clipPhase===null?(phase+Math.max(0,delta)*(1.72*stride))%1:((clipPhase%1)+1)%1;
+  // Subtle timing asymmetry between planted hooves and aerial suspension.
+  phase=(raw+.028*Math.sin(raw*2*Math.PI)+1)%1;
   for(const item of joints){
    const angle=cyclicSpline(item.angles,phase)*strength;
    turn.setFromAxisAngle(axis,angle);
    item.bone.quaternion.multiply(turn).normalize();
    item.correction.copy(turn);
   }
-  return {phase,lift:cyclicSpline(FLIGHT_HEIGHT,phase)*strength};
+  return {phase,lift:cyclicSpline(FLIGHT_HEIGHT,phase)*strength,
+    contactPhase:[0,.11,.27,.39].map(t=>Math.abs((((phase-t)+1.5)%1)-.5)<.075)};
  }
  return {jointNames:joints.map(x=>x.name),reset,refine,get phase(){return phase}};
 }
