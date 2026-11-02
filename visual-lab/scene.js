@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
+import {trackPoint} from './trackMath.js?v=a08-1';
+import {createAlternativeTracks} from './trackVisuals.js?v=a08-1';
+import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha06-1';
 import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha06-1';
@@ -91,6 +94,7 @@ const grassTexture=makeTexture('grass'),earthTexture=makeTexture('earth');
 const grass=mat('#e0eed6',1);grass.map=grassTexture;
 const earth=mat('#f0e2d4',.93);earth.map=earthTexture;
 box(690,.35,260,0,-.33,0,grass);
+const straightSceneIndex=scene.children.length;
 box(568,.13,38,0,-.06,0,earth);
 // Galloping ruts, run-off strips and painted distance marks.
 const lanePaint=mat('#e2d0ae',1),sod=mat('#3e7f49',1);
@@ -111,6 +115,9 @@ rail(-20.2);rail(20.2);
 for(let x=-279;x<=279;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
 for(let x=-279;x<=279;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
 box(568,.12,.13,0,1.25,53,C.steel);
+const straightCourse=new THREE.Group();straightCourse.name='Straight track assets';
+const straightChildren=scene.children.slice(straightSceneIndex);scene.add(straightCourse);
+straightChildren.forEach(child=>straightCourse.add(child));
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
 const treeGroup=new THREE.Group();scene.add(treeGroup);
@@ -210,6 +217,8 @@ box(.7,1.6,42,VISUAL_FINISH_X,12.9,0,C.roof);
 const finishSign=sign('META · FINISH',VISUAL_FINISH_X,13.0,-3,18,2.5);
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
+const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
+let layoutMode='straight';
 // Dust particles when running; no effect on outcomes.
 const dustN=mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
@@ -274,7 +283,8 @@ async function bootHorses(){
    model={root,update(){},play(){},setAppearance(){}};
    console.warn('Caballo GLB de respaldo',i,results[i].reason);
   }
-  model.root.position.set(VISUAL_START_X,0,(i-5.5)*2.55);
+  const initial=trackPoint(layoutMode,0,i);
+  model.root.position.set(initial.x,0,initial.z);model.root.rotation.y=initial.heading;
   // No floating symbol sprites: the marks are part of the 3D horse skin shader.
   scene.add(model.root);
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
@@ -293,7 +303,8 @@ function setRace(index){
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
-   const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.visible=true;h.model.root.position.set(VISUAL_START_X,0,(i-5.5)*2.55);
+   const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
+    h.model.root.position.set(first.x,0,first.z);h.model.root.rotation.y=first.heading;
    h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
    h.visualSpeed=1;h.model.play('Idle');
   });
@@ -414,15 +425,29 @@ weatherSelect.addEventListener('change',applyLightingControls);
 applyLightingControls();
 const target=new THREE.Vector3(),goal=new THREE.Vector3();
 function adjustCamera(dt){
- const avg=horses.length?horses.reduce((a,h)=>a+h.model.root.position.x,0)/horses.length:-83;
- const follow=Math.min(VISUAL_FINISH_X+6,Math.max(VISUAL_START_X+6,avg));
- const camMode=camSelect.value;
- if(camMode==='aerial'){goal.set(0,290,155);target.set(0,0,0);}
- else if(camMode==='drone'){goal.set(follow-30,75,55);target.set(follow+20,0,-5);}
- else if(camMode==='finish'){goal.set(VISUAL_FINISH_X+6,7,31);target.set(VISUAL_FINISH_X-12,2,0);}
- else if(camMode==='rail'){goal.set(follow-6,2.75,14.5);target.set(follow+8,2.0,0);}
- else {goal.set(follow-3,5.4,32);target.set(follow+12,2.1,-17);}
- camera.position.lerp(goal,Math.min(1,dt*1.9));camera.lookAt(target);
+ const avg=horses.length?horses.reduce((a,h)=>a+Math.min(1.12,h.progress),0)/horses.length:0;
+ const point=trackPoint(layoutMode,avg,5.5);
+ const tx=point.tangentX,tz=point.tangentZ,nx=point.sideX,nz=point.sideZ;
+ const mode=camSelect.value;
+ if(mode==='aerial'){
+   goal.set(0,layoutMode==='oval'?285:300,layoutMode==='oval'?145:155);
+   target.set(0,0,layoutMode==='oval'?35:0);
+ }else if(mode==='finish'){
+   const finish=trackPoint(layoutMode,1,5.5);
+   goal.set(finish.x+finish.sideX*29,7,finish.z+finish.sideZ*29);
+   target.set(finish.x-finish.tangentX*18,2,finish.z-finish.tangentZ*18);
+ }else if(mode==='drone'){
+   goal.set(point.x-tx*34+nx*47,48,point.z-tz*34+nz*47);
+   target.set(point.x+tx*18,1.8,point.z+tz*18);
+ }else if(mode==='rail'){
+   goal.set(point.x-tx*8+nx*14,2.8,point.z-tz*8+nz*14);
+   target.set(point.x+tx*11,2,point.z+tz*11);
+ }else{
+   goal.set(point.x-tx*8+nx*29,4.2,point.z-tz*8+nz*29);
+   target.set(point.x+tx*17,2.05,point.z+tz*17);
+ }
+ camera.position.lerp(goal,Math.min(1,dt*2.7));
+ camera.lookAt(target);
 }
 function particles(dt){
  if(running&&horses.length){
@@ -456,14 +481,15 @@ function animate(now){
      broadcastSpeed(p,elapsed);
    const pr=dist/leaderMeters;
    h.progress=pr;
-   h.model.root.position.x=VISUAL_START_X+VISUAL_SPAN*pr;
+   const world=trackPoint(layoutMode,pr,i);
+   h.model.root.position.set(world.x,0,world.z);h.model.root.rotation.y=world.heading;
    // Slightly faster hoof cadence makes 550 world units in 60s read as a sprint.
    h.visualSpeed=Math.max(.52,Math.min(2.65,1.62*meterSpeed/(leaderMeters/60)));
    // The GLB + eight corrective keyframes now provide the flight and impact;
    // avoid a second oversized global vertical bounce in the scene.
    // Never float the root above the track; footfall kick is applied to the ground.
    h.model.root.position.y=0;
-   if(elapsed<60)trackFX.stamp(h.index,h.model.root.position.x,(h.index-5.5)*2.55,h.visualSpeed*7);
+   if(elapsed<60)trackFX.stamp(h.index,world.x,world.z,h.visualSpeed*7);
   });
   clockEl.textContent=elapsed>=60?'01:00':'00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
   if(!inRunout){
@@ -511,6 +537,7 @@ function animate(now){
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
  nightLights.update(now/1000);
  trackFX.update(realSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
+ if(layoutMode!=='straight')trackFX.puddles.visible=false;
  particles(dt);adjustCamera(dt);renderer.render(scene,camera);
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
  raf=requestAnimationFrame(animate);
