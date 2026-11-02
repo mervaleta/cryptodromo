@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {trackPoint} from './trackMath.js?v=a09-1';
+import {trackPoint} from './trackMath.js?v=a12-1';
 
 function ribbon(mode,material,width=40){
  const n=250,positions=[],uv=[],idx=[];
@@ -58,15 +58,23 @@ export function createAlternativeTracks(scene,trackMaterial,railMaterial){
   rail(mode,21,railMaterial,group);
   const markMat=new THREE.LineBasicMaterial({color:'#f4e0ba',opacity:.22,transparent:true});
   lines(mode,markMat,group);
-  // Start and official finish: grounded stripes, not hovering decorations.
-  const finish=trackPoint(mode,1,5.5),start=trackPoint(mode,0,5.5);
-  const lineMat=new THREE.MeshBasicMaterial({color:'#fff8e7',side:THREE.DoubleSide});
-  for(const point of [start,finish]){
-   const m=new THREE.Mesh(new THREE.PlaneGeometry(40,.33),lineMat);
-   m.rotation.x=-Math.PI/2;
-   m.rotation.z=point.heading;
-   m.position.set(point.x,.108,point.z);group.add(m);
-  }
+  // Build painted stripes directly in XZ, aligned to the local track tangent.
+  // On a complete oval the start and finish coincide: paint only one line.
+  const finish=trackPoint(mode,1,5.5);
+  const lineMat=new THREE.MeshBasicMaterial({color:'#fff8e7',side:THREE.DoubleSide,depthWrite:false});
+  const stripeAt=p=>{
+    const c=trackPoint(mode,p,5.5),w=20,half=.28;
+    const a=[c.x-c.sideX*w-c.tangentX*half,.14,c.z-c.sideZ*w-c.tangentZ*half];
+    const b=[c.x+c.sideX*w-c.tangentX*half,.14,c.z+c.sideZ*w-c.tangentZ*half];
+    const d=[c.x-c.sideX*w+c.tangentX*half,.14,c.z-c.sideZ*w+c.tangentZ*half];
+    const e=[c.x+c.sideX*w+c.tangentX*half,.14,c.z+c.sideZ*w+c.tangentZ*half];
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute([...a,...b,...d,...b,...e,...d],3));
+    geometry.computeVertexNormals();
+    const stripe=new THREE.Mesh(geometry,lineMat);stripe.renderOrder=6;group.add(stripe);
+  };
+  if(mode!=='oval')stripeAt(0);
+  stripeAt(1);
   // Oval and S-bend need their own finish gates, not the old straight arch.
   const gate=new THREE.Group();gate.name='Meta oficial · '+mode;group.add(gate);
   const postMat=new THREE.MeshStandardMaterial({color:'#e9e1cd',metalness:.22,roughness:.43});
