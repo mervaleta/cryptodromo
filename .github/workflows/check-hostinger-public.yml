@@ -1,0 +1,26 @@
+name: Check race.cryptodromo.com deployment
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/check-hostinger-public.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-public-host:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check current Hostinger website and production modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          for url in             "https://race.cryptodromo.com/"             "https://race.cryptodromo.com/race-lab/source/src/data/officialRace.js"             "https://race.cryptodromo.com/race-lab/source/assets/horse.glb.gz"; do
+            echo "::group::$url"
+            printf "HTTP status: "
+            curl -L --max-time 20 -sS -o /tmp/response -w "%{http_code}\n" "$url" || true
+            printf "Response bytes: "; wc -c < /tmp/response || true
+            if grep -qaE "createOfficialRace|CRYPTODROMO_SATOSHI_STADIUM_V1|Gran Premio" /tmp/response; then
+              echo "Contains race frontend/engine marker"
+            fi
+            echo "::endgroup::"
+          done
