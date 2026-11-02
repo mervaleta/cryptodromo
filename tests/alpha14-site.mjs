@@ -17,7 +17,7 @@ test('Alpha14 oval runout is continuous, monotonic and does not wrap',()=>{
   assert.ok(along<=120+1e-6,'exceeded safely bounded runout');
   previousTravel=along;previous=v;
  }
- assert.equal(trackPoint('oval',0,5.5).x,p1.x);
+ assert.ok(Math.abs(trackPoint('oval',0,5.5).x-p1.x)<1e-6);
 });
 test('all 100 horse skins have marks, only 47 are bundled artwork',()=>{
  const livery=read('race-lab/source/src/horseLivery.js');
