@@ -4,7 +4,8 @@ import {coastDistance,coastSpeed,raceStatistics,narrateEvent,RUNOUT_SECONDS} fro
 import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha06-1';
 import {createNightLights} from './nightLights.js?v=alpha05-lighting-4';
-import {createHorse} from '/race-lab/source/src/horse.js?v=alpha06-gait-1';
+import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha07-1';
+import {createHorse} from '/race-lab/source/src/horse.js?v=alpha07-brand-1';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -208,6 +209,7 @@ for(const z of [-21,21])box(.55,12,.55,VISUAL_FINISH_X,6,z,C.steel);
 box(.7,1.6,42,VISUAL_FINISH_X,12.9,0,C.roof);
 const finishSign=sign('META · FINISH',VISUAL_FINISH_X,13.0,-3,18,2.5);
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
+const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 // Dust particles when running; no effect on outcomes.
 const dustN=mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
@@ -273,7 +275,7 @@ async function bootHorses(){
    console.warn('Caballo GLB de respaldo',i,results[i].reason);
   }
   model.root.position.set(VISUAL_START_X,0,(i-5.5)*2.55);
-  model.root.traverse(o=>{if(o.isSprite)o.visible=false;});
+  // No floating symbol sprites: the marks are part of the 3D horse skin shader.
   scene.add(model.root);
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
@@ -287,7 +289,7 @@ function setRace(index){
  broadcastProfiles=buildBroadcastProfiles(profiles);
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
- resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');
+ resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
@@ -443,6 +445,7 @@ function animate(now){
    // avoid a second oversized global vertical bounce in the scene.
    // Never float the root above the track; footfall kick is applied to the ground.
    h.model.root.position.y=0;
+   if(elapsed<60)trackFX.stamp(h.index,h.model.root.position.x,(h.index-5.5)*2.55,h.visualSpeed*7);
   });
   clockEl.textContent=elapsed>=60?'01:00':'00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
   if(!inRunout){
@@ -489,6 +492,7 @@ function animate(now){
  }
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
  nightLights.update(now/1000);
+ trackFX.update(realSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
  particles(dt);adjustCamera(dt);renderer.render(scene,camera);
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
  raf=requestAnimationFrame(animate);
