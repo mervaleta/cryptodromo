@@ -2,7 +2,7 @@ name: Cinematic visual lab verification
 on:
   push:
     branches: [main]
-    paths: ['visual-lab/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','.github/workflows/visual-lab.yml']
+    paths: ['visual-lab/**','race-lab/source/src/horse.js','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','.github/workflows/visual-lab.yml']
   workflow_dispatch:
 permissions:
   contents: read
