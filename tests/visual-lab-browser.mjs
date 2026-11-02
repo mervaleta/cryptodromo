@@ -24,6 +24,15 @@ try{
  }
  const initial=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,canvas:[document.querySelector('canvas').width,document.querySelector('canvas').height],horses:document.querySelectorAll('#standings li').length}));
  console.log('SCENE_INIT',JSON.stringify(initial));
+ const deployedScript=await page.evaluate(async()=>{
+  const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha06-'+Date.now(),{cache:'no-store'})).text();
+  return {hasRunout:source.includes('coastDistance(p.distanceAt60,exitVelocity,elapsed-60)'),
+   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha06-gait-1'),
+   length:source.length,engineStatus:document.querySelector('#race-biography')?.textContent};
+ });
+ console.log('PUBLIC_ENGINE_VERSION',JSON.stringify(deployedScript));
+ assert.ok(deployedScript.hasRunout&&deployedScript.hasResult&&deployedScript.hasGait,
+  'Hostinger is still serving an outdated race engine');
  assert.ok(initial.canvas[0]>=1000);
  assert.equal(initial.horses,12);
  await mkdir('artifacts',{recursive:true});
