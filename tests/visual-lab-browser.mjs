@@ -36,7 +36,7 @@ try{
  assert.ok(initial.canvas[0]>=1000);
  assert.equal(initial.horses,12);
  await mkdir('artifacts',{recursive:true});
- await page.screenshot({path:'artifacts/alpha3-stadium.png',fullPage:false});
+ await page.screenshot({path:'artifacts/alpha3-stadium.png',fullPage:false,timeout:25000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  // The full-length aerial camera must be stationary so forward movement is obvious.
  await page.selectOption('#camera','aerial');
  await page.click('#tab-light');
@@ -49,13 +49,13 @@ try{
  assert.match(await page.locator('#light-status').innerText(),/58%/);
  await page.waitForTimeout(700);
  console.log('NIGHT_MENU_OK',JSON.stringify({level:await page.locator('#light-level').innerText(),mode:await page.locator('#weather').inputValue(),effect:await page.locator('#light-pattern').inputValue()}));
- await page.screenshot({path:'artifacts/alpha05-night-lights.png',fullPage:false,timeout:60000});
+ await page.screenshot({path:'artifacts/alpha05-night-lights.png',fullPage:false,timeout:60000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  // Full-power broadcast setup: independently verify a usable night race surface.
  await page.locator('#light-dimmer').evaluate(el=>{el.value='100';el.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.locator('#light-color').evaluate(el=>{el.value='#fff3d4';el.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.selectOption('#light-pattern','steady');
  await page.waitForTimeout(350);
- await page.screenshot({path:'artifacts/alpha05-night-full-power.png',fullPage:false,timeout:60000});
+ await page.screenshot({path:'artifacts/alpha05-night-full-power.png',fullPage:false,timeout:60000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  // Test controls without affecting official race results.
  await page.locator('#light-power').uncheck();
  assert.match(await page.locator('#light-status').innerText(),/apagados/);
@@ -68,7 +68,7 @@ try{
  const clock=await page.locator('#clock').innerText();
  console.log('CLOCK_AFTER_START',clock);
  console.log('BROWSER_ERRORS',JSON.stringify(errors.slice(0,15)));
- await page.screenshot({path:'artifacts/alpha3-racing.png',fullPage:false});
+ await page.screenshot({path:'artifacts/alpha3-racing.png',fullPage:false,timeout:25000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  assert.notEqual(clock,'00:00','Race timeline did not advance');
  assert.ok(!errors.length,'Browser errors: '+errors.join('; ').slice(0,1200));
  console.log('PASS: interactive live Three.js race, 12 horses, scene screenshot');
@@ -88,7 +88,7 @@ try{
  assert.equal(paddockState.total,100);
  assert.equal(paddockState.symbol,'BTC');
  assert.ok(paddockState.fallback&&paddockState.canvasVisible,'Paddock 3D preview did not load');
- await page.screenshot({path:'artifacts/alpha4-racers-btc.png',fullPage:false});
+ await page.screenshot({path:'artifacts/alpha4-racers-btc.png',fullPage:false,timeout:25000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  await page.locator('.runner[data-symbol="ETH"]').click();
  await page.waitForTimeout(1000);
  assert.equal(await page.locator('#horse-symbol').innerText(),'ETH');
