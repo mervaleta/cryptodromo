@@ -79,7 +79,7 @@ try{
  assert.equal(initial.horses,12);
  console.log('NATIVE_LOGO_NETWORK',JSON.stringify(requestedLogos));
  assert.ok(requestedLogos.length>=4,'At least the four star horses must receive their official skin mark');
- assert.ok(requestedLogos.length<=12,'One race must never preload logos from the 100-token roster');
+ assert.ok(new Set(requestedLogos).size<=24,'Only current and next 12 runners may request SVGs; never prefetch 100-token roster');
  const verifiedLogo=await page.request.get('https://race.cryptodromo.com/assets/crypto-logos/btc.svg');
  assert.equal(verifiedLogo.status(),200,'BTC SVG must be local on Hostinger');
  assert.match(await verifiedLogo.text(),/^<svg /);
