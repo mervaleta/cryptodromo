@@ -395,6 +395,8 @@ function showPresentation(nextRace,seconds){
  const slotIndex=Math.min(11,Math.floor(Math.max(0,seconds)/5));
  presentation.hidden=false;
  presentCountdown.textContent=formatCountdown(60-seconds);
+ if(seconds>=55)presentCountdown.textContent='LARGADA EN '+Math.max(1,Math.ceil(60-seconds));
+ clockEl.textContent=formatCountdown(60-seconds);
  if(slotIndex===lastPresented)return;
  lastPresented=slotIndex;
  const token=nextRace.entries[slotIndex],stats=biographyStats.get(token.symbol);
@@ -449,16 +451,21 @@ function updateLiveProgram(){
   }
  }
  if(phase.phase===PHASES.PRESENTATION){
+  document.querySelector('.dial div').textContent='PRÓXIMA LARGADA';
   showPresentation(race,phase.time);
   return;
  }
  presentation.hidden=true;
+ document.querySelector('.dial div').textContent=phase.phase===PHASES.RACE?'TIEMPO DE CARRERA':'ACTA DE LLEGADA';
  if(phase.phase===PHASES.RACE){
   running=true;if(Math.abs(elapsed-now.slotSeconds)>1)elapsed=now.slotSeconds;
  }else{
   // The clock stays at 60 for the scoring engine, but the last horse
   // continues crossing over the following seconds for cinematic delivery.
-  if(now.slotSeconds<60+RUNOUT_SECONDS){running=true;elapsed=now.slotSeconds;}
+  if(now.slotSeconds<60+RUNOUT_SECONDS){
+    if(!running)horses.forEach(h=>h.model.play('Gallop'));
+    running=true;elapsed=now.slotSeconds;
+  }
   else{
    running=false;elapsed=60+RUNOUT_SECONDS;
    if(!finishShown)showOfficialResult();
