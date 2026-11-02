@@ -147,6 +147,8 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <button id="voice" type="button" aria-pressed="false">🔊 ACTIVAR RELATO</button>
 <button id="sound" type="button" aria-pressed="false">♫ HABILITAR AUDIO</button>
 <label>VOLUMEN <input type="range" id="audio-volume" min="0" max="100" step="5" value="90" aria-label="Volumen del hipódromo"/></label>
+<label>CALIDAD 3D<select id="graphics-quality" aria-label="Calidad gráfica del estadio"><option value="auto">Automática (FPS)</option><option value="eco">Económica</option><option value="balanced">Equilibrada</option><option value="cinematic">Cinematográfica</option></select></label>
+<span class="auto-label" id="fps-readout" role="status">FPS · calculando</span>
 <label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Aérea fija · vista de carrera</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta</option><option value="leader">Líder · persecución</option><option value="pack">Pelotón · gran angular</option><option value="grandstand">Tribuna · fija</option><option value="orbit">Órbita del estadio</option></select></label>
 <label>TRAZADO<select id="layout"><option value="straight">Recta central</option><option value="s-bend">Curva en S</option><option value="oval">Óvalo completo</option></select></label>
 <label>SUPERFICIE<select id="surface"><option value="dirt">Tierra compactada</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
