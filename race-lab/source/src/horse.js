@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {createGaitRefiner} from './gaitRefiner.js?v=alpha06-2';
 import {createFurIdentity} from './horseLivery.js?v=alpha07-2';
+import {smoothHorseNormals} from './horseSurface.js?v=alpha08-1';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -16,7 +17,9 @@ async function loadHorseAsset(){
       const compressed=await response.arrayBuffer();
       const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'));
       const binary=await new Response(stream).arrayBuffer();
-      return new GLTFLoader().parseAsync(binary,new URL('../assets/',import.meta.url).href);
+      const gltf=await new GLTFLoader().parseAsync(binary,new URL('../assets/',import.meta.url).href);
+      smoothHorseNormals(gltf.scene,{strength:.91});
+      return gltf;
     })();
   }
   return assetPromise;
@@ -31,7 +34,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
     if(!object.isMesh)return;object.castShadow=true;object.receiveShadow=true;
     const source=Array.isArray(object.material)?object.material:[object.material];
     const assigned=source.map(original=>{
-      const material=original.clone();material.metalness=0;material.roughness=.78;colorBindings.push({material,name:original.name,mesh:object});materials.add(material);return material;
+      const material=original.clone();material.metalness=0;material.roughness=.87;material.flatShading=false;colorBindings.push({material,name:original.name,mesh:object});materials.add(material);return material;
     });
     object.material=Array.isArray(object.material)?assigned:assigned[0];
   });
