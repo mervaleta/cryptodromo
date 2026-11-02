@@ -34,6 +34,12 @@ $('#search').addEventListener('input',render);$('#sort').addEventListener('chang
 $('#clear').addEventListener('click',()=>{$('#search').value='';tier='all';document.querySelectorAll('.filters button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tier==='all')));render();$('#search').focus();});
 function motion(){ $('#motion').textContent=paused?'Reanudar galope':'Pausar galope';$('#motion').setAttribute('aria-pressed',String(!paused));preview?.pause(paused); }
 $('#motion').addEventListener('click',()=>{paused=!paused;motion();});
+// Background selector is presentation-only. It never influences the race formula.
+$('#stage-toggle').addEventListener('click',event=>{
+ const black=$('.stage').classList.toggle('stage-black');
+ event.currentTarget.setAttribute('aria-pressed',String(black));
+ event.currentTarget.textContent=black?'Ver hipódromo':'Fondo negro';
+});
 window.addEventListener('hashchange',()=>{const t=TOKEN_ROSTER.find(t=>t.symbol===location.hash.slice(1));if(t)select(t);});
 render();select(selected);motion();
 function fallback(token){

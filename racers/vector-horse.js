@@ -2,7 +2,7 @@
  * Palette/lighting/dust are independent of motion and financial scoring.
  * No external PNG, shaders or model files needed. Renderer consumes pure SVG path data.
  */
-export const MASTER_VERSION='horse-vector-1.0';
+export const MASTER_VERSION='horse-vector-1.1';
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const rgba=(hex,a=1)=>{const c=hex.replace('#','');const n=parseInt(c.length===3?c.split('').map(x=>x+x).join(''):c,16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;};
 export function shade(hex,factor=1){const c=hex.replace('#','');const rgb=(c.length===3?c.split('').map(v=>parseInt(v+v,16)):Array.from({length:3},(_,i)=>parseInt(c.slice(i*2,i*2+2),16)));return '#'+rgb.map(v=>Math.round(clamp(v*factor,0,255)).toString(16).padStart(2,'0')).join('');}
@@ -20,7 +20,7 @@ export function paletteForToken(token={}){
    tail:toHexHSL((h+295)%360,.68,.27),
    hoof:toHexHSL((h+295)%360,.48,.17),
    bridle:'#cfc9b9',
-   outline:'#111016',
+   outline:'#090a10',
    accent,
  };
 }
@@ -45,8 +45,18 @@ function dust(ctx,phase,level,seed=0){
   const x=70-random()*20-age*(16+random()*17);
   const y=159+random()*7-age*(8+random()*9);
   const r=3.5+random()*7.0+age*5.0;
-  const alpha=clamp((1-age)*.42*level)*clamp(age*15);
-  fillEllipse(ctx,x,y,r,r*.46,`rgba(168,144,110,${alpha.toFixed(3)})`);
+  const alpha=clamp((1-age)*.51*level)*clamp(age*15);
+  fillEllipse(ctx,x,y,r,r*.46,`rgba(190,160,121,${alpha.toFixed(3)})`);
+ }
+ // Small airborne motes catch the stadium lights around the rear hooves.
+ for(let p=0;p<15;p++){
+  const born=p/15,age=(phase+1-born)%1;
+  const x=65-random()*13-age*(17+random()*25);
+  const y=158+random()*11-age*(13+random()*12);
+  const radius=.23+random()*.65;
+  const alpha=clamp((1-age)*.64*level)*clamp(age*15);
+  ctx.fillStyle=`rgba(248,207,141,${alpha.toFixed(3)})`;
+  ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
  }
  ctx.restore();
 }
@@ -57,16 +67,20 @@ export function drawHorse(ctx,master,{frame=0,palette={},dustLevel=.5,shadowLeve
  const c={...paletteForToken(),...palette};
  ctx.save();ctx.translate(offsetX,offsetY);ctx.scale(scale,scale);
  // Contact/ambient shadows stay on the ground. They do not affect alpha silhouette.
- if(shadowLevel>0){fillEllipse(ctx,101,166,56,7.3,`rgba(8,12,10,${(.34*shadowLevel).toFixed(3)})`);
-   fillEllipse(ctx,102,168,43,3.4,`rgba(8,12,10,${(.22*shadowLevel).toFixed(3)})`);}
+ if(shadowLevel>0){
+   fillEllipse(ctx,101,165,59,8.2,`rgba(12,8,12,${(.39*shadowLevel).toFixed(3)})`);
+   fillEllipse(ctx,105,169,44,2.6,`rgba(213,159,94,${(.13*shadowLevel).toFixed(3)})`);
+ }
  dust(ctx,idx/12,dustLevel,seed);
  // Unchanged artwork silhouettes, painted in parameterized colors.
+ // Preserve original keyframe silhouettes, with a controlled outer ink border.
  fill(ctx,layers.ink,c.outline);
+ if(layers.ink){ctx.save();ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.strokeStyle='#07080b';ctx.stroke(layers.ink);ctx.restore();}
  fill(ctx,layers.coat,c.coat);
  if(detail&&layers.coat){
    ctx.save();ctx.clip(layers.coat,'evenodd');
-   fillEllipse(ctx,103,108,47,24,'rgba(255,248,220,.26)');
-   fillEllipse(ctx,88,139,55,23,`rgba(30,20,26,${(.29*shadowLevel).toFixed(3)})`);
+   fillEllipse(ctx,103,108,47,24,'rgba(255,248,220,.31)');
+   fillEllipse(ctx,88,139,55,23,`rgba(28,18,24,${(.35*shadowLevel).toFixed(3)})`);
    fillEllipse(ctx,143,112,22,23,'rgba(255,255,255,.13)');
    ctx.restore();
  }
@@ -80,9 +94,16 @@ export function drawHorse(ctx,master,{frame=0,palette={},dustLevel=.5,shadowLeve
  if(layers.mane){ctx.save();ctx.beginPath();ctx.rect(0,55,90,80);ctx.clip();fill(ctx,layers.mane,c.tail);ctx.restore();}
  fill(ctx,layers.hoof,c.hoof);
  fill(ctx,layers.gear,c.bridle);
+ // Thin warm reflected light on the inside of the silhouette reads clearly on black.
+ if(layers.coat){
+   ctx.save();ctx.clip(layers.coat,'evenodd');
+   ctx.strokeStyle=rgba(shade(c.coat,1.32),.62);
+   ctx.lineWidth=1.3;ctx.lineJoin='round';ctx.stroke(layers.coat);
+   ctx.restore();
+ }
  // Ink contours are deliberately redrawn last to preserve the 12 original key poses.
- // A small global alpha avoids over-thickening the lines at high zoom.
- ctx.globalAlpha=.88;
+ // Solid, clean ink edges are essential against the stadium's black background.
+ ctx.globalAlpha=1;
  fill(ctx,layers.ink,c.outline);
  ctx.globalAlpha=1;
  ctx.restore();
@@ -97,7 +118,7 @@ export function createVectorHorseTexture(THREE,master,token,{size=512,fps=12,zoo
  const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
  const ctx=canvas.getContext('2d');const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
  texture.generateMipmaps=true;texture.minFilter=THREE.LinearMipmapLinearFilter;
- let current=-1,lastPalette=paletteForToken(token),dustLevel=.5,shadowLevel=.75;
+ let current=-1,lastPalette=paletteForToken(token),dustLevel=1.05,shadowLevel=1.1;
  function paint(frame){ctx.clearRect(0,0,size,size);const scale=zoomToArt?size/158:size/170;const offsetX=zoomToArt?-12*scale:0;const offsetY=zoomToArt?size*.5-124*scale:0;drawHorse(ctx,master,{frame,palette:lastPalette,scale,offsetX,offsetY,dustLevel,shadowLevel,seed:hashString(token?.symbol||'BTC')});texture.needsUpdate=true;}
  return {
   texture,canvas,
