@@ -230,6 +230,31 @@ box(.24,.07,40,VISUAL_FINISH_X,.07,0,C.ivory);
 for(const z of [-21,21])box(.55,12,.55,VISUAL_FINISH_X,6,z,C.steel);
 box(.7,1.6,42,VISUAL_FINISH_X,12.9,0,C.roof);
 const finishSign=sign('META · FINISH',VISUAL_FINISH_X,13.0,-3,18,2.5);
+// Light-weight golden photo-finish flare: one GPU points draw, 96 sparkles.
+// No billboards around horse brands and no particle system per animal.
+const burstN=softwareGPU?52:96,burstPos=new Float32Array(burstN*3),burstGeo=new THREE.BufferGeometry();
+burstGeo.setAttribute('position',new THREE.BufferAttribute(burstPos,3));
+const finishBurst=new THREE.Points(burstGeo,new THREE.PointsMaterial({
+ color:'#ffe3a0',size:.65,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending
+}));
+finishBurst.visible=false;finishBurst.frustumCulled=false;scene.add(finishBurst);
+const finishGlow=new THREE.PointLight(0xffd68a,0,95,1.8);scene.add(finishGlow);
+function updateFinishBurst(){
+ const t=elapsed-60,active=running&&t>=0&&t<6.8&&!finishShown;
+ finishBurst.visible=active;
+ finishGlow.intensity=active?Math.max(0,24*(1-t/7)):0;
+ if(!active)return;
+ const f=trackPoint(layoutMode,1,5.5);finishGlow.position.set(f.x,6,f.z);
+ const a=burstGeo.attributes.position;
+ for(let i=0;i<burstN;i++){
+  const angle=i*2.39996+(i%4)*.1,r=2.4+(i%17)*.61;
+  a.setXYZ(i,f.x+Math.cos(angle)*r,1.6+t*(.7+i%3*.12)+(i%7)*.35,
+    f.z+Math.sin(angle)*r);
+ }
+ a.needsUpdate=true;
+ finishBurst.material.opacity=.68*Math.max(0,1-t/6.8);
+}
+
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
@@ -342,6 +367,7 @@ function setRace(index){
  start.textContent='▶ INICIAR CARRERA';updateStandings();
 }
 function updateStandings(){
+ if(finished&&!finishShown)return; // Do not reveal official order before all twelve cross.
  if(finished){
   // Post-finish movement is purely cinematic: positions and leader on
   // every broadcast scoreboard must remain the OFFICIAL 60-second result.
@@ -729,7 +755,7 @@ function animate(now,draw=true){
    wetState.textContent='Humedad del estadio '+Math.round(wet*100)+'% · '+
      (weatherSelect.value==='rain'?'acumulando agua':wet>.03?'secándose gradualmente':'superficie seca');
   }
-  particles(dt);adjustCamera(dt);renderer.render(scene,camera);
+  updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
  }
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
  if(draw)raf=requestAnimationFrame(animate);
