@@ -35,7 +35,10 @@ test('fixture and results pages share official price-based engine; betting demo 
   assert.match(html,/href="\/estadisticas\/"/);
   assert.ok(js.includes("getRaceFixture"));
  }
- assert.match(read('resultados/resultados.js'),/officialRanking\(createOfficialRace\(/);
+ const results=read('resultados/resultados.js');
+ assert.match(results,/const profiles=createOfficialRace\\(race\\.entries\\)/);
+ assert.match(results,/officialRanking\\(profiles\\)/);
+ assert.match(results,/buildTrackSplits\\(buildBroadcastProfiles\\(profiles\\)/);
  const bet=read('apuestas/index.html');
  assert.match(bet,/disabled aria-disabled="true"/);
  assert.match(bet,/Sin depósitos, tickets, pagos ni retiros/);
