@@ -48,7 +48,7 @@ test('keyframe table matches actual joint names and runout never pauses the mode
  for(const joint of ['FrontUpperLeg.L','FrontLowerLeg.R','BackLowerLeg.L','BackUpperLeg.R','Neck1','Head','Tail2']){
   assert.ok(horse.includes(joint),'Missing horse rig bone '+joint);
  }
- assert.ok(scene.includes('coastDistance(p.distanceAt60,exitVelocity,elapsed-60)'));
+ assert.ok(scene.includes('broadcastRunoutDistance({...p,exitVelocity},leaderMeters,elapsed-60)'));
  assert.ok(scene.includes('showOfficialResult()'));
  assert.ok(scene.includes('resultsOverlay.hidden=false'));
  assert.ok(!scene.includes("elapsed=Math.min(60,elapsed+realSeconds)"));
