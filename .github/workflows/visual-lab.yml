@@ -18,6 +18,11 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
           npx playwright install chromium --with-deps
+      - name: Parse all browser modules
+        run: |
+          node --check visual-lab/scene.js
+          node --check visual-lab/nightLights.js
+          node --check visual-lab/raceChoreography.js
       - name: Verify financial outcome and all 3360 choreographed races
         run: node --test tests/cinematic-choreography.mjs
       - name: Verify live cinematic scene
