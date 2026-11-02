@@ -17,7 +17,9 @@ export function timeAtMark(profile,meters) {
   if(!numeric(meters)||meters<=0||meters>1000)throw new RangeError('Mark must be in (0, 1000] meters');
   // The official engine owns the 1000m finish time. Never re-rank its result.
   if(meters===1000) return profile.finishTime;
-  const values=profile.cumulative;
+  // Use the same movement samples that drive the current 3D broadcast.
+  // Official finish times remain immutable and independent of visuals.
+  const values=profile.broadcastDistance??profile.cumulative;
   if(!Array.isArray(values)||values.length!==13||values.some(x=>!numeric(x)) || values.some((x,i)=>i&&x<values[i-1])){
     throw new Error('Expected thirteen monotonically increasing cumulative-distance samples');
   }
