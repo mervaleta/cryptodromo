@@ -2,7 +2,7 @@ name: Cinematic visual lab verification
 on:
   push:
     branches: [main]
-    paths: ['visual-lab/**','tests/visual-lab-browser.mjs','.github/workflows/visual-lab.yml']
+    paths: ['visual-lab/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','.github/workflows/visual-lab.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,6 +18,8 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
           npx playwright install chromium --with-deps
+      - name: Verify financial outcome and all 3360 choreographed races
+        run: node --test tests/cinematic-choreography.mjs
       - name: Verify live cinematic scene
         run: node tests/visual-lab-browser.mjs
       - name: Save reference screenshots
