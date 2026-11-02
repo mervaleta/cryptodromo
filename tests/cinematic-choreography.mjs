@@ -3,11 +3,14 @@ import test from 'node:test';
 import {readFileSync} from 'node:fs';
 import {getRaceFixture} from '../race-lab/source/src/data/raceFixture.js';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js';
-import {buildBroadcastProfiles,broadcastPosition,overtakeEvents} from '../visual-lab/raceChoreography.js';
+import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed,overtakeEvents,MIN_CRUISE_RATIO} from '../visual-lab/raceChoreography.js';
 
-test('alpha04 extends visual course without changing the two-price financial engine',()=>{
+test('alpha05 extends visual course by 20% without changing the two-price financial engine',()=>{
  const scene=readFileSync(new URL('../visual-lab/scene.js',import.meta.url),'utf8');
- assert.match(scene,/VISUAL_START_X=-205,VISUAL_FINISH_X=205/);
+ assert.match(scene,/VISUAL_START_X=-246,VISUAL_FINISH_X=246/);
+ assert.doesNotMatch(scene,/VISUAL_SPAN\*Math\.min\(1\.025/);
+ assert.match(scene,/goal\.set\(0,290,155\)/);
+ assert.match(scene,/createNightLights/);
  assert.match(scene,/VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X/);
  assert.match(scene,/broadcastPosition\(broadcastProfiles\[i\],elapsed\)/);
  assert.match(scene,/VISUAL_START_X\+VISUAL_SPAN/);
@@ -26,7 +29,13 @@ test('all 3360 races retain official prices, 60s finishing order and valid inter
   for(const p of broadcast){
    assert.equal(broadcastPosition(p,0),0);
    assert.equal(broadcastPosition(p,60),p.distanceAt60);
-   for(let s=0;s<60;s+=5) assert.ok(broadcastPosition(p,s+5)>broadcastPosition(p,s));
+   for(let t=0;t<60;t+=.5){
+    assert.ok(broadcastPosition(p,t+.5)>broadcastPosition(p,t),'Stalled or reversed: day '+day+' race '+i);
+    assert.ok(broadcastSpeed(p,t)>0,'Horse had zero cruise speed');
+   }
+   assert.ok(p.broadcastWeights.every(w=>w>=MIN_CRUISE_RATIO));
+   assert.ok(p.minimumSpeed>0);
+
   }
   if(day===0&&i<100&&overtakeEvents(broadcast,{seconds:60,step:1})>=4)significant++;
   count++;
