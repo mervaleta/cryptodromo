@@ -2,11 +2,14 @@ import * as THREE from 'three';
 import { getRaceFixture, RACES_PER_DAY, FIXTURE_DAYS, RACE_DURATION_SECONDS } from './data/raceFixture.js';
 import { createHorse } from './horse.js';
 import { createChurchillStadium } from './churchillStadium.js';
+import { createOfficialRace, positionAt, officialRanking, officialAudit } from './data/officialRace.js';
 // CRYPTODROMO_SATOSHI_STADIUM_V1
 
 let absoluteRaceIndex = 0;
 let currentRace = getRaceFixture(0, 0);
 const racers = currentRace.entries;
+let officialProfiles = createOfficialRace(currentRace.entries);
+const currentWinner = () => officialRanking(officialProfiles)[0];
 const environmentState = { hour: 17.5, clouds: .32, wind: 12, weather: 'clear', surface: 'grass' };
 const surfaceStyles = {
   grass: { track: 0x665d43, field: 0x49683e, rail: 0xe5d4ad, label: 'CÉSPED' },
@@ -154,6 +157,7 @@ function updateRaceHeader(){
 function loadRace(index){
   absoluteRaceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
   currentRace=getRaceFixture(absoluteRaceIndex%RACES_PER_DAY,Math.floor(absoluteRaceIndex/RACES_PER_DAY));
+  officialProfiles=createOfficialRace(currentRace.entries);
   currentRace.entries.forEach((entry,i)=>{
     const horse=horses[i];
     horse.racer=entry;horse.progress=0;horse.delta=0;horse.latestMove=0;horse.input1=entry.input1;horse.input2=entry.input2;
@@ -169,7 +173,20 @@ function flash(text){callout.textContent=text;callout.classList.add('visible');w
 function setRunning(value){running=value;setHorseAnimation(running?'Gallop':'Idle');startButton.innerHTML=running?'<span>Ⅱ</span> PAUSAR CARRERA':'<span>▶</span> CONTINUAR CARRERA';if(running)flash(elapsed===0?'¡LARGADA!':'CARRERA EN MARCHA');}
 startButton.addEventListener('click',()=>{if(finished){loadRace(absoluteRaceIndex+1);resetRace(false);setRunning(true);}else setRunning(!running);});
 document.querySelector('#resetRace').addEventListener('click',()=>resetRace());
-document.querySelector('#marketMove').addEventListener('input',e=>{marketInput=Number(e.target.value)/1000;const label=document.querySelector('#moveValue');label.textContent=`${marketInput>=0?'+':''}${(marketInput*100).toFixed(1)}%`;label.style.color=marketInput<0?'#ff7580':'#1ce1a2';document.querySelector('#marketMessage').textContent=marketInput>.003?'Refuerzo alcista':marketInput<-.003?'Refuerzo bajista':'Usando fixture base';});
+const auditAction=document.createElement('button');
+auditAction.type='button';auditAction.textContent='↓ AUDITORÍA JSON';
+auditAction.title='Descargar cálculo financiero y dosis de los 12 caballos';
+auditAction.className='icon-button';
+auditAction.setAttribute('aria-label','Descargar auditoría de carrera');
+startButton.parentElement.appendChild(auditAction);
+auditAction.addEventListener('click',()=>{
+  const payload=officialAudit(officialProfiles,currentRace.day,currentRace.number);
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='cryptodromo-dia-'+currentRace.day+'-carrera-'+currentRace.number+'.json';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+});
+document.querySelector('#marketMove').addEventListener('input',e=>{marketInput=Number(e.target.value)/1000;const label=document.querySelector('#moveValue');label.textContent=`${marketInput>=0?'+':''}${(marketInput*100).toFixed(1)}%`;label.style.color=marketInput<0?'#ff7580':'#1ce1a2';document.querySelector('#marketMessage').textContent='Solo animación visual · resultados por precio';});
 updateRaceHeader();
 
 function timeColors(value){const hour=value/6;const stops=[{h:0,sky:0x07101d,sun:0x7a90d1,intensity:.3},{h:5,sky:0x382a4e,sun:0xf68a62,intensity:.72},{h:7,sky:0x86a9c0,sun:0xffd6a0,intensity:1.45},{h:12,sky:0x74b5d3,sun:0xfff3d4,intensity:2.15},{h:17,sky:0xe18463,sun:0xffac67,intensity:1.35},{h:20,sky:0x252e55,sun:0xc28ca7,intensity:.65},{h:24,sky:0x07101d,sun:0x7a90d1,intensity:.3}];let a=stops[0],b=stops[1];for(let i=0;i<stops.length-1;i++)if(hour>=stops[i].h&&hour<=stops[i+1].h){a=stops[i];b=stops[i+1];break;}const t=THREE.MathUtils.clamp((hour-a.h)/(b.h-a.h),0,1);return{sky:new THREE.Color(a.sky).lerp(new THREE.Color(b.sky),t),sun:new THREE.Color(a.sun).lerp(new THREE.Color(b.sun),t),intensity:THREE.MathUtils.lerp(a.intensity,b.intensity,t)};}
@@ -243,25 +260,29 @@ function animate(){
         const lateInput=sampleStep>=9;
         const priceMove=lateInput?h.racer.input2:h.racer.input1;
         const coefficient=lateInput?h.racer.coefficients2[sampleStep-9]:h.racer.coefficients1[sampleStep];
-        h.latestMove=priceMove+marketInput*100;
-        h.delta=THREE.MathUtils.clamp((priceMove/100+marketInput)*coefficient*8,-4.8,4.8);
+        h.latestMove=priceMove;
+        h.delta=THREE.MathUtils.clamp((priceMove/100)*coefficient*8,-4.8,4.8);
       });
       updateOrder();
       const leader=horses.reduce((best,h)=>h.progress>best.progress?h:best,horses[0]);
       stadium.setScoreboard({leader:leader.racer.symbol,time:`00:${String(Math.min(59,Math.floor(elapsed))).padStart(2,'0')}`});
     }
-    horses.forEach(h=>{const priceFactor=1+h.delta*.08;h.progress=Math.min(1,h.progress+h.base*priceFactor*dt*.15);});
+    // Every frame is read from a deterministic precomputed financial race.
+    // The visual shuffled doses modulate pacing, but never determine the winner.
+    const leaderMeters=currentWinner().distanceAt60;
+    horses.forEach(h=>{h.progress=Math.min(1,Math.max(0,positionAt(officialProfiles[h.index],Math.min(elapsed,RACE_DURATION_SECONDS))/leaderMeters));});
     const avg=horses.reduce((s,h)=>s+h.progress,0)/horses.length;
     document.querySelector('#progressFill').style.width=`${avg*100}%`;
     document.querySelector('#raceClock').textContent=`${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(Math.floor(elapsed%60)).padStart(2,'0')}`;
     if(elapsed>=RACE_DURATION_SECONDS){
-      const leaderProgress=Math.max(...horses.map(h=>h.progress),.001);
-      horses.forEach(h=>{h.progress=Math.min(1,h.progress/leaderProgress);});
+      elapsed=RACE_DURATION_SECONDS;
+      const leaderMeters=currentWinner().distanceAt60;
+      horses.forEach(h=>{h.progress=positionAt(officialProfiles[h.index],RACE_DURATION_SECONDS)/leaderMeters;});
       running=false;setHorseAnimation('Idle');finished=true;document.querySelector('#raceStatus').textContent='FINALIZADA';startButton.innerHTML='<span>↺</span> SIGUIENTE CARRERA';updateOrder();
-      flash(`¡${horses.slice().sort((a,b)=>b.progress-a.progress)[0].racer.symbol} GANA!`);
+      flash(`¡${currentWinner().entry.symbol} GANA!`);
     }
   }
-  let mean=0;horses.forEach(h=>{const phase=t*10+h.index*.62;const travel=-14+h.progress*54.7;mean+=travel;h.root.position.x=travel;h.root.position.y=h.laneY+Math.max(0,Math.sin(phase*2)*.028);h.legs.forEach(leg=>{const cyc=phase+leg.phase;leg.pivot.rotation.z=Math.sin(cyc)*.58;});h.model?.update(dt);});mean/=horses.length;
+  let mean=0;horses.forEach(h=>{const phase=t*(10+marketInput*80)+h.index*.62;const travel=-14+h.progress*54.7;mean+=travel;h.root.position.x=travel;h.root.position.y=h.laneY+Math.max(0,Math.sin(phase*2)*.028);h.legs.forEach(leg=>{const cyc=phase+leg.phase;leg.pivot.rotation.z=Math.sin(cyc)*.58;});h.model?.update(dt,Math.max(.55,1+marketInput*8));});mean/=horses.length;
   camera.position.x=THREE.MathUtils.lerp(camera.position.x,Math.max(-7,Math.min(22,mean+7)),dt*.7);camera.lookAt(camera.position.x,9.5,0);
   stadium.update(dt,{running});
   // Crowd animates inside the Satoshi Nakamoto stadium module.
