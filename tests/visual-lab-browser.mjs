@@ -188,4 +188,21 @@ try{
  assert.equal((await page.locator('#horse-color').innerText()).toLowerCase(),'#627eea');
  assert.equal(errors.length,0,'Live browser JS failures: '+errors.join('; ').slice(0,1200));
  console.log('PASS: 100-runner catalog uses riderless animated horse, synced token coats/colors');
+ // The public homepage must run the exact same cinematic 3D broadcast.
+ const home=await page.goto('https://race.cryptodromo.com/?ci=alpha13-home',{waitUntil:'domcontentloaded',timeout:30000});
+ assert.equal(home?.status(),200,'Public homepage must be online');
+ await page.waitForFunction(()=>document.querySelector('#start')&&!document.querySelector('#start').disabled,{timeout:30000});
+ const homeState=await page.evaluate(()=>({
+  title:document.title,
+  count:document.querySelectorAll('#standings li').length,
+  live:document.querySelector('#automatic-label')?.textContent,
+  legacy:!!document.querySelector('#startButton'),
+  backdrop:document.querySelector('#status')?.textContent
+ }));
+ console.log('ALPHA13_PUBLIC_HOME',JSON.stringify(homeState));
+ assert.equal(homeState.count,12);
+ assert.equal(homeState.legacy,false);
+ assert.match(homeState.live||'',/TRANSMISIÓ[N]/);
+ assert.equal(errors.length,0,'Homepage browser errors: '+errors.join('; ').slice(0,1200));
+
 }finally{await browser.close();}
