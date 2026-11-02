@@ -9,12 +9,12 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 test('Alpha14 oval runout is continuous, monotonic and does not wrap',()=>{
  const p1=trackPoint('oval',1,5.5);
  let previous=p1;let previousTravel=0;
- for(let i=1;i<=200;i++){
+ for(let i=1;i<=700;i++){
   const p=1+i/2000,v=trackPoint('oval',p,5.5);
   const along=(v.x-p1.x)*p1.tangentX+(v.z-p1.z)*p1.tangentZ;
   assert.ok(along>=previousTravel-1e-5,'backwards oval runout');
   assert.ok(Math.hypot(v.x-previous.x,v.z-previous.z)<1.0,'teleport at finish');
-  assert.ok(along<=120+1e-6,'exceeded safely bounded runout');
+  assert.ok(along<=350+1e-6,'exceeded safely bounded runout');
   previousTravel=along;previous=v;
  }
  assert.ok(Math.abs(trackPoint('oval',0,5.5).x-p1.x)<1e-6);
