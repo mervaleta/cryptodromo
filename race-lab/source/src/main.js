@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { getRaceFixture, RACES_PER_DAY, FIXTURE_DAYS, RACE_DURATION_SECONDS } from './data/raceFixture.js';
 import { createHorse } from './horse.js';
+import { createChurchillStadium } from './churchillStadium.js';
+// CRYPTODROMO_SATOSHI_STADIUM_V1
 
 let absoluteRaceIndex = 0;
 let currentRace = getRaceFixture(0, 0);
@@ -33,8 +35,8 @@ renderer.toneMappingExposure = 1.1;
 
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-18,18,9,-9,0.1,180);
-camera.position.set(-7, 0, 34);
-camera.lookAt(-7, 0, 0);
+camera.position.set(-7, 9.5, 34);
+camera.lookAt(-7, 9.5, 0);
 scene.fog = new THREE.Fog(0x9bb2ac, 43, 112);
 
 const hemi = new THREE.HemisphereLight(0xd9efff, 0x3c4b32, 1.55); scene.add(hemi);
@@ -128,38 +130,10 @@ const lintel=new THREE.Mesh(new THREE.BoxGeometry(4.3,.3,.6),new THREE.MeshStand
 const finishCanvas=document.createElement('canvas');finishCanvas.width=512;finishCanvas.height=128;const fctx=finishCanvas.getContext('2d');fctx.fillStyle='#092216';fctx.fillRect(0,0,512,128);fctx.fillStyle='#1bce91';fctx.font='900 66px Arial';fctx.textAlign='center';fctx.textBaseline='middle';fctx.fillText('FINISH',256,66);const finishTex=new THREE.CanvasTexture(finishCanvas);finishTex.colorSpace=THREE.SRGBColorSpace;
 const finishSign=new THREE.Mesh(new THREE.PlaneGeometry(4.1,1),new THREE.MeshBasicMaterial({map:finishTex,side:THREE.DoubleSide}));finishSign.position.set(41,7.1,.72);scene.add(finishSign);
 const finishLine=new THREE.Mesh(new THREE.PlaneGeometry(.6,12),new THREE.MeshStandardMaterial({color:0xf6efe2,roughness:.9}));finishLine.position.set(40.7,0,.21);scene.add(finishLine);
-const stand=new THREE.Group();scene.add(stand);
-for(let row=0;row<5;row++){
-  const box=new THREE.Mesh(new THREE.BoxGeometry(35,.7,1.2),new THREE.MeshStandardMaterial({color:[0x252e2d,0x36403b,0x41433a][row%3],roughness:.92}));box.position.set(0,7.5+row*.52,-12-row*.2);box.castShadow=true;box.receiveShadow=true;stand.add(box);
-}
-const standFrame=new THREE.MeshStandardMaterial({color:0x182a23,roughness:.78});
-for(const x of [-17,-10,-3,4,11,17]){const pier=new THREE.Mesh(new THREE.BoxGeometry(.22,2.65,.24),standFrame);pier.position.set(x,10.15,-13.9);pier.castShadow=true;stand.add(pier);}
-const canopy=new THREE.Mesh(new THREE.BoxGeometry(36,.34,4.2),new THREE.MeshStandardMaterial({color:0x172920,roughness:.7}));canopy.position.set(0,11.35,-12.6);canopy.castShadow=true;stand.add(canopy);
-const canopyEdge=new THREE.Mesh(new THREE.BoxGeometry(36,.18,.2),new THREE.MeshStandardMaterial({color:0x13d69a,emissive:0x063622,roughness:.55}));canopyEdge.position.set(0,11.12,-10.5);stand.add(canopyEdge);
-const historyCanvas=document.createElement('canvas');historyCanvas.width=768;historyCanvas.height=128;const historyCtx=historyCanvas.getContext('2d');
-historyCtx.fillStyle='#071b14';historyCtx.fillRect(0,0,768,128);historyCtx.fillStyle='#13d69a';historyCtx.fillRect(0,0,10,128);
-historyCtx.textAlign='center';historyCtx.textBaseline='middle';historyCtx.fillStyle='#f3f8ee';historyCtx.font='900 28px Inter,Arial';historyCtx.fillText('EL HIPÓDROMO DE LAS COTIZACIONES',389,43);
-historyCtx.fillStyle='#9fe8c8';historyCtx.font='600 17px Inter,Arial';historyCtx.fillText('EL PRECIO MUEVE LA CARRERA · FIXTURE SINTÉTICO',389,91);
-const historyTexture=new THREE.CanvasTexture(historyCanvas);historyTexture.colorSpace=THREE.SRGBColorSpace;
-const historySign=new THREE.Mesh(new THREE.PlaneGeometry(14,1.15),new THREE.MeshBasicMaterial({map:historyTexture,side:THREE.DoubleSide}));historySign.position.set(0,10.55,-10.25);stand.add(historySign);
-const stadiumLights=[],stadiumBulbs=[];let stadiumGlow=0,targetStadiumGlow=0;
-const towerMaterial=new THREE.MeshStandardMaterial({color:0x24352d,roughness:.8});
-for(const x of [-23,23]){
-  const tower=new THREE.Mesh(new THREE.BoxGeometry(.24,6.4,.24),towerMaterial);tower.position.set(x,5.4,-8.6);tower.castShadow=true;scene.add(tower);
-  const arm=new THREE.Mesh(new THREE.BoxGeometry(1.7,.18,.32),towerMaterial);arm.position.set(x,8.7,-8.6);scene.add(arm);
-  const bulbMaterial=new THREE.MeshStandardMaterial({color:0xd8fff0,emissive:0x57edb5,emissiveIntensity:0,roughness:.35});
-  const bulbs=new THREE.Mesh(new THREE.BoxGeometry(1.45,.24,.28),bulbMaterial);bulbs.position.set(x,8.55,-8.42);scene.add(bulbs);stadiumBulbs.push(bulbMaterial);
-  const lamp=new THREE.SpotLight(0x9fffd6,0,52,Math.PI/4,.72,1.6);lamp.position.set(x,8.45,-8.1);lamp.target.position.set(x*.55,0,0);lamp.castShadow=false;scene.add(lamp,lamp.target);stadiumLights.push(lamp);
-}
-const crowdGeo=new THREE.SphereGeometry(.12,5,4),crowdMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1}),crowdInstances=new THREE.InstancedMesh(crowdGeo,crowdMat,240),crowdMatrix=new THREE.Matrix4(),crowdColor=new THREE.Color();
-const crowdBodyGeo=new THREE.CapsuleGeometry(.075,.14,2,5),crowdBodyMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1}),crowdBodies=new THREE.InstancedMesh(crowdBodyGeo,crowdBodyMat,240),crowdBodyMatrix=new THREE.Matrix4(),crowdBase=[];
-const crowdPalette=[0xf0b76f,0xe7e3d7,0x88bab1,0xa6a1d8,0xd07162];let crowdIndex=0;
-for(let row=0;row<5;row++)for(let i=0;i<48;i++){
-  const x=-16.5+i*.7,y=7.9+row*.52,z=-12-row*.2,color=crowdPalette[(i*3+row)%5];crowdBase.push({x,y,z});
-  crowdMatrix.makeTranslation(x,y,z);crowdInstances.setMatrixAt(crowdIndex,crowdMatrix);crowdInstances.setColorAt(crowdIndex,crowdColor.setHex(color));
-  crowdBodyMatrix.makeTranslation(x,y-.21,z);crowdBodies.setMatrixAt(crowdIndex,crowdBodyMatrix);crowdBodies.setColorAt(crowdIndex,crowdColor.setHex(color));crowdIndex++;
-}
-crowdInstances.instanceMatrix.needsUpdate=true;crowdBodies.instanceMatrix.needsUpdate=true;stand.add(crowdBodies,crowdInstances);
+// Estadio Satoshi Nakamoto, pista Eadweard Muybridge. Scenic module only.
+const stadium = createChurchillStadium({THREE,scene,mode:'race',
+  quality:window.matchMedia('(max-width:700px)').matches?'low':'medium',
+  enableParticles:false,title:'ESTADIO SATOSHI NAKAMOTO'});
 const cloudGroup=new THREE.Group();scene.add(cloudGroup);const cloudMat=new THREE.MeshStandardMaterial({color:0xf3f6f4,roughness:1,transparent:true,opacity:.88});
 for(let i=0;i<12;i++){const cloud=new THREE.Group();const cx=(i%4)*14-20,cy=11+Math.floor(i/4)*2,cz=-24-(i%3)*4;for(let j=0;j<5;j++){const puff=new THREE.Mesh(new THREE.SphereGeometry(1,9,7),cloudMat.clone());puff.scale.set(2.2+(j%2)*.4,1+(j%3)*.15,1);puff.position.set((j-2)*1.6,(j%2)*.4,0);cloud.add(puff);}cloud.position.set(cx,cy,cz);cloudGroup.add(cloud);}
 const weatherCount=1000;const weatherPositions=new Float32Array(weatherCount*3);const weatherVelocities=[];for(let i=0;i<weatherCount;i++){weatherPositions[i*3]=(Math.random()-.5)*80;weatherPositions[i*3+1]=Math.random()*30;weatherPositions[i*3+2]=(Math.random()-.5)*32;weatherVelocities.push(.08+Math.random()*.16);}
@@ -174,6 +148,7 @@ function updateRaceHeader(){
   const hour=Math.floor(currentRace.minute/60),minute=currentRace.minute%60;
   document.querySelector('#raceInfo').textContent=`CARRERA ${String(currentRace.number).padStart(3,'0')} / ${RACES_PER_DAY} · ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')} UTC · 12 PARTICIPANTES`;
   document.querySelector('#raceStatus').textContent=`DÍA ${currentRace.day} · FIXTURE SINTÉTICO`;
+  stadium.setScoreboard({raceNumber:String(currentRace.number).padStart(3,'0'),leader:currentRace.entries[0].symbol,time:'00:00'});
   document.querySelector('#startButton').innerHTML=`<span>▶</span> INICIAR CARRERA ${String(currentRace.number).padStart(3,'0')}`;
 }
 function loadRace(index){
@@ -213,7 +188,7 @@ function updateEnvironment(){
   weatherParticles.visible=['rain','storm','snow'].includes(environmentState.weather);weatherMat.color.set(environmentState.weather==='snow'?0xffffff:0xbcdced);weatherMat.size=environmentState.weather==='snow'?.2:.1;weatherMat.opacity=environmentState.weather==='storm'?.9:.7;weatherParticles.userData.kind=environmentState.weather;
   track.material.color.set(surfaceStyles[environmentState.surface].track);ground.material.color.set(surfaceStyles[environmentState.surface].field);track.material.roughness=['rain','storm'].includes(environmentState.weather)?.38:.92;
   document.querySelector('#weatherLabel').textContent=`${surfaceStyles[environmentState.surface].label} · ${environmentState.weather==='clear'?'DESPEJADO':environmentState.weather==='cloudy'?'NUBLADO':environmentState.weather==='rain'?'LLUVIA':environmentState.weather==='storm'?'TORMENTA':environmentState.weather==='snow'?'NIEVE':'NEBLINA'}`;
-  const nightFactor=Math.max(THREE.MathUtils.smoothstep(environmentState.hour,17,20),1-THREE.MathUtils.smoothstep(environmentState.hour,4,7));targetStadiumGlow=nightFactor*(environmentState.weather==='fog'?.62:1);
+  stadium.setEnvironment({hour:environmentState.hour,type:environmentState.weather,wind:environmentState.wind,clouds:environmentState.clouds});
   if(environmentState.weather==='fog'){scene.fog.near=10;scene.fog.far=60;}else if(environmentState.weather==='storm'){scene.fog.near=40;scene.fog.far=110;}else{scene.fog.near=43;scene.fog.far=112;}
 }
 document.querySelectorAll('#timeOfDay,#clouds,#wind,#weather,#surface').forEach(el=>el.addEventListener('input',updateEnvironment));document.querySelectorAll('#weather,#surface').forEach(el=>el.addEventListener('change',updateEnvironment));
@@ -221,7 +196,7 @@ document.querySelector('#resetEnvironment').addEventListener('click',()=>{docume
 updateEnvironment();
 document.querySelector('#fullscreen').addEventListener('click',()=>{if(!document.fullscreenElement)wrap.requestFullscreen?.();else document.exitFullscreen?.();});document.querySelector('#soundToggle').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.style.color=soundOn?'#25d69a':'';e.currentTarget.title=soundOn?'Audio ambiente activado (demo visual)':'Silenciar / activar audio';});
 
-function resize(){const w=wrap.clientWidth,h=wrap.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const aspect=w/h;const viewH=24;camera.left=-viewH*aspect/2;camera.right=viewH*aspect/2;camera.top=viewH/2;camera.bottom=-viewH/2;camera.updateProjectionMatrix();}
+function resize(){const w=wrap.clientWidth,h=wrap.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const aspect=w/h;const viewH=34;camera.left=-viewH*aspect/2;camera.right=viewH*aspect/2;camera.top=viewH/2;camera.bottom=-viewH/2;camera.updateProjectionMatrix();}
 new ResizeObserver(resize).observe(wrap);resize();
 const clock=new THREE.Clock();
 function drawFallback(t){
@@ -272,6 +247,8 @@ function animate(){
         h.delta=THREE.MathUtils.clamp((priceMove/100+marketInput)*coefficient*8,-4.8,4.8);
       });
       updateOrder();
+      const leader=horses.reduce((best,h)=>h.progress>best.progress?h:best,horses[0]);
+      stadium.setScoreboard({leader:leader.racer.symbol,time:`00:${String(Math.min(59,Math.floor(elapsed))).padStart(2,'0')}`});
     }
     horses.forEach(h=>{const priceFactor=1+h.delta*.08;h.progress=Math.min(1,h.progress+h.base*priceFactor*dt*.15);});
     const avg=horses.reduce((s,h)=>s+h.progress,0)/horses.length;
@@ -285,9 +262,9 @@ function animate(){
     }
   }
   let mean=0;horses.forEach(h=>{const phase=t*10+h.index*.62;const travel=-14+h.progress*54.7;mean+=travel;h.root.position.x=travel;h.root.position.y=h.laneY+Math.max(0,Math.sin(phase*2)*.028);h.legs.forEach(leg=>{const cyc=phase+leg.phase;leg.pivot.rotation.z=Math.sin(cyc)*.58;});h.model?.update(dt);});mean/=horses.length;
-  camera.position.x=THREE.MathUtils.lerp(camera.position.x,Math.max(-7,Math.min(22,mean+7)),dt*.7);camera.lookAt(camera.position.x,0,0);
-  stadiumGlow=THREE.MathUtils.lerp(stadiumGlow,targetStadiumGlow,1-Math.exp(-dt/1.15));stadiumLights.forEach(light=>{light.intensity=stadiumGlow*2.8;});stadiumBulbs.forEach(material=>{material.emissiveIntensity=stadiumGlow*1.8;});
-  for(let i=0;i<crowdBase.length;i++){const p=crowdBase[i],cheer=running&&i%8===0?Math.sin(t*9+i*.7)*.06:Math.sin(t*1.4+i*.61)*.012;crowdMatrix.makeTranslation(p.x,p.y+cheer,p.z);crowdInstances.setMatrixAt(i,crowdMatrix);crowdBodyMatrix.makeTranslation(p.x,p.y-.21+cheer*.55,p.z);crowdBodies.setMatrixAt(i,crowdBodyMatrix);}crowdInstances.instanceMatrix.needsUpdate=true;crowdBodies.instanceMatrix.needsUpdate=true;
+  camera.position.x=THREE.MathUtils.lerp(camera.position.x,Math.max(-7,Math.min(22,mean+7)),dt*.7);camera.lookAt(camera.position.x,9.5,0);
+  stadium.update(dt,{running});
+  // Crowd animates inside the Satoshi Nakamoto stadium module.
   cloudGroup.position.x-=environmentState.wind*dt*.003;if(cloudGroup.position.x<-18)cloudGroup.position.x=12;
   if(weatherParticles.visible){const pos=weatherGeo.attributes.position;for(let i=0;i<weatherCount;i++){let x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);const kind=weatherParticles.userData.kind;if(kind==='snow'){y-=weatherVelocities[i]*dt*7;x+=Math.sin(t+i)*dt*.35;}else{y-=weatherVelocities[i]*dt*(kind==='storm'?31:22);x-=dt*(2+environmentState.wind*.12);}if(y<-.2){y=22+Math.random()*8;x=(Math.random()-.5)*80;}if(x<-42)x=42;pos.setXYZ(i,x,y,z);}pos.needsUpdate=true;}
   if(environmentState.weather==='fog'){scene.fog.density=.018+environmentState.clouds*.011;}else scene.fog.density=0;
