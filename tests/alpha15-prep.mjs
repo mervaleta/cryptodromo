@@ -5,6 +5,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {syntheticRaceRecord,syntheticAudit,assertSyntheticRaceRecord,raceIdentity} from '../alpha15/raceRecords.js';
 import {buildSyntheticChronicle,asTextBrief} from '../alpha15/chronicle.js';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js';
+import {buildSyntheticCareers} from '../alpha15/careers.js';
 import {getRaceFixture} from '../race-lab/source/src/data/raceFixture.js';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js';
 import {buildBroadcastProfiles,broadcastSpeed} from '../visual-lab/raceChoreography.js';
@@ -100,4 +101,26 @@ test('all 3360 synthetic fixture results and staged finish outcomes match engine
   winners++;
  }
  assert.equal(winners,3360);
+});
+
+test('100-horse form and rivalry dossiers use only races before their explicit cutoff',()=>{
+ const first=buildSyntheticCareers({throughDay:0,throughSlot:0});
+ assert.equal(first.racesAnalyzed,1);
+ assert.equal(first.careers.size,100);
+ assert.equal([...first.careers.values()].reduce((n,s)=>n+s.starts,0),12);
+ const firstSymbols=getRaceFixture(0,0).entries.map(x=>x.symbol);
+ for(const sym of firstSymbols)assert.equal(first.careers.get(sym).starts,1);
+ const weekly=buildSyntheticCareers();
+ assert.equal(weekly.racesAnalyzed,3360);
+ assert.equal(weekly.careers.size,100);
+ const entries=[...weekly.careers.values()];
+ assert.equal(entries.reduce((sum,s)=>sum+s.starts,0),3360*12);
+ assert.equal(entries.reduce((sum,s)=>sum+s.wins,0),3360);
+ assert.equal(entries.reduce((sum,s)=>sum+s.podiums,0),3360*3);
+ assert.ok(entries.every(s=>s.recentForm.length<=8&&s.provenance.transmissionObserved===false));
+ assert.ok(entries.some(s=>s.rivals.length>0));
+ const btc=weekly.careers.get('BTC');
+ for(const opponent of btc.rivals){
+  assert.ok(opponent.meetings>=opponent.placedAhead+opponent.placedBehind);
+ }
 });
