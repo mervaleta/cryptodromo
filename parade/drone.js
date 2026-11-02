@@ -42,7 +42,8 @@ export function createDroneRig({x=-25,y=58,z=185,yaw=0,pitch=-.42,fov=48,
   const v=lookVector();
   return {
    position:{x:state.x,y:state.y,z:state.z},
-   lookAt:{x:state.x+v.x*100,y:state.y+v.y*100,z:state.z+v.z*100},
+   lookAt:state.mode==='follow'?{x:finite(target.x,0),y:finite(target.y,2),z:finite(target.z,0)}:
+    {x:state.x+v.x*100,y:state.y+v.y*100,z:state.z+v.z*100},
    fov:state.fov,mode:state.mode
   };
  }
