@@ -382,6 +382,7 @@ function setRace(index){
    const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
     h.model.root.position.set(first.x,0,first.z);h.model.root.rotation.y=first.heading;
    h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
+   h.model.setBank?.(0);
    h.visualSpeed=1;h.model.play('Idle');
   });
  }
@@ -799,6 +800,12 @@ function animate(now,draw=true){
    h.progress=pr;h.visualMeters=dist;
    const world=trackPoint(layoutMode,pr,i);
    h.model.root.position.set(world.x,0,world.z);h.model.root.rotation.y=world.heading;
+   // Bank gently with the actual XZ path curvature; zero lean after the finish.
+   const a=trackPoint(layoutMode,Math.min(1,Math.max(0,pr-.001)),i);
+   const b=trackPoint(layoutMode,Math.min(1,pr+.001),i);
+   const turn=Math.atan2(a.tangentX*b.tangentZ-a.tangentZ*b.tangentX,
+     a.tangentX*b.tangentX+a.tangentZ*b.tangentZ);
+   h.model.setBank?.(pr>=1?0:Math.max(-.12,Math.min(.12,-turn*2.4)));
    // Slightly faster hoof cadence makes 550 world units in 60s read as a sprint.
    h.visualSpeed=Math.max(.64,Math.min(3.15,1.86*meterSpeed/(leaderMeters/60)));
    // The GLB + eight corrective keyframes now provide the flight and impact;
