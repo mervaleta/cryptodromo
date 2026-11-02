@@ -2,7 +2,7 @@ name: Cinematic visual lab verification
 on:
   push:
     branches: [main]
-    paths: ['visual-lab/**','race-lab/source/src/horse.js','race-lab/source/src/horseLivery.js','race-lab/source/src/horseSurface.js','race-lab/source/src/gaitRefiner.js','assets/crypto-logos/**','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/alpha07-visual.mjs','tests/alpha08.mjs','tests/alpha09.mjs','tests/alpha11-oval.mjs','tests/alpha12-curve-contact.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
+    paths: ['index.html','visual-lab/**','race-lab/source/src/horse.js','race-lab/source/src/horseLivery.js','race-lab/source/src/horseSurface.js','race-lab/source/src/gaitRefiner.js','assets/crypto-logos/**','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/alpha07-visual.mjs','tests/alpha08.mjs','tests/alpha09.mjs','tests/alpha11-oval.mjs','tests/alpha12-curve-contact.mjs','tests/alpha13-home.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
   workflow_dispatch:
 concurrency:
   group: visual-lab-${{ github.ref }}
@@ -24,6 +24,7 @@ jobs:
       - name: Parse all browser modules
         run: |
           node --check visual-lab/scene.js
+          node --check visual-lab/stadiumBackdrop.js
           node --check visual-lab/cinematicCamera.js
           node --check visual-lab/nightLights.js
           node --check visual-lab/raceChoreography.js
@@ -51,6 +52,8 @@ jobs:
         run: node --test tests/alpha11-oval.mjs
       - name: Verify Alpha12 curved-track dust and finish stripe
         run: node --test tests/alpha12-curve-contact.mjs
+      - name: Verify homepage replacement and stadium scenery
+        run: node --test tests/alpha13-home.mjs
       - name: Verify financial outcome and all 3360 choreographed races
         run: node --test tests/cinematic-choreography.mjs
       - name: Verify live cinematic scene
