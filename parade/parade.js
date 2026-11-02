@@ -6,7 +6,7 @@ import {createLiveStadiumDistrict} from '../visual-lab/stadiumDistrict.js?v=stad
 import {createCloudLayer} from '../visual-lab/cloudLayer.js?v=alpha15-2';
 import {createParadeController,PARADE_WAVES,WAVES} from './march.js?v=alpha16-1';
 import {createDroneRig,droneInputs} from './drone.js?v=alpha16-1';
-import {createParadeVillage} from './scenery.js?v=alpha16-1';
+import {createParadeVillage} from './scenery.js?v=alpha16-2';
 
 const $=id=>document.getElementById(id),canvas=$('parade-canvas'),stage=$('stage');
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<780;
@@ -28,6 +28,10 @@ sky.material.uniforms.mieCoefficient.value=.005;
 sky.material.uniforms.mieDirectionalG.value=.78;
 const clouds=createCloudLayer(scene,{mobile,softwareGPU});
 const hemi=new THREE.HemisphereLight('#b2d8ea','#3a4836',1.2);scene.add(hemi);
+// Broad moon bounce preserves readable architecture at night while the
+// detailed lamps remain emissive meshes. One shadowless directional light.
+const moonFill=new THREE.DirectionalLight('#91b8e0',0);
+moonFill.position.set(180,130,-80);moonFill.castShadow=false;scene.add(moonFill);
 const sun=new THREE.DirectionalLight('#fff1dc',2.3);
 sun.position.set(-75,140,70);sun.castShadow=renderer.shadowMap.enabled;
 sun.shadow.mapSize.set(1024,1024);
@@ -138,14 +142,15 @@ function lighting(){
  sun.color.set(night?'#829eb4':sunset?'#ffbd84':'#fff1da');
  sun.intensity=(night?.05:.35+2.35*daylight)*(wet?.65:1)*ambient;
  sun.castShadow=!night&&renderer.shadowMap.enabled;
- hemi.intensity=(night?.36:.78+daylight*.7)*ambient;
+ hemi.intensity=(night?.92:.78+daylight*.7)*ambient;
+ moonFill.intensity=(night?1.15:.10)*ambient;
  hemi.color.set(night?'#87a3d2':'#c2dce7');
- scene.background.set(night?'#101b30':wet?'#869b9d':sunset?'#b7a18d':'#8db9cb');
- scene.fog.color.set(night?'#182638':wet?'#8e9fa3':sunset?'#b7b2a6':'#a8c8c0');
+ scene.background.set(night?'#263b50':wet?'#869b9d':sunset?'#b7a18d':'#8db9cb');
+ scene.fog.color.set(night?'#334854':wet?'#8e9fa3':sunset?'#b7b2a6':'#a8c8c0');
  scene.fog.density=wet?.0032:.00145;
  trackMat.color.set(wet?'#685c4e':'#9d7958');
  trackMat.roughness=wet?.47:.91;
- renderer.toneMappingExposure=night?.88:sunset?1.11:1.04;
+ renderer.toneMappingExposure=night?1.31:sunset?1.11:1.04;
  village.setEnvironment({night,wetness:wet?1:0,lightLevel:ambient});
  district.setEnvironment({hour:h,type:wet?'rain':night?'night':'clear',wetness:wet?1:0});
  clouds.configure({cover:wet?.8:night?.42:.34,night,rain:wet,sunset,wind:.5});
