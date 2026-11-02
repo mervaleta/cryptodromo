@@ -146,7 +146,7 @@ export async function createMotionHorse({coat='#6e5143',accent='#f7931a',symbol=
       if(!clip)return;
       const next=skeletonMixer.clipAction(clip);
       if(active===next)return;
-      next.reset().setLoop(THREE.LoopRepeat,Infinity).play();
+      next.reset().setLoop(THREE.LoopRepeat,Infinity).setEffectiveTimeScale(1).play();
       if(active)next.crossFadeFrom(active,fade,true);
       active=next;
     },
@@ -155,7 +155,8 @@ export async function createMotionHorse({coat='#6e5143',accent='#f7931a',symbol=
       label.material.map.dispose();label.material.dispose();root.remove(label);
       label=badge(nextSymbol,nextAccent);label.position.set(0,3,0);root.add(label);
     },
-    update(delta,speed=1){skeletonMixer.update(Math.min(Math.max(0,delta),.1)*Math.max(0,speed));},
+    // Advance only by elapsed render time. Market inputs and track speed never alter this loop.
+    update(delta){skeletonMixer.update(Math.min(Math.max(0,delta),.1));},
     dispose(){skeletonMixer.stopAllAction();skeletonMixer.uncacheRoot(visual);materials.forEach(m=>m.dispose());label.material.map.dispose();label.material.dispose();root.removeFromParent();}
   };
   api.play(mode,0);return api;
