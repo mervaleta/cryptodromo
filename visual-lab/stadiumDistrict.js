@@ -53,6 +53,9 @@ export function createLiveStadiumDistrict({THREE,scene,stadiumId='satoshi',quali
   }
   // The original Alpha14 12-lane circuit remains at z=-20..20, its full
   // existing grandstand at z=-33..-80. Our entire district stays off-course.
+  // Continuous parkland behind the existing -130m ground edge. Does not cover the
+  // active track, and prevents distant facilities from standing on empty sky.
+  box(staticParts,0,-.33,-199,940,.28,201,M.grass);
   box(staticParts,0,-.19,-180,540,.19,31,M.plaza);
   box(staticParts,0,.025,-204,420,.09,3,M.bronze);
   // Entrance concourse behind original grandstand, with distinct visitor functions.
