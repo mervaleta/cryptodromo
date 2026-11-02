@@ -6,6 +6,11 @@ const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use
 try{
  const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
  const errors=[],requestedLogos=[];
+ const debuggerSession=await page.context().newCDPSession(page);
+ await debuggerSession.send('Debugger.enable');
+ debuggerSession.on('Debugger.scriptFailedToParse',e=>{
+   console.log('FAILED_SCRIPT_TO_PARSE',JSON.stringify({url:e.url,line:e.lineNumber,column:e.columnNumber,start:e.startLine,end:e.endLine}));
+ });
  page.on('request',request=>{if(request.url().includes('/assets/crypto-logos/'))requestedLogos.push(request.url());});
  page.on('pageerror',e=>errors.push('PAGE '+(e.stack||e.message)));
  page.on('response',response=>{if(response.status()>=400)errors.push('HTTP '+response.status()+' '+response.url());});
@@ -32,6 +37,21 @@ try{
     }));
    });
    console.log('SCENE_MODULE_DIAGNOSTICS',JSON.stringify(diagnostics));
+   const imports=await page.evaluate(async()=>{
+     const paths=[
+      '/visual-lab/liveSchedule.js?v=a08-1',
+      '/visual-lab/trackMath.js?v=a08-2',
+      '/visual-lab/trackVisuals.js?v=a08-2',
+      '/visual-lab/raceAudio.js?v=alpha08-1',
+      '/race-lab/source/src/horseSurface.js?v=alpha08-1',
+      '/race-lab/source/src/horseLivery.js?v=alpha08-fur-1'
+     ];
+     return Promise.all(paths.map(async p=>{
+       try{await import(p);return{path:p,ok:true};}
+       catch(e){return{path:p,error:String(e),stack:e.stack};}
+     }));
+   });
+   console.log('SCENE_IMPORT_DIAGNOSTICS',JSON.stringify(imports));
    throw e;
  }
  const initial=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,canvas:[document.querySelector('canvas').width,document.querySelector('canvas').height],horses:document.querySelectorAll('#standings li').length}));
