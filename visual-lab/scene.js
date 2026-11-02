@@ -7,6 +7,7 @@ import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
+import {createParadeVillage} from '../parade/scenery.js?v=alpha16-live-1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
@@ -159,22 +160,13 @@ for(let i=0;i<treeN;i++){
  cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
  cone(h*.16,h*.53,x,h*.82,z,treeNeedle,treeGroup,7);
 }
-// Stadium Satoshi Nakamoto: concrete amphitheater, deep stands, VIP facade and twin spires.
-const venue=new THREE.Group();venue.name='Estadio Satoshi Nakamoto · Pista Eadweard Muybridge';scene.add(venue);
-box(820,2.6,36,0,1.2,-57,C.concrete,venue);
-box(812,5.2,12,0,5,-73,C.stone,venue);
-for(let row=0;row<17;row++){
- const y=3.4+row*.75,z=-38-row*1.8;
- box(810,.29,1.9,0,y,z,row%3===0?C.ivory:C.seat,venue);
- box(810,.15,.13,0,y+.3,z+.87,C.steel,venue);
-}
-for(let x=-397;x<=397;x+=9){
- box(.28,16,.4,x,11.0,-71,C.steel,venue);
- box(.28,9,.5,x,6.9,-33,C.steel,venue);
-}
-box(824,.55,24,0,22.5,-67,C.roof,venue);
-box(824,.22,1.0,0,22.9,-54.6,C.bronze,venue);
-for(let x=-398;x<=398;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
+// Alpha16: preserve Satoshi's landmark VIP pavilion but NOT its previous
+// uninterrupted 810m tribune. Three short modular stands live in Parade Village.
+// This also leaves gaps for the paddock, services, food court and drone vistas.
+const venue=new THREE.Group();venue.name='Estadio Satoshi Nakamoto · Pabellón VIP y meta';scene.add(venue);
+box(93,1.35,27,0,.65,-78,C.concrete,venue);
+box(105,.35,11,0,1.15,-68,C.stone,venue);
+const standCenters=[-210,-5,207],standWidths=[101,122,101];
 // Center VIP house framed with ornamental stone, patterned windows and copper roofing.
 const vip=new THREE.Group();vip.position.set(0,0,-78);venue.add(vip);
 box(69,13,9,0,11,0,C.ivory,vip);
@@ -212,13 +204,14 @@ function sign(text,x,y,z,w=24,h=3,fg='#f3ecd7',bg='#0e3028'){
 sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7);
 sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0);
 // Spectators: shared-instanced bodies and heads, individual colors, multi-tier seating.
-const crowdN=softwareGPU?950:mobile?1400:3400,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
+const crowdN=softwareGPU?260:mobile?440:980,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
 const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.InstancedMesh(headG,mat('#dbb78b'),crowdN)];
 const dummy=new THREE.Object3D(),palette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
 const rnd=seeded(641903);
 for(let i=0;i<crowdN;i++){
- const row=Math.floor(rnd()*17),x=(rnd()-.5)*560,z=-37.8-row*1.8;
- const y=3.92+row*.75;
+ const section=i%3,row=Math.floor(rnd()*7);
+ const x=standCenters[section]+(rnd()-.5)*(standWidths[section]-8);
+ const z=-107-row*2.6,y=4.62+row*.93;
  dummy.position.set(x,y,z);dummy.rotation.y=(rnd()-.5)*.6;dummy.updateMatrix();crowds[0].setMatrixAt(i,dummy.matrix);
  dummy.position.y+=.52;dummy.updateMatrix();crowds[1].setMatrixAt(i,dummy.matrix);
  crowds[0].setColorAt(i,new THREE.Color(palette[Math.floor(rnd()*palette.length)]));
@@ -232,7 +225,9 @@ const cheerFlags=new THREE.InstancedMesh(flagGeom,flagMat,flagsN),flagMatrix=new
 cheerFlags.frustumCulled=false;cheerFlags.visible=false;cheerFlags.name='Crowd · photo finish cheering';
 const flagPositions=[];
 for(let i=0;i<flagsN;i++){
- const row=i%12,x=-340+(i*97%680),z=-38-row*1.8,y=4.6+row*.75;
+ const section=i%3,row=(Math.floor(i/3)%7);
+ const x=standCenters[section]+((i*71%101)/101-.5)*(standWidths[section]-10);
+ const z=-107-row*2.6,y=5.1+row*.93;
  flagPositions.push({x,z,y,phase:i*.64});
  flagMatrix.position.set(x,y,z);flagMatrix.updateMatrix();cheerFlags.setMatrixAt(i,flagMatrix.matrix);
 }
@@ -296,6 +291,9 @@ function updateFinishBurst(){
 // Does not recreate course, crowd, sky, horse assets, rain, spotlights or cameras.
 const liveDistrict=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',
   quality:softwareGPU||mobile?'eco':'balanced'});
+// Separate scene layers: original race/paddock geometry + compact public venue.
+// The village never creates an alternative track, race horses or a clock.
+const liveVillage=createParadeVillage(scene,{quality:softwareGPU||mobile?'eco':'balanced'});
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
@@ -652,6 +650,7 @@ function setWeather(mode){
  for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?85:0;}
  nightLights.configure({night});
  liveDistrict.setEnvironment({hour,type:wet?'rain':night?'night':'clear',wetness:trackFX.wetness});
+ liveVillage.setEnvironment({night,wetness:trackFX.wetness});
 }
 weatherSelect.value='auto';
 weatherSelect.addEventListener('change',()=>{setWeather(weatherSelect.value);applyLightingControls();});
@@ -728,6 +727,7 @@ function applyQualityPreset(next){
  }
  activeQuality=next;
  liveDistrict.setQuality(next);
+ liveVillage.setQuality(next);
  graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
   (graphicsModeSelect.value==='auto'?' · AUTO':'');
  resize();
@@ -779,6 +779,11 @@ function applyLightingControls(){
   effect:lightPattern.value,
   spread:Number(lightSpread.value),ambient:Number(lightAmbient.value)/100,perimeter:lightPerimeter.checked,
   night:isSolarNight()||weatherSelect.value==='night'
+ });
+ liveVillage.setEnvironment({
+  night:isSolarNight()||weatherSelect.value==='night',
+  wetness:trackFX.wetness,
+  lightLevel:lightPower.checked?intensity/100:0
  });
  const mode=(isSolarNight()||weatherSelect.value==='night')?'noche':'día';
  lightStatus.textContent=(lightPower.checked?'Reflectores activos':'Reflectores apagados')+
@@ -910,6 +915,10 @@ function updateEnvironment(){
    C.concrete.color.copy(stoneBase).lerp(new THREE.Color('#333e3d'),wet*.26);
     liveDistrict.setEnvironment({hour:getSolarMinutes()/60,
       type:weatherSelect.value==='rain'?'rain':isSolarNight()?'night':'clear',wetness:wet});
+   liveVillage.setEnvironment({
+    night:isSolarNight()||weatherSelect.value==='night',wetness:wet,
+    lightLevel:lightPower.checked?Number(lightDimmer.value)/100:0
+   });
    for(const horse of horses)horse.model.setWetness?.(wet);
    wetState.textContent='Humedad del estadio '+Math.round(wet*100)+'% · '+
      (weatherSelect.value==='rain'?'acumulando agua':wet>.03?'secándose gradualmente':'superficie seca');
@@ -1013,6 +1022,7 @@ function animate(now,draw=true){
  if(draw){
   nightLights.update(now/1000);
   cloudLayer.update(now/1000);
+  liveVillage.update(now/1000);
   updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
   const feedback=qualityGovernor.sample(Math.max(1,now-lastRenderedAt),now);
   lastRenderedAt=now;
