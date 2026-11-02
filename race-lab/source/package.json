@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "prebuild": "node scripts/precompute-races.mjs",
-    "test": "node --test ../../../tests/official-race.mjs"
+    "test": "node --test ../../tests/official-race.mjs"
   },
   "dependencies": {
     "three": "0.187.0"
