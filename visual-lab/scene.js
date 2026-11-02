@@ -272,7 +272,7 @@ function adjustCamera(dt){
  if(camMode==='aerial'){goal.set(follow-34,68,54);target.set(follow+24,0,-7);}
  else if(camMode==='finish'){goal.set(VISUAL_FINISH_X+6,7,31);target.set(VISUAL_FINISH_X-12,2,0);}
  else if(camMode==='rail'){goal.set(follow-6,2.75,14.5);target.set(follow+8,2.0,0);}
- else {goal.set(follow+26,5.3,34);target.set(follow-8,2.0,-1.5);}
+ else {goal.set(follow-3,5.4,32);target.set(follow+12,2.1,-17);}
  camera.position.lerp(goal,Math.min(1,dt*1.9));camera.lookAt(target);
 }
 function particles(dt){
