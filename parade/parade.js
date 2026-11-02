@@ -89,7 +89,12 @@ const parade=createParadeController({pace:3.2});
 const drone=createDroneRig({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32});
 const position=new THREE.Vector3(),target=new THREE.Vector3();
 const pointerKeys=new Set(),keyboardKeys=new Set(),keys=new Set();
-let waveIndex=-1,horseModels=[],isReady=false;
+let waveIndex=-1,horseModels=[],isReady=false,selectedWalkClips=[];
+Object.defineProperty(window,'__cryptodromoParadeQA',{configurable:false,value:Object.freeze({
+ snapshot:()=>({parade:parade.snapshot(),drone:drone.snapshot(),ready:isReady,
+  models:horseModels.length,walkClips:[...selectedWalkClips],village:village.stats,
+  stage:{w:renderer.domElement.width,h:renderer.domElement.height}})
+})});
 let cameraInterest={id:'pista',name:'Óvalo y caballos',x:0,y:1,z:72};
 const sights=[...village.sights,{id:'acceso',name:'Acceso y boleterías',x:0,y:10,z:-201},
 {id:'paddock',name:'Paddock y veterinaria',x:-315,y:3,z:-176},
@@ -290,6 +295,7 @@ async function loadModels(){
    horse.userData={paradeSymbol:runner?.symbol||null};
    const clips=horse.clips||[];
    const clip=pickClip(clips);
+   selectedWalkClips[i]=clip;
    if(clip)horse.play(clip,.1);
    if(!clips.some(x=>/walk/i.test(x)))console.warn('Walk not embedded in generated GLB; using',clip);
    scene.add(horse.root);return horse;
