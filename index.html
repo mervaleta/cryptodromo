@@ -16,7 +16,7 @@
       <main id="main-content" class="page">
         <section class="race-heading">
           <div>
-            <div class="eyebrow"><span class="live-dot"></span> ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE · TRANSMISIÓN DE PRUEBA</div>
+            <div class="eyebrow"><span class="live-dot"></span> ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE · REPETICIÓN PRECALCULADA</div>
             <h1>Gran Premio <em>Cripto</em></h1>
             <p class="race-meta"><span id="raceInfo">CARRERA 001 / 480 · 00:00 UTC · 12 PARTICIPANTES</span> <span>·</span> <span id="raceStatus">DÍA 1 · FIXTURE SINTÉTICO</span></p>
           </div>
@@ -32,7 +32,7 @@
               </div>
               <div id="sceneWrap" class="scene-wrap">
                 <div class="scene-vignette"></div>
-                <div class="scene-label"><span class="label-live">LIVE</span><span id="weatherLabel">CÉSPED · DESPEJADO</span></div>
+                <div class="scene-label"><span class="label-live">DEMO</span><span id="weatherLabel">CÉSPED · DESPEJADO</span></div>
                 <div class="scene-caption">SIMULACIÓN VISUAL · COTIZACIONES DE MUESTRA</div>
                 <canvas id="raceCanvas" aria-label="Carrera 3D de doce caballos construidos con geometría procedural"></canvas>
                 <div class="center-callout" id="callout">¡A SUS MARCAS!</div>
@@ -58,11 +58,11 @@
           <aside class="side-column">
             <section class="market-card">
               <div class="section-head compact"><div><div class="eyebrow">INPUT DE MERCADO</div><h2>Pulso de precios</h2></div><span class="demo-pill">DEMO</span></div>
-              <p class="helper-text">La carrera usa el fixture de precios del token. Este control suma un ajuste manual a las variaciones del día.</p>
-              <label class="market-input-label" for="marketMove">Ajuste manual <strong id="moveValue">+0.0%</strong></label>
+              <p class="helper-text">Los resultados ya están determinados por dos variaciones consecutivas del fixture sintético. Este control solo cambia el ritmo del galope, nunca el ganador.</p>
+              <label class="market-input-label" for="marketMove">Ritmo de animación <strong id="moveValue">1.00×</strong></label>
               <input id="marketMove" class="market-slider" type="range" min="-50" max="50" value="0" />
-              <div class="range-ends"><small>−5.0%</small><small>+5.0%</small></div>
-              <div class="market-foot"><span class="pulse-icon">⌁</span> <span id="marketMessage">Mercado alcista</span><span class="pulse-live">ACTIVO</span></div>
+              <div class="range-ends"><small>Más lento</small><small>Más rápido</small></div>
+              <div class="market-foot"><span class="pulse-icon">⌁</span> <span id="marketMessage">Solo animación visual · resultados por precio</span><span class="pulse-live">ACTIVO</span></div>
             </section>
 
             <section class="standings-card">
