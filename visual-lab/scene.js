@@ -245,7 +245,13 @@ const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THR
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
 rain.visible=false;scene.add(rain);
 
-let raceIndex=0,race=getRaceFixture(0,0),profiles=createOfficialRace(race.entries);
+const initialQa=new URLSearchParams(location.search).get('finish-qa')==='alpha06';
+const initialLiveSlot=liveSlot(new Date());
+const initialRaceIndex=initialQa?0:
+ broadcastPhase(initialLiveSlot.slotSeconds).phase===PHASES.PRESENTATION?
+ initialLiveSlot.next.index:initialLiveSlot.index;
+let raceIndex=initialRaceIndex,race=getRaceFixture(initialRaceIndex%RACES_PER_DAY,Math.floor(initialRaceIndex/RACES_PER_DAY)),
+    profiles=createOfficialRace(race.entries);
 let broadcastProfiles=buildBroadcastProfiles(profiles);
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
@@ -306,7 +312,7 @@ async function bootHorses(){
   scene.add(model.root);
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
- setRace(0);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
+ setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
  status.textContent='CAMPO PREPARADO · 12 CORREDORES';
 }
@@ -376,7 +382,7 @@ const presentation=document.querySelector('#presentation-overlay'),presentRoster
       presentBadge=document.querySelector('#present-badge'),presentRecord=document.querySelector('#present-record'),
       presentCountdown=document.querySelector('#present-countdown');
 const finishCelebration=document.querySelector('#finish-celebration'),finishCrossCount=document.querySelector('#finish-cross-count');
-const qaManual=new URLSearchParams(location.search).get('finish-qa')==='alpha06';
+const qaManual=initialQa;
 let liveFollowing=!qaManual,lastLiveIndex=-1,lastPhase='',lastPresented=-1;
 function syncControlMode(){
  const manual=!liveFollowing;
@@ -422,7 +428,8 @@ function updateLiveProgram(){
  if(!liveFollowing||!horses.length)return;
  if(now.index!==lastLiveIndex){
   lastLiveIndex=now.index;lastPhase='';
-  setRace(now.index);buildPresentRoster(race.entries);
+  setRace(phase.phase===PHASES.PRESENTATION?now.next.index:now.index);
+  buildPresentRoster(race.entries);
  }
  if(phase.phase!==lastPhase){
   lastPhase=phase.phase;
