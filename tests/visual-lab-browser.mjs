@@ -93,6 +93,18 @@ try{
  assert.equal(await page.locator('#layout').inputValue(),'oval');
  await page.waitForTimeout(180);
  await page.selectOption('#layout','straight');
+ // Alpha15 atmospheric lighting and scalable quality must be accessible.
+ await page.selectOption('#graphics-quality','eco');
+ await page.waitForTimeout(250);
+ assert.match(await page.locator('#fps-readout').innerText(),/ECO/);
+ await page.selectOption('#graphics-quality','auto');
+ await page.locator('#cloud-cover').evaluate(input=>{input.value='85';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ await page.locator('#fog-intensity').evaluate(input=>{input.value='145';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ assert.equal((await page.locator('#cloud-cover-label').innerText()).trim(),'85%');
+ assert.equal((await page.locator('#fog-intensity-label').innerText()).trim(),'145%');
+ await page.selectOption('#camera','leader');
+ await page.selectOption('#camera','orbit');
+ await page.selectOption('#camera','broadcast');
  const nowLabel=await page.locator('#live-current').innerText();
  console.log('LIVE_SCHEDULE',JSON.stringify({
    current:nowLabel,
@@ -119,6 +131,7 @@ try{
  if(captureScreenshots)await page.screenshot({path:'artifacts/alpha3-stadium.png',fullPage:false,timeout:25000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  // The full-length aerial camera must be stationary so forward movement is obvious.
  await page.selectOption('#camera','aerial');
+ if(captureScreenshots)await page.screenshot({path:'artifacts/alpha15-oval-atmosphere.png',fullPage:false,timeout:30000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  await page.click('#tab-light');
  assert.equal(await page.locator('#panel-light').isVisible(),true);
  await page.click('#light-preview');
