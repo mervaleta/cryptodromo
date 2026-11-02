@@ -8,7 +8,8 @@ try{
   {path:'/fixture/',ready:'#rows tr',expected:24},
   {path:'/resultados/',ready:'#results tr',expected:12},
   {path:'/apuestas/',ready:'#odds tr',expected:12},
-  {path:'/estadisticas/',ready:'#ranking tr',expected:100}
+  {path:'/estadisticas/',ready:'#ranking tr',expected:100},
+  {path:'/cronicas/',ready:'#articles .story',expected:12}
  ];
  for(const item of targets){
   const response=await page.goto('https://race.cryptodromo.com'+item.path+'?alpha14='+Date.now(),{waitUntil:'domcontentloaded',timeout:30000});
@@ -27,7 +28,7 @@ try{
    throw error;
   }
   const actual=await page.locator(item.ready).count();
-  if(item.path==='/fixture/')assert.ok(actual>0&&actual<=item.expected);
+  if(item.path==='/fixture/'||item.path==='/cronicas/')assert.ok(actual>0&&actual<=item.expected);
   else assert.equal(actual,item.expected,item.path+' count');
   console.log('PUBLIC_PAGE_OK',item.path,actual);
  }
