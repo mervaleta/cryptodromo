@@ -55,9 +55,9 @@ export function createGaitRefiner(model,{strength=.36}={}){
    item.correction.identity();
   }
  }
- function refine(delta=0,relativeSpeed=1){
+ function refine(delta=0,relativeSpeed=1,clipPhase=null){
   const stride=Math.max(.25,Math.min(2.7,relativeSpeed));
-  phase=(phase+Math.max(0,delta)*(1.72*stride))%1;
+  phase=clipPhase===null?(phase+Math.max(0,delta)*(1.72*stride))%1:((clipPhase%1)+1)%1;
   for(const item of joints){
    const angle=cyclicSpline(item.angles,phase)*strength;
    turn.setFromAxisAngle(axis,angle);
