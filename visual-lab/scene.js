@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
-import {createNightLights} from './nightLights.js?v=alpha05-lighting-3';
+import {createNightLights} from './nightLights.js?v=alpha05-lighting-4';
 import {createHorse} from '/race-lab/source/src/horse.js';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
