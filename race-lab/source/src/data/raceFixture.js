@@ -106,9 +106,11 @@ export function getRaceFixture(raceNumber, day = 0) {
     const doseRandom = rng(hashText(`dose-v1:${dayIndex}:${raceIndex}:${token.symbol}`));
     return {
       ...token,
-      input1: data.returns[baseIndex],
-      input2: data.returns[baseIndex + 1],
+      // Inputs are explicitly derived from two consecutive 1-minute close prices.
+      input1: 100 * (data.prices[baseIndex + 1] / data.prices[baseIndex] - 1),
+      input2: 100 * (data.prices[baseIndex + 2] / data.prices[baseIndex + 1] - 1),
       priceAtStart: data.prices[baseIndex],
+      priceAtMid: data.prices[baseIndex + 1],
       priceAtFinish: data.prices[baseIndex + 2],
       coefficients1: shuffle(FIRST_DECK, doseRandom),
       coefficients2: shuffle(SECOND_DECK, doseRandom),
