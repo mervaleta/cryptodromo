@@ -143,8 +143,15 @@ try{
  await page.selectOption('#light-pattern','steady');
  await page.click('#tab-race');
  await page.selectOption('#weather','rain');
+ await page.waitForFunction(()=>Number.parseInt(document.querySelector('#wet-state')?.textContent.match(/\d+%/)?.[0])>0,{timeout:7000});
+ const wetLabel=await page.locator('#wet-state').innerText();
+ console.log('RAIN_WETNESS',wetLabel);
+ assert.match(wetLabel,/acumulando agua/);
+ await page.selectOption('#weather','noon');
  await page.waitForTimeout(1100);
- console.log('RAIN_WETNESS',await page.locator('#wet-state').innerText());
+ const dryLabel=await page.locator('#wet-state').innerText();
+ console.log('DRYING_WETNESS',dryLabel);
+ assert.match(dryLabel,/secándose gradualmente|superficie seca/);
  await page.selectOption('#weather','golden');
  await page.click('#start');
  const autoAudio=await page.locator('#sound').getAttribute('aria-pressed');
