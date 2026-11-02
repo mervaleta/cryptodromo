@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {trackPoint} from './trackMath.js';
+import {trackPoint} from './trackMath.js?v=a09-1';
 
 /** Three GPU instanced calls, no per-hoof mesh allocations:
  * worn hoofprints, contact shadow pads, surface puddles.
