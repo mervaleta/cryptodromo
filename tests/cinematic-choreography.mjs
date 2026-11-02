@@ -5,9 +5,9 @@ import {getRaceFixture} from '../race-lab/source/src/data/raceFixture.js';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed,overtakeEvents,MIN_CRUISE_RATIO} from '../visual-lab/raceChoreography.js';
 
-test('alpha05 extends visual course by 20% without changing the two-price financial engine',()=>{
+test('alpha07 extends visible straight by another 12% without changing the two-price financial engine',()=>{
  const scene=readFileSync(new URL('../visual-lab/scene.js',import.meta.url),'utf8');
- assert.match(scene,/VISUAL_START_X=-246,VISUAL_FINISH_X=246/);
+ assert.match(scene,/VISUAL_START_X=-275,VISUAL_FINISH_X=275/);
  assert.doesNotMatch(scene,/VISUAL_SPAN\*Math\.min\(1\.025/);
  assert.match(scene,/goal\.set\(0,290,155\)/);
  assert.match(scene,/createNightLights/);
