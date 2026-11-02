@@ -73,8 +73,8 @@ function tattoo(mesh,material,uniforms){
    '(vFurLocal.y-'+verticalCenter.toFixed(5)+')/'+vertical.toFixed(5)+'+.5);'+
    'float inFlank=step(0.,furUV.x)*step(furUV.x,1.)*step(0.,furUV.y)*step(furUV.y,1.);'+
    'float sideMask=smoothstep(.15,.62,abs('+sideAxis+'-'+sideCenter.toFixed(5)+')/'+halfSide.toFixed(5)+');'+
-   'vec4 tattoo=texture2D(cryptoFurLogo,clamp(furUV,0.,1.));'+
-   'float ink=tattoo.a*inFlank*sideMask*.90;'+
+   'vec4 tattoo=texture2D(cryptoFurLogo,clamp(fract(furUV*vec2(3.,2.)),0.,1.));'+
+   'float ink=tattoo.a*inFlank*sideMask*.80;'+
    'diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*.17+tattoo.rgb*.63,ink);'+
    // Two scales of pigment grain and fiber direction, evaluated in rest-mesh
    // coordinates so the texture travels with the skinned body while galloping.
