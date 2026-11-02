@@ -4,6 +4,7 @@ import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
 import {cameraBlend} from './cinematicCamera.js?v=alpha10-1';
 import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
+import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
@@ -647,6 +648,48 @@ function setTrackType(type){
 }
 trackType.addEventListener('change',()=>setTrackType(trackType.value));
 setTrackType(trackType.value);
+// Quality changes affect ONLY rendering resources. Official time and scoring
+// remain bound to the stadium wall clock and immutable price fixture.
+const graphicsModeSelect=document.querySelector('#graphics-quality');
+const graphicsFpsReadout=document.querySelector('#fps-readout');
+const detectedQuality=recommendQuality({
+ softwareGPU,mobile,deviceMemory:navigator.deviceMemory||4,
+ hardwareConcurrency:navigator.hardwareConcurrency||4,
+ saveData:Boolean(navigator.connection?.saveData),
+ reducedMotion:window.matchMedia('(prefers-reduced-motion: reduce)').matches
+});
+const qualityGovernor=createQualityGovernor({initial:detectedQuality,minSamples:50,cooldownMs:18000});
+let activeQuality='',lastFpsReadout=-Infinity;
+function applyQualityPreset(next){
+ if(next===activeQuality)return;
+ const p=rendererSettings(next,{devicePixelRatio:window.devicePixelRatio||1});
+ renderer.setPixelRatio(Math.min(p.pixelRatio,softwareGPU?.78:mobile?1.1:1.6));
+ const audienceCount=Math.max(120,Math.min(crowdN,Math.floor(crowdN*p.crowdFactor)));
+ for(const inst of crowds)inst.count=audienceCount;
+ dustGeo.setDrawRange(0,Math.max(20,Math.floor(dustN*p.particleFactor)));
+ rainGeo.setDrawRange(0,Math.max(70,Math.floor(rainN*p.particleFactor)));
+ if(!softwareGPU){
+  const shadowSize=p.shadowResolution;
+  if(sun.shadow.mapSize.x!==shadowSize){
+   sun.shadow.mapSize.set(shadowSize,shadowSize);
+   if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}
+   sun.shadow.needsUpdate=true;
+  }
+ }
+ activeQuality=next;
+ resize();
+}
+graphicsModeSelect.addEventListener('change',()=>{
+ const mode=graphicsModeSelect.value;
+ if(mode==='auto'){
+  qualityGovernor.reset(detectedQuality);
+  applyQualityPreset(detectedQuality);
+ }else{
+  qualityGovernor.reset(mode);
+  applyQualityPreset(mode);
+ }
+});
+applyQualityPreset(detectedQuality);
 cameraZoom.addEventListener('input',()=>{camera.fov=Number(cameraZoom.value);zoomLabel.textContent=camera.fov+'°';camera.updateProjectionMatrix();});
 angleInput.addEventListener('input',()=>{angleLabel.textContent=angleInput.value+'°';});
 heightInput.addEventListener('input',()=>{heightLabel.textContent=heightInput.value+' m';});
@@ -910,6 +953,16 @@ function animate(now,draw=true){
  if(draw){
   nightLights.update(now/1000);
   updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
+  const feedback=qualityGovernor.sample(realSeconds*1000,now);
+  if(graphicsModeSelect.value==='auto'&&feedback.changed){
+   applyQualityPreset(softwareGPU?'eco':feedback.level);
+  }
+  if(now-lastFpsReadout>900){
+   lastFpsReadout=now;
+   const fps=Number.isFinite(feedback.fps)?Math.round(feedback.fps):'…';
+   graphicsFpsReadout.textContent=fps+' FPS · '+activeQuality.toUpperCase()+
+     (graphicsModeSelect.value==='auto'?' · AUTO':'');
+  }
  }
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
  if(draw)raf=requestAnimationFrame(animate);
