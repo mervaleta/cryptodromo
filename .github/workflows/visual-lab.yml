@@ -2,7 +2,7 @@ name: Cinematic visual lab verification
 on:
   push:
     branches: [main]
-    paths: ['visual-lab/**','race-lab/source/src/horse.js','race-lab/source/src/gaitRefiner.js','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
+    paths: ['visual-lab/**','race-lab/source/src/horse.js','race-lab/source/src/horseLivery.js','race-lab/source/src/gaitRefiner.js','assets/crypto-logos/**','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/alpha07-visual.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,8 +28,12 @@ jobs:
           node --check visual-lab/rosterStats.js
           node --check race-lab/source/src/gaitRefiner.js
           node --check race-lab/source/src/horse.js
+          node --check race-lab/source/src/horseLivery.js
+          node --check visual-lab/trackSurface.js
       - name: Verify eight-pose gallop, race runout, narration and 100 runner careers
         run: node --test tests/race-broadcast.mjs
+      - name: Verify 47 local logos, dyed material, hoofprints and official fade-in
+        run: node --test tests/alpha07-visual.mjs
       - name: Verify financial outcome and all 3360 choreographed races
         run: node --test tests/cinematic-choreography.mjs
       - name: Verify live cinematic scene
