@@ -29,7 +29,11 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   const asset=await loadHorseAsset(),model=clone(asset.scene);model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model,true),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
   const visual=new THREE.Group();model.position.set(-center.x,-bounds.min.y,-center.z);visual.add(model);visual.scale.setScalar(height/size.y);visual.rotation.y=Math.PI/2;
-  const root=new THREE.Group();root.add(visual);const materials=new Set(),colorBindings=[];
+  // Pivot the whole animal around its body, not its hooves, while leaning into corners.
+  const bankPivot=new THREE.Group();bankPivot.position.y=height*.46;
+  visual.position.y=-height*.46;bankPivot.add(visual);
+  const root=new THREE.Group();root.add(bankPivot);
+  let bankGoal=0;const materials=new Set(),colorBindings=[];
   model.traverse(object=>{
     if(!object.isMesh)return;object.castShadow=true;object.receiveShadow=true;
     const source=Array.isArray(object.material)?object.material:[object.material];
@@ -54,6 +58,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   const api={
     root,clips:clips.map(clip=>clip.name),
     get hoofPhase(){return gait.phase;},
+    setBank(radians=0){bankGoal=Math.max(-.12,Math.min(.12,Number(radians)||0));},
     setWetness(level){currentWetness=Math.max(0,Math.min(1,Number(level)||0));tintWetness();},
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
     setAppearance({coat:nextCoat=coat,accent:nextAccent=accent,symbol:nextSymbol=symbol}={}){
@@ -65,13 +70,14 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
     update(delta,speed=1){
       gait.reset();
       const step=Math.min(Math.max(delta,0),.10),rate=Math.max(0,speed);
+      bankPivot.rotation.x+=(bankGoal-bankPivot.rotation.x)*(1-Math.exp(-step*5));
       mixer.update(step*rate);
       if(action?.getClip().name==='Gallop'){
         // The native Gallop clip is 0.583s; lock corrective keys to its clock.
         gait.refine(step,rate,action.time/action.getClip().duration);
       }
     },
-    dispose(){gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
+    dispose(){bankGoal=0;bankPivot.rotation.x=0;gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };
   api.setAppearance({coat,accent,symbol});
   api.play(mode,0);mixer.update(phase);return api;
