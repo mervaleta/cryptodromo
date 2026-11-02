@@ -4,11 +4,12 @@ import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('homepage embeds cinematic broadcast and preserves institutional navigation',()=>{
  const html=read('index.html');
- assert.match(html,/\/visual-lab\/scene\.js\?v=alpha15-cinematic-3/);
+ assert.match(html,/\/visual-lab\/scene\.js\?v=alpha16-village-1/);
  assert.match(html,/id="presentation-overlay"/);
  assert.match(html,/id="live-countdown"/);
  assert.match(html,/href="\/racers\/"/);
  assert.match(html,/href="\/institucional\/"/);
+ assert.match(html,/href="\/parade\/"/);
  assert.doesNotMatch(html,/id="startButton"/);
  assert.doesNotMatch(html,/race-lab\/source\/src\/main\.js/);
 });
@@ -16,8 +17,10 @@ test('both 3D views load the scenic expansion without any finance-engine change'
  const lab=read('visual-lab/index.html');
  const scene=read('visual-lab/scene.js');
  const scenery=read('visual-lab/stadiumBackdrop.js');
- assert.match(lab,/alpha15-cinematic-3/);
+ assert.match(lab,/alpha16-village-1/);
  assert.match(scene,/createStadiumBackdrop\(scene,\{softwareGPU,mobile\}\)/);
+ assert.match(scene,/createParadeVillage\(scene,/);
+ assert.doesNotMatch(scene,/box\(820,2\.6,36/);
  assert.match(scenery,/InstancedMesh/);
  assert.match(scenery,/forestN/);
  assert.match(scene,/createOfficialRace\(race\.entries\)/);
