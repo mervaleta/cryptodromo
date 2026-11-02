@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#08110f">
   <meta name="description" content="Explorá el Estadio Satoshi Nakamoto y la Pista Eadweard Muybridge, el universo 3D de Cryptódromo.">
   <link rel="icon" href="/assets/cryptodromo-logo.png">
-  <title>Estadio Satoshi Nakamoto | Cryptódromo</title>
-  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js"}}</script>
+  <title>Estadios de Cryptódromo | Recorrido 3D</title>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
   <script type="module" src="/estadio/estadio.js"></script>
   <link rel="stylesheet" href="/race-lab/source/src/style.css">
   <style>
@@ -28,6 +28,8 @@
     .stadium-copy article{border:1px solid #253d31;background:#101e17;border-radius:10px;padding:18px}
     .stadium-copy h2{font-size:17px;margin:0 0 9px;color:#eaf8ee}.stadium-copy p{font-size:12px;line-height:1.65;color:#90a79b;margin:0}
     .stadium-back{display:inline-block;color:#26d39f;font-size:13px;font-weight:650;margin-top:18px}
+    .stadium-controls label{margin-left:0;flex:1 1 162px;justify-content:space-between;min-width:0}
+    .stadium-controls select{max-width:100%;min-width:0}
     @media(max-width:700px){.stadium-copy{grid-template-columns:1fr}.stadium-controls label{margin-left:0;width:100%}}
     @media(prefers-reduced-motion:reduce){.stadium-controls button{transition:none}}
   </style>
@@ -42,25 +44,42 @@
   </div></header>
   <main class="stadium-page" id="main-content">
     <div class="stadium-eyebrow">La casa de las carreras del mercado</div>
-    <h1>ESTADIO <span>SATOSHI NAKAMOTO</span></h1>
-    <p class="stadium-lead">La pista principal lleva el nombre de <strong>Eadweard Muybridge</strong>, pionero de la fotografía del movimiento. Arquitectura inspirada en los históricos hipódromos de Kentucky, reinterpretada con identidad propia de Cryptódromo.</p>
+    <h1>UN UNIVERSO, <span>TRES ESTADIOS</span></h1>
+    <p class="stadium-lead">Explorá el complejo <strong>Satoshi Nakamoto</strong> con su Pista Eadweard Muybridge, y las futuras sedes de Bolsa y Materias Primas. Un solo generador tridimensional, tres arquitecturas diferentes. La carrera y sus resultados permanecen independientes de la escenografía.</p>
     <section class="stadium-panel" aria-label="Explorador 3D del estadio">
       <div class="stadium-controls">
-        <button id="overview" type="button" aria-pressed="true">Vista panorámica</button>
-        <button id="homestretch" type="button" aria-pressed="false">Recta principal</button>
-        <label for="lighting">Iluminación
-          <select id="lighting"><option value="17.5">Atardecer</option><option value="12">Mediodía</option><option value="22">Noche</option><option value="7">Amanecer</option></select>
-        </label>
-        <label for="climate">Clima
-          <select id="climate"><option value="clear">Despejado</option><option value="rain">Lluvia</option><option value="storm">Tormenta</option><option value="fog">Neblina</option></select>
-        </label>
+        <label for="venue-select">Sede <select id="venue-select" aria-label="Elegir estadio">
+          <option value="satoshi">Satoshi Nakamoto · Cripto</option>
+          <option value="exchange">Estadio de la Bolsa · Acciones</option>
+          <option value="horizon">Estadio Horizonte · Commodities</option>
+        </select></label>
+        <label for="camera-select">Visita <select id="camera-select" aria-label="Elegir vista">
+          <option value="aerial">Panorámica</option>
+          <option value="grandstand">Tribuna y pista</option>
+          <option value="entrance">Acceso y plaza</option>
+          <option value="paddock">Paddock y caballerizas</option>
+          <option value="side">Vista lateral</option>
+        </select></label>
+        <label for="lighting">Hora <select id="lighting">
+          <option value="17.5">Atardecer</option><option value="12">Mediodía</option>
+          <option value="22">Noche</option><option value="7">Amanecer</option>
+        </select></label>
+        <label for="climate">Clima <select id="climate">
+          <option value="clear">Despejado</option><option value="cloudy">Nublado</option>
+          <option value="rain">Lluvia</option><option value="storm">Tormenta</option>
+          <option value="fog">Neblina</option>
+        </select></label>
+        <label for="quality-select">Detalle <select id="quality-select">
+          <option value="low">Bajo</option><option value="medium" selected>Medio</option><option value="high">Alto</option>
+        </select></label>
       </div>
-      <div id="stadiumView"><canvas id="stadiumCanvas" aria-label="Reconstrucción 3D del Estadio Satoshi Nakamoto"></canvas><div id="stadiumNotice" role="status">ESCENOGRAFÍA 3D · DEMOSTRACIÓN</div></div>
+      <div id="stadiumView"><canvas id="stadiumCanvas" aria-label="Reconstrucción 3D del Estadio Satoshi Nakamoto"></canvas><div id="stadiumNotice" role="status">EXPLORADOR 3D · ESCENOGRAFÍA PROCEDURAL</div></div>
     </section>
+    <p class="stadium-lead" id="venue-caption" aria-live="polite">Estadio Satoshi Nakamoto · Pista Eadweard Muybridge · Mercado Cripto</p>
     <div class="stadium-copy">
-      <article><h2>Las dos torres</h2><p>Clubhouse de inspiración decimonónica, torres gemelas, techos oscuros, arquerías y terrazas. Un homenaje arquitectónico, no una réplica oficial.</p></article>
-      <article><h2>Pista Eadweard Muybridge</h2><p>Óvalo de tierra y recta de llegada. La panorámica presenta el trazado completo; el motor de carreras conserva su propia geometría lineal.</p></article>
-      <article><h2>Estadio vivo</h2><p>Tribunas animadas, reflectores nocturnos y clima integrado. Los resultados de las competencias se calculan aparte, a partir de un fixture sintético reproducible.</p></article>
+      <article><h2>Tres arquitecturas</h2><p>Torres históricas para Satoshi, composición art déco para Bolsa e instalaciones industriales para Horizonte. Cada sede tiene su propia personalidad, pero comparte el mismo sistema.</p></article>
+      <article><h2>Complejo deportivo</h2><p>Tribunas, clubhouse, acceso, boleterías, paseo gastronómico, caballerizas, paddock, servicios, jardines, luminarias y vías técnicas.</p></article>
+      <article><h2>Construcción procedural</h2><p>Geometría y materiales compartidos, públicos y vegetación instanciados, niveles de calidad y clima visual. Este recorrido no modifica la pista ni los resultados de carrera.</p></article>
     </div>
     <a class="stadium-back" href="/">← Volver a la carrera</a>
   </main>
