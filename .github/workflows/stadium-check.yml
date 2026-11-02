@@ -5,6 +5,8 @@ on:
       - 'race-lab/source/**'
       - 'estadio/**'
       - 'index.html'
+      - 'tests/stadium-world.mjs'
+      - 'docs/stadium/**'
       - '.github/workflows/stadium-check.yml'
   push:
     branches: [main]
@@ -12,6 +14,8 @@ on:
       - 'race-lab/source/**'
       - 'estadio/**'
       - 'index.html'
+      - 'tests/stadium-world.mjs'
+      - 'docs/stadium/**'
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -27,6 +31,8 @@ jobs:
           node --check race-lab/source/src/main.js
           node --check race-lab/source/src/churchillStadium.js
           node --check estadio/estadio.js
+          node --check race-lab/source/src/stadium/presets.js
+          node --check race-lab/source/src/stadium/venue.js
       - name: Build race application
         working-directory: race-lab/source
         run: |
@@ -34,3 +40,5 @@ jobs:
           npm run build
       - name: Stadium and fixture contract
         run: node tests/stadium-integration.mjs
+      - name: Three stadiums scenic integration and resource lifecycle
+        run: node --test tests/stadium-world.mjs
