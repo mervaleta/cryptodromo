@@ -15,12 +15,12 @@ export function createNightLights(scene,{start=-246,finish=246}={}){
  ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
  const poolTex=new THREE.CanvasTexture(poolCanvas);poolTex.colorSpace=THREE.SRGBColorSpace;
  const positions=[];
- for(let x=start+20;x<=finish-10;x+=69)for(const side of [-1,1])positions.push({x,z:side<0?-33:34});
+ for(let x=start+20;x<=finish-10;x+=69)for(const side of [-1,1])positions.push({x,z:side<0?-33:34,side});
  const lampGeo=new THREE.BoxGeometry(4.0,.62,1.65);
  const beamGeo=new THREE.ConeGeometry(13,29,12,1,true);beamGeo.translate(0,-14.5,0);
  const poolGeo=new THREE.PlaneGeometry(29,28);
  for(let i=0;i<positions.length;i++){
-  const {x,z}=positions[i];
+  const {x,z,side}=positions[i];
   const support=new THREE.Mesh(new THREE.CylinderGeometry(.19,.26,23,8),stem);
   support.position.set(x,11.5,z);support.castShadow=true;root.add(support);supports.push(support);
   const luminaire=new THREE.Mesh(lampGeo,lightMat.clone());luminaire.position.set(x,23.1,z);
