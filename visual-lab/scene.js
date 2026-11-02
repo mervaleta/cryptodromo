@@ -118,6 +118,8 @@ function makeTexture(kind){
 const grassTexture=makeTexture('grass'),earthTexture=makeTexture('earth');
 const grass=mat('#e0eed6',1);grass.map=grassTexture;
 const earth=mat('#f0e2d4',.93);earth.map=earthTexture;
+// Reuse the existing tile as a subtle height detail map: no extra network asset.
+earth.bumpMap=earthTexture;earth.bumpScale=.047;
 box(850,.35,260,0,-.33,0,grass);
 const straightSceneIndex=scene.children.length;
 box(812,.13,38,0,-.06,0,earth);
@@ -617,6 +619,7 @@ function setWeather(mode){
  sun.position.copy(sunDirection).multiplyScalar(135).add(sun.target.position);
  sky.material.uniforms.sunPosition.value.copy(sunDirection).multiplyScalar(150);
  sun.intensity=(night?.14:.3+3.7*illumination)*(wet?.55:1)*lightScale;
+ renderer.toneMappingExposure=night?.94:wet?1.03:illumination<.35?1.10:1.15;
  sun.color.set(night?'#87a2c5':wet?'#bbccd6':illumination<.35?'#ffba7b':'#fff2d5');
  hemi.intensity=(night?.32:.5+1.6*illumination)*(wet?.77:1)*lightScale;
  sky.visible=!night&&!wet;
@@ -667,13 +670,13 @@ function setLayout(mode){
 layoutSelect.addEventListener('change',()=>setLayout(layoutSelect.value));
 function setTrackType(type){
  if(type==='grass'){
-  earth.map=grassTexture;earth.color.set('#bfd09f');earth.roughness=.90;
+  earth.map=grassTexture;earth.bumpMap=grassTexture;earth.bumpScale=.023;earth.color.set('#bfd09f');earth.roughness=.90;
   trackFX.marks.material.color.set('#27451e');
  }else if(type==='synthetic'){
-  earth.map=null;earth.color.set('#a5aaa2');earth.roughness=.66;
+  earth.map=null;earth.bumpMap=null;earth.bumpScale=0;earth.color.set('#a5aaa2');earth.roughness=.66;
   trackFX.marks.material.color.set('#404945');
  }else{
-  earth.map=earthTexture;earth.color.set('#f0e2d4');earth.roughness=.96;
+  earth.map=earthTexture;earth.bumpMap=earthTexture;earth.bumpScale=.047;earth.color.set('#f0e2d4');earth.roughness=.96;
   trackFX.marks.material.color.set('#493526');
  }
  earthBaseColor=earth.color.clone();earthBaseRough=earth.roughness;
@@ -883,6 +886,7 @@ function updateEnvironment(){
    // All stadium surfaces retain accumulated dampness even after rain stops.
    earth.color.copy(earthBaseColor).lerp(new THREE.Color('#34342e'),wet*.49);
    earth.roughness=Math.max(.19,earthBaseRough-wet*.57);
+   earth.bumpScale=(trackType.value==='grass'?.023:trackType.value==='synthetic'?0:.047)*(1-wet*.62);
    grass.color.copy(grassBase).lerp(new THREE.Color('#536147'),wet*.41);
    C.roof.color.copy(roofBase).lerp(new THREE.Color('#1c2825'),wet*.38);
    C.roof.roughness=.46-wet*.24;
