@@ -36,12 +36,13 @@ export function createPreview(canvas,onFailure=()=>{}){
      if(disposed||request!==pending)return;
      if(renderer){
        texture?.dispose();sprite?.material?.dispose();if(sprite)scene.remove(sprite);
-       texture=createVectorHorseTexture(THREE,master,token,{size:512,fps:12,zoomToArt:true});
+       texture=createVectorHorseTexture(THREE,master,token,{size:768,fps:12,zoomToArt:true});
+       texture.setStyle({dust:1.1,shadow:1.15});
        const material=new THREE.SpriteMaterial({map:texture.texture,transparent:true,depthWrite:false,alphaTest:.015,toneMapped:false});
        sprite=new THREE.Sprite(material);const size=4.1*Math.min(1,stageAspect);sprite.scale.set(size,size,1);scene.add(sprite);
        texture.update(elapsed);
      }
-     indicator&&(indicator.textContent='VECTORIAL · 12 POSES · SOMBRAS Y POLVO');
+     indicator&&(indicator.textContent='VECTORIAL · CONTORNOS HD · 12 POSES');
    }catch(error){if(disposed||request!==pending)return;console.error('Vector horse failed:',error);onFailure(token,error);}
  }
  function pause(value){paused=!!value;}
@@ -53,7 +54,7 @@ export function createPreview(canvas,onFailure=()=>{}){
      const scale=Math.min(canvas.width/158,canvas.height/120);
      const dx=(canvas.width-158*scale)*.5-12*scale;
      const dy=(canvas.height-100*scale)*.5-76*scale;
-     drawHorse(context,master,{frame:Math.floor(elapsed*12),palette:paletteForToken(selected),scale,offsetX:dx,offsetY:dy,dustLevel:1.2,shadowLevel:1.1});
+     drawHorse(context,master,{frame:Math.floor(elapsed*12),palette:paletteForToken(selected),scale,offsetX:dx,offsetY:dy,dustLevel:1.1,shadowLevel:1.15});
    }
    frameId=requestAnimationFrame(tick);
  }
