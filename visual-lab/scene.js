@@ -251,6 +251,7 @@ function showOfficialResult(){
  msg.textContent='El resultado se congeló a 60 s; los caballos desaceleran después de la meta.';
  statContent.textContent='Ganador: '+stats.leader+' · margen '+stats.leadGapMeters.toFixed(2)+
     ' m · dispersión '+stats.spreadMeters.toFixed(2)+' m · variación media '+stats.averageChangePct.toFixed(3)+'%.';
+ updateStandings(); // freeze HUD immediately on official result, independent of GPU frame rate
 }
 const horseCoats=['#6c4731','#b18053','#342a26','#d3b48f','#a65f36','#5d5d62','#a78c66','#332c2a','#a28467','#c49a74','#5b4134','#d4bda8'];
 async function bootHorses(){
