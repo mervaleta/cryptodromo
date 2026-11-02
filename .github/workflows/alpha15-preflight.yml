@@ -1,0 +1,31 @@
+name: Alpha15 isolated preflight
+on:
+  push:
+    branches: ['prep/alpha15-director-telemetry-editorial']
+    paths:
+      - 'alpha15/**'
+      - 'tests/alpha15-prep.mjs'
+      - '.github/workflows/alpha15-preflight.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'alpha15/**'
+      - 'tests/alpha15-prep.mjs'
+      - '.github/workflows/alpha15-preflight.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  alpha15-pure-modules:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse isolated Alpha15 modules
+        run: |
+          for p in alpha15/*.js alpha15/preview/*.js tests/alpha15-prep.mjs; do node --check "$p"; done
+      - name: Test synthetic racing records, editorial, TV direction and stable finish
+        run: node --test tests/alpha15-prep.mjs
