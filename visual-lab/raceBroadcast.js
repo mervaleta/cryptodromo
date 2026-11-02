@@ -12,6 +12,16 @@ export function coastDistance(metersAt60,velocityAt60,secondsPastFinish){
 export function coastSpeed(velocityAt60,secondsPastFinish){
  return Math.max(0,velocityAt60)*Math.exp(-Math.max(0,secondsPastFinish)/RUNOUT_TAU);
 }
+// Runout is cinematic only, never alters the 60-second score. A minimum
+// cruise on the exit straight guarantees the final runner crosses camera's
+// finish stripe before results are superimposed.
+export function broadcastRunoutDistance(profile,officialFinish,t){
+ const elapsed=Math.max(0,t);
+ const nominal=coastDistance(profile.distanceAt60,profile.exitVelocity,elapsed);
+ const required=Math.max(0,officialFinish-profile.distanceAt60);
+ const minCruise=Math.max(1.6,required/12.8);
+ return Math.max(nominal,profile.distanceAt60+minCruise*elapsed);
+}
 export function narrateEvent({type,leader,previous,elapsed=0,changes=0}={}){
  const name=String(leader||'el puntero'),former=String(previous||'el pelotón');
  const slot=Math.max(0,Math.floor(elapsed/5));
