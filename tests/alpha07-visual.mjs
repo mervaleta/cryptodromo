@@ -30,7 +30,7 @@ test('Alpha07 1-second official finish hold, fade-in and positive runout',()=>{
  assert.match(scene,/trackFX\.update/);
  assert.match(html,/\.result-overlay\.is-visible\{opacity:1/);
  assert.match(html,/transition:opacity \.85s/);
- assert.match(scene,/resultOverlay\.classList\.add\('is-visible'\)/);
+ assert.match(scene,/resultsOverlay\.classList\.add\('is-visible'\)/);
  const ground=read('visual-lab/trackSurface.js');
  assert.match(ground,/new THREE\.InstancedMesh/);
  assert.match(ground,/puddleMat\.opacity=wetness/);
