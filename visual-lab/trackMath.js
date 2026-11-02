@@ -20,7 +20,7 @@ export function trackPoint(mode,progress,lane=5.5){
   const halfStraight=250,radius=72;
   const straightLength=2*halfStraight,arcLength=Math.PI*radius;
   const loopLength=2*(straightLength+arcLength);
-  const distance=(p%1)*loopLength;
+  const distance=Math.min(p,1)*loopLength;
   let cx,cz,vx,vz;
   if(distance<straightLength){
    cx=-halfStraight+distance;cz=radius;vx=1;vz=0;
