@@ -86,7 +86,7 @@ test('Parade is isolated from finance, scene has real horse walk and accessible 
    'sight','follow-horse','parade-canvas','fps']){
   assert.ok(html.includes('id="'+id+'"'),'missing '+id);
  }
- assert.match(html,/parade\.js\?v=alpha16-1/);
+ assert.match(html,/parade\.js\?v=alpha16-night-2/);
  assert.match(module,/createHorse/);
  assert.match(module,/pickClip/);
  assert.match(module,/\bWalk\b/);
