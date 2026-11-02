@@ -37,6 +37,15 @@ export function trackPoint(mode,progress,lane=5.5){
   }
   const len=Math.hypot(vx,vz)||1,nx=-vz/len,nz=vx/len;
   x=cx+side*nx;z=cz+side*nz;dx=vx;dz=vz;
+  // A race ends after one lap. Its visual runout must leave the scoring
+  // loop on the EXIT TANGENT instead of wrapping back across the start.
+  // Distance is scaled to the visual course, not the finance engine.
+  if(p>1){
+   const tangentLength=Math.hypot(dx,dz)||1;
+   const overrun=Math.min(120,(p-1)*COURSE_LENGTH);
+   x+=overrun*dx/tangentLength;
+   z+=overrun*dz/tangentLength;
+  }
  }else{
   x=-390+780*p;z=side;dx=780;dz=0;
  }
