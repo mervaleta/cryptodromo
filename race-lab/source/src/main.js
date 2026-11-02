@@ -186,7 +186,7 @@ auditAction.addEventListener('click',()=>{
   link.href=url;link.download='cryptodromo-dia-'+currentRace.day+'-carrera-'+currentRace.number+'.json';link.click();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
 });
-document.querySelector('#marketMove').addEventListener('input',e=>{marketInput=Number(e.target.value)/1000;const label=document.querySelector('#moveValue');label.textContent=`${marketInput>=0?'+':''}${(marketInput*100).toFixed(1)}%`;label.style.color=marketInput<0?'#ff7580':'#1ce1a2';document.querySelector('#marketMessage').textContent='Solo animación visual · resultados por precio';});
+document.querySelector('#marketMove').addEventListener('input',e=>{marketInput=Number(e.target.value)/1000;const label=document.querySelector('#moveValue');label.textContent=`${Math.max(.55,1+marketInput*8).toFixed(2)}×`;label.style.color=marketInput<0?'#ff7580':'#1ce1a2';document.querySelector('#marketMessage').textContent='Solo animación visual · resultados por precio';});
 updateRaceHeader();
 
 function timeColors(value){const hour=value/6;const stops=[{h:0,sky:0x07101d,sun:0x7a90d1,intensity:.3},{h:5,sky:0x382a4e,sun:0xf68a62,intensity:.72},{h:7,sky:0x86a9c0,sun:0xffd6a0,intensity:1.45},{h:12,sky:0x74b5d3,sun:0xfff3d4,intensity:2.15},{h:17,sky:0xe18463,sun:0xffac67,intensity:1.35},{h:20,sky:0x252e55,sun:0xc28ca7,intensity:.65},{h:24,sky:0x07101d,sun:0x7a90d1,intensity:.3}];let a=stops[0],b=stops[1];for(let i=0;i<stops.length-1;i++)if(hour>=stops[i].h&&hour<=stops[i+1].h){a=stops[i];b=stops[i+1];break;}const t=THREE.MathUtils.clamp((hour-a.h)/(b.h-a.h),0,1);return{sky:new THREE.Color(a.sky).lerp(new THREE.Color(b.sky),t),sun:new THREE.Color(a.sun).lerp(new THREE.Color(b.sun),t),intensity:THREE.MathUtils.lerp(a.intensity,b.intensity,t)};}
