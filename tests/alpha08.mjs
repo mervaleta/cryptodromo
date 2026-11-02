@@ -66,4 +66,5 @@ test('procedural fur, normals, original token tattoo and audio work without adde
  assert.match(scene,/liveFollowing/);
  assert.match(scene,/SINTONIZAR LIVE/);
  assert.match(scene,/VISUAL_START_X=-320,VISUAL_FINISH_X=320/);
+ assert.match(scene,/for\(let x=-336;x<=336;x\+=8\)box/);
 });
