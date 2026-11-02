@@ -27,7 +27,7 @@ try{
  const initial=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,canvas:[document.querySelector('canvas').width,document.querySelector('canvas').height],horses:document.querySelectorAll('#standings li').length}));
  console.log('SCENE_INIT',JSON.stringify(initial));
  const deployedScript=await page.evaluate(async()=>{
-  const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha07-'+Date.now(),{cache:'no-store'})).text();
+  const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha08-'+Date.now(),{cache:'no-store'})).text();
   return {hasRunout:source.includes('coastDistance(p.distanceAt60,exitVelocity,elapsed-60)'),
    hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha08-surface-1'),
    length:source.length,engineStatus:document.querySelector('#race-biography')?.textContent};
@@ -45,6 +45,26 @@ try{
  assert.match(await verifiedLogo.text(),/^<svg /);
  const otherLogo=await page.request.get('https://race.cryptodromo.com/assets/crypto-logos/eth.svg');
  assert.equal(otherLogo.status(),200,'ETH SVG must be local on Hostinger');
+ // All three courses must be selectable and draw with the same 12 horses.
+ await page.selectOption('#layout','s-bend');
+ assert.equal(await page.locator('#layout').inputValue(),'s-bend');
+ await page.waitForTimeout(180);
+ await page.selectOption('#layout','oval');
+ assert.equal(await page.locator('#layout').inputValue(),'oval');
+ await page.waitForTimeout(180);
+ await page.selectOption('#layout','straight');
+ const nowLabel=await page.locator('#live-current').innerText();
+ console.log('LIVE_SCHEDULE',JSON.stringify({
+   current:nowLabel,
+   previous:await page.locator('#live-previous').innerText(),
+   next:await page.locator('#live-next-label').innerText(),
+   status:await page.locator('#live-state').innerText()
+ }));
+ assert.match(nowLabel,/^\d{2}:\d{2}$/);
+ await page.click('#live-now');
+ assert.match(await page.locator('#live-now').innerText(),/SALIR/);
+ await page.click('#live-now');
+ await page.click('#reset');
  await page.selectOption('#surface','grass');
  assert.equal(await page.locator('#surface').inputValue(),'grass');
  await page.selectOption('#surface','synthetic');
@@ -79,6 +99,9 @@ try{
  await page.click('#tab-race');
  await page.selectOption('#weather','golden');
  await page.click('#start');
+ const autoAudio=await page.locator('#sound').getAttribute('aria-pressed');
+ console.log('AUDIO_UNLOCK',JSON.stringify({autoAudio,volume:await page.locator('#audio-volume').inputValue()}));
+ if(await page.evaluate(()=>!!(window.AudioContext||window.webkitAudioContext)))assert.equal(autoAudio,'true');
  await page.waitForTimeout(6500);
  const clock=await page.locator('#clock').innerText();
  console.log('CLOCK_AFTER_START',clock);
