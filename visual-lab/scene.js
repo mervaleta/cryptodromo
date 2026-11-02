@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
-import {trackPoint} from './trackMath.js?v=a09-1';
+import {trackPoint} from './trackMath.js?v=a11-oval-1';
 import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
-import {createAlternativeTracks} from './trackVisuals.js?v=a09-1';
+import {createAlternativeTracks} from './trackVisuals.js?v=a11-oval-1';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
 import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
@@ -544,23 +544,60 @@ for(const [id,offset] of [['#live-prev',-1],['#live-next',1]]){
 }
 syncControlMode();
 updateLiveProgram();setInterval(updateLiveProgram,550);
+const daytimeInput=document.querySelector('#daytime');
+const daytimeAuto=document.querySelector('#daytime-auto');
+const daytimeLabel=document.querySelector('#daytime-label');
+const sunlightInput=document.querySelector('#sunlight');
+const sunlightLabel=document.querySelector('#sunlight-label');
+const angleInput=document.querySelector('#camera-angle'),heightInput=document.querySelector('#camera-height');
+const angleLabel=document.querySelector('#camera-angle-label'),heightLabel=document.querySelector('#camera-height-label');
+const stadiumClock=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+function currentStadiumMinutes(){
+ const [hour,minute]=stadiumClock.format(new Date()).split(':').map(Number);
+ return hour*60+minute;
+}
+function getSolarMinutes(){return daytimeAuto.checked?currentStadiumMinutes():Number(daytimeInput.value);}
+function isSolarNight(){const hour=getSolarMinutes()/60;return hour<6||hour>=19;}
 function setWeather(mode){
- const night=mode==='night',wet=mode==='rain';
- sun.intensity=night?.28:wet?1.6:mode==='noon'?4.1:3.2;
- sun.color.set(night?'#769bc0':wet?'#b8c5d0':mode==='noon'?'#fff7e4':'#ffdaa7');
- const sunPos=night?[-100,-5,10]:wet?[-60,30,65]:mode==='noon'?[25,120,45]:[-100,43,100];
- sun.position.set(...sunPos);sky.material.uniforms.sunPosition.value.copy(sun.position);
+ const minute=getSolarMinutes(),hour=minute/60;
+ if(daytimeAuto.checked)daytimeInput.value=String(minute);
+ daytimeLabel.textContent=(daytimeAuto.checked?'AUTO · ':'')+String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');
+ const lightScale=Number(sunlightInput.value)/100;
+ sunlightLabel.textContent=Math.round(lightScale*100)+'%';
+ const wet=mode==='rain',solar=Math.max(0,Math.sin((hour-6)/13*Math.PI));
+ const night=mode==='night'||(mode!=='noon'&&mode!=='golden'&&solar<.025);
+ const illumination=mode==='night'?0:mode==='noon'?1:mode==='golden'?.34:solar;
+ const azimuth=(hour-12)/12*Math.PI;
+ const elevation=Math.max(-.12,Math.sin((hour-6)/13*Math.PI));
+ sun.position.set(Math.sin(azimuth)*115,120*elevation,Math.cos(azimuth)*110);
+ sky.material.uniforms.sunPosition.value.copy(sun.position);
+ sun.intensity=(night?.14:.3+3.7*illumination)*(wet?.55:1)*lightScale;
+ sun.color.set(night?'#87a2c5':wet?'#bbccd6':illumination<.35?'#ffba7b':'#fff2d5');
+ hemi.intensity=(night?.32:.5+1.6*illumination)*(wet?.77:1)*lightScale;
  sky.visible=!night&&!wet;
- sky.material.uniforms.turbidity.value=wet?11:mode==='noon'?2.2:6.2;
- sky.material.uniforms.rayleigh.value=mode==='noon'?1.25:2.55;
- hemi.intensity=night?.5:wet?1.05:1.9;scene.background=new THREE.Color(night?'#101b2c':wet?'#849a9f':mode==='noon'?'#91c7e7':'#c1c9ba');
- scene.fog.color.set(night?'#172130':wet?'#92a6a8':'#b9c6b8');scene.fog.density=wet?.0075:.0036;
+ sky.material.uniforms.turbidity.value=wet?12:illumination<.3?7:3.3;
+ sky.material.uniforms.rayleigh.value=illumination<.3?3.0:1.7;
+ const background=night?'#111a2c':wet?'#8499a5':illumination<.3?'#c17e73':'#8dbfdf';
+ scene.background.set(background);
+ scene.fog.color.set(night?'#152031':wet?'#899da5':illumination<.3?'#b5a39a':'#b3c9c6');
+ scene.fog.density=wet?.0075:.0036;
  rain.visible=wet;
- for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?90:0;}
+ for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?85:0;}
  nightLights.configure({night});
 }
-weatherSelect.addEventListener('change',()=>setWeather(weatherSelect.value));setWeather('golden');
+weatherSelect.value='auto';
+weatherSelect.addEventListener('change',()=>{setWeather(weatherSelect.value);applyLightingControls();});
+for(const el of [daytimeInput,daytimeAuto,sunlightInput]){
+ el.addEventListener('input',()=>{
+  if(el===daytimeInput)daytimeAuto.checked=false;
+  setWeather(weatherSelect.value);applyLightingControls();
+ });
+ el.addEventListener('change',()=>{setWeather(weatherSelect.value);applyLightingControls();});
+}
+setWeather('auto');
+setInterval(()=>{if(daytimeAuto.checked)setWeather(weatherSelect.value);},30000);
 const trackType=document.querySelector('#surface'),cameraZoom=document.querySelector('#camera-zoom');
+const zoomLabel=document.querySelector('#camera-zoom-label');
 const wetState=document.querySelector('#wet-state');
 let earthBaseColor=earth.color.clone(),earthBaseRough=.96,lastWetUpdate=0;
 const roofBase=C.roof.color.clone(),stoneBase=C.concrete.color.clone(),grassBase=grass.color.clone();
@@ -592,7 +629,9 @@ function setTrackType(type){
 }
 trackType.addEventListener('change',()=>setTrackType(trackType.value));
 setTrackType(trackType.value);
-cameraZoom.addEventListener('input',()=>{camera.fov=Number(cameraZoom.value);camera.updateProjectionMatrix();});
+cameraZoom.addEventListener('input',()=>{camera.fov=Number(cameraZoom.value);zoomLabel.textContent=camera.fov+'°';camera.updateProjectionMatrix();});
+angleInput.addEventListener('input',()=>{angleLabel.textContent=angleInput.value+'°';});
+heightInput.addEventListener('input',()=>{heightLabel.textContent=heightInput.value+' m';});
 
 // The lighting console is its own accessible tab. It never touches race data.
 const tabRace=document.querySelector('#tab-race'),tabLight=document.querySelector('#tab-light');
@@ -620,9 +659,9 @@ function applyLightingControls(){
   dimmer:intensity/100,
   color:lightColor.value,
   effect:lightPattern.value,
-  night:weatherSelect.value==='night'
+  night:isSolarNight()||weatherSelect.value==='night'
  });
- const mode=weatherSelect.value==='night'?'noche':'día';
+ const mode=(isSolarNight()||weatherSelect.value==='night')?'noche':'día';
  lightStatus.textContent=(lightPower.checked?'Reflectores activos':'Reflectores apagados')+
    ' · '+intensity+'% · '+mode+' · '+lightPattern.options[lightPattern.selectedIndex].textContent+
    ' · sin influencia en la clasificación.';
@@ -667,6 +706,12 @@ function adjustCamera(dt){
    target.set(point.x+tx*17,2.05,point.z+tz*17);
  }
  const blend=cameraBlend(dt,mode==='finish'?1.8:2.7);
+ // Orbit manual rotation around the look-at point, independent of zoom and height.
+ const theta=Number(angleInput.value)*Math.PI/180;
+ const offsetX=goal.x-target.x,offsetZ=goal.z-target.z;
+ goal.x=target.x+offsetX*Math.cos(theta)-offsetZ*Math.sin(theta);
+ goal.z=target.z+offsetX*Math.sin(theta)+offsetZ*Math.cos(theta);
+ goal.y=Math.max(1.2,goal.y+Number(heightInput.value));
  camera.position.lerp(goal,blend);
  if(!cameraFocusReady){cameraFocus.copy(target);cameraFocusReady=true;}
  else cameraFocus.lerp(target,cameraBlend(dt,3.8));
