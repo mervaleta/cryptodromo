@@ -1,4 +1,4 @@
-import {getStadiumPreset} from '/race-lab/source/src/stadium/presets.js';
+import {getStadiumPreset} from '../race-lab/source/src/stadium/presets.js';
 
 /**
  * Alpha14 scenery adapter. Reuses the SAME venue identity / palette as /estadio/.
