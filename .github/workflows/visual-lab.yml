@@ -2,7 +2,7 @@ name: Cinematic visual lab verification
 on:
   push:
     branches: [main]
-    paths: ['index.html','visual-lab/**','fixture/**','resultados/**','estadisticas/**','apuestas/**','assets/race-site-hub.css','race-lab/source/src/horse.js','race-lab/source/src/horseLivery.js','race-lab/source/src/horseSurface.js','race-lab/source/src/gaitRefiner.js','assets/crypto-logos/**','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/alpha07-visual.mjs','tests/alpha08.mjs','tests/alpha09.mjs','tests/alpha11-oval.mjs','tests/alpha12-curve-contact.mjs','tests/alpha13-home.mjs','tests/alpha14-site.mjs','tests/alpha14-pages-browser.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
+    paths: ['index.html','visual-lab/**','fixture/**','resultados/**','estadisticas/**','cronicas/**','alpha15/**','apuestas/**','assets/race-site-hub.css','race-lab/source/src/horse.js','race-lab/source/src/horseLivery.js','race-lab/source/src/horseSurface.js','race-lab/source/src/gaitRefiner.js','assets/crypto-logos/**','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/alpha07-visual.mjs','tests/alpha08.mjs','tests/alpha09.mjs','tests/alpha11-oval.mjs','tests/alpha12-curve-contact.mjs','tests/alpha13-home.mjs','tests/alpha14-site.mjs','tests/alpha14-pages-browser.mjs','tests/alpha15-prep.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
   workflow_dispatch:
 concurrency:
   group: visual-lab-${{ github.ref }}
@@ -24,6 +24,12 @@ jobs:
       - name: Parse all browser modules
         run: |
           node --check visual-lab/scene.js
+          node --check visual-lab/cloudLayer.js
+          node --check cronicas/cronicas.js
+          node --check alpha15/chronicle.js
+          node --check alpha15/careers.js
+          node --check alpha15/quality.js
+          node --check alpha15/finishOrchestrator.js
           node --check fixture/fixture.js
           node --check resultados/resultados.js
           node --check apuestas/apuestas.js
@@ -61,10 +67,12 @@ jobs:
         run: node --test tests/alpha13-home.mjs
       - name: Verify Alpha14 site, 100 horse identities, bots and runout
         run: node --test tests/alpha14-site.mjs
+      - name: Verify Alpha15 director, finish, form and synthetic editorial logic
+        run: node --test tests/alpha15-prep.mjs
       - name: Verify financial outcome and all 3360 choreographed races
         run: node --test tests/cinematic-choreography.mjs
       - name: Verify live cinematic scene
-        run: node tests/visual-lab-browser.mjs
+        run: CAPTURE_SCREENSHOTS=1 node tests/visual-lab-browser.mjs
       - name: Verify fixture results statistics and disabled betting pages on Hostinger
         run: node tests/alpha14-pages-browser.mjs
       - name: Verify live official finish after 60s and overlay
@@ -73,6 +81,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cryptodromo-cinematic-alpha14
+          name: cryptodromo-cinematic-alpha15
           path: artifacts/
           if-no-files-found: ignore
