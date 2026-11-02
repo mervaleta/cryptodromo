@@ -1,5 +1,5 @@
 import {syntheticRaceRecord} from './raceRecords.js';
-import {RACES_PER_DAY,FIXTURE_DAYS} from '../race-lab/source/src/data/raceFixture.js';
+import {RACES_PER_DAY,FIXTURE_DAYS} from '../race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 /**
  * Editorial generator for synthetic races, NOT the separate real-source Gazette.
  * Only uses deterministic outcomes up to the supplied day and slot.
