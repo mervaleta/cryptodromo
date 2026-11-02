@@ -1,4 +1,4 @@
-import { TOKEN_ROSTER } from './tokenRoster.js';
+import { TOKEN_ROSTER } from './tokenRoster.js?v=coat-20261102';
 
 export const FIXTURE_DAYS = 7;
 export const MINUTES_PER_DAY = 1440;
