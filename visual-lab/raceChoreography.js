@@ -11,7 +11,7 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export const STEP_SECONDS=5;
 export const SEGMENTS=12;
 export const FIRST_DOSES=9;
-export function buildBroadcastProfiles(profiles,{strength=0.83}={}){
+export function buildBroadcastProfiles(profiles,{strength=0.47}={}){
   if(!Array.isArray(profiles)||profiles.length!==12)throw Error('Requires 12 price-derived official profiles');
   return profiles.map(p=>{
     const w=[];
