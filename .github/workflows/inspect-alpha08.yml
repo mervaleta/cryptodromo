@@ -1,0 +1,33 @@
+name: Inspect live Alpha08 modules
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/inspect-alpha08.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  endpoints:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check every production JS module and content type
+        shell: bash
+        run: |
+          set -uo pipefail
+          for path in \
+            /visual-lab/scene.js \
+            /visual-lab/trackMath.js \
+            /visual-lab/trackVisuals.js \
+            /visual-lab/liveSchedule.js \
+            /visual-lab/raceAudio.js \
+            /race-lab/source/src/horse.js \
+            /race-lab/source/src/horseSurface.js \
+            /race-lab/source/src/horseLivery.js; do
+            name=$(basename "$path")
+            printf '%s | ' "$path"
+            curl -L --max-time 18 -sS -o /tmp/inspect-js -w 'HTTP=%{http_code} TYPE=%{content_type} BYTES=%{size_download}\n' "https://race.cryptodromo.com$path?alpha08-verify=1" || true
+            head -c 100 /tmp/inspect-js | tr '\n' ' '
+            printf '\n'
+            if grep -qa '<!doctype html' /tmp/inspect-js; then echo '!!! HTML returned for JS module'; fi
+            if grep -qa 'The page you are looking' /tmp/inspect-js; then echo '!!! 404 fallback'; fi
+          done
