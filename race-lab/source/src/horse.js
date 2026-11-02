@@ -41,9 +41,10 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   // The token identity is pigment in the model's own fur, never a hovering sign.
   const identity=createFurIdentity(colorBindings);
   const mixer=new THREE.AnimationMixer(model),clips=asset.animations.filter(clip=>!clip.name.includes('|'));let action;
-  const gait=createGaitRefiner(model,{strength:.27});
+  const gait=createGaitRefiner(model,{strength:.40});
   const api={
     root,clips:clips.map(clip=>clip.name),
+    get hoofPhase(){return gait.phase;},
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
     setAppearance({coat:nextCoat=coat,accent:nextAccent=accent,symbol:nextSymbol=symbol}={}){
       identity.apply({coat:nextCoat,accent:nextAccent,symbol:nextSymbol});
