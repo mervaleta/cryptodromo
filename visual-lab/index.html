@@ -37,12 +37,23 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 .foot{font-size:11px;color:#7d9289;padding:20px 1px;line-height:1.6}.foot a{color:#9dcbb6}
 @media(max-width:890px){.below{grid-template-columns:1fr}.stage{height:520px}.top nav{display:none}#standings{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.stage{height:450px}.dial strong{font-size:30px}.broadcast{left:10px;top:10px;font-size:9px}.lowerthird strong{font-size:17px}.leader strong{font-size:20px}}
+.race-tabs{display:flex;gap:8px;margin:0 0 17px;border-bottom:1px solid #3b5846;padding-bottom:10px}
+.race-tabs button{min-height:36px;padding:9px 13px;border-radius:2px;background:#101e1a;border-color:#364f41;font-size:10px;letter-spacing:.09em;font-weight:800}
+.race-tabs button.active{background:#c8a46d;border-color:#c8a46d;color:#101610}
+.light-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));align-items:center;gap:15px}
+.light-controls label{display:flex;flex-direction:column;align-items:flex-start;gap:7px;font-size:10px;letter-spacing:.09em;color:#d1e4d9;line-height:1.3}
+.light-controls input[type=range]{width:100%;accent-color:#d8b77b}
+.light-controls input[type=color]{width:66px;height:44px;padding:5px;background:#122820;border:1px solid #597363}
+.light-controls input[type=checkbox]{accent-color:#d8b77b;width:19px;height:19px}
+.light-controls .light-switch{flex-direction:row;align-items:center;gap:9px;white-space:normal}
+.light-controls #light-preview{border-color:#a88b56;color:#f4d4a5}
+[hidden]{display:none!important}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head><body>
-<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera anterior</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 04</span></header>
+<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera anterior</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 05</span></header>
 <main class="shell">
-<div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS SIN JOCKEY · PISTA EXTENDIDA · 60 SEGUNDOS</small></div>
+<div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS SIN JOCKEY · PISTA +20% · 60 SEGUNDOS</small></div>
 <div class="stage" id="stage">
 <canvas id="raceCanvas" aria-label="Estadio de carreras 3D con doce caballos, gradas y cámaras de transmisión"></canvas>
 <div class="broadcast"><b>● DEMO</b><span>CRYPTÓDROMO WORLD FEED</span></div>
@@ -50,13 +61,26 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <div class="lowerthird"><div><div class="overline" id="status">CARGANDO ESCENARIO 3D</div><strong id="raceName">GRAN PREMIO CRIPTO · CARRERA 001</strong><p id="message">Datos sintéticos, resultados predeterminados y sin apuestas</p></div><div class="leader"><div>AL FRENTE</div><strong id="leader">BTC</strong></div></div>
 </div>
 <div class="below">
-<section class="panel"><h2>Dirección de carrera</h2><div class="controlrow">
+<section class="panel"><h2>Dirección de carrera</h2>
+<div class="race-tabs" role="tablist" aria-label="Panel de carrera y luces">
+<button type="button" class="active" role="tab" id="tab-race" aria-selected="true" aria-controls="panel-race">CARRERA / CLIMA</button>
+<button type="button" role="tab" id="tab-light" aria-selected="false" aria-controls="panel-light">✦ ILUMINACIÓN</button>
+</div>
+<div id="panel-race" role="tabpanel" aria-labelledby="tab-race"><div class="controlrow">
 <button class="primary" id="start" disabled>▶ PREPARANDO CABALLOS</button>
 <button id="reset">↺ REINICIAR</button><button id="next">SIGUIENTE CARRERA ›</button>
 <label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Toma aérea</option><option value="finish">Meta</option></select></label>
 <label>ATMÓSFERA<select id="weather"><option value="golden">Atardecer</option><option value="noon">Pleno día</option><option value="night">Noche</option><option value="rain">Lluvia</option></select></label>
-</div><p class="micro">Prototipo visual en Three.js, reconstruido con pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></section>
+</div><p class="micro">Prototipo visual en Three.js, reconstruido con pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></div>
+<div id="panel-light" role="tabpanel" aria-labelledby="tab-light" hidden>
+<div class="light-controls"><label class="light-switch"><input type="checkbox" id="light-power" checked/> REFLECTORES ENCENDIDOS</label>
+<label>POTENCIA / DIMMER <span id="light-level" aria-live="polite">84%</span><input id="light-dimmer" type="range" min="0" max="100" value="84" step="1"/></label>
+<label>COLOR DEL HAZ <input id="light-color" type="color" value="#fff3d4" aria-label="Color de los reflectores"/></label>
+<label>JUEGO DE LUCES <select id="light-pattern"><option value="steady">Fijo / transmisión TV</option><option value="pulse">Pulsación</option><option value="chase">Secuencial</option><option value="wave">Barrido</option><option value="rainbow">Festival cromático</option></select></label>
+<button id="light-preview" type="button">☾ VER EL ESTADIO DE NOCHE</button></div>
+<p class="micro" id="light-status" role="status">Los reflectores iluminan el piso y los caballos. En modo noche el sistema regula la exposición visual de la pista. Efectos cosméticos, nunca alteran el ganador.</p>
+</div></section>
 <section class="panel"><h2>Clasificación en pista</h2><ol id="standings"></ol></section>
 </div>
 <footer class="foot">CRYPTÓDROMO · laboratorio visual. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
-</main><script type="module" src="./scene.js?v=alpha04-3"></script></body></html>
+</main><script type="module" src="./scene.js?v=alpha05-lights-cruise-1"></script></body></html>
