@@ -7,6 +7,13 @@ import * as THREE from 'three';
 export function createNightLights(scene,{start=-246,finish=246}={}){
  const root=new THREE.Group();root.name='Satoshi Nakamoto · adjustable floodlighting';scene.add(root);
  const fixtures=[],beams=[],pools=[],supports=[];
+ // Wide fill ensures the entire straight is usable at night, between spot pools.
+ // The dimmer and master switch control this fill as well.
+ const courseFill=new THREE.DirectionalLight('#dae9ff',0);
+ courseFill.position.set(0,96,68);courseFill.target.position.set(0,0,0);
+ courseFill.castShadow=false;root.add(courseFill,courseFill.target);
+ const arenaBounce=new THREE.HemisphereLight(0xbfd7e6,0x173328,0);
+ root.add(arenaBounce);
  const stem=new THREE.MeshStandardMaterial({color:'#465b59',metalness:.74,roughness:.33});
  const lightMat=new THREE.MeshStandardMaterial({color:'#fff4cd',emissive:'#ffffff',emissiveIntensity:0,metalness:.05,roughness:.24});
  const poolCanvas=document.createElement('canvas');poolCanvas.width=poolCanvas.height=128;
@@ -52,6 +59,10 @@ export function createNightLights(scene,{start=-246,finish=246}={}){
  function update(seconds=0){
   const base=state.enabled?(state.night?1:.30)*state.dimmer:0;
   original.set(state.color);
+  courseFill.color.copy(original).lerp(new THREE.Color('#c4dff5'),.34);
+  courseFill.intensity=base*.85;
+  arenaBounce.color.copy(original).lerp(new THREE.Color('#bcd6eb'),.6);
+  arenaBounce.intensity=base*.42;
   for(let i=0;i<fixtures.length;i++){
    const f=fixtures[i],phase=i/fixtures.length,theta=seconds;
    let gain=1,color=original;
