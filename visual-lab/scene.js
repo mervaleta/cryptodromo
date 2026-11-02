@@ -8,7 +8,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createParadeVillage} from '../parade/scenery.js?v=alpha16-live-1';
-import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
+import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha15-runout-1';
