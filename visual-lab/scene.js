@@ -713,6 +713,7 @@ function applyQualityPreset(next){
   }
  }
  activeQuality=next;
+ liveDistrict.setQuality(next);
  graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
   (graphicsModeSelect.value==='auto'?' · AUTO':'');
  resize();
