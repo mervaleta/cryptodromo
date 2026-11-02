@@ -12,7 +12,7 @@ test('alpha05 extends visual course by 20% without changing the two-price financ
  assert.match(scene,/goal\.set\(0,290,155\)/);
  assert.match(scene,/createNightLights/);
  assert.match(scene,/VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X/);
- assert.match(scene,/broadcastPosition\(broadcastProfiles\[i\],elapsed\)/);
+ assert.match(scene,/broadcastPosition\(p,elapsed\)/);
  assert.match(scene,/VISUAL_START_X\+VISUAL_SPAN/);
  assert.doesNotMatch(scene,/function jockey\s*\(/);
  assert.doesNotMatch(scene,/const rider=jockey/);
