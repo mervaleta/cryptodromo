@@ -1,4 +1,6 @@
 import { TOKEN_ROSTER } from '/race-lab/source/src/data/tokenRoster.js?v=coat-20261102';
+import {buildRosterStats,horseBiography} from '/visual-lab/rosterStats.js?v=alpha06-1';
+const computedStats=buildRosterStats();
 const labels={star:'Estrella',core:'Principal',challenger:'Desafiante'};
 const descriptions={star:'Los protagonistas más frecuentes del fixture, mezclados con el resto del plantel en cada carrera.',core:'El núcleo del plantel. Cuatro corredores de esta categoría participan en cada carrera.',challenger:'Nuevos rivales en cada largada. Cuatro desafiantes comparten la pista con estrellas y principales.'};
 const $=s=>document.querySelector(s);
@@ -7,7 +9,18 @@ function previewFallback(token){preview?.dispose();preview=null;$('#preview-stat
 let paused=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function select(token,scroll=false){
  selected=token;
- $('#horse-tier').textContent=labels[token.tier].toUpperCase();$('#horse-symbol').textContent=token.symbol;$('#horse-name').textContent=token.name;
+ $('#horse-tier').textContent=labels[token.tier].toUpperCase();
+ const record=computedStats.get(token.symbol);
+ $('#horse-story').textContent=horseBiography(token,record);
+ $('#horse-stat-grid').replaceChildren(...[
+  ['CARRERAS',record.starts],['VICTORIAS',record.wins],['PODIOS',record.podiums],
+  ['MEJOR LLEGADA','#'+record.bestPlace],['PROMEDIO',record.averagePlace.toFixed(2)],
+  ['% VICTORIAS',record.winRatePct.toFixed(1)+'%']
+ ].map(([name,value])=>{
+  const label=document.createElement('span');
+  const strong=document.createElement('strong');strong.textContent=value;
+  label.append(strong,document.createTextNode(name));return label;
+ }));$('#horse-symbol').textContent=token.symbol;$('#horse-name').textContent=token.name;
  $('#horse-number').textContent=`${String(TOKEN_ROSTER.indexOf(token)+1).padStart(2,'0')} / ${TOKEN_ROSTER.length}`;
  $('#horse-description').textContent=descriptions[token.tier];
  for(const [key,value] of [['color',token.color],['coat',token.coat]]){$(`#horse-${key}`).textContent=value.toUpperCase();$(`#${key}-swatch`).style.background=value;}
