@@ -3,12 +3,13 @@ import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=a08-2';
 import {createAlternativeTracks} from './trackVisuals.js?v=a08-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
-import {coastDistance,coastSpeed,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha08-commentary-1';
+import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
+import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
 import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha08-1';
 import {createNightLights} from './nightLights.js?v=alpha05-lighting-4';
-import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha07-1';
-import {createHorse} from '/race-lab/source/src/horse.js?v=alpha08-surface-1';
+import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
+import {createHorse} from '/race-lab/source/src/horse.js?v=alpha09-gait-1';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -238,7 +239,7 @@ const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false}));
 dust.visible=false;scene.add(dust);
-const rainN=softwareGPU?180:mobile?280:650,rainPos=new Float32Array(rainN*3),rr=seeded(624);
+const rainN=softwareGPU?260:mobile?450:1050,rainPos=new Float32Array(rainN*3),rr=seeded(624);
 for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*820;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
@@ -426,8 +427,8 @@ function setLayout(mode){
  gateFrames.visible=mode!=='oval';
  finishSign.visible=mode==='straight';
  treeGroup.visible=mode!=='oval';
- trackFX.reset();
- if(horses.length)setRace(raceIndex);
+ trackFX.setLayout(mode);
+ if(horses.length){setRace(raceIndex);if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}}
 }
 layoutSelect.addEventListener('change',()=>setLayout(layoutSelect.value));
 function setTrackType(type){
@@ -522,7 +523,7 @@ function particles(dt){
   const attr=dustGeo.attributes.position;
   for(let i=0;i<dustN;i++){
    const h=horses[i%horses.length],r=seeded(i*13+Math.floor(elapsed*15));
-   attr.setXYZ(i,h.model.root.position.x-1-r()*7,r()*.9,(h.index-5.5)*2.55+(r()-.5)*1.3);
+   attr.setXYZ(i,h.model.root.position.x-1-r()*7,r()*.40,h.model.root.position.z+(r()-.5)*1.3);
   }
   attr.needsUpdate=true;dust.visible=true;
   dust.material.opacity=weatherSelect.value==='rain'?.08:(trackType.value==='grass'?.14:.48);
@@ -543,7 +544,7 @@ function animate(now,draw=true){
    const p=broadcastProfiles[i];
    const exitVelocity=broadcastSpeed(p,59.99);
    const dist=inRunout?
-     coastDistance(p.distanceAt60,exitVelocity,elapsed-60):
+     broadcastRunoutDistance({...p,exitVelocity},leaderMeters,elapsed-60):
      broadcastPosition(p,elapsed);
    const meterSpeed=inRunout?coastSpeed(exitVelocity,elapsed-60):
      broadcastSpeed(p,elapsed);
@@ -552,12 +553,12 @@ function animate(now,draw=true){
    const world=trackPoint(layoutMode,pr,i);
    h.model.root.position.set(world.x,0,world.z);h.model.root.rotation.y=world.heading;
    // Slightly faster hoof cadence makes 550 world units in 60s read as a sprint.
-   h.visualSpeed=Math.max(.52,Math.min(2.65,1.62*meterSpeed/(leaderMeters/60)));
+   h.visualSpeed=Math.max(.64,Math.min(3.15,1.86*meterSpeed/(leaderMeters/60)));
    // The GLB + eight corrective keyframes now provide the flight and impact;
    // avoid a second oversized global vertical bounce in the scene.
    // Never float the root above the track; footfall kick is applied to the ground.
    h.model.root.position.y=0;
-   if(elapsed<60)trackFX.stamp(h.index,world.x,world.z,h.visualSpeed*7);
+   if(elapsed<60+RUNOUT_SECONDS)trackFX.stamp(h.index,world.x,world.z,h.visualSpeed*7,world.heading);
   });
   clockEl.textContent=elapsed>=60?'01:00':'00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
   if(!inRunout){
