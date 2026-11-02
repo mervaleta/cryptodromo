@@ -26,9 +26,9 @@ try{
  const initial=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,canvas:[document.querySelector('canvas').width,document.querySelector('canvas').height],horses:document.querySelectorAll('#standings li').length}));
  console.log('SCENE_INIT',JSON.stringify(initial));
  const deployedScript=await page.evaluate(async()=>{
-  const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha06-'+Date.now(),{cache:'no-store'})).text();
+  const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha07-'+Date.now(),{cache:'no-store'})).text();
   return {hasRunout:source.includes('coastDistance(p.distanceAt60,exitVelocity,elapsed-60)'),
-   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha06-gait-1'),
+   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha07-brand-2'),
    length:source.length,engineStatus:document.querySelector('#race-biography')?.textContent};
  });
  console.log('PUBLIC_ENGINE_VERSION',JSON.stringify(deployedScript));
@@ -36,6 +36,16 @@ try{
   'Hostinger is still serving an outdated race engine');
  assert.ok(initial.canvas[0]>=1000);
  assert.equal(initial.horses,12);
+ const verifiedLogo=await page.request.get('https://race.cryptodromo.com/assets/crypto-logos/btc.svg');
+ assert.equal(verifiedLogo.status(),200,'BTC SVG must be local on Hostinger');
+ assert.match(await verifiedLogo.text(),/^<svg /);
+ const otherLogo=await page.request.get('https://race.cryptodromo.com/assets/crypto-logos/eth.svg');
+ assert.equal(otherLogo.status(),200,'ETH SVG must be local on Hostinger');
+ await page.selectOption('#surface','grass');
+ assert.equal(await page.locator('#surface').inputValue(),'grass');
+ await page.selectOption('#surface','synthetic');
+ await page.selectOption('#surface','dirt');
+ await page.locator('#camera-zoom').evaluate(input=>{input.value='60';input.dispatchEvent(new Event('input',{bubbles:true}));});
  await mkdir('artifacts',{recursive:true});
  if(captureScreenshots)await page.screenshot({path:'artifacts/alpha3-stadium.png',fullPage:false,timeout:25000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  // The full-length aerial camera must be stationary so forward movement is obvious.
