@@ -1,9 +1,7 @@
-# Cryptodromo 3D Race Lab
+# Cryptodromo procedural race demo
 
-Procedural Three.js race scene based on reusable geometry rather than external art files. The stadium now has a modular covered grandstand, crowd instancing, roof trusses, LED boards, floodlights, city silhouette and generated surface textures. The scene remains configurable for time, weather, wind and track surface. Race input uses deterministic sample-price fixtures.
+The published entry point is the repository root `index.html` at `race.cryptodromo.com`. The static files under `assets/` are the current production build.
 
-- `index.html` and `assets/`: static deployment at `/race-lab/`.
-- `source/`: editable Vite project.
-- `source/src/main.js`: scene, procedural materials and race simulation.
+The editable Vite project is under `race-lab/source/`. Run `npm ci && npm run build` there to create a static build. Three.js is loaded from the pinned jsDelivr URL in `vite.config.js`; the race scene itself uses procedural geometry and no horse or stadium sprites.
 
-Run `npm ci && npm run dev` from `source/`; build with `npm run build`. No external art assets are fetched. Three.js is bundled. The 2D canvas mode is only a compatibility fallback for environments where WebGL is unavailable.
+The deterministic synthetic fixture contains 100 crypto assets × 10,080 one-minute prices (seven 1,440-minute days). It has 480 scheduled races per day, 12 runners each, and seeded 4/4/4 draws from star, core, and challenger tiers. It is fictional and makes no market requests.

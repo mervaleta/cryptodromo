@@ -26,7 +26,7 @@
           <div>
             <div class="eyebrow"><span class="live-dot"></span> TRANSMISIÓN DE PRUEBA</div>
             <h1>Gran Premio <em>Cripto</em></h1>
-            <p class="race-meta">12 corredores <span>·</span> Demo de mercado <span>·</span> <span id="raceStatus">EN VIVO</span></p>
+            <p class="race-meta"><span id="raceInfo">CARRERA 001 / 480 · 00:00 UTC · 12 PARTICIPANTES</span> <span>·</span> <span id="raceStatus">DÍA 1 · FIXTURE SINTÉTICO</span></p>
           </div>
           <div class="race-clock"><span>VUELTA</span><strong id="raceClock">00:00</strong></div>
         </section>
@@ -66,9 +66,9 @@
           <aside class="side-column">
             <section class="market-card">
               <div class="section-head compact"><div><div class="eyebrow">INPUT DE MERCADO</div><h2>Pulso de precios</h2></div><span class="demo-pill">DEMO</span></div>
-              <p class="helper-text">La variación impulsa el ritmo de cada corredor. Ajustá el pulso para ver cómo cambia la carrera.</p>
-              <label class="market-input-label" for="marketMove">Variación de muestra <strong id="moveValue">+1.2%</strong></label>
-              <input id="marketMove" class="market-slider" type="range" min="-50" max="50" value="12" />
+              <p class="helper-text">La carrera usa el fixture de precios del token. Este control suma un ajuste manual a las variaciones del día.</p>
+              <label class="market-input-label" for="marketMove">Ajuste manual <strong id="moveValue">+0.0%</strong></label>
+              <input id="marketMove" class="market-slider" type="range" min="-50" max="50" value="0" />
               <div class="range-ends"><small>−5.0%</small><small>+5.0%</small></div>
               <div class="market-foot"><span class="pulse-icon">⌁</span> <span id="marketMessage">Mercado alcista</span><span class="pulse-live">ACTIVO</span></div>
             </section>
@@ -80,10 +80,10 @@
             </section>
 
             <div class="race-actions"><button id="startButton" class="primary-button"><span>▶</span> INICIAR CARRERA</button><button id="resetRace" class="secondary-button" title="Reiniciar carrera">↺</button></div>
-            <p class="demo-note">Las cotizaciones son datos ficticios precargados para esta demostración. No hay conexión a precios en vivo.</p>
+            <p class="demo-note">Fixture sintético reproducible · 100 activos · 7 días de precios por minuto · 480 carreras diarias · sin conexión a precios en vivo.</p>
           </aside>
         </section>
-        <footer class="footer"><span>CRYPTODROMO <b>3D RACE LAB</b></span><span>Prototipo visual · Motor modular en Three.js</span></footer>
+        <footer class="footer"><span>CRYPTODROMO <b>3D RACE LAB</b></span><span>100 caballos · 12 por carrera · largada cada 3 minutos</span></footer>
       </main>
     </div>
     <script type="module" src="/src/main.js"></script>
