@@ -4,7 +4,10 @@ import * as THREE from 'three';
  * Logos are projected in the PBR horse skin shader, not meshes, flags or tickers.
  * Unavailable graphics leave the flank plain rather than showing a fake logo.
  */
-const available=new Set('1INCH AAVE ADA ALGO ATOM AVAX BAT BCH BNB BTC CAKE COMP CRO CRV DASH DOGE DOT EGLD ENJ ETC ETH FIL FLOW GALA GNO GRT INJ IOTA KAVA KSM LINK LTC LPT MANA NEO OKB OSMO RAY RUNE SAND SHIB SNX SOL SUSHI THETA TRX UNI VET XLM XMR XRP XTZ ZEC ZIL'.split(' '));
+// Audited against the repository SVG filenames. SKY was deliberately excluded
+// because the old ticker icon does not identify the newer Sky crypto project.
+const available=new Set('BTC ETH SOL BNB XRP DOGE LINK ADA TRX ZEC XMR XLM BCH LTC AVAX DOT AAVE UNI ICP ETC FIL ATOM QNT ALGO VET GRT CRV MANA SAND CHZ STX THETA XTZ KCS COMP SNX 1INCH LPT ZIL BAT SUSHI DASH NEO KSM ENJ GNO RAY'.split(' '));
+const MAX_TEXTURES=24; // current 12 runners plus one previous set, never all 100
 const cache=new Map();
 const transparent=new THREE.DataTexture(new Uint8Array([0,0,0,0]),1,1,THREE.RGBAFormat);
 transparent.needsUpdate=true;
@@ -16,27 +19,38 @@ export function liveryPalette(coat,accent){
  return {fur,mane,tail,fleck:fur.clone().lerp(new THREE.Color('#d8ddcd'),.13)};
 }
 export function supportedLogo(symbol){return available.has(String(symbol||'').toUpperCase());}
-async function getLogo(symbol){
+function getLogo(symbol){
  const key=String(symbol||'').toUpperCase();
- if(!supportedLogo(key))return null;
- if(cache.has(key))return cache.get(key);
+ if(!supportedLogo(key))return Promise.resolve(null);
+ if(cache.has(key)){
+   const promise=cache.get(key);
+   cache.delete(key);cache.set(key,promise);return promise;
+ }
  const promise=new Promise(resolve=>{
-  const url='https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/'+key.toLowerCase()+'.svg';
-  const image=new Image();image.crossOrigin='anonymous';
+  // SVG is local. Only active horses request their mark, never the full roster.
+  const image=new Image();
   image.onload=()=>{
-   const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
-   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,256,256);
-   ctx.drawImage(image,8,8,240,240);
-   const texture=new THREE.CanvasTexture(canvas);
-   texture.colorSpace=THREE.SRGBColorSpace;
-   texture.minFilter=THREE.LinearMipmapLinearFilter;
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
+   const ctx=canvas.getContext('2d');
+   ctx.clearRect(0,0,128,128);ctx.drawImage(image,6,6,116,116);
+   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+   texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;
    resolve(texture);
   };
   image.onerror=()=>resolve(null);
-  image.src=url;
+  image.src='/assets/crypto-logos/'+key.toLowerCase()+'.svg';
  });
- cache.set(key,promise);return promise;
+ cache.set(key,promise);
+ while(cache.size>MAX_TEXTURES){
+  const oldest=cache.keys().next().value,prior=cache.get(oldest);
+  cache.delete(oldest);
+  // No longer needed by a new race. Dispose once the texture exists.
+  prior.then(texture=>texture?.dispose());
+ }
+ return promise;
 }
+export const liveryCacheStats=()=>({textures:cache.size,maxTextures:MAX_TEXTURES,iconsBundled:available.size});
+
 /** Apply additive dyed pattern to material shader; follows skinned vertices. */
 function tattoo(mesh,material,uniforms){
  const geo=mesh.geometry;if(!geo?.attributes?.position)return;
