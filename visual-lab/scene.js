@@ -498,6 +498,9 @@ function setWeather(mode){
 }
 weatherSelect.addEventListener('change',()=>setWeather(weatherSelect.value));setWeather('golden');
 const trackType=document.querySelector('#surface'),cameraZoom=document.querySelector('#camera-zoom');
+const wetState=document.querySelector('#wet-state');
+let earthBaseColor=earth.color.clone(),earthBaseRough=.96,lastWetUpdate=0;
+const roofBase=C.roof.color.clone(),stoneBase=C.concrete.color.clone(),grassBase=grass.color.clone();
 const layoutSelect=document.querySelector('#layout');
 function setLayout(mode){
  layoutMode=mode;
@@ -521,6 +524,7 @@ function setTrackType(type){
   earth.map=earthTexture;earth.color.set('#f0e2d4');earth.roughness=.96;
   trackFX.marks.material.color.set('#493526');
  }
+ earthBaseColor=earth.color.clone();earthBaseRough=earth.roughness;
  earth.needsUpdate=true;
 }
 trackType.addEventListener('change',()=>setTrackType(trackType.value));
@@ -697,7 +701,20 @@ function animate(now,draw=true){
  if(draw){
   nightLights.update(now/1000);
   trackFX.update(realSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
-  if(layoutMode!=='straight')trackFX.puddles.visible=false;
+  if(now-lastWetUpdate>230){
+   lastWetUpdate=now;
+   const wet=trackFX.wetness;
+   // All stadium surfaces retain accumulated dampness even after rain stops.
+   earth.color.copy(earthBaseColor).lerp(new THREE.Color('#34342e'),wet*.49);
+   earth.roughness=Math.max(.19,earthBaseRough-wet*.57);
+   grass.color.copy(grassBase).lerp(new THREE.Color('#536147'),wet*.41);
+   C.roof.color.copy(roofBase).lerp(new THREE.Color('#1c2825'),wet*.38);
+   C.roof.roughness=.46-wet*.24;
+   C.concrete.color.copy(stoneBase).lerp(new THREE.Color('#333e3d'),wet*.26);
+   for(const horse of horses)horse.model.setWetness?.(wet);
+   wetState.textContent='Humedad del estadio '+Math.round(wet*100)+'% · '+
+     (weatherSelect.value==='rain'?'acumulando agua':wet>.03?'secándose gradualmente':'superficie seca');
+  }
   particles(dt);adjustCamera(dt);renderer.render(scene,camera);
  }
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
