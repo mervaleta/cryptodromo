@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createGaitRefiner} from './gaitRefiner.js?v=alpha06-2';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -60,6 +61,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
     root.add(panel);clothPanels.push(panel);
   }
   const mixer=new THREE.AnimationMixer(model),clips=asset.animations.filter(clip=>!clip.name.includes('|'));let action;
+  const gait=createGaitRefiner(model,{strength:.27});
   const api={
     root,clips:clips.map(clip=>clip.name),
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
@@ -72,8 +74,16 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
       for(const panel of clothPanels)panel.name='token-racing-livery-'+nextSymbol;
       coat=nextCoat;accent=nextAccent;symbol=nextSymbol;
     },
-    update(delta,speed=1){mixer.update(Math.min(Math.max(delta,0),.1)*Math.max(0,speed));},
-    dispose(){mixer.stopAllAction();mixer.uncacheRoot(model);materials.forEach(material=>material.dispose());badgeMaterial.map?.dispose();badgeMaterial.dispose();clothMaterial.map?.dispose();clothMaterial.dispose();clothGeom.dispose();root.removeFromParent();}
+    update(delta,speed=1){
+      gait.reset();
+      const step=Math.min(Math.max(delta,0),.10),rate=Math.max(0,speed);
+      mixer.update(step*rate);
+      if(action?.getClip().name==='Gallop'){
+        // The native Gallop clip is 0.583s; lock corrective keys to its clock.
+        gait.refine(step,rate,action.time/action.getClip().duration);
+      }
+    },
+    dispose(){gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);materials.forEach(material=>material.dispose());badgeMaterial.map?.dispose();badgeMaterial.dispose();clothMaterial.map?.dispose();clothMaterial.dispose();clothGeom.dispose();root.removeFromParent();}
   };
   api.play(mode,0);mixer.update(phase);return api;
 }
