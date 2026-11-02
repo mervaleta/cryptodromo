@@ -3,7 +3,7 @@
  * Official ranking/results freeze at exactly 60. Runout is not scored.
  */
 export const OFFICIAL_FINISH_SECONDS=60;
-export const RUNOUT_SECONDS=15;
+export const RUNOUT_SECONDS=19;
 export const RUNOUT_TAU=7.5;
 export function coastDistance(metersAt60,velocityAt60,secondsPastFinish){
  const t=Math.max(0,Number(secondsPastFinish)||0);
