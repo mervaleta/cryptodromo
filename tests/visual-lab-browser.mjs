@@ -5,7 +5,8 @@ const captureScreenshots=process.env.CAPTURE_SCREENSHOTS==='1';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 try{
  const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
- const errors=[];
+ const errors=[],requestedLogos=[];
+ page.on('request',request=>{if(request.url().includes('/assets/crypto-logos/'))requestedLogos.push(request.url());});
  page.on('pageerror',e=>errors.push('PAGE '+e.message));
  page.on('requestfailed',r=>errors.push('REQUEST '+r.url()+' '+r.failure()?.errorText));
  page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text());});
@@ -36,6 +37,9 @@ try{
   'Hostinger is still serving an outdated race engine');
  assert.ok(initial.canvas[0]>=1000);
  assert.equal(initial.horses,12);
+ console.log('NATIVE_LOGO_NETWORK',JSON.stringify(requestedLogos));
+ assert.ok(requestedLogos.length>=4,'At least the four star horses must receive their official skin mark');
+ assert.ok(requestedLogos.length<=12,'One race must never preload logos from the 100-token roster');
  const verifiedLogo=await page.request.get('https://race.cryptodromo.com/assets/crypto-logos/btc.svg');
  assert.equal(verifiedLogo.status(),200,'BTC SVG must be local on Hostinger');
  assert.match(await verifiedLogo.text(),/^<svg /);
