@@ -2,8 +2,11 @@ import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {createHorse} from '/race-lab/source/src/horse.js';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
-import {createOfficialRace,positionAt,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
+import {buildBroadcastProfiles,broadcastPosition} from './raceChoreography.js?v=alpha04-1';
+import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 
+// Alpha 04: extended 410m visible course. Financial race is still 60s and price-driven.
+const VISUAL_START_X=-205,VISUAL_FINISH_X=205,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
 // Alpha 03: a real XZ-plane, Y-up stadium, not a vertical XY theater.
 // Visual effects and frame rate are deliberately isolated from the finance engine.
 const canvas=document.getElementById('raceCanvas'), stage=document.getElementById('stage');
@@ -29,7 +32,7 @@ sky.material.uniforms.rayleigh.value=2.1;
 sky.material.uniforms.mieCoefficient.value=.005;
 sky.material.uniforms.mieDirectionalG.value=.81;
 const camera=new THREE.PerspectiveCamera(50,1,.1,700);
-camera.position.set(-115,4.4,21);camera.lookAt(-94,2,0);
+camera.position.set(-214,4.4,21);camera.lookAt(-196,2,0);
 const hemi=new THREE.HemisphereLight(0xc1e2ff,0x39412e,2.0);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe0aa,3.6);
 sun.position.set(-75,125,62);sun.castShadow=true;
@@ -66,33 +69,33 @@ function makeTexture(kind){
 const grassTexture=makeTexture('grass'),earthTexture=makeTexture('earth');
 const grass=mat('#e0eed6',1);grass.map=grassTexture;
 const earth=mat('#f0e2d4',.93);earth.map=earthTexture;
-box(500,.35,260,0,-.33,0,grass);
-box(280,.13,38,0,-.06,0,earth);
+box(620,.35,260,0,-.33,0,grass);
+box(465,.13,38,0,-.06,0,earth);
 // Galloping ruts, run-off strips and painted distance marks.
 const lanePaint=mat('#e2d0ae',1),sod=mat('#3e7f49',1);
 for(const z of [-18,18])box(280,.12,4,0,.02,z,sod);
 for(let i=0;i<12;i++){
  const z=-14.9+i*2.65;
- box(275,.016,.027,0,.025,z,lanePaint).castShadow=false;
+ box(463,.016,.027,0,.025,z,lanePaint).castShadow=false;
 }
-for(let x=-116;x<=124;x+=20)for(const z of [-17,17]){
+for(let x=-225;x<=225;x+=20)for(const z of [-17,17]){
  const slab=box(.34,.017,1.3,x,.025,z,mat('#efe4c6'));slab.castShadow=false;
 }
 function rail(z){
- for(const y of [.65,1.23])box(283,.115,.115,0,y,z,C.rail);
- for(let x=-140;x<=140;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
+ for(const y of [.65,1.23])box(470,.115,.115,0,y,z,C.rail);
+ for(let x=-234;x<=234;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
 }
 rail(-20.2);rail(20.2);
 // Outer track lawn, sculpted hedges and paddock fencing.
-for(let x=-124;x<=124;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
-for(let x=-130;x<=130;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
-box(269,.12,.13,0,1.25,53,C.steel);
+for(let x=-225;x<=225;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
+for(let x=-225;x<=225;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
+box(470,.12,.13,0,1.25,53,C.steel);
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=mobile?90:155;
 for(let i=0;i<treeN;i++){
- const r=seeded(i*761+49),x=r()*290-145,back=r()>.40,z=back?-74-r()*34:75+r()*25;
+ const r=seeded(i*761+49),x=r()*475-237.5,back=r()>.40,z=back?-74-r()*34:75+r()*25;
  const h=5+r()*9;
  cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
  cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
@@ -170,10 +173,10 @@ for(const x of [-125,125]){
  const lamp=new THREE.PointLight(0xffe5b5,0,70,2);lamp.position.set(x,30,-31);venue.add(lamp);bank.userData.lamp=lamp;
 }
 // Finish area: race arches, camera bridge and official marker.
-box(.24,.07,40,120,.07,0,C.ivory);
-for(const z of [-21,21])box(.55,12,.55,120,6,z,C.steel);
-box(.7,1.6,42,120,12.9,0,C.roof);
-const finishSign=sign('META · FINISH',120,13.0,-3,18,2.5);
+box(.24,.07,40,VISUAL_FINISH_X,.07,0,C.ivory);
+for(const z of [-21,21])box(.55,12,.55,VISUAL_FINISH_X,6,z,C.steel);
+box(.7,1.6,42,VISUAL_FINISH_X,12.9,0,C.roof);
+const finishSign=sign('META · FINISH',VISUAL_FINISH_X,13.0,-3,18,2.5);
 // Dust particles when running; no effect on outcomes.
 const dustN=mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
@@ -186,24 +189,10 @@ const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,siz
 rain.visible=false;scene.add(rain);
 
 let raceIndex=0,race=getRaceFixture(0,0),profiles=createOfficialRace(race.entries);
+let broadcastProfiles=buildBroadcastProfiles(profiles);
+let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
 const horseCoats=['#6c4731','#b18053','#342a26','#d3b48f','#a65f36','#5d5d62','#a78c66','#332c2a','#a28467','#c49a74','#5b4134','#d4bda8'];
-function jockey(h,index){
- const decor=new THREE.Group();decor.position.set(0,0,0);h.root.add(decor);
- const color=new THREE.Color(race.entries[index].color);
- const jersey=new THREE.MeshStandardMaterial({color,roughness:.78});
- const cream=mat('#dedad0'),boot=mat('#151d1d'),helmet=mat('#12261f',.31);
- // The jockey is a stylized rig placeholder until the purchased Maya model is converted.
- const saddle=box(1.1,.10,.70,-.1,1.92,0,jersey,decor);saddle.castShadow=true;
- const torso=cyl(.25,.36,.85,-.12,2.45,-.05,jersey,decor);torso.rotation.z=-.42;
- cyl(.24,.28,.24,-.35,3.04,0,cream,decor);
- const head=mesh(new THREE.SphereGeometry(.27,14,10),helmet,decor);head.position.set(-.35,3.25,0);
- for(const z of [-.25,.25]){
-  const arm=cyl(.095,.115,.7,.08,2.30,z,jersey,decor);arm.rotation.z=-.98;
-  const leg=cyl(.12,.14,.72,-.22,1.99,z,boot,decor);leg.rotation.z=.46;
- }
- return {decor,jersey};
-}
 async function bootHorses(){
  const entries=race.entries;const results=await Promise.allSettled(entries.map((e,i)=>createHorse({
    coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,height:2.85,mode:'Gallop',phase:i*.13
@@ -221,10 +210,10 @@ async function bootHorses(){
    model={root,update(){},play(){},setAppearance(){}};
    console.warn('Caballo GLB de respaldo',i,results[i].reason);
   }
-  model.root.position.set(-105,0,(i-5.5)*2.55);
+  model.root.position.set(VISUAL_START_X,0,(i-5.5)*2.55);
   model.root.traverse(o=>{if(o.isSprite)o.visible=false;});
-  const rider=jockey(model,i);scene.add(model.root);
-  horses.push({model,rider,index:i,entry:entries[i],progress:0});
+  scene.add(model.root);
+  horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
  setRace(0);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  status.textContent='CAMPO PREPARADO · 12 CORREDORES';
@@ -232,13 +221,15 @@ async function bootHorses(){
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
  race=getRaceFixture(raceIndex%RACES_PER_DAY,Math.floor(raceIndex/RACES_PER_DAY));
- profiles=createOfficialRace(race.entries);elapsed=0;running=false;finished=false;
+ profiles=createOfficialRace(race.entries);
+ broadcastProfiles=buildBroadcastProfiles(profiles);
+ overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
-   const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.position.set(-105,0,(i-5.5)*2.55);
+   const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.position.set(VISUAL_START_X,0,(i-5.5)*2.55);
    h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
-   h.rider.jersey.color.set(e.color);h.model.play('Idle');
+   h.visualSpeed=1;h.model.play('Idle');
   });
  }
  status.textContent='A SUS MARCAS · DÍA '+race.day;
@@ -276,10 +267,10 @@ weatherSelect.addEventListener('change',()=>setWeather(weatherSelect.value));set
 const target=new THREE.Vector3(),goal=new THREE.Vector3();
 function adjustCamera(dt){
  const avg=horses.length?horses.reduce((a,h)=>a+h.model.root.position.x,0)/horses.length:-83;
- const follow=Math.min(116,Math.max(-97,avg));
+ const follow=Math.min(VISUAL_FINISH_X+6,Math.max(VISUAL_START_X+6,avg));
  const camMode=camSelect.value;
  if(camMode==='aerial'){goal.set(follow-34,68,54);target.set(follow+24,0,-7);}
- else if(camMode==='finish'){goal.set(119,7,31);target.set(104,2,0);}
+ else if(camMode==='finish'){goal.set(VISUAL_FINISH_X+6,7,31);target.set(VISUAL_FINISH_X-12,2,0);}
  else if(camMode==='rail'){goal.set(follow-6,2.75,14.5);target.set(follow+8,2.0,0);}
  else {goal.set(follow+14,4.6,24);target.set(follow-9,2.0,-1.5);}
  camera.position.lerp(goal,Math.min(1,dt*1.9));camera.lookAt(target);
@@ -304,11 +295,22 @@ function animate(now){
   elapsed=Math.min(60,elapsed+realSeconds);
   const leaderMeters=officialRanking(profiles)[0].distanceAt60;
   horses.forEach((h,i)=>{
-   const dist=positionAt(profiles[i],elapsed),pr=dist/leaderMeters;
+   const dist=broadcastPosition(broadcastProfiles[i],elapsed);
+   const pr=dist/leaderMeters;
    h.progress=pr;
-   h.model.root.position.x=-105+225*Math.min(1.025,pr);
-   h.model.root.position.y=Math.abs(Math.sin(now*.012+i*.48))*.055;
+   h.model.root.position.x=VISUAL_START_X+VISUAL_SPAN*Math.min(1.025,pr);
+   const dose=Math.min(11,Math.floor(Math.max(0,elapsed-.001)/5));
+   const weight=broadcastProfiles[i].broadcastWeights[dose];
+   h.visualSpeed=Math.min(2.8,Math.max(1.5,1.92*Math.sqrt(weight)));
+   h.model.root.position.y=Math.abs(Math.sin(now*.018*h.visualSpeed+i*.48))*.045;
   });
+  const currentOrder=horses.slice().sort((a,b)=>b.progress-a.progress||a.index-b.index).map(h=>h.index).join(',');
+  if(previousOrder&&currentOrder!==previousOrder){
+   overtakeCount++;
+   const front=horses.slice().sort((a,b)=>b.progress-a.progress)[0];
+   msg.textContent='ADELANTAMIENTOS '+overtakeCount+' · '+front.entry.symbol+' al frente · dosis cada 5 s';
+  }
+  previousOrder=currentOrder;
   clockEl.textContent='00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
   if(elapsed>=60){
    clockEl.textContent='01:00';running=false;finished=true;
@@ -319,7 +321,7 @@ function animate(now){
    msg.textContent='Llegada calculada con los dos inputs financieros sintéticos';
   }
  }
- for(const h of horses)h.model.update(dt,running?1.15:1);
+ for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
  particles(dt);adjustCamera(dt);renderer.render(scene,camera);
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
  raf=requestAnimationFrame(animate);
