@@ -10,7 +10,18 @@ try{
  page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text());});
  const res=await page.goto('https://race.cryptodromo.com/visual-lab/?ci=20261102',{waitUntil:'domcontentloaded',timeout:30000});
  assert.equal(res?.status(),200,'Live visual lab must exist on Hostinger');
- await page.waitForFunction(()=>document.querySelector('#start')&&!document.querySelector('#start').disabled,{timeout:30000});
+ try {
+   await page.waitForFunction(()=>document.querySelector('#start')&&!document.querySelector('#start').disabled,{timeout:30000});
+ } catch(e) {
+   console.log('SCENE_START_FAILURE',JSON.stringify(await page.evaluate(()=>({
+    status:document.querySelector('#status')?.textContent,
+    message:document.querySelector('#message')?.textContent,
+    button:document.querySelector('#start')?.outerHTML,
+    scripts:[...document.scripts].map(s=>s.src).filter(Boolean)
+   }))));
+   console.log('SCENE_START_ERRORS',JSON.stringify(errors));
+   throw e;
+ }
  const initial=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,canvas:[document.querySelector('canvas').width,document.querySelector('canvas').height],horses:document.querySelectorAll('#standings li').length}));
  console.log('SCENE_INIT',JSON.stringify(initial));
  assert.ok(initial.canvas[0]>=1000);
