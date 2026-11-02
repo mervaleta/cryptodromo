@@ -55,6 +55,18 @@ try{
  await page.waitForTimeout(200);
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'follow');
  await page.selectOption('#quality','eco');
+ // Capture a controlled daylight comparison, not whatever time the CI runner
+ // happens to have in Buenos Aires.
+ await page.locator('#daytime-auto').uncheck();
+ await page.locator('#daytime').evaluate(el=>{el.value='840';el.dispatchEvent(new Event('input',{bubbles:true}));});
+ await page.locator('#weather').selectOption('clear');
+ await page.selectOption('#camera-mode','orbit');
+ await page.selectOption('#sight','tribunas');
+ await mkdir('artifacts',{recursive:true});
+ await page.waitForTimeout(250);
+ await page.screenshot({path:'artifacts/parade-alpha16-daytime-stadium.png',timeout:40000});
+ await page.selectOption('#sight','comida');
+ await page.screenshot({path:'artifacts/parade-alpha16-daytime-foodcourt.png',timeout:40000});
  await page.locator('#weather').selectOption('night');
  await page.locator('#lights').evaluate(el=>{el.value='145';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.locator('#light-label').innerText()).trim(),'145%');
