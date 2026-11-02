@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {createHorse} from '/race-lab/source/src/horse.js';
-import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=crp-20261102';
+import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {createOfficialRace,positionAt,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 
 // Alpha 03: a real XZ-plane, Y-up stadium, not a vertical XY theater.
