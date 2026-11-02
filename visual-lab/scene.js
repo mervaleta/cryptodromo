@@ -301,6 +301,17 @@ function setRace(index){
  start.textContent='▶ INICIAR CARRERA';updateStandings();
 }
 function updateStandings(){
+ if(finished){
+  // Post-finish movement is purely cinematic: positions and leader on
+  // every broadcast scoreboard must remain the OFFICIAL 60-second result.
+  const order=officialRanking(profiles);
+  standings.innerHTML=order.map((p,i)=>'<li data-symbol="'+p.entry.symbol+
+   '" title="Ver biografía" style="cursor:pointer"><i style="background:'+p.entry.color+
+   '"></i><b>'+String(i+1).padStart(2,'0')+' '+p.entry.symbol+
+   '</b><small>'+p.finishTime.toFixed(2)+' s</small></li>').join('');
+  leaderEl.textContent=order[0].entry.symbol;
+  return;
+ }
  const order=horses.slice().sort((a,b)=>b.progress-a.progress||a.index-b.index);
  standings.innerHTML=order.map((h,i)=>'<li data-symbol="'+h.entry.symbol+'" title="Ver biografía" style="cursor:pointer"><i style="background:'+h.entry.color+'"></i><b>'+String(i+1).padStart(2,'0')+' '+h.entry.symbol+'</b><small>'+(h.progress*100).toFixed(1)+'%</small></li>').join('');
  const lead=order[0];leaderEl.textContent=lead?lead.entry.symbol:'—';
