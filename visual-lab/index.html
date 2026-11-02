@@ -49,7 +49,8 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 .light-controls #light-preview{border-color:#a88b56;color:#f4d4a5}
 [hidden]{display:none!important}
 .race-narrator{position:absolute;bottom:95px;left:22px;right:22px;background:linear-gradient(90deg,#051713cb,#06160e44);border-left:3px solid #cfb17c;color:#f7f1dc;z-index:3;font-size:11px;font-weight:750;letter-spacing:.08em;max-width:65%;padding:11px 16px;text-shadow:0 1px 5px #000}
-.result-overlay{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:34px 18px;background:linear-gradient(125deg,#071c18f4,#070f11e2 70%);text-align:center}
+.result-overlay{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:34px 18px;background:linear-gradient(125deg,#071c18f4,#070f11e2 70%);text-align:center;opacity:0;transition:opacity .85s cubic-bezier(.22,.7,.24,1);pointer-events:none}
+.result-overlay.is-visible{opacity:1;pointer-events:auto}
 .result-kicker{font-size:10px;letter-spacing:.25em;color:#dbc08c;font-weight:900}
 .result-title{font-family:Georgia,serif;letter-spacing:-.04em;font-size:clamp(28px,4vw,58px);font-weight:800;margin:8px 0 17px}
 .result-title em{color:#d4b273;font-weight:400}
@@ -70,7 +71,7 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head><body>
-<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera anterior</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 06</span></header>
+<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera anterior</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 07</span></header>
 <main class="shell">
 <div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS SIN JOCKEY · PISTA +20% · 60 SEGUNDOS</small></div>
 <div class="stage" id="stage">
@@ -99,8 +100,10 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <button id="voice" type="button" aria-pressed="false">🔊 ACTIVAR RELATO</button>
 <button id="sound" type="button" aria-pressed="false">♫ AMBIENTE Y CASCOS</button>
 <label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Aérea fija · vista de carrera</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta</option></select></label>
+<label>SUPERFICIE<select id="surface"><option value="dirt">Tierra compactada</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
+<label>ÁNGULO / ZOOM<input id="camera-zoom" type="range" min="28" max="82" value="50" step="1" aria-label="Campo visual de la cámara"/></label>
 <label>ATMÓSFERA<select id="weather"><option value="golden">Atardecer</option><option value="noon">Pleno día</option><option value="night">Noche</option><option value="rain">Lluvia</option></select></label>
-</div><p class="micro">Prototipo visual en Three.js, reconstruido con pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></div>
+</div><p class="micro">Alpha 07: caballos sin jockey ni carteles flotantes, color del pelaje teñido por su marca, huellas y charcos. Pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></div>
 <div id="panel-light" role="tabpanel" aria-labelledby="tab-light" hidden>
 <div class="light-controls"><label class="light-switch"><input type="checkbox" id="light-power" checked/> REFLECTORES ENCENDIDOS</label>
 <label>POTENCIA / DIMMER <span id="light-level" aria-live="polite">84%</span><input id="light-dimmer" type="range" min="0" max="100" value="84" step="1"/></label>
@@ -114,4 +117,4 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 </div>
 <section class="panel info-panel"><h2>Los protagonistas</h2><p>Historias y estadísticas calculadas para los cien caballos del Cryptódromo. Cada identidad es ficticia; las victorias y los podios corresponden a las 3.360 carreras sintéticas.</p><div id="race-biography" aria-live="polite">Seleccioná un caballo en la clasificación para ver su biografía.</div><a href="/racers/">Explorar los 100 caballos y sus estadísticas ↗</a></section>
 <footer class="foot">CRYPTÓDROMO · laboratorio visual. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
-</main><script type="module" src="./scene.js?v=alpha06-finish-4"></script></body></html>
+</main><script type="module" src="./scene.js?v=alpha07-livery-track-1"></script></body></html>
