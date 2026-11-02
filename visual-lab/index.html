@@ -68,10 +68,26 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 #race-biography{border-left:2px solid #cba771;margin:14px 0;padding:8px 13px;color:#dfe9df;font-size:13px}
 @media(max-width:640px){.result-list{grid-template-columns:1fr;max-height:61%}.result-overlay{padding:14px 9px}.result-row{padding:4px 8px}.race-narrator{bottom:88px;font-size:10px;max-width:92%;left:8px;right:8px}}
 [hidden]{display:none!important}
+
+.live-program{margin-top:17px}
+.live-title{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.live-title h2{font-size:21px;letter-spacing:.05em;margin:8px 0}
+.live-title small{font-size:10px;letter-spacing:.13em;color:#a3c1ae;margin-left:10px}
+.live-dot{display:inline-block;width:9px;height:9px;background:#e1c386;border-radius:50%;box-shadow:0 0 16px #e1c386}
+.live-countdown{font-size:30px;color:#e5c38d;font-variant-numeric:tabular-nums;font-weight:900}
+.live-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:15px}
+.live-slots>div{padding:14px;background:#0b1a14;border:1px solid #375444;display:flex;flex-direction:column;align-items:start;gap:8px}
+.live-slots>div.live-current{background:#1b2c24;border-color:#d7b57c}
+.live-slots span{font-size:10px;letter-spacing:.12em;color:#9dbdaa}
+.live-slots strong{font-size:25px;font-variant-numeric:tabular-nums}
+.live-slots button{min-width:0;font-size:11px;padding:8px 12px}
+.live-slots .live-current button{background:#c7a76f;color:#0d170f;border-color:#ebc68b;font-weight:850}
+#audio-volume{max-width:120px;accent-color:#c7a76f}
+@media(max-width:600px){.live-slots{grid-template-columns:1fr}.live-title h2{font-size:16px}.live-countdown{font-size:23px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head><body>
-<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera anterior</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 07</span></header>
+<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera anterior</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 08</span></header>
 <main class="shell">
 <div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS SIN JOCKEY · PISTA +20% · 60 SEGUNDOS</small></div>
 <div class="stage" id="stage">
@@ -98,12 +114,14 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <button class="primary" id="start" disabled>▶ PREPARANDO CABALLOS</button>
 <button id="reset">↺ REINICIAR</button><button id="next">SIGUIENTE CARRERA ›</button>
 <button id="voice" type="button" aria-pressed="false">🔊 ACTIVAR RELATO</button>
-<button id="sound" type="button" aria-pressed="false">♫ AMBIENTE Y CASCOS</button>
+<button id="sound" type="button" aria-pressed="false">♫ HABILITAR AUDIO</button>
+<label>VOLUMEN <input type="range" id="audio-volume" min="0" max="100" step="5" value="90" aria-label="Volumen del hipódromo"/></label>
 <label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Aérea fija · vista de carrera</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta</option></select></label>
+<label>TRAZADO<select id="layout"><option value="straight">Recta central</option><option value="s-bend">Curva en S</option><option value="oval">Óvalo completo</option></select></label>
 <label>SUPERFICIE<select id="surface"><option value="dirt">Tierra compactada</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
 <label>ÁNGULO / ZOOM<input id="camera-zoom" type="range" min="28" max="82" value="50" step="1" aria-label="Campo visual de la cámara"/></label>
 <label>ATMÓSFERA<select id="weather"><option value="golden">Atardecer</option><option value="noon">Pleno día</option><option value="night">Noche</option><option value="rain">Lluvia</option></select></label>
-</div><p class="micro">Alpha 07: caballos sin jockey ni carteles flotantes, color del pelaje teñido por su marca, huellas y charcos. Pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></div>
+</div><p class="micro">Alpha 08: pelaje procedural, trazados con curvas y programación LIVE. Caballos sin jockey ni carteles flotantes, color del pelaje teñido por su marca, huellas y charcos. Pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></div>
 <div id="panel-light" role="tabpanel" aria-labelledby="tab-light" hidden>
 <div class="light-controls"><label class="light-switch"><input type="checkbox" id="light-power" checked/> REFLECTORES ENCENDIDOS</label>
 <label>POTENCIA / DIMMER <span id="light-level" aria-live="polite">84%</span><input id="light-dimmer" type="range" min="0" max="100" value="84" step="1"/></label>
@@ -115,6 +133,15 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <section class="panel"><h2>Clasificación en pista</h2><ol id="standings"></ol>
 <div class="race-stats" id="race-stats"><strong>ESTADÍSTICAS</strong><div id="race-stat-content">Preparando posiciones y diferencias…</div></div></section>
 </div>
+<section class="panel live-program" id="live">
+<div class="live-title"><div><div class="overline">PROGRAMACIÓN DEL ESTADIO · ARGENTINA (UTC−3)</div><h2><span class="live-dot"></span> CRYPTÓDROMO LIVE <small>REPLAY SINTÉTICO</small></h2></div><div id="live-countdown" class="live-countdown">00:00</div></div>
+<p class="micro">Cada 3 minutos comienza una nueva carrera del fixture ficticio de 7 días. No se consultan cotizaciones reales. El modo LIVE sigue el reloj del estadio; los resultados son reproducibles.</p>
+<div class="live-slots">
+ <div><span>ANTERIOR</span><strong id="live-previous">--:--</strong><button id="live-prev" type="button">Ver repetición</button></div>
+ <div class="live-current"><span>AHORA · ESTADIO SATOSHI</span><strong id="live-current">--:--</strong><button id="live-now" type="button">● SINTONIZAR LIVE</button></div>
+ <div><span>PRÓXIMA</span><strong id="live-next-label">--:--</strong><button id="live-next" type="button">Ver fixture</button></div>
+</div><p id="live-state" class="micro" role="status">Consultando la hora del estadio…</p>
+</section>
 <section class="panel info-panel"><h2>Los protagonistas</h2><p>Historias y estadísticas calculadas para los cien caballos del Cryptódromo. Cada identidad es ficticia; las victorias y los podios corresponden a las 3.360 carreras sintéticas.</p><div id="race-biography" aria-live="polite">Seleccioná un caballo en la clasificación para ver su biografía.</div><a href="/racers/">Explorar los 100 caballos y sus estadísticas ↗</a></section>
 <footer class="foot">CRYPTÓDROMO · laboratorio visual. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
-</main><script type="module" src="./scene.js?v=alpha07-livery-track-2"></script></body></html>
+</main><script type="module" src="./scene.js?v=alpha08-tracks-live-1"></script></body></html>
