@@ -61,7 +61,7 @@ test('track, surface, weather and identity use shared instanced graphics and 128
  assert.match(scene,/earth\.roughness=Math\.max/);
  assert.match(scene,/model\.setWetness/);
  const html=source('visual-lab/index.html');
- assert.match(html,/PRESENTACIÓN DE CORREDORES/);
+ assert.match(html,/PRÓXIMA CARRERA · PASE DE LISTA/);
  assert.match(html,/present-roster/);
  assert.match(html,/LIVE AUTOMÁTICO/);
 });
