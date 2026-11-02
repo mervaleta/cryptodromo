@@ -23,7 +23,7 @@ test('Alpha07 bundles verified CC0 graphics, requests only runner logos, no spri
 });
 test('Alpha07 1-second official finish hold, fade-in and positive runout',()=>{
  const scene=read('visual-lab/scene.js'),html=read('visual-lab/index.html');
- assert.match(scene,/VISUAL_START_X=-275,VISUAL_FINISH_X=275/);
+ assert.match(scene,/VISUAL_START_X=-320,VISUAL_FINISH_X=320/);
  assert.match(scene,/if\(elapsed>=61\)showOfficialResult\(\)/);
  assert.match(scene,/coastDistance\(p\.distanceAt60,exitVelocity,elapsed-60\)/);
  assert.match(scene,/trackFX\.stamp/);
