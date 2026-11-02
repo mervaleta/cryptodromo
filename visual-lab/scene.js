@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
+import {createNightLights} from './nightLights.js?v=alpha05-lighting-1';
 import {createHorse} from '/race-lab/source/src/horse.js';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
-import {buildBroadcastProfiles,broadcastPosition} from './raceChoreography.js?v=alpha04-1';
+import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 
-// Alpha 04: extended 410m visible course. Financial race is still 60s and price-driven.
-const VISUAL_START_X=-205,VISUAL_FINISH_X=205,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
+// Alpha 05: +20% physical/visual course (410 → 492 units), same official race and 60s.
+const VISUAL_START_X=-246,VISUAL_FINISH_X=246,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
 // Alpha 03: a real XZ-plane, Y-up stadium, not a vertical XY theater.
 // Visual effects and frame rate are deliberately isolated from the finance engine.
 const canvas=document.getElementById('raceCanvas'), stage=document.getElementById('stage');
@@ -32,7 +33,7 @@ sky.material.uniforms.rayleigh.value=2.1;
 sky.material.uniforms.mieCoefficient.value=.005;
 sky.material.uniforms.mieDirectionalG.value=.81;
 const camera=new THREE.PerspectiveCamera(50,1,.1,700);
-camera.position.set(-214,4.4,21);camera.lookAt(-196,2,0);
+camera.position.set(-256,4.4,21);camera.lookAt(-236,2,0);
 const hemi=new THREE.HemisphereLight(0xc1e2ff,0x39412e,2.0);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe0aa,3.6);
 sun.position.set(-75,125,62);sun.castShadow=true;
@@ -69,33 +70,33 @@ function makeTexture(kind){
 const grassTexture=makeTexture('grass'),earthTexture=makeTexture('earth');
 const grass=mat('#e0eed6',1);grass.map=grassTexture;
 const earth=mat('#f0e2d4',.93);earth.map=earthTexture;
-box(620,.35,260,0,-.33,0,grass);
-box(465,.13,38,0,-.06,0,earth);
+box(690,.35,260,0,-.33,0,grass);
+box(568,.13,38,0,-.06,0,earth);
 // Galloping ruts, run-off strips and painted distance marks.
 const lanePaint=mat('#e2d0ae',1),sod=mat('#3e7f49',1);
-for(const z of [-18,18])box(280,.12,4,0,.02,z,sod);
+for(const z of [-18,18])box(568,.12,4,0,.02,z,sod);
 for(let i=0;i<12;i++){
  const z=-14.9+i*2.65;
- box(463,.016,.027,0,.025,z,lanePaint).castShadow=false;
+ box(564,.016,.027,0,.025,z,lanePaint).castShadow=false;
 }
-for(let x=-225;x<=225;x+=20)for(const z of [-17,17]){
+for(let x=-275;x<=275;x+=20)for(const z of [-17,17]){
  const slab=box(.34,.017,1.3,x,.025,z,mat('#efe4c6'));slab.castShadow=false;
 }
 function rail(z){
- for(const y of [.65,1.23])box(470,.115,.115,0,y,z,C.rail);
- for(let x=-234;x<=234;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
+ for(const y of [.65,1.23])box(568,.115,.115,0,y,z,C.rail);
+ for(let x=-282;x<=282;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
 }
 rail(-20.2);rail(20.2);
 // Outer track lawn, sculpted hedges and paddock fencing.
-for(let x=-225;x<=225;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
-for(let x=-225;x<=225;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
-box(470,.12,.13,0,1.25,53,C.steel);
+for(let x=-279;x<=279;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
+for(let x=-279;x<=279;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
+box(568,.12,.13,0,1.25,53,C.steel);
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=mobile?90:155;
 for(let i=0;i<treeN;i++){
- const r=seeded(i*761+49),x=r()*475-237.5,back=r()>.40,z=back?-74-r()*34:75+r()*25;
+ const r=seeded(i*761+49),x=r()*580-290,back=r()>.40,z=back?-74-r()*34:75+r()*25;
  const h=5+r()*9;
  cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
  cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
@@ -103,20 +104,20 @@ for(let i=0;i<treeN;i++){
 }
 // Stadium Satoshi Nakamoto: concrete amphitheater, deep stands, VIP facade and twin spires.
 const venue=new THREE.Group();venue.name='Estadio Satoshi Nakamoto · Pista Eadweard Muybridge';scene.add(venue);
-box(475,2.6,36,0,1.2,-57,C.concrete,venue);
-box(470,5.2,12,0,5,-73,C.stone,venue);
+box(575,2.6,36,0,1.2,-57,C.concrete,venue);
+box(568,5.2,12,0,5,-73,C.stone,venue);
 for(let row=0;row<17;row++){
  const y=3.4+row*.75,z=-38-row*1.8;
- box(466,.29,1.9,0,y,z,row%3===0?C.ivory:C.seat,venue);
- box(466,.15,.13,0,y+.3,z+.87,C.steel,venue);
+ box(564,.29,1.9,0,y,z,row%3===0?C.ivory:C.seat,venue);
+ box(564,.15,.13,0,y+.3,z+.87,C.steel,venue);
 }
-for(let x=-227;x<=227;x+=9){
+for(let x=-276;x<=276;x+=9){
  box(.28,16,.4,x,11.0,-71,C.steel,venue);
  box(.28,9,.5,x,6.9,-33,C.steel,venue);
 }
-box(480,.55,24,0,22.5,-67,C.roof,venue);
-box(480,.22,1.0,0,22.9,-54.6,C.bronze,venue);
-for(let x=-230;x<=230;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
+box(580,.55,24,0,22.5,-67,C.roof,venue);
+box(580,.22,1.0,0,22.9,-54.6,C.bronze,venue);
+for(let x=-280;x<=280;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
 // Center VIP house framed with ornamental stone, patterned windows and copper roofing.
 const vip=new THREE.Group();vip.position.set(0,0,-78);venue.add(vip);
 box(69,13,9,0,11,0,C.ivory,vip);
@@ -159,7 +160,7 @@ const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.Ins
 const dummy=new THREE.Object3D(),palette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
 const rnd=seeded(641903);
 for(let i=0;i<crowdN;i++){
- const row=Math.floor(rnd()*17),x=(rnd()-.5)*467,z=-37.8-row*1.8;
+ const row=Math.floor(rnd()*17),x=(rnd()-.5)*560,z=-37.8-row*1.8;
  const y=3.92+row*.75;
  dummy.position.set(x,y,z);dummy.rotation.y=(rnd()-.5)*.6;dummy.updateMatrix();crowds[0].setMatrixAt(i,dummy.matrix);
  dummy.position.y+=.52;dummy.updateMatrix();crowds[1].setMatrixAt(i,dummy.matrix);
@@ -167,23 +168,34 @@ for(let i=0;i<crowdN;i++){
  crowds[1].setColorAt(i,new THREE.Color(rnd()>.55?'#d9b798':'#b99573'));
 }
 for(const inst of crowds){inst.castShadow=false;inst.receiveShadow=false;inst.instanceMatrix.needsUpdate=true;venue.add(inst);}
-for(const x of [-230,230]){
+for(const x of [-285,285]){
  cyl(.35,.55,31,x,15,-33,C.steel,venue);
  const bank=box(11,.8,2.1,x,30,-33,C.ivory,venue);
  const lamp=new THREE.PointLight(0xffe5b5,0,70,2);lamp.position.set(x,30,-31);venue.add(lamp);bank.userData.lamp=lamp;
+}
+// Starting gates: 12 open, clearly separated stalls. Decorative, no collisions.
+const gateFrames=new THREE.Group();gateFrames.name='12 starting gates';scene.add(gateFrames);
+const gatesSteel=mat('#b3c9be',.5,.33),gateAccent=mat('#e6c17c',.56,.22);
+for(let lane=0;lane<12;lane++){
+ const z=(lane-5.5)*2.55,x=VISUAL_START_X-3.6;
+ for(const offset of [-1.18,1.18])box(3.9,2.95,.12,x,1.48,z+offset,gatesSteel,gateFrames);
+ box(4.25,.15,2.4,x,3.02,z,gatesSteel,gateFrames);
+ box(.16,2.8,2.4,x-2.08,1.44,z,gatesSteel,gateFrames);
+ box(.14,.42,1.4,x+2.11,2.65,z,gateAccent,gateFrames);
 }
 // Finish area: race arches, camera bridge and official marker.
 box(.24,.07,40,VISUAL_FINISH_X,.07,0,C.ivory);
 for(const z of [-21,21])box(.55,12,.55,VISUAL_FINISH_X,6,z,C.steel);
 box(.7,1.6,42,VISUAL_FINISH_X,12.9,0,C.roof);
 const finishSign=sign('META · FINISH',VISUAL_FINISH_X,13.0,-3,18,2.5);
+const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 // Dust particles when running; no effect on outcomes.
 const dustN=mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false}));
 dust.visible=false;scene.add(dust);
 const rainN=mobile?280:650,rainPos=new Float32Array(rainN*3),rr=seeded(624);
-for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*480;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
+for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*580;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
 rain.visible=false;scene.add(rain);
@@ -261,7 +273,8 @@ function setWeather(mode){
  hemi.intensity=night?.5:wet?1.05:1.9;scene.background=new THREE.Color(night?'#101b2c':wet?'#849a9f':mode==='noon'?'#91c7e7':'#c1c9ba');
  scene.fog.color.set(night?'#172130':wet?'#92a6a8':'#b9c6b8');scene.fog.density=wet?.0075:.0036;
  rain.visible=wet;
- for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?280:0;}
+ for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?90:0;}
+ nightLights.configure({night});
 }
 weatherSelect.addEventListener('change',()=>setWeather(weatherSelect.value));setWeather('golden');
 const target=new THREE.Vector3(),goal=new THREE.Vector3();
@@ -298,11 +311,14 @@ function animate(now){
    const dist=broadcastPosition(broadcastProfiles[i],elapsed);
    const pr=dist/leaderMeters;
    h.progress=pr;
-   h.model.root.position.x=VISUAL_START_X+VISUAL_SPAN*Math.min(1.025,pr);
-   const dose=Math.min(11,Math.floor(Math.max(0,elapsed-.001)/5));
-   const weight=broadcastProfiles[i].broadcastWeights[dose];
-   h.visualSpeed=Math.min(2.8,Math.max(1.5,1.92*Math.sqrt(weight)));
-   h.model.root.position.y=Math.abs(Math.sin(now*.018*h.visualSpeed+i*.48))*.045;
+   h.model.root.position.x=VISUAL_START_X+VISUAL_SPAN*pr;
+   // Motor of the limbs is calibrated from actual positive world velocity,
+   // not from a fixed global animation multiplier (prevents on-the-spot gallop).
+   const meterSpeed=broadcastSpeed(broadcastProfiles[i],elapsed);
+   const nominalSpeed=leaderMeters/60;
+   const speedRatio=meterSpeed/nominalSpeed;
+   h.visualSpeed=Math.max(.85,Math.min(2.35,1.30*speedRatio));
+   h.model.root.position.y=Math.abs(Math.sin(now*.009*h.visualSpeed+i*.48))*.022;
   });
   const currentOrder=horses.slice().sort((a,b)=>b.progress-a.progress||a.index-b.index).map(h=>h.index).join(',');
   if(previousOrder&&currentOrder!==previousOrder){
@@ -322,6 +338,7 @@ function animate(now){
   }
  }
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
+ nightLights.update(now/1000);
  particles(dt);adjustCamera(dt);renderer.render(scene,camera);
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
  raf=requestAnimationFrame(animate);
