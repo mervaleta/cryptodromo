@@ -115,6 +115,7 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 @media(max-width:860px){.top{align-items:flex-start;flex-direction:column}.top nav{gap:10px}.top nav a{font-size:10px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+<link rel="stylesheet" href="/visual-lab/trackSplitsPanel.css?v=alpha15-splits-1">
 </head><body>
 <header class="top"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="" class="brand-mark" width="38" height="38">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera LIVE</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/cronicas/">Crónicas</a><a href="/apuestas/">Apuestas · demo</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 14</span></header>
 <main class="shell">
@@ -183,6 +184,11 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <section class="panel"><h2>Clasificación en pista</h2><ol id="standings"></ol>
 <div class="race-stats" id="race-stats"><strong>ESTADÍSTICAS</strong><div id="race-stat-content">Preparando posiciones y diferencias…</div></div></section>
 </div>
+<section class="panel crp-split-wrap" aria-label="Parciales y puntos de campeonato">
+<div class="crp-split-toolbar"><h2>PARCIALES / CAMPEONATO</h2><label>REGLAMENTO <select id="split-mode" aria-label="Tipo de parciales"><option value="quarters">Cuartos · 250 / 500 / 750 / meta</option><option value="legacy">Clásico · 200 / 400 / 600 / 800</option></select></label></div>
+<div id="race-splits" aria-live="off">Preparando parciales de los doce corredores…</div>
+<p class="crp-split-note">+1 punto al primero en llegar a cada marca bonificada. Clasificación: 25, 18, 15, 12, 10, 8, 6, 4, 2, 1, 0, 0 puntos. La meta no recibe un bonus duplicado en modo cuartos. Datos sintéticos.</p>
+</section>
 <section class="panel live-program" id="live">
 <div class="live-title"><div><div class="overline">PROGRAMACIÓN DEL ESTADIO · ARGENTINA (UTC−3)</div><h2><span class="live-dot"></span> CRYPTÓDROMO LIVE <small>REPLAY SINTÉTICO</small></h2></div><div id="live-countdown" class="live-countdown">00:00</div></div>
 <p class="micro">La transmisión arranca automáticamente: 1 minuto de carrera, 1 minuto para la llegada y resultados, 1 minuto de presentación y cuenta regresiva. Para escuchar sonido activá audio una sola vez. Fixture ficticio reproducible, sin cotizaciones ni apuestas reales.</p>
@@ -194,4 +200,4 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 </section>
 <section class="panel info-panel"><h2>Los protagonistas</h2><p>Historias y estadísticas calculadas para los cien caballos del Cryptódromo. Cada identidad es ficticia; las victorias y los podios corresponden a las 3.360 carreras sintéticas.</p><div id="race-biography" aria-live="polite">Seleccioná un caballo en la clasificación para ver su biografía.</div><a href="/racers/">Explorar los 100 caballos y sus estadísticas ↗</a></section>
 <footer class="foot">CRYPTÓDROMO · laboratorio visual. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
-</main><script type="module" src="./scene.js?v=alpha15-cinematic-3"></script></body></html>
+</main><script type="module" src="./scene.js?v=alpha15-cinematic-3-splits1"></script></body></html>
