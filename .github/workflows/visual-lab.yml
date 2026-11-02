@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths: ['visual-lab/**','race-lab/source/src/horse.js','race-lab/source/src/horseLivery.js','race-lab/source/src/horseSurface.js','race-lab/source/src/gaitRefiner.js','assets/crypto-logos/**','racers/**','tests/visual-lab-browser.mjs','tests/cinematic-choreography.mjs','tests/race-broadcast.mjs','tests/alpha07-visual.mjs','tests/alpha08.mjs','tests/alpha09.mjs','tests/finish-browser.mjs','.github/workflows/visual-lab.yml']
   workflow_dispatch:
+concurrency:
+  group: visual-lab-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
