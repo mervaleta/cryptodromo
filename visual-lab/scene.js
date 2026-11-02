@@ -152,7 +152,7 @@ for(let x=-330;x<=330;x+=9){
 }
 box(695,.55,24,0,22.5,-67,C.roof,venue);
 box(695,.22,1.0,0,22.9,-54.6,C.bronze,venue);
-for(let x=-336;x<=336;x+=8box(.2,1.3,22,x,21.6,-65,C.steel,venue);
+for(let x=-336;x<=336;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
 // Center VIP house framed with ornamental stone, patterned windows and copper roofing.
 const vip=new THREE.Group();vip.position.set(0,0,-78);venue.add(vip);
 box(69,13,9,0,11,0,C.ivory,vip);
