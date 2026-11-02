@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
-import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
+import {cameraBlend} from './cinematicCamera.js?v=alpha10-1';
+import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
+import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
@@ -256,10 +258,10 @@ const finishBurst=new THREE.Points(burstGeo,new THREE.PointsMaterial({
 finishBurst.visible=false;finishBurst.frustumCulled=false;scene.add(finishBurst);
 const finishGlow=new THREE.PointLight(0xffd68a,0,95,1.8);scene.add(finishGlow);
 function updateFinishBurst(){
- const t=elapsed-60,active=running&&t>=0&&t<13.8&&!finishShown;
+ const t=elapsed-60,active=running&&t>=0&&t<18.5&&!finishShown;
  finishBurst.visible=active;
  cheerFlags.visible=active;
- finishGlow.intensity=active?Math.max(0,22*(1-t/14)):0;
+ finishGlow.intensity=active?Math.max(0,22*(1-t/19)):0;
  if(active){
    for(let i=0;i<flagsN;i++){
      const p=flagPositions[i];
@@ -278,7 +280,7 @@ function updateFinishBurst(){
     f.z+Math.sin(angle)*r);
  }
  a.needsUpdate=true;
- finishBurst.material.opacity=.68*Math.max(0,1-t/14);
+ finishBurst.material.opacity=.68*Math.max(0,1-t/19);
 }
 
 // Independent exterior for the Satoshi alpha14 race, using three-venue shared presets.
@@ -312,6 +314,9 @@ let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
 let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
+const finishController=createFinishOrchestrator({holdAfterLast:2.4,maxVisualSeconds:19});
+const tvDirector=createBroadcastDirector({minDwell:5.5});
+let selectedTvShot='pack',lastDirectorUpdate=-Infinity;
 const biographyStats=buildRosterStats();
 function speakBroadcast(phrase){narrationDisplay.textContent=phrase;narrator.say(phrase,{urgent:phrase.includes('Largaron')||phrase.includes('Cruzaron')});}
 function showBiography(token){
@@ -379,12 +384,13 @@ function setRace(index){
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
  lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
+ finishController.reset();tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
  finishCelebration.hidden=true;presentation.hidden=true;
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
-   const e=race.entries[i];h.entry=e;h.progress=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
+   const e=race.entries[i];h.entry=e;h.progress=0;h.visualMeters=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
     h.model.root.position.set(first.x,0,first.z);h.model.root.rotation.y=first.heading;
    h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
    h.model.setBank?.(0);
@@ -525,7 +531,10 @@ function updateLiveProgram(){
   }
   else{
    running=false;elapsed=60+RUNOUT_SECONDS;
-   if(!finishShown)showOfficialResult();
+   // Never publish an acta unless all 12 have actually crossed.
+   const finishState=finishController.state;
+   if(finishState.revealed&&!finishShown)showOfficialResult();
+   else if(!finishState.revealed)status.textContent='ESPERANDO CRUCE DE TODOS LOS CORREDORES';
   }
  }
 }
@@ -698,7 +707,24 @@ function adjustCamera(dt){
  const point=trackPoint(layoutMode,avg,5.5);
  const tx=point.tangentX,tz=point.tangentZ,nx=point.sideX,nz=point.sideZ;
  const selectedMode=camSelect.value;
- const mode=selectedMode==='broadcast'?tvShot(elapsed,{running}):selectedMode;
+ let mode=selectedMode;
+ if(selectedMode==='broadcast'){
+   // Evaluate the director at most four times per second. The official
+   // ranking and time stay untouched; camera choice is visual only.
+   const phase=liveFollowing?(lastPhase||PHASES.RACE):
+     (elapsed>=60?PHASES.RESULTS:PHASES.RACE);
+   if(elapsed-lastDirectorUpdate>=.25||lastDirectorUpdate>elapsed){
+     const sorted=horses.map(h=>h.visualMeters||0).sort((a,b)=>b-a);
+     const margin=sorted.length>=2?sorted[0]-sorted[1]:100;
+     selectedTvShot=tvDirector.frame({
+       elapsed,phase,layout:layoutMode,progress:avg,
+       leadMarginMeters:margin,overtakes:overtakeCount,
+       reduceMotion:window.matchMedia('(prefers-reduced-motion: reduce)').matches
+     }).shot;
+     lastDirectorUpdate=elapsed;
+   }
+   mode=selectedTvShot;
+ }
  if(mode==='paddock'){
    goal.set(point.x+nx*38,12,point.z+nz*38);
    target.set(point.x,2.1,point.z);
@@ -855,7 +881,10 @@ function animate(now,draw=true){
   }
   if(inRunout){
    if(!finished){finished=true;updateStandings();}
-   const count=horses.filter(h=>h.visualMeters>=leaderMeters-1e-6).length;
+   const gate=finishController.update({
+     elapsed,distances:horses.map(h=>h.visualMeters),finishDistance:leaderMeters
+   });
+   const count=gate.crossedCount;
    if(count>previousCrossCount){previousCrossCount=count;finishCrossCount.textContent=count+' / 12';}
    if(!finishShown)finishCelebration.hidden=false;
    if(!finishRoarPlayed){
@@ -864,12 +893,13 @@ function animate(now,draw=true){
      msg.textContent='Esperamos el cruce del último corredor para mostrar el acta.';
      soundtrack.celebrate?.();
    }
-   if(count===12&&lastCrossedAt===null)lastCrossedAt=elapsed;
-   if(finishReveal({allCrossed:count===12,elapsed,firstCrossAt:lastCrossedAt??60,minimumHold:1.75}))
-     showOfficialResult();
+   if(gate.allCrossed&&lastCrossedAt===null)lastCrossedAt=gate.lastCrossAt;
+   if(gate.showOfficialResult)showOfficialResult();
+   if(gate.overdue)status.textContent='ALERTA: VERIFICAR EL CRUCE DEL ÚLTIMO CABALLO';
    soundtrack.update(elapsed,weatherSelect.value,.65,trackType.value);
    if(elapsed>=60+RUNOUT_SECONDS){
-    if(!finishShown)showOfficialResult();
+    // Fail closed: never reveal the official overlay based on time alone.
+    if(finishController.state.revealed&&!finishShown)showOfficialResult();
     running=false;
     // The animals leave the shot; never leave twelve idle horses on the finish.
     for(const h of horses){h.model.root.visible=false;h.model.play('Idle');}
