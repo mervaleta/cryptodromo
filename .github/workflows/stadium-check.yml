@@ -6,6 +6,10 @@ on:
       - 'estadio/**'
       - 'index.html'
       - 'tests/stadium-world.mjs'
+      - 'tests/stadium-live-integration.mjs'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/stadiumDistrict.js'
+      - 'visual-lab/index.html'
       - 'docs/stadium/**'
       - '.github/workflows/stadium-check.yml'
   push:
@@ -31,6 +35,8 @@ jobs:
           node --check race-lab/source/src/main.js
           node --check race-lab/source/src/churchillStadium.js
           node --check estadio/estadio.js
+          node --check visual-lab/scene.js
+          node --check visual-lab/stadiumDistrict.js
           node --check race-lab/source/src/stadium/presets.js
           node --check race-lab/source/src/stadium/venue.js
       - name: Build race application
@@ -42,3 +48,5 @@ jobs:
         run: node tests/stadium-integration.mjs
       - name: Three stadiums scenic integration and resource lifecycle
         run: node --test tests/stadium-world.mjs
+      - name: Validate alpha14 scenic adapter without touching race rules
+        run: node --test tests/stadium-live-integration.mjs
