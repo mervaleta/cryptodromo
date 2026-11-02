@@ -528,14 +528,34 @@ function updateLiveProgram(){
   // continues crossing over the following seconds for cinematic delivery.
   if(now.slotSeconds<60+RUNOUT_SECONDS){
     if(!running)horses.forEach(h=>h.model.play('Gallop'));
-    running=true;elapsed=now.slotSeconds;
+    running=true;elapsed=Math.max(elapsed,now.slotSeconds);
   }
   else{
    running=false;elapsed=60+RUNOUT_SECONDS;
+   // A spectator may tune in AFTER the last horse has already crossed.
+   // Verify the complete synthetic runout deterministically instead of
+   // leaving an empty result overlay or fabricating an unobserved finish.
+   if(!finishController.state.revealed){
+    const officialDistance=officialRanking(profiles)[0].distanceAt60;
+    const positions=broadcastProfiles.map(p=>broadcastRunoutDistance(
+      {...p,exitVelocity:broadcastSpeed(p,59.99)},officialDistance,RUNOUT_SECONDS));
+    const gate=finishController.update({
+      elapsed:60+RUNOUT_SECONDS,
+      distances:positions,finishDistance:officialDistance
+    });
+    if(gate.allCrossed&&!gate.showOfficialResult){
+      finishController.update({
+        elapsed:60+RUNOUT_SECONDS+2.4,
+        distances:positions,finishDistance:officialDistance
+      });
+    }
+   }
    // Never publish an acta unless all 12 have actually crossed.
    const finishState=finishController.state;
-   if(finishState.revealed&&!finishShown)showOfficialResult();
-   else if(!finishState.revealed)status.textContent='ESPERANDO CRUCE DE TODOS LOS CORREDORES';
+   if(finishState.revealed&&!finishShown){
+    showOfficialResult();
+    for(const h of horses){h.model.root.visible=false;h.model.play('Idle');}
+   }else if(!finishState.revealed)status.textContent='ESPERANDO CRUCE DE TODOS LOS CORREDORES';
   }
  }
 }
