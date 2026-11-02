@@ -223,15 +223,27 @@ for(const [id,[key,multiplier]] of Object.entries(controlBindings)){
  $(id).addEventListener('input',()=>{drone.setPose({[key]:Number($(id).value)*multiplier});syncControls();});
 }
 $('camera-mode').addEventListener('change',()=>{drone.setMode($('camera-mode').value);syncControls();});
-$('sight').addEventListener('change',()=>{
+// Curated architectural establishing shots. They change ONLY camera
+// orientation and framing; the user can immediately override them manually.
+const shotPresets={
+ tribunas:{yaw:0,pitch:-.32,distance:170},
+ comida:{yaw:0,pitch:-.39,distance:100},
+ carpas:{yaw:0,pitch:-.36,distance:110},
+ maquinas:{yaw:-.42,pitch:-.36,distance:130},
+ insumos:{yaw:-.24,pitch:-.43,distance:98},
+ pista:{yaw:0,pitch:-.28,distance:195},
+ acceso:{yaw:0,pitch:-.31,distance:162},
+ paddock:{yaw:0,pitch:-.38,distance:129},
+ broadcast:{yaw:0,pitch:-.36,distance:115}
+};
+function flyToSight(){
  cameraInterest=sights.find(s=>s.id===$('sight').value)||sights[0];
- if($('camera-mode').value!=='follow'){$('camera-mode').value='orbit';drone.setMode('orbit');}
+ drone.setPose({...shotPresets[cameraInterest.id],mode:'orbit'});
+ $('camera-mode').value='orbit';
  syncControls();
-});
-$('visit-sight').addEventListener('click',()=>{
- const site=sights.find(s=>s.id===$('sight').value)||sights[0];
- cameraInterest=site;drone.setMode('orbit');$('camera-mode').value='orbit';syncControls();
-});
+}
+$('sight').addEventListener('change',flyToSight);
+$('visit-sight').addEventListener('click',flyToSight);
 function resetDrone(){
  drone.setPose({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32,distance:95,mode:'free'});
  $('camera-mode').value='free';$('sight').value='pista';cameraInterest=sights[0];syncControls();
