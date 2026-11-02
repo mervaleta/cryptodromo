@@ -337,14 +337,55 @@ standings.addEventListener('click',event=>{
 });
 start.addEventListener('click',()=>{
  if(!horses.length)return;
+ if(liveFollowing){liveFollowing=false;liveNowButton.textContent='● SINTONIZAR LIVE';}
  if(finished){setRace(raceIndex+1);resultsOverlay.hidden=true;}
  running=!running;for(const h of horses)h.model.play(running?'Gallop':'Idle');
  if(running&&elapsed===0)speakBroadcast(narrateEvent({type:'start'}));
  start.textContent=running?'Ⅱ PAUSAR':'▶ CONTINUAR';
  status.textContent=running?'CARRERA EN CURSO · DOS INPUTS DE PRECIO':'EN PAUSA';
 });
-resetButton.addEventListener('click',()=>setRace(raceIndex));
-nextButton.addEventListener('click',()=>setRace(raceIndex+1));
+resetButton.addEventListener('click',()=>{liveFollowing=false;setRace(raceIndex);});
+nextButton.addEventListener('click',()=>{liveFollowing=false;setRace(raceIndex+1);});
+const livePrevious=document.querySelector('#live-previous'),liveCurrent=document.querySelector('#live-current'),
+      liveNextLabel=document.querySelector('#live-next-label'),liveCountdown=document.querySelector('#live-countdown'),
+      liveState=document.querySelector('#live-state'),liveNowButton=document.querySelector('#live-now');
+let liveFollowing=false,lastLiveIndex=-1;
+function updateLiveProgram(){
+ const now=liveSlot(new Date());
+ livePrevious.textContent=now.previous.label;
+ liveCurrent.textContent=now.label;
+ liveNextLabel.textContent=now.next.label;
+ liveCountdown.textContent=formatCountdown(now.secondsToNext);
+ const phase=now.racing?'EN PISTA · '+(60-now.slotSeconds)+' s restantes':'PRÓXIMA LARGADA · '+formatCountdown(now.secondsToNext);
+ liveState.textContent='DÍA '+(now.dayIndex+1)+' / 7 · CARRERA '+String(now.slot+1).padStart(3,'0')+
+   ' / 480 · '+phase+' · REPLAY SINTÉTICO (UTC−3)';
+ if(!liveFollowing||!horses.length)return;
+ if(now.index!==lastLiveIndex){
+   lastLiveIndex=now.index;
+   setRace(now.index);
+ }
+ if(now.racing){
+   if(!running){running=true;horses.forEach(h=>h.model.play('Gallop'));start.textContent='Ⅱ PAUSAR';}
+   if(elapsed<now.slotSeconds-1.2)elapsed=now.slotSeconds;
+ }else if(!finished){
+   running=false;finished=true;elapsed=61.2;
+   showOfficialResult();horses.forEach(h=>h.model.play('Idle'));
+ }
+}
+liveNowButton.addEventListener('click',()=>{
+ liveFollowing=!liveFollowing;
+ liveNowButton.textContent=liveFollowing?'■ SALIR DEL LIVE':'● SINTONIZAR LIVE';
+ if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}
+ else liveState.textContent+=' · MODO REPLAY LIBRE';
+});
+for(const [id,offset] of [['#live-prev',-1],['#live-next',1]]){
+ document.querySelector(id).addEventListener('click',()=>{
+  liveFollowing=false;liveNowButton.textContent='● SINTONIZAR LIVE';
+  const now=liveSlot(new Date()),slot=offset===-1?now.previous:now.next;
+  setRace(slot.index);
+ });
+}
+updateLiveProgram();setInterval(updateLiveProgram,1000);
 function setWeather(mode){
  const night=mode==='night',wet=mode==='rain';
  sun.intensity=night?.28:wet?1.6:mode==='noon'?4.1:3.2;
@@ -362,6 +403,18 @@ function setWeather(mode){
 }
 weatherSelect.addEventListener('change',()=>setWeather(weatherSelect.value));setWeather('golden');
 const trackType=document.querySelector('#surface'),cameraZoom=document.querySelector('#camera-zoom');
+const layoutSelect=document.querySelector('#layout');
+function setLayout(mode){
+ layoutMode=mode;
+ straightCourse.visible=mode==='straight';
+ alternateTracks.select(mode);
+ gateFrames.visible=mode!=='oval';
+ finishSign.visible=mode==='straight';
+ treeGroup.visible=mode!=='oval';
+ trackFX.reset();
+ if(horses.length)setRace(raceIndex);
+}
+layoutSelect.addEventListener('change',()=>setLayout(layoutSelect.value));
 function setTrackType(type){
  if(type==='grass'){
   earth.map=grassTexture;earth.color.set('#bfd09f');earth.roughness=.90;
