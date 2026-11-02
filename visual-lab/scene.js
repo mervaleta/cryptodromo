@@ -103,20 +103,20 @@ for(let i=0;i<treeN;i++){
 }
 // Stadium Satoshi Nakamoto: concrete amphitheater, deep stands, VIP facade and twin spires.
 const venue=new THREE.Group();venue.name='Estadio Satoshi Nakamoto · Pista Eadweard Muybridge';scene.add(venue);
-box(203,2.6,36,0,1.2,-57,C.concrete,venue);
-box(190,5.2,12,0,5,-73,C.stone,venue);
+box(475,2.6,36,0,1.2,-57,C.concrete,venue);
+box(470,5.2,12,0,5,-73,C.stone,venue);
 for(let row=0;row<17;row++){
  const y=3.4+row*.75,z=-38-row*1.8;
- box(197,.29,1.9,0,y,z,row%3===0?C.ivory:C.seat,venue);
- box(197,.15,.13,0,y+.3,z+.87,C.steel,venue);
+ box(466,.29,1.9,0,y,z,row%3===0?C.ivory:C.seat,venue);
+ box(466,.15,.13,0,y+.3,z+.87,C.steel,venue);
 }
-for(let x=-97;x<=97;x+=9){
+for(let x=-227;x<=227;x+=9){
  box(.28,16,.4,x,11.0,-71,C.steel,venue);
  box(.28,9,.5,x,6.9,-33,C.steel,venue);
 }
-box(207,.55,24,0,22.5,-67,C.roof,venue);
-box(207,.22,1.0,0,22.9,-54.6,C.bronze,venue);
-for(let x=-101;x<=101;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
+box(480,.55,24,0,22.5,-67,C.roof,venue);
+box(480,.22,1.0,0,22.9,-54.6,C.bronze,venue);
+for(let x=-230;x<=230;x+=8)box(.2,1.3,22,x,21.6,-65,C.steel,venue);
 // Center VIP house framed with ornamental stone, patterned windows and copper roofing.
 const vip=new THREE.Group();vip.position.set(0,0,-78);venue.add(vip);
 box(69,13,9,0,11,0,C.ivory,vip);
@@ -154,12 +154,12 @@ function sign(text,x,y,z,w=24,h=3,fg='#f3ecd7',bg='#0e3028'){
 sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7);
 sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0);
 // Spectators: shared-instanced bodies and heads, individual colors, multi-tier seating.
-const crowdN=mobile?950:2200,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
+const crowdN=mobile?1400:3400,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
 const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.InstancedMesh(headG,mat('#dbb78b'),crowdN)];
 const dummy=new THREE.Object3D(),palette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
 const rnd=seeded(641903);
 for(let i=0;i<crowdN;i++){
- const row=Math.floor(rnd()*17),x=(rnd()-.5)*191,z=-37.8-row*1.8;
+ const row=Math.floor(rnd()*17),x=(rnd()-.5)*467,z=-37.8-row*1.8;
  const y=3.92+row*.75;
  dummy.position.set(x,y,z);dummy.rotation.y=(rnd()-.5)*.6;dummy.updateMatrix();crowds[0].setMatrixAt(i,dummy.matrix);
  dummy.position.y+=.52;dummy.updateMatrix();crowds[1].setMatrixAt(i,dummy.matrix);
@@ -167,7 +167,7 @@ for(let i=0;i<crowdN;i++){
  crowds[1].setColorAt(i,new THREE.Color(rnd()>.55?'#d9b798':'#b99573'));
 }
 for(const inst of crowds){inst.castShadow=false;inst.receiveShadow=false;inst.instanceMatrix.needsUpdate=true;venue.add(inst);}
-for(const x of [-125,125]){
+for(const x of [-230,230]){
  cyl(.35,.55,31,x,15,-33,C.steel,venue);
  const bank=box(11,.8,2.1,x,30,-33,C.ivory,venue);
  const lamp=new THREE.PointLight(0xffe5b5,0,70,2);lamp.position.set(x,30,-31);venue.add(lamp);bank.userData.lamp=lamp;
@@ -183,7 +183,7 @@ const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THR
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false}));
 dust.visible=false;scene.add(dust);
 const rainN=mobile?280:650,rainPos=new Float32Array(rainN*3),rr=seeded(624);
-for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*240;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
+for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*480;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
 rain.visible=false;scene.add(rain);
@@ -272,7 +272,7 @@ function adjustCamera(dt){
  if(camMode==='aerial'){goal.set(follow-34,68,54);target.set(follow+24,0,-7);}
  else if(camMode==='finish'){goal.set(VISUAL_FINISH_X+6,7,31);target.set(VISUAL_FINISH_X-12,2,0);}
  else if(camMode==='rail'){goal.set(follow-6,2.75,14.5);target.set(follow+8,2.0,0);}
- else {goal.set(follow+14,4.6,24);target.set(follow-9,2.0,-1.5);}
+ else {goal.set(follow+26,5.3,34);target.set(follow-8,2.0,-1.5);}
  camera.position.lerp(goal,Math.min(1,dt*1.9));camera.lookAt(target);
 }
 function particles(dt){
