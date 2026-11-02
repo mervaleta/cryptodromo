@@ -8,6 +8,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
+import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
 import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
@@ -76,13 +77,16 @@ sky.material.uniforms.turbidity.value=5.5;
 sky.material.uniforms.rayleigh.value=2.1;
 sky.material.uniforms.mieCoefficient.value=.005;
 sky.material.uniforms.mieDirectionalG.value=.81;
+const cloudLayer=createCloudLayer(scene,{mobile,softwareGPU});
 const camera=new THREE.PerspectiveCamera(50,1,.1,700);
 camera.position.set(-256,4.4,21);camera.lookAt(-236,2,0);
 const hemi=new THREE.HemisphereLight(0xc1e2ff,0x39412e,2.0);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe0aa,3.6);
+const sunDirection=new THREE.Vector3(-.46,.83,.30).normalize();
 sun.position.set(-75,125,62);sun.castShadow=true;
 sun.shadow.mapSize.set(softwareGPU?512:mobile?768:1536,softwareGPU?512:mobile?768:1536);
-Object.assign(sun.shadow.camera,{left:-160,right:160,top:110,bottom:-110,near:1,far:320});
+Object.assign(sun.shadow.camera,{left:-102,right:102,top:98,bottom:-98,near:1,far:320});
+sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.bias=-.00014;sun.shadow.normalBias=.018;scene.add(sun);scene.add(sun.target);
 const fill=new THREE.DirectionalLight(0x91c5df,.8);fill.position.set(30,20,-65);scene.add(fill);
 function mat(c,rough=.8,metal=0){return new THREE.MeshStandardMaterial({color:c,roughness:rough,metalness:metal});}
@@ -586,6 +590,8 @@ const daytimeInput=document.querySelector('#daytime');
 const daytimeAuto=document.querySelector('#daytime-auto');
 const daytimeLabel=document.querySelector('#daytime-label');
 const sunlightInput=document.querySelector('#sunlight');
+const cloudCover=document.querySelector('#cloud-cover'),fogIntensity=document.querySelector('#fog-intensity');
+const cloudCoverLabel=document.querySelector('#cloud-cover-label'),fogIntensityLabel=document.querySelector('#fog-intensity-label');
 const sunlightLabel=document.querySelector('#sunlight-label');
 const angleInput=document.querySelector('#camera-angle'),heightInput=document.querySelector('#camera-height');
 const angleLabel=document.querySelector('#camera-angle-label'),heightLabel=document.querySelector('#camera-height-label');
@@ -607,8 +613,9 @@ function setWeather(mode){
  const illumination=mode==='night'?0:mode==='noon'?1:mode==='golden'?.34:solar;
  const azimuth=(hour-12)/12*Math.PI;
  const elevation=Math.max(-.12,Math.sin((hour-6)/13*Math.PI));
- sun.position.set(Math.sin(azimuth)*115,120*elevation,Math.cos(azimuth)*110);
- sky.material.uniforms.sunPosition.value.copy(sun.position);
+ sunDirection.set(Math.sin(azimuth)*115,120*Math.max(.045,elevation),Math.cos(azimuth)*110).normalize();
+ sun.position.copy(sunDirection).multiplyScalar(135).add(sun.target.position);
+ sky.material.uniforms.sunPosition.value.copy(sunDirection).multiplyScalar(150);
  sun.intensity=(night?.14:.3+3.7*illumination)*(wet?.55:1)*lightScale;
  sun.color.set(night?'#87a2c5':wet?'#bbccd6':illumination<.35?'#ffba7b':'#fff2d5');
  hemi.intensity=(night?.32:.5+1.6*illumination)*(wet?.77:1)*lightScale;
@@ -618,7 +625,13 @@ function setWeather(mode){
  const background=night?'#111a2c':wet?'#8499a5':illumination<.3?'#c17e73':'#8dbfdf';
  scene.background.set(background);
  scene.fog.color.set(night?'#152031':wet?'#899da5':illumination<.3?'#b5a39a':'#b3c9c6');
- scene.fog.density=wet?.0075:.0036;
+ const mistScale=Number(fogIntensity.value)/100;
+ fogIntensityLabel.textContent=fogIntensity.value+'%';
+ cloudCoverLabel.textContent=cloudCover.value+'%';
+ scene.fog.density=Math.max(.0004,(wet?.0075:.0036)*mistScale);
+ sun.castShadow=!night&&!softwareGPU;
+ cloudLayer.configure({cover:Math.max(wet?.8:0,Number(cloudCover.value)/100),
+   night,rain:wet,sunset:illumination<.38,wind:wet?1.6:.55});
  rain.visible=wet;
  for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?85:0;}
  nightLights.configure({night});
@@ -626,7 +639,7 @@ function setWeather(mode){
 }
 weatherSelect.value='auto';
 weatherSelect.addEventListener('change',()=>{setWeather(weatherSelect.value);applyLightingControls();});
-for(const el of [daytimeInput,daytimeAuto,sunlightInput]){
+for(const el of [daytimeInput,daytimeAuto,sunlightInput,cloudCover,fogIntensity]){
  el.addEventListener('input',()=>{
   if(el===daytimeInput)daytimeAuto.checked=false;
   setWeather(weatherSelect.value);applyLightingControls();
@@ -769,6 +782,11 @@ function adjustCamera(dt){
  const avg=horses.length?horses.reduce((a,h)=>a+Math.min(1.12,h.progress),0)/horses.length:0;
  const point=trackPoint(layoutMode,avg,5.5);
  const tx=point.tangentX,tz=point.tangentZ,nx=point.sideX,nz=point.sideZ;
+ // A stabilized, camera-local shadow map follows the peloton instead of
+ // allocating 1,536² pixels across the entire 780 m course.
+ sun.target.position.set(point.x,0,point.z);
+ sun.position.copy(sunDirection).multiplyScalar(135).add(sun.target.position);
+ sun.target.updateMatrixWorld();
  const selectedMode=camSelect.value;
  let mode=selectedMode;
  if(selectedMode==='broadcast'){
@@ -972,6 +990,7 @@ function animate(now,draw=true){
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
  if(draw){
   nightLights.update(now/1000);
+  cloudLayer.update(now/1000);
   updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
   const feedback=qualityGovernor.sample(realSeconds*1000,now);
   if(graphicsModeSelect.value==='auto'&&feedback.changed){
