@@ -27,7 +27,7 @@ test('LIVE: 480 races per local day, 3 min slots, UTC−3, seven-day calendar ro
  assert.equal(formatCountdown(61),'01:01');
 });
 test('three physical layouts progress without freezing, preserve forward facing tangent',()=>{
- assert.equal(COURSE_LENGTH,640);
+ assert.equal(COURSE_LENGTH,780);
  assert.deepEqual(COURSE_MODES,['straight','s-bend','oval']);
  for(const mode of COURSE_MODES){
   let previous;
@@ -65,8 +65,8 @@ test('procedural fur, normals, original token tattoo and audio work without adde
  assert.match(scene,/createAlternativeTracks/);
  assert.match(scene,/liveFollowing/);
  assert.match(scene,/SINTONIZAR LIVE/);
- assert.match(scene,/VISUAL_START_X=-320,VISUAL_FINISH_X=320/);
+ assert.match(scene,/VISUAL_START_X=-390,VISUAL_FINISH_X=390/);
  assert.match(scene,/softwareGPU/);
  assert.match(scene,/setInterval\(\(\)=>/);
- assert.match(scene,/for\(let x=-336;x<=336;x\+=8\)box/);
+ assert.match(scene,/for\(let x=-398;x<=398;x\+=8\)box/);
 });
