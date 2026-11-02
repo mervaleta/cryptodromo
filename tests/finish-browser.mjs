@@ -23,7 +23,7 @@ try{
  }));
  console.log('ALPHA06_FINISH_QA',JSON.stringify(result));
  const runout0=await page.evaluate(()=>window.__cryptodromoQA.state());
- await page.waitForTimeout(1200);
+ await page.waitForFunction(before=>window.__cryptodromoQA.state().elapsed>before+.3,runout0.elapsed,{polling:100,timeout:18000});
  const runout1=await page.evaluate(()=>window.__cryptodromoQA.state());
  const distanceIncrease=runout1.positions.map((pos,i)=>pos-runout0.positions[i]);
  console.log('RUNOUT_QA',JSON.stringify({before:runout0.elapsed,after:runout1.elapsed,movement:distanceIncrease}));
