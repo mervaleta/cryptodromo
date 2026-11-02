@@ -277,6 +277,51 @@ function setWeather(mode){
  nightLights.configure({night});
 }
 weatherSelect.addEventListener('change',()=>setWeather(weatherSelect.value));setWeather('golden');
+
+// The lighting console is its own accessible tab. It never touches race data.
+const tabRace=document.querySelector('#tab-race'),tabLight=document.querySelector('#tab-light');
+const panelRace=document.querySelector('#panel-race'),panelLight=document.querySelector('#panel-light');
+function switchConsole(showLights){
+ tabRace.classList.toggle('active',!showLights);
+ tabLight.classList.toggle('active',showLights);
+ tabRace.setAttribute('aria-selected',String(!showLights));
+ tabLight.setAttribute('aria-selected',String(showLights));
+ panelRace.hidden=showLights;panelLight.hidden=!showLights;
+}
+tabRace.addEventListener('click',()=>switchConsole(false));
+tabLight.addEventListener('click',()=>switchConsole(true));
+const lightPower=document.querySelector('#light-power');
+const lightDimmer=document.querySelector('#light-dimmer');
+const lightColor=document.querySelector('#light-color');
+const lightPattern=document.querySelector('#light-pattern');
+const lightLevel=document.querySelector('#light-level');
+const lightStatus=document.querySelector('#light-status');
+function applyLightingControls(){
+ const intensity=Number(lightDimmer.value);
+ lightLevel.textContent=intensity+'%';
+ nightLights.configure({
+  enabled:lightPower.checked,
+  dimmer:intensity/100,
+  color:lightColor.value,
+  effect:lightPattern.value,
+  night:weatherSelect.value==='night'
+ });
+ const mode=weatherSelect.value==='night'?'noche':'día';
+ lightStatus.textContent=(lightPower.checked?'Reflectores activos':'Reflectores apagados')+
+   ' · '+intensity+'% · '+mode+' · '+lightPattern.options[lightPattern.selectedIndex].textContent+
+   ' · sin influencia en la clasificación.';
+}
+for(const input of [lightPower,lightDimmer,lightColor,lightPattern]){
+ input.addEventListener('input',applyLightingControls);
+ input.addEventListener('change',applyLightingControls);
+}
+document.querySelector('#light-preview').addEventListener('click',()=>{
+ weatherSelect.value='night';
+ setWeather('night');
+ applyLightingControls();
+});
+weatherSelect.addEventListener('change',applyLightingControls);
+applyLightingControls();
 const target=new THREE.Vector3(),goal=new THREE.Vector3();
 function adjustCamera(dt){
  const avg=horses.length?horses.reduce((a,h)=>a+h.model.root.position.x,0)/horses.length:-83;
