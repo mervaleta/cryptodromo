@@ -17,6 +17,25 @@ try{
  assert.equal(initial.horses,12);
  await mkdir('artifacts',{recursive:true});
  await page.screenshot({path:'artifacts/alpha3-stadium.png',fullPage:false});
+ // The full-length aerial camera must be stationary so forward movement is obvious.
+ await page.selectOption('#camera','aerial');
+ await page.click('#tab-light');
+ assert.equal(await page.locator('#panel-light').isVisible(),true);
+ await page.click('#light-preview');
+ assert.equal(await page.locator('#weather').inputValue(),'night');
+ await page.locator('#light-dimmer').fill('58');
+ await page.locator('#light-color').fill('#55bbff');
+ await page.selectOption('#light-pattern','wave');
+ assert.match(await page.locator('#light-status').innerText(),/58%/);
+ await page.waitForTimeout(700);
+ await page.screenshot({path:'artifacts/alpha05-night-lights.png',fullPage:false});
+ // Test controls without affecting official race results.
+ await page.locator('#light-power').uncheck();
+ assert.match(await page.locator('#light-status').innerText(),/apagados/);
+ await page.locator('#light-power').check();
+ await page.selectOption('#light-pattern','steady');
+ await page.click('#tab-race');
+ await page.selectOption('#weather','golden');
  await page.click('#start');
  await page.waitForTimeout(6500);
  const clock=await page.locator('#clock').innerText();
