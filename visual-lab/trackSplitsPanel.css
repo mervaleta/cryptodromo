@@ -21,3 +21,9 @@
 .crp-split-bonus{margin-left:auto;white-space:nowrap;color:#84cda9;font-size:10px}
 .crp-split-points{width:48px;text-align:right;font-size:11px;white-space:nowrap;color:#f7d99c}
 @media(max-width:640px){.crp-split-checkpoints{grid-template-columns:repeat(2,minmax(0,1fr))}.crp-split-standings{grid-template-columns:1fr}}
+
+.crp-split-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.crp-split-toolbar h2{margin:0;font-size:14px;font-weight:800;letter-spacing:.09em;color:#ead198}
+.crp-split-toolbar label{display:flex;align-items:center;gap:8px;font-size:11px;color:#b1d0be}
+.crp-split-toolbar select{max-width:100%;width:auto;font-size:12px;padding:7px 10px;min-height:36px}
+.crp-split-note{font-size:11px;color:#acc5b6;line-height:1.5;margin:11px 0 0}
