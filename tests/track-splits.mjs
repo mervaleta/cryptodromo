@@ -88,3 +88,12 @@ test('unreached checkpoints cannot earn an imaginary point',()=>{
  assert.equal(score.splits[0].record,null);
  assert.equal(score.results.reduce((n,p)=>n+p.bonusPoints,0),0);
 });
+
+
+test('broadcast split path is used while the official winner remains frozen',()=>{
+ const runners=profiles();
+ runners[1].broadcastDistance=runners[1].cumulative.map(v=>v*1.1);
+ const scores=buildTrackSplits(runners,{mode:'quarters'});
+ assert.equal(scores.splits[0].record,'T1');
+ assert.equal(scores.finishWinner,'T0');
+});
