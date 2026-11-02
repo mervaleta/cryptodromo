@@ -226,15 +226,15 @@ $('camera-mode').addEventListener('change',()=>{drone.setMode($('camera-mode').v
 // Curated architectural establishing shots. They change ONLY camera
 // orientation and framing; the user can immediately override them manually.
 const shotPresets={
- tribunas:{yaw:0,pitch:-.32,distance:170},
- comida:{yaw:0,pitch:-.39,distance:100},
- carpas:{yaw:0,pitch:-.36,distance:110},
- maquinas:{yaw:-.42,pitch:-.36,distance:130},
- insumos:{yaw:-.24,pitch:-.43,distance:98},
- pista:{yaw:0,pitch:-.28,distance:195},
- acceso:{yaw:0,pitch:-.31,distance:162},
- paddock:{yaw:0,pitch:-.38,distance:129},
- broadcast:{yaw:0,pitch:-.36,distance:115}
+ tribunas:{yaw:0,pitch:-.32,distance:225,fov:51},
+ comida:{yaw:0,pitch:-.37,distance:284,fov:55},
+ carpas:{yaw:0,pitch:-.36,distance:250,fov:55},
+ maquinas:{yaw:-.42,pitch:-.36,distance:165,fov:50},
+ insumos:{yaw:-.24,pitch:-.43,distance:145,fov:48},
+ pista:{yaw:0,pitch:-.28,distance:220,fov:53},
+ acceso:{yaw:0,pitch:-.31,distance:186,fov:49},
+ paddock:{yaw:0,pitch:-.38,distance:153,fov:49},
+ broadcast:{yaw:0,pitch:-.36,distance:156,fov:49}
 };
 function flyToSight(){
  cameraInterest=sights.find(s=>s.id===$('sight').value)||sights[0];
