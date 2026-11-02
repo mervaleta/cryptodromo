@@ -10,7 +10,7 @@ import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceCho
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 
 // Alpha 05: +20% physical/visual course (410 → 492 units), same official race and 60s.
-const VISUAL_START_X=-246,VISUAL_FINISH_X=246,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
+const VISUAL_START_X=-275,VISUAL_FINISH_X=275,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
 // Alpha 03: a real XZ-plane, Y-up stadium, not a vertical XY theater.
 // Visual effects and frame rate are deliberately isolated from the finance engine.
 const canvas=document.getElementById('raceCanvas'), stage=document.getElementById('stage');
@@ -33,7 +33,7 @@ soundButton.addEventListener('click',()=>{
  else if(soundtrack.start())soundButton.textContent='♫ SILENCIAR AMBIENTE';
  soundButton.setAttribute('aria-pressed',String(soundtrack.enabled));
 });
-document.querySelector('#result-close').addEventListener('click',()=>{resultsOverlay.hidden=true;});
+document.querySelector('#result-close').addEventListener('click',()=>{resultsOverlay.classList.remove('is-visible');resultsOverlay.hidden=true;});
 const mobile=matchMedia('(max-width:700px)').matches;
 let renderer;
 try {renderer=new THREE.WebGLRenderer({canvas,antialias:!mobile,powerPreference:'high-performance'});}
@@ -245,7 +245,8 @@ function showOfficialResult(){
  }));
  resultMeta.textContent='12 CABALLOS · VENTAJA '+stats.leadGapMeters.toFixed(2)+
    ' m · '+race.day+'ª JORNADA · DATOS SINTÉTICOS';
- resultsOverlay.hidden=false;start.textContent='▶ SIGUIENTE CARRERA';
+ resultsOverlay.hidden=false;requestAnimationFrame(()=>resultsOverlay.classList.add('is-visible'));
+ start.textContent='▶ SIGUIENTE CARRERA';
  speakBroadcast(narrateEvent({type:'finish',leader:stats.leader}));
  status.textContent='RESULTADO OFICIAL · '+stats.leader+' GANADOR';
  msg.textContent='El resultado se congeló a 60 s; los caballos desaceleran después de la meta.';
@@ -286,7 +287,7 @@ function setRace(index){
  broadcastProfiles=buildBroadcastProfiles(profiles);
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
- resultsOverlay.hidden=true;
+ resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
@@ -436,10 +437,12 @@ function animate(now){
    const pr=dist/leaderMeters;
    h.progress=pr;
    h.model.root.position.x=VISUAL_START_X+VISUAL_SPAN*pr;
-   h.visualSpeed=Math.max(.43,Math.min(2.35,1.30*meterSpeed/(leaderMeters/60)));
+   // Slightly faster hoof cadence makes 550 world units in 60s read as a sprint.
+   h.visualSpeed=Math.max(.52,Math.min(2.65,1.62*meterSpeed/(leaderMeters/60)));
    // The GLB + eight corrective keyframes now provide the flight and impact;
    // avoid a second oversized global vertical bounce in the scene.
-   h.model.root.position.y=Math.abs(Math.sin(now*.009*h.visualSpeed+i*.48))*.012;
+   // Never float the root above the track; footfall kick is applied to the ground.
+   h.model.root.position.y=0;
   });
   clockEl.textContent=elapsed>=60?'01:00':'00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
   if(!inRunout){
@@ -473,7 +476,9 @@ function animate(now){
    }
   }
   if(inRunout){
-   showOfficialResult();
+   if(!finished){finished=true;updateStandings();}
+   // Give the athletes a full second to cross and clear the camera.
+   if(elapsed>=61)showOfficialResult();
    soundtrack.update(elapsed,weatherSelect.value,.65);
    if(elapsed>=60+RUNOUT_SECONDS){
     running=false;
