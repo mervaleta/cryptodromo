@@ -9,7 +9,7 @@ const masterPromise=fetch('/racers/horse-master.v1.json',{cache:'force-cache'})
 export function createPreview(canvas,onFailure=()=>{}){
  let renderer=null,context=null,sprite=null,texture=null,master=null,selected=null;
  let elapsed=0,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,disposed=false;
- let pending=0,clock=new THREE.Clock(),observer,frameId;
+ let pending=0,clock=new THREE.Clock(),observer,frameId,stageAspect=1.45;
  const indicator=document.querySelector('#preview-state');
  const scene=new THREE.Scene();
  const camera=new THREE.OrthographicCamera(-2.4,2.4,1.8,-1.8,.1,30);
@@ -24,7 +24,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    const container=canvas.parentElement;
    if(!container)return;
    const w=Math.max(1,container.clientWidth),h=Math.max(1,container.clientHeight);
-   if(renderer){renderer.setSize(w,h,false);const ratio=w/h;camera.left=-2.35*ratio;camera.right=2.35*ratio;camera.top=2.35;camera.bottom=-2.35;camera.updateProjectionMatrix();}
+   if(renderer){renderer.setSize(w,h,false);const ratio=w/h;stageAspect=ratio;camera.left=-2.35*ratio;camera.right=2.35*ratio;camera.top=2.35;camera.bottom=-2.35;camera.updateProjectionMatrix();if(sprite){const size=4.1*Math.min(1,ratio);sprite.scale.set(size,size,1);}}
    else{const dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
  }
  observer=new ResizeObserver(resize);observer.observe(canvas.parentElement);resize();
@@ -38,7 +38,7 @@ export function createPreview(canvas,onFailure=()=>{}){
        texture?.dispose();sprite?.material?.dispose();if(sprite)scene.remove(sprite);
        texture=createVectorHorseTexture(THREE,master,token,{size:512,fps:12,zoomToArt:true});
        const material=new THREE.SpriteMaterial({map:texture.texture,transparent:true,depthWrite:false,alphaTest:.015,toneMapped:false});
-       sprite=new THREE.Sprite(material);sprite.scale.set(4.1,4.1,1);scene.add(sprite);
+       sprite=new THREE.Sprite(material);const size=4.1*Math.min(1,stageAspect);sprite.scale.set(size,size,1);scene.add(sprite);
        texture.update(elapsed);
      }
      indicator&&(indicator.textContent='VECTORIAL · 12 POSES · SOMBRAS Y POLVO');
