@@ -736,7 +736,7 @@ let environmentLast=performance.now();
 function updateEnvironment(){
  const now=performance.now(),environmentSeconds=Math.min(2,Math.max(0,(now-environmentLast)/1000));
  environmentLast=now;
-  trackFX.update(environmentSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
+  trackFX.update(environmentSeconds,{weather:weatherSelect.value,sun:(isSolarNight()||weatherSelect.value==='night'||weatherSelect.value==='rain')?0:Math.max(0,Math.sin((getSolarMinutes()/60-6)/13*Math.PI))});
   if(now-lastWetUpdate>230){
    lastWetUpdate=now;
    const wet=trackFX.wetness;
