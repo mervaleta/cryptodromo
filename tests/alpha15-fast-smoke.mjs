@@ -48,7 +48,20 @@ try{
  const response=await page.goto('https://race.cryptodromo.com/visual-lab/?fast-qa=alpha15',
    {waitUntil:'domcontentloaded',timeout:30000});
  assert.equal(response?.status(),200);
- await page.waitForFunction(()=>document.querySelector('#start')&&!document.querySelector('#start').disabled,{timeout:35000});
+ try{
+  await page.waitForFunction(()=>document.querySelector('#start')&&!document.querySelector('#start').disabled,{timeout:35000});
+ }catch(error){
+  const diagnostic=await page.evaluate(async()=>{
+   const response=await fetch('/visual-lab/scene.js?no-cache='+Date.now(),{cache:'no-store'});
+   return {url:location.href,stage:document.querySelector('#stage')?.getBoundingClientRect().toJSON(),
+    status:document.querySelector('#status')?.textContent,
+    message:document.querySelector('#message')?.textContent,
+    start:document.querySelector('#start')?.outerHTML,
+    scripts:[...document.scripts].map(x=>x.src).filter(Boolean),sceneStatus:response.status};
+  });
+  console.error('ALPHA16_3D_LOAD_FAILURE',JSON.stringify({diagnostic,faults:faults.slice(-15)}));
+  throw error;
+ }
  const stage=await page.evaluate(()=>({
   horses:document.querySelectorAll('#standings li').length,
   clouds:!!document.querySelector('#cloud-cover'),
