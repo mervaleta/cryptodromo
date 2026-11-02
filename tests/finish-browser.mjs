@@ -6,13 +6,13 @@ const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use
 try{
  const page=await browser.newPage({viewport:{width:1450,height:850}});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.clock.install();
  const response=await page.goto('https://race.cryptodromo.com/visual-lab/?finish-qa=alpha06',{waitUntil:'domcontentloaded',timeout:40000});
  assert.equal(response?.status(),200);
  await page.waitForFunction(()=>!document.querySelector('#start')?.disabled,{timeout:40000});
  await page.click('#start');
- await page.clock.fastForward(60500);
- await page.waitForFunction(()=>!document.querySelector('#result-overlay').hidden,{timeout:12000});
+ // Same deterministic precomputed race: jump only the playback clock.
+ await page.evaluate(()=>window.__cryptodromoQA.jumpNearFinish());
+ await page.waitForFunction(()=>!document.querySelector('#result-overlay').hidden,{timeout:15000});
  const result=await page.evaluate(()=>({
   clock:document.querySelector('#clock').textContent,
   status:document.querySelector('#status').textContent,
@@ -22,6 +22,12 @@ try{
   stats:document.querySelector('#race-stat-content').textContent,
  }));
  console.log('ALPHA06_FINISH_QA',JSON.stringify(result));
+ const runout0=await page.evaluate(()=>window.__cryptodromoQA.state());
+ await page.waitForTimeout(1200);
+ const runout1=await page.evaluate(()=>window.__cryptodromoQA.state());
+ const distanceIncrease=runout1.positions.map((pos,i)=>pos-runout0.positions[i]);
+ console.log('RUNOUT_QA',JSON.stringify({before:runout0.elapsed,after:runout1.elapsed,movement:distanceIncrease}));
+ assert.ok(distanceIncrease.every(d=>d>0),'All horses must continue moving past the official post');
  console.log('JS_ERRORS',JSON.stringify(errors));
  assert.equal(result.clock,'01:00');
  assert.equal(result.visible,true);
