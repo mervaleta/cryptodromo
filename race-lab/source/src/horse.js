@@ -53,7 +53,8 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
       const old=badgeMaterial.map;badgeMaterial.map=makeBadgeTexture(nextSymbol,nextAccent);badgeMaterial.needsUpdate=true;old?.dispose();
       coat=nextCoat;accent=nextAccent;symbol=nextSymbol;
     },
-    update(delta,speed=1){mixer.update(Math.min(Math.max(delta,0),.1)*Math.max(0,speed));},
+    // Fixed visual clock: speed and market data only change track position, not gait timing.
+    update(delta){mixer.update(Math.min(Math.max(delta,0),.1));},
     dispose(){mixer.stopAllAction();mixer.uncacheRoot(model);materials.forEach(material=>material.dispose());badgeMaterial.map?.dispose();badgeMaterial.dispose();root.removeFromParent();}
   };
   api.play(mode,0);mixer.update(phase);return api;
