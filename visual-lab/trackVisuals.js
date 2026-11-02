@@ -67,6 +67,26 @@ export function createAlternativeTracks(scene,trackMaterial,railMaterial){
    m.rotation.z=point.heading;
    m.position.set(point.x,.108,point.z);group.add(m);
   }
+  // Oval and S-bend need their own finish gates, not the old straight arch.
+  const gate=new THREE.Group();gate.name='Meta oficial · '+mode;group.add(gate);
+  const postMat=new THREE.MeshStandardMaterial({color:'#e9e1cd',metalness:.22,roughness:.43});
+  const beamMat=new THREE.MeshStandardMaterial({color:'#244c3e',metalness:.25,roughness:.36});
+  for(const side of [-1,1]){
+   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.36,.44,11,9),postMat);
+   pole.position.set(finish.x+finish.sideX*20,5.5,finish.z+finish.sideZ*20);
+   pole.castShadow=true;gate.add(pole);
+  }
+  const beam=new THREE.Mesh(new THREE.BoxGeometry(42,1.65,.85),beamMat);
+  beam.position.set(finish.x,11.45,finish.z);
+  beam.rotation.y=Math.atan2(-finish.sideZ,finish.sideX);
+  beam.castShadow=true;gate.add(beam);
+  const lampMat=new THREE.MeshBasicMaterial({color:'#eac682'});
+  for(let j=0;j<9;j++){
+   const led=new THREE.Mesh(new THREE.SphereGeometry(.25,7,5),lampMat);
+   const offset=(j-4)*4.8;
+   led.position.set(finish.x+finish.sideX*offset,11.45,finish.z+finish.sideZ*offset);
+   gate.add(led);
+  }
   courses[mode]=group;
   group.visible=false;
  }
