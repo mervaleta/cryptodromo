@@ -350,6 +350,23 @@ function setWeather(mode){
  nightLights.configure({night});
 }
 weatherSelect.addEventListener('change',()=>setWeather(weatherSelect.value));setWeather('golden');
+const trackType=document.querySelector('#surface'),cameraZoom=document.querySelector('#camera-zoom');
+function setTrackType(type){
+ if(type==='grass'){
+  earth.map=grassTexture;earth.color.set('#bfd09f');earth.roughness=.90;
+  trackFX.marks.material.color.set('#27451e');
+ }else if(type==='synthetic'){
+  earth.map=null;earth.color.set('#a5aaa2');earth.roughness=.66;
+  trackFX.marks.material.color.set('#404945');
+ }else{
+  earth.map=earthTexture;earth.color.set('#f0e2d4');earth.roughness=.96;
+  trackFX.marks.material.color.set('#493526');
+ }
+ earth.needsUpdate=true;
+}
+trackType.addEventListener('change',()=>setTrackType(trackType.value));
+setTrackType(trackType.value);
+cameraZoom.addEventListener('input',()=>{camera.fov=Number(cameraZoom.value);camera.updateProjectionMatrix();});
 
 // The lighting console is its own accessible tab. It never touches race data.
 const tabRace=document.querySelector('#tab-race'),tabLight=document.querySelector('#tab-light');
@@ -415,6 +432,7 @@ function particles(dt){
    attr.setXYZ(i,h.model.root.position.x-1-r()*7,r()*.9,(h.index-5.5)*2.55+(r()-.5)*1.3);
   }
   attr.needsUpdate=true;dust.visible=true;
+  dust.material.opacity=weatherSelect.value==='rain'?.08:(trackType.value==='grass'?.14:.48);
  }else dust.visible=false;
  if(rain.visible){const attr=rainGeo.attributes.position;for(let i=0;i<rainN;i++){
   let y=attr.getY(i)-dt*25;
