@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050b0a">
+<meta name="description" content="Cryptódromo Cinematic Race Lab: el prototipo 3D de carreras, impulsadas por datos de precios sintéticos.">
+<title>CRYPTÓDROMO | CINEMATIC RACE LAB</title>
+<style>
+:root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:#070d0c;color:#f2f2e9;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(155deg,#0e1d1b,#060909 55%);min-height:100vh}
+.top{display:flex;align-items:center;justify-content:space-between;padding:13px clamp(15px,3.5vw,65px);border-bottom:1px solid #264037;background:#07110fee;position:relative;z-index:5;gap:18px}
+.brand{font-size:20px;letter-spacing:.02em;font-weight:900;color:#f3f1e3;text-decoration:none;white-space:nowrap}.brand:before{content:"◈";color:#2de2b0;margin-right:11px}.brand span{color:#3ecca2}
+.top nav{display:flex;flex-wrap:wrap;gap:20px}.top nav a{color:#b7c8c0;text-decoration:none;font-size:11px;text-transform:uppercase;letter-spacing:.13em}.top nav a:hover{color:white}
+.shell{max-width:1800px;margin:auto;padding:19px clamp(12px,3vw,55px) 36px}
+.heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:17px;flex-wrap:wrap}.overline{font-size:10px;font-weight:850;color:#39d3a7;letter-spacing:.22em;text-transform:uppercase}
+h1{font-family:Georgia,serif;font-size:clamp(30px,3.9vw,57px);font-weight:500;margin:6px 0 0;letter-spacing:-.05em;line-height:1.03}h1 em{color:#e4c185;font-weight:400}
+.heading small{font-size:11px;color:#a2b0a6;letter-spacing:.05em}.dot{display:inline-block;width:7px;height:7px;background:#40dba1;border-radius:100%;box-shadow:0 0 18px #19c68d;margin-right:7px}
+.stage{position:relative;width:100%;height:clamp(420px,58vw,770px);border:1px solid #435747;border-radius:8px;overflow:hidden;box-shadow:0 28px 80px #0009;background:#758b8c}
+#raceCanvas{display:block;width:100%;height:100%}
+.stage:after{content:"";position:absolute;pointer-events:none;inset:0;box-shadow:inset 0 0 100px 22px #08100c58}
+.broadcast{position:absolute;left:21px;top:20px;display:flex;gap:12px;align-items:center;z-index:2;font-size:11px;font-weight:900;letter-spacing:.13em;text-shadow:0 2px 6px #000}
+.broadcast span{padding:7px 11px;background:#0b1c17b8;border:1px solid #d6f3d138;border-radius:3px}
+.broadcast b{background:#bd2b2c;color:white;padding:8px 11px;border-radius:3px}
+.dial{position:absolute;right:22px;top:18px;z-index:2;text-align:right;text-shadow:0 2px 5px #000}.dial div{font-size:11px;color:#dce6de;font-weight:800;letter-spacing:.18em}.dial strong{font-size:46px;font-weight:700;letter-spacing:-.07em;font-variant-numeric:tabular-nums}
+.lowerthird{position:absolute;bottom:0;left:0;right:0;padding:28px 21px 19px;z-index:2;background:linear-gradient(transparent,#06100bea 85%);display:flex;justify-content:space-between;align-items:end;gap:20px}
+.lowerthird strong{font-size:21px;letter-spacing:-.02em}.lowerthird p{margin:6px 0 0;color:#cfddcf;font-size:11px}
+.lowerthird .leader{color:#ebd394;text-align:right}.leader div{font-size:9px;letter-spacing:.18em;color:#9cbbaa}.leader strong{font-size:29px}
+.below{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,390px);gap:17px;margin-top:17px}
+.panel{border:1px solid #34453d;background:linear-gradient(155deg,#14231e,#0a1310);border-radius:6px;padding:17px}
+h2{font-size:13px;letter-spacing:.15em;margin:0 0 16px;text-transform:uppercase}
+.controlrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+button,select{background:#172d23;border:1px solid #426152;color:#f6f5e9;padding:12px 15px;font:inherit;font-size:12px;border-radius:3px;cursor:pointer;min-height:43px}
+button:hover,select:hover{background:#254537}button.primary{background:#c5a16b;color:#0c0f0a;border-color:#d8b885;font-weight:900;letter-spacing:.08em;min-width:195px}
+label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:130px}.micro{font-size:11px;color:#8da59b;line-height:1.7;margin-top:14px}
+#standings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;padding:0;margin:0}
+#standings li{background:#0b1713;border:1px solid #263b31;padding:8px 9px;display:flex;align-items:center;gap:8px;min-width:0;font-size:12px}
+#standings i{width:6px;height:21px;flex-shrink:0;border-radius:2px}#standings b{font-size:11px;letter-spacing:.08em}#standings small{color:#94ab9c;margin-left:auto}
+.foot{font-size:11px;color:#7d9289;padding:20px 1px;line-height:1.6}.foot a{color:#9dcbb6}
+@media(max-width:890px){.below{grid-template-columns:1fr}.stage{height:520px}.top nav{display:none}#standings{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.stage{height:450px}.dial strong{font-size:30px}.broadcast{left:10px;top:10px;font-size:9px}.lowerthird strong{font-size:17px}.leader strong{font-size:20px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+</head><body>
+<header class="top"><a class="brand" href="/">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera anterior</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 03</span></header>
+<main class="shell">
+<div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS · 60 SEGUNDOS · REPRODUCCIÓN SINTÉTICA</small></div>
+<div class="stage" id="stage">
+<canvas id="raceCanvas" aria-label="Estadio de carreras 3D con doce caballos, gradas y cámaras de transmisión"></canvas>
+<div class="broadcast"><b>● DEMO</b><span>CRYPTÓDROMO WORLD FEED</span></div>
+<div class="dial"><div>TIEMPO DE CARRERA</div><strong id="clock">00:00</strong></div>
+<div class="lowerthird"><div><div class="overline" id="status">CARGANDO ESCENARIO 3D</div><strong id="raceName">GRAN PREMIO CRIPTO · CARRERA 001</strong><p id="message">Datos sintéticos, resultados predeterminados y sin apuestas</p></div><div class="leader"><div>AL FRENTE</div><strong id="leader">BTC</strong></div></div>
+</div>
+<div class="below">
+<section class="panel"><h2>Dirección de carrera</h2><div class="controlrow">
+<button class="primary" id="start" disabled>▶ PREPARANDO CABALLOS</button>
+<button id="reset">↺ REINICIAR</button><button id="next">SIGUIENTE CARRERA ›</button>
+<label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Toma aérea</option><option value="finish">Meta</option></select></label>
+<label>ATMÓSFERA<select id="weather"><option value="golden">Atardecer</option><option value="noon">Pleno día</option><option value="night">Noche</option><option value="rain">Lluvia</option></select></label>
+</div><p class="micro">Prototipo visual en Three.js, reconstruido con pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></section>
+<section class="panel"><h2>Clasificación en pista</h2><ol id="standings"></ol></section>
+</div>
+<footer class="foot">CRYPTÓDROMO · laboratorio visual. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
+</main><script type="module" src="./scene.js?v=alpha03-1"></script></body></html>
