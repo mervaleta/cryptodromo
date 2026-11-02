@@ -19,6 +19,9 @@ on:
       - 'estadio/**'
       - 'index.html'
       - 'tests/stadium-world.mjs'
+      - 'tests/stadium-live-integration.mjs'
+      - 'visual-lab/**'
+      - 'alpha15/**'
       - 'docs/stadium/**'
 jobs:
   validate:
