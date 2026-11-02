@@ -57,7 +57,7 @@ export function officialAudit(profiles,day,number) {
     method:'CRP-DOSE-FAIR-V1',coefficients:{first:FIRST_COEFFICIENTS,second:SECOND_COEFFICIENTS},
     formula:'distance60=1000*(1+(91*variationMinute1Pct+120*variationMinute2Pct)/1200)',
     horses:officialRanking(profiles).map((p,i)=>({
-      position:i+1,symbol:p.entry.symbol,variation1Pct:p.input1,
+      position:i+1,symbol:p.entry.symbol,priceStart:p.entry.priceAtStart,priceMinute1:p.entry.priceAtMid,priceMinute2:p.entry.priceAtFinish,variation1Pct:p.input1,
       variation2Pct:p.input2,coefficients1:p.coefficients.slice(0,9),
       coefficients2:p.coefficients.slice(9),distance60Meters:p.distanceAt60,
       finish1000mSeconds:p.finishTime
