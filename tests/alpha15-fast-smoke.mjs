@@ -68,7 +68,7 @@ try{
  assert.equal(splitState.preset,'quarters');
  assert.equal(stage.horses,12);
  assert.ok(stage.clouds&&stage.fog&&stage.quality);
- assert.match(stage.script||'',/alpha16-village-1/);
+ assert.match(stage.script||'',/alpha16-village-2/);
  assert.equal(faults.length,0,'3D runtime faults '+faults.join('; ').slice(0,800));
  // Alpha16 is a separate contemplative path: never replaces LIVE.
  faults.length=0;
