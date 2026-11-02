@@ -365,43 +365,117 @@ nextButton.addEventListener('click',()=>{liveFollowing=false;setRace(raceIndex+1
 const livePrevious=document.querySelector('#live-previous'),liveCurrent=document.querySelector('#live-current'),
       liveNextLabel=document.querySelector('#live-next-label'),liveCountdown=document.querySelector('#live-countdown'),
       liveState=document.querySelector('#live-state'),liveNowButton=document.querySelector('#live-now');
-let liveFollowing=false,lastLiveIndex=-1;
+const replayButton=document.querySelector('#replay-mode'),autoLabel=document.querySelector('#automatic-label');
+const presentation=document.querySelector('#presentation-overlay'),presentRoster=document.querySelector('#present-roster'),
+      presentSymbol=document.querySelector('#present-symbol'),presentName=document.querySelector('#present-name'),
+      presentBadge=document.querySelector('#present-badge'),presentRecord=document.querySelector('#present-record'),
+      presentCountdown=document.querySelector('#present-countdown');
+const finishCelebration=document.querySelector('#finish-celebration'),finishCrossCount=document.querySelector('#finish-cross-count');
+const qaManual=new URLSearchParams(location.search).get('finish-qa')==='alpha06';
+let liveFollowing=!qaManual,lastLiveIndex=-1,lastPhase='',lastPresented=-1;
+function syncControlMode(){
+ const manual=!liveFollowing;
+ for(const button of [start,resetButton,nextButton])button.hidden=!manual;
+ autoLabel.hidden=manual;
+ replayButton.textContent=manual?'● VOLVER A LIVE AUTOMÁTICO':'▶ MODO REPLAY MANUAL';
+ liveNowButton.textContent=manual?'● SINTONIZAR LIVE':'● LIVE AUTOMÁTICO';
+}
+function showPresentation(nextRace,seconds){
+ const slotIndex=Math.min(11,Math.floor(Math.max(0,seconds)/5));
+ presentation.hidden=false;
+ presentCountdown.textContent=formatCountdown(60-seconds);
+ if(slotIndex===lastPresented)return;
+ lastPresented=slotIndex;
+ const token=nextRace.entries[slotIndex],stats=biographyStats.get(token.symbol);
+ presentSymbol.textContent=token.symbol;presentSymbol.style.color=token.color;
+ presentName.textContent=token.name;
+ presentBadge.textContent=String(slotIndex+1).padStart(2,'0')+' / 12 · CABALLO '+(slotIndex+1);
+ presentRecord.textContent=stats?'Ficha del campeonato · '+stats.starts+' participaciones · '+stats.wins+
+   ' victorias · '+stats.podiums+' podios · mejor puesto '+stats.bestPlace:'Corredor del Cryptódromo';
+ [...presentRoster.children].forEach((card,i)=>card.classList.toggle('active',i===slotIndex));
+ showBiography(token);
+ if(slotIndex===0||slotIndex===6||slotIndex===10)speakBroadcast(
+  'Presentamos al corredor '+token.symbol+', '+token.name+'. '+(stats?stats.wins+' victorias en el campeonato ficticio.':''));
+}
+function buildPresentRoster(entries){
+ const cards=entries.map((entry,i)=>{
+  const el=document.createElement('div');
+  el.textContent=entry.symbol;el.style.setProperty('--runner-color',entry.color);
+  el.title=entry.name;el.dataset.runner=String(i);return el;
+ });
+ presentRoster.replaceChildren(...cards);lastPresented=-1;
+}
 function updateLiveProgram(){
- const now=liveSlot(new Date());
- livePrevious.textContent=now.previous.label;
- liveCurrent.textContent=now.label;
+ const now=liveSlot(new Date()),phase=broadcastPhase(now.slotSeconds);
+ livePrevious.textContent=now.previous.label;liveCurrent.textContent=now.label;
  liveNextLabel.textContent=now.next.label;
  liveCountdown.textContent=formatCountdown(now.secondsToNext);
- const phase=now.racing?'EN PISTA · '+(60-now.slotSeconds)+' s restantes':'PRÓXIMA LARGADA · '+formatCountdown(now.secondsToNext);
+ const label=phase.phase===PHASES.RACE?'EN PISTA · '+Math.ceil(phase.secondsLeft)+' s':
+   phase.phase===PHASES.RESULTS?'LLEGADA / ACTA OFICIAL':'PRESENTACIÓN Y CUENTA REGRESIVA';
  liveState.textContent='DÍA '+(now.dayIndex+1)+' / 7 · CARRERA '+String(now.slot+1).padStart(3,'0')+
-   ' / 480 · '+phase+' · REPLAY SINTÉTICO (UTC−3)';
+  ' / 480 · '+label+' · REPLAY SINTÉTICO UTC−3';
  if(!liveFollowing||!horses.length)return;
  if(now.index!==lastLiveIndex){
-   lastLiveIndex=now.index;
-   setRace(now.index);
+  lastLiveIndex=now.index;lastPhase='';
+  setRace(now.index);buildPresentRoster(race.entries);
  }
- if(now.racing){
-   if(!running){running=true;horses.forEach(h=>h.model.play('Gallop'));start.textContent='Ⅱ PAUSAR';}
-   if(elapsed<now.slotSeconds-1.2)elapsed=now.slotSeconds;
- }else if(!finished){
-   running=false;finished=true;elapsed=61.2;
-   showOfficialResult();horses.forEach(h=>h.model.play('Idle'));
+ if(phase.phase!==lastPhase){
+  lastPhase=phase.phase;
+  if(phase.phase===PHASES.PRESENTATION){
+   const upcoming=now.next.index;
+   setRace(upcoming);buildPresentRoster(race.entries);
+   running=false;finished=false;
+   resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');
+   finishCelebration.hidden=true;
+   status.textContent='PRESENTACIÓN DE CORREDORES · PRÓXIMA LARGADA AUTOMÁTICA';
+  }
+  if(phase.phase===PHASES.RACE){
+   presentation.hidden=true;finishCelebration.hidden=true;
+   if(raceIndex!==now.index)setRace(now.index);
+   running=true;horses.forEach(h=>h.model.play('Gallop'));
+   status.textContent='● LIVE · CARRERA EN CURSO';speakBroadcast(narrateEvent({type:'start'}));
+  }
+ }
+ if(phase.phase===PHASES.PRESENTATION){
+  showPresentation(race,phase.time);
+  return;
+ }
+ presentation.hidden=true;
+ if(phase.phase===PHASES.RACE){
+  running=true;if(Math.abs(elapsed-now.slotSeconds)>1)elapsed=now.slotSeconds;
+ }else{
+  // The clock stays at 60 for the scoring engine, but the last horse
+  // continues crossing over the following seconds for cinematic delivery.
+  if(now.slotSeconds<60+RUNOUT_SECONDS){running=true;elapsed=now.slotSeconds;}
+  else{
+   running=false;elapsed=60+RUNOUT_SECONDS;
+   if(!finishShown)showOfficialResult();
+  }
  }
 }
+function enterManualMode(){
+ liveFollowing=false;
+ presentation.hidden=true;finishCelebration.hidden=true;
+ resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');
+ setRace(raceIndex);syncControlMode();
+}
 liveNowButton.addEventListener('click',()=>{
- liveFollowing=!liveFollowing;
- liveNowButton.textContent=liveFollowing?'■ SALIR DEL LIVE':'● SINTONIZAR LIVE';
- if(liveFollowing){activateBroadcastAudio();lastLiveIndex=-1;updateLiveProgram();}
- else liveState.textContent+=' · MODO REPLAY LIBRE';
+ if(liveFollowing)enterManualMode();
+ else{liveFollowing=true;lastLiveIndex=-1;lastPhase='';syncControlMode();updateLiveProgram();}
+});
+replayButton.addEventListener('click',()=>{
+ if(liveFollowing)enterManualMode();
+ else{liveFollowing=true;lastLiveIndex=-1;lastPhase='';syncControlMode();updateLiveProgram();}
 });
 for(const [id,offset] of [['#live-prev',-1],['#live-next',1]]){
  document.querySelector(id).addEventListener('click',()=>{
-  liveFollowing=false;liveNowButton.textContent='● SINTONIZAR LIVE';
+  enterManualMode();
   const now=liveSlot(new Date()),slot=offset===-1?now.previous:now.next;
   setRace(slot.index);
  });
 }
-updateLiveProgram();setInterval(updateLiveProgram,1000);
+syncControlMode();
+updateLiveProgram();setInterval(updateLiveProgram,550);
 function setWeather(mode){
  const night=mode==='night',wet=mode==='rain';
  sun.intensity=night?.28:wet?1.6:mode==='noon'?4.1:3.2;
