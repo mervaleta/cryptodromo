@@ -7,7 +7,8 @@ try{
  const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
  const errors=[],requestedLogos=[];
  page.on('request',request=>{if(request.url().includes('/assets/crypto-logos/'))requestedLogos.push(request.url());});
- page.on('pageerror',e=>errors.push('PAGE '+e.message));
+ page.on('pageerror',e=>errors.push('PAGE '+(e.stack||e.message)));
+ page.on('response',response=>{if(response.status()>=400)errors.push('HTTP '+response.status()+' '+response.url());});
  page.on('requestfailed',r=>errors.push('REQUEST '+r.url()+' '+r.failure()?.errorText));
  page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text());});
  const res=await page.goto('https://race.cryptodromo.com/visual-lab/?ci=20261102',{waitUntil:'domcontentloaded',timeout:30000});
@@ -22,6 +23,15 @@ try{
     scripts:[...document.scripts].map(s=>s.src).filter(Boolean)
    }))));
    console.log('SCENE_START_ERRORS',JSON.stringify(errors));
+   const diagnostics=await page.evaluate(async()=>{
+    const paths=['/visual-lab/scene.js','/visual-lab/trackMath.js','/visual-lab/trackVisuals.js','/visual-lab/liveSchedule.js','/visual-lab/raceAudio.js','/race-lab/source/src/horse.js','/race-lab/source/src/horseSurface.js'];
+    return Promise.all(paths.map(async path=>{
+      try{const r=await fetch(path+'?diag=a08-'+Date.now(),{cache:'no-store'}),text=await r.text();
+        return{path,status:r.status,type:r.headers.get('content-type'),prefix:text.slice(0,90),size:text.length};
+      }catch(e){return{path,error:String(e)};}
+    }));
+   });
+   console.log('SCENE_MODULE_DIAGNOSTICS',JSON.stringify(diagnostics));
    throw e;
  }
  const initial=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,canvas:[document.querySelector('canvas').width,document.querySelector('canvas').height],horses:document.querySelectorAll('#standings li').length}));
