@@ -43,7 +43,7 @@ function speedForSymbol(symbol,pace=3.2){
 }
 export function waveDuration(wave,{pace=3.2}={}){
  if(!wave?.runners?.length)throw Error('Invalid parade wave');
- return Math.max(...wave.runners.map((runner,i)=>paradeLapLength(i)/speedForSymbol(runner.symbol,pace)));
+ return Math.max(...wave.runners.map((runner,i)=>paradeLapLength(i+(PARADE_WAVE_CAP-wave.runners.length)/2)/speedForSymbol(runner.symbol,pace)));
 }
 export function wavePose(wave,elapsedSeconds,{pace=3.2}={}){
  if(!wave?.runners?.length)throw Error('Invalid parade wave');
