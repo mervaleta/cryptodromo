@@ -3,7 +3,7 @@
  * No "future career" leakage into pre-race introductions.
  * Nothing here is real market data or an observed racing history.
  */
-import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js';
+import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js?v=coat-20261102';
 import {RACES_PER_DAY,FIXTURE_DAYS} from '../race-lab/source/src/data/raceFixture.js';
 import {syntheticRaceRecord} from './raceRecords.js';
 const clamp=(n,low,high)=>Math.min(high,Math.max(low,n));
