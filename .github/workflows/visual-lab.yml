@@ -1,0 +1,29 @@
+name: Cinematic visual lab verification
+on:
+  push:
+    branches: [main]
+    paths: ['visual-lab/**','tests/visual-lab-browser.mjs','.github/workflows/visual-lab.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Verify live cinematic scene
+        run: node tests/visual-lab-browser.mjs
+      - name: Save reference screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptodromo-cinematic-alpha03
+          path: artifacts/
+          if-no-files-found: ignore
