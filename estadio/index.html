@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#08110f">
+  <meta name="description" content="Explorá el Estadio Satoshi Nakamoto y la Pista Eadweard Muybridge, el universo 3D de Cryptódromo.">
+  <link rel="icon" href="/assets/cryptodromo-logo.png">
+  <title>Estadio Satoshi Nakamoto | Cryptódromo</title>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js"}}</script>
+  <script type="module" src="/estadio/estadio.js"></script>
+  <link rel="stylesheet" href="/race-lab/source/src/style.css">
+  <style>
+    .stadium-page{max-width:1480px;margin:auto;padding:26px clamp(16px,3vw,42px) 60px}
+    .stadium-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#27d7a2;font-weight:750}
+    .stadium-page h1{font-family:'Barlow Condensed',Impact,Arial,sans-serif;font-size:clamp(36px,5vw,69px);line-height:1.05;letter-spacing:.02em;margin:12px 0 8px;color:#f6fbf7}
+    .stadium-page h1 span{color:#19d69d}
+    .stadium-lead{max-width:760px;color:#aebeb5;line-height:1.65;font-size:14px}
+    .stadium-panel{border:1px solid #264235;background:#0c1712;border-radius:12px;overflow:hidden;margin:26px 0 18px}
+    .stadium-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #24382d}
+    .stadium-controls button,.stadium-controls select{border:1px solid #365143;border-radius:6px;color:#e8f6ee;background:#14241b;padding:9px 13px;font-size:12px;cursor:pointer}
+    .stadium-controls button[aria-pressed=true]{background:#117b59;border-color:#24c691;color:white}
+    .stadium-controls label{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:#98afa3}
+    #stadiumView{position:relative;height:clamp(330px,53vw,680px);background:linear-gradient(#769aaf,#3b6141)}
+    #stadiumView canvas{width:100%;height:100%;display:block}
+    #stadiumNotice{position:absolute;inset:auto 14px 14px auto;padding:8px 10px;border-radius:5px;background:#061810c9;color:#e8f3ed;font:11px Inter,Arial,sans-serif}
+    .stadium-copy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .stadium-copy article{border:1px solid #253d31;background:#101e17;border-radius:10px;padding:18px}
+    .stadium-copy h2{font-size:17px;margin:0 0 9px;color:#eaf8ee}.stadium-copy p{font-size:12px;line-height:1.65;color:#90a79b;margin:0}
+    .stadium-back{display:inline-block;color:#26d39f;font-size:13px;font-weight:650;margin-top:18px}
+    @media(max-width:700px){.stadium-copy{grid-template-columns:1fr}.stadium-controls label{margin-left:0;width:100%}}
+    @media(prefers-reduced-motion:reduce){.stadium-controls button{transition:none}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <a class="site-skip" href="#main-content">Saltar al contenido</a>
+  <header class="sitebar"><div class="sitebar-inner">
+    <a class="site-brand" href="/" aria-label="Cryptódromo, inicio"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a>
+    <nav class="site-nav" aria-label="Navegación principal"><a href="/">Carrera</a><a href="/racers/">Corredores</a><a href="/estadio/" aria-current="page">Estadio</a><a href="/institucional/">Proyecto</a><a href="/como-funciona.html">Cómo funciona</a></nav>
+    <a class="site-action" href="/">Ver carrera ↗</a>
+  </div></header>
+  <main class="stadium-page" id="main-content">
+    <div class="stadium-eyebrow">La casa de las carreras del mercado</div>
+    <h1>ESTADIO <span>SATOSHI NAKAMOTO</span></h1>
+    <p class="stadium-lead">La pista principal lleva el nombre de <strong>Eadweard Muybridge</strong>, pionero de la fotografía del movimiento. Arquitectura inspirada en los históricos hipódromos de Kentucky, reinterpretada con identidad propia de Cryptódromo.</p>
+    <section class="stadium-panel" aria-label="Explorador 3D del estadio">
+      <div class="stadium-controls">
+        <button id="overview" type="button" aria-pressed="true">Vista panorámica</button>
+        <button id="homestretch" type="button" aria-pressed="false">Recta principal</button>
+        <label for="lighting">Iluminación
+          <select id="lighting"><option value="17.5">Atardecer</option><option value="12">Mediodía</option><option value="22">Noche</option><option value="7">Amanecer</option></select>
+        </label>
+        <label for="climate">Clima
+          <select id="climate"><option value="clear">Despejado</option><option value="rain">Lluvia</option><option value="storm">Tormenta</option><option value="fog">Neblina</option></select>
+        </label>
+      </div>
+      <div id="stadiumView"><canvas id="stadiumCanvas" aria-label="Reconstrucción 3D del Estadio Satoshi Nakamoto"></canvas><div id="stadiumNotice" role="status">ESCENOGRAFÍA 3D · DEMOSTRACIÓN</div></div>
+    </section>
+    <div class="stadium-copy">
+      <article><h2>Las dos torres</h2><p>Clubhouse de inspiración decimonónica, torres gemelas, techos oscuros, arquerías y terrazas. Un homenaje arquitectónico, no una réplica oficial.</p></article>
+      <article><h2>Pista Eadweard Muybridge</h2><p>Óvalo de tierra y recta de llegada. La panorámica presenta el trazado completo; el motor de carreras conserva su propia geometría lineal.</p></article>
+      <article><h2>Estadio vivo</h2><p>Tribunas animadas, reflectores nocturnos y clima integrado. Los resultados de las competencias se calculan aparte, a partir de un fixture sintético reproducible.</p></article>
+    </div>
+    <a class="stadium-back" href="/">← Volver a la carrera</a>
+  </main>
+</div>
+</body>
+</html>

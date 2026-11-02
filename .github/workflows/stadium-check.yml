@@ -1,0 +1,36 @@
+name: Satoshi Nakamoto Stadium
+on:
+  pull_request:
+    paths:
+      - 'race-lab/source/**'
+      - 'estadio/**'
+      - 'index.html'
+      - '.github/workflows/stadium-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'race-lab/source/**'
+      - 'estadio/**'
+      - 'index.html'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'race-lab/source/package-lock.json'
+      - name: JavaScript syntax
+        run: |
+          node --check race-lab/source/src/main.js
+          node --check race-lab/source/src/churchillStadium.js
+          node --check estadio/estadio.js
+      - name: Build race application
+        working-directory: race-lab/source
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Stadium and fixture contract
+        run: node tests/stadium-integration.mjs
