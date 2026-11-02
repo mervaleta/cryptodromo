@@ -20,12 +20,12 @@ function render(){
   return '<tr><td><b>#'+String(i+1).padStart(3,'0')+'</b></td><td>'+fixture.time+'</td><td class="entries">'+fixture.entries.map(e=>'<a href="/racers/#'+encodeURIComponent(e.symbol)+'" style="color:'+e.color+'" title="'+escape(e.name)+'">'+escape(e.symbol)+'</a>').join(' · ')+'</td><td><span class="pill'+(current?' upcoming':'')+'">'+state+'</span></td></tr>';
  }).join('');
  $('summary').textContent='Día '+(day+1)+' de 7 · '+filtered.length+' carreras encontradas · mostrando '+(view.length?offset+1:0)+'-'+(offset+view.length);
- $('pages').textContent=Math.ceil(offset/24)+1+' / '+Math.max(1,Math.ceil(filtered.length/24));
+ $('pages').textContent=(view.length?offset+1:0)+'–'+(offset+view.length)+' / '+filtered.length;
  $('previous').disabled=offset===0;$('following').disabled=offset+24>=filtered.length;
 }
 $('day').addEventListener('change',()=>{day=Number($('day').value);offset=0;render();});
 $('search').addEventListener('input',()=>{offset=0;render();});
-$('hour').addEventListener('change',()=>{offset=Math.floor(Number($('hour').value)*20/24)*24;render();});
+$('hour').addEventListener('change',()=>{offset=Number($('hour').value)*20;render();});
 $('previous').addEventListener('click',()=>{offset=Math.max(0,offset-24);render();});
 $('following').addEventListener('click',()=>{offset+=24;render();});
 render();
