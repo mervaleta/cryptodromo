@@ -678,6 +678,28 @@ function particles(dt){
   if(y<0)y=29;attr.setY(i,y);
  }attr.needsUpdate=true;}
 }
+let environmentLast=performance.now();
+function updateEnvironment(){
+ const now=performance.now(),environmentSeconds=Math.min(2,Math.max(0,(now-environmentLast)/1000));
+ environmentLast=now;
+  trackFX.update(environmentSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
+  if(now-lastWetUpdate>230){
+   lastWetUpdate=now;
+   const wet=trackFX.wetness;
+   // All stadium surfaces retain accumulated dampness even after rain stops.
+   earth.color.copy(earthBaseColor).lerp(new THREE.Color('#34342e'),wet*.49);
+   earth.roughness=Math.max(.19,earthBaseRough-wet*.57);
+   grass.color.copy(grassBase).lerp(new THREE.Color('#536147'),wet*.41);
+   C.roof.color.copy(roofBase).lerp(new THREE.Color('#1c2825'),wet*.38);
+   C.roof.roughness=.46-wet*.24;
+   C.concrete.color.copy(stoneBase).lerp(new THREE.Color('#333e3d'),wet*.26);
+   for(const horse of horses)horse.model.setWetness?.(wet);
+   wetState.textContent='Humedad del estadio '+Math.round(wet*100)+'% · '+
+     (weatherSelect.value==='rain'?'acumulando agua':wet>.03?'secándose gradualmente':'superficie seca');
+  }
+
+}
+setInterval(updateEnvironment,180);
 function animate(now,draw=true){
  const realSeconds=Math.max(0,(now-last)/1000),dt=Math.min(realSeconds,.08);last=now;
  if(running){
@@ -762,21 +784,6 @@ function animate(now,draw=true){
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
  if(draw){
   nightLights.update(now/1000);
-  trackFX.update(realSeconds,{weather:weatherSelect.value,sun:weatherSelect.value==='night'?0:1});
-  if(now-lastWetUpdate>230){
-   lastWetUpdate=now;
-   const wet=trackFX.wetness;
-   // All stadium surfaces retain accumulated dampness even after rain stops.
-   earth.color.copy(earthBaseColor).lerp(new THREE.Color('#34342e'),wet*.49);
-   earth.roughness=Math.max(.19,earthBaseRough-wet*.57);
-   grass.color.copy(grassBase).lerp(new THREE.Color('#536147'),wet*.41);
-   C.roof.color.copy(roofBase).lerp(new THREE.Color('#1c2825'),wet*.38);
-   C.roof.roughness=.46-wet*.24;
-   C.concrete.color.copy(stoneBase).lerp(new THREE.Color('#333e3d'),wet*.26);
-   for(const horse of horses)horse.model.setWetness?.(wet);
-   wetState.textContent='Humedad del estadio '+Math.round(wet*100)+'% · '+
-     (weatherSelect.value==='rain'?'acumulando agua':wet>.03?'secándose gradualmente':'superficie seca');
-  }
   updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
  }
  if(Math.floor(now/200)!==Math.floor((now-dt*1000)/200))updateStandings();
