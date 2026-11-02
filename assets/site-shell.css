@@ -1,0 +1,37 @@
+/* Cryptodromo Race shared shell: same logo, content width, navigation and footer. */
+html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 50% -30%,#18352a 0,#0b1511 50%,#070c0a 100%);color:#eff6f3;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}a{color:inherit}button,a,input,select{-webkit-tap-highlight-color:transparent}:root{--bg:#08110f;--panel:#0e1a17;--line:#20342d;--lime:#13d69a;--ink:#eff6f3;--muted:#9aaca3;--max:1480px;color-scheme:dark}
+.sitebar{position:sticky!important;top:0!important;z-index:100!important;width:100%!important;min-height:78px!important;height:auto!important;display:block!important;align-items:stretch!important;gap:0!important;margin:0!important;padding:0!important;background:rgba(6,9,7,.96)!important;border:0!important;border-bottom:1px solid #20342d!important;backdrop-filter:blur(16px)!important;color:#eff6f3!important;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+.sitebar *{box-sizing:border-box}
+.sitebar-inner{width:min(1480px,calc(100% - 48px));min-height:78px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr) auto;align-items:center;gap:24px}
+.site-brand{display:flex;align-items:center;width:220px;height:64px;color:#fff!important;text-decoration:none!important}
+.site-brand img{display:block;width:100%;max-width:220px;height:auto;max-height:62px;object-fit:contain;object-position:left center}
+.site-nav{display:flex;justify-content:flex-end;align-items:center;gap:clamp(14px,2vw,30px);min-width:0;margin:0!important;padding:0!important;border:0!important;background:none!important;font:700 11px/1.2 Inter,system-ui,sans-serif!important;letter-spacing:.08em;text-transform:uppercase}
+.site-nav a{display:inline-flex;align-items:center;min-height:42px;color:#a8b8b0!important;text-decoration:none!important;white-space:nowrap;padding:0!important;border:0!important;background:none!important}
+.site-nav a:hover,.site-nav a[aria-current=page]{color:#fff!important}
+.site-nav a[aria-current=page]{box-shadow:inset 0 -2px #13d69a}
+.site-action{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;background:#13d69a!important;border:1px solid #34e3ac!important;border-radius:5px;color:#04120c!important;font:800 11px/1 Inter,system-ui,sans-serif!important;letter-spacing:.06em;text-decoration:none!important;white-space:nowrap;box-shadow:0 6px 22px #08a86b2c}
+.site-action:hover{background:#62edbd!important;color:#04120c!important}
+.site-footer{margin:24px 0 0;padding:0;border-top:1px solid #20342d;background:#080e0c;color:#9aaca3;font:12px/1.6 Inter,system-ui,sans-serif}
+.site-footer-inner{width:min(1480px,calc(100% - 48px));margin:0 auto;padding:32px 0 22px}
+.site-footer-grid{display:grid;grid-template-columns:1.35fr repeat(3,minmax(0,1fr));gap:28px}
+.site-footer-brand img{display:block;width:190px;max-width:100%;height:auto;margin-bottom:13px}
+.site-footer-brand p{max-width:320px;margin:0;color:#9aaca3;font-size:12px;line-height:1.65}
+.site-footer h2,.site-footer h3{margin:0 0 12px;color:#13d69a;font:700 10px/1.4 Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.site-footer ul{margin:0;padding:0;list-style:none}
+.site-footer li{padding:3px 0}
+.site-footer a{color:#b8c8c0;text-decoration:none}
+.site-footer a:hover{color:#fff}
+.site-footer-meta{display:flex;justify-content:space-between;gap:16px;margin-top:26px;padding-top:16px;border-top:1px solid #20342d;color:#81938b;font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+.site-width{width:min(1480px,calc(100% - 48px));margin-left:auto;margin-right:auto}
+.app-shell{max-width:none!important;margin:0!important;min-height:100vh}
+main.page{width:min(1480px,calc(100% - 48px));max-width:none!important;margin:0 auto!important;padding:24px 0 16px!important}
+body>main#main-content:not(.page):not(.site-width):not(.institutional-page){width:min(1480px,calc(100% - 48px));max-width:none!important;margin:0 auto!important;padding:0!important}
+.wrap{width:min(1480px,calc(100% - 48px))!important;max-width:1480px!important}
+.page-body{width:min(850px,calc(100% - 48px))!important;max-width:850px!important;margin-left:auto!important;margin-right:auto!important}
+body>main,body>div#app{max-width:1480px}
+.site-skip{position:absolute;left:12px;top:-60px;z-index:200;padding:10px 14px;background:#13d69a;color:#04120c!important;border-radius:4px;font-weight:700}
+.site-skip:focus{top:10px}
+@media(max-width:1000px){.sitebar-inner{grid-template-columns:200px minmax(0,1fr) auto;gap:15px}.site-brand{width:200px}.site-nav{gap:13px;font-size:10px!important}.site-action{padding:0 12px;font-size:10px!important}.site-footer-grid{gap:20px}}
+@media(max-width:820px){.sitebar-inner{grid-template-columns:1fr auto;gap:0 16px;padding:8px 0}.site-brand{height:56px;width:205px}.site-nav{grid-column:1/-1;grid-row:2;justify-content:flex-start;gap:clamp(12px,4vw,28px);overflow-x:auto;scrollbar-width:none}.site-nav::-webkit-scrollbar{display:none}.site-action{grid-column:2;grid-row:1}.site-footer-grid{grid-template-columns:1fr 1fr}.site-footer-brand{grid-column:1/-1}}
+@media(max-width:540px){.sitebar{min-height:72px!important}.sitebar-inner,.site-footer-inner{width:calc(100% - 32px)}.sitebar-inner{min-height:72px;grid-template-columns:minmax(0,1fr) auto;gap:0 8px}.site-brand{width:178px;height:48px}.site-action{min-height:38px;padding:0 10px;font-size:9px!important}.site-nav{width:100%;gap:18px;min-height:38px}.site-nav a{font-size:9px!important;min-height:36px}.site-footer-grid{gap:22px 14px}.site-footer-meta{flex-direction:column}.wrap,.site-width,main.page{width:calc(100% - 32px)!important}.page-body{width:calc(100% - 32px)!important}}
+@media(prefers-reduced-motion:reduce){.sitebar *{scroll-behavior:auto!important;transition:none!important}}
