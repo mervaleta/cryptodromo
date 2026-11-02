@@ -39,7 +39,8 @@ try{
  await page.selectOption('#light-pattern','wave');
  assert.match(await page.locator('#light-status').innerText(),/58%/);
  await page.waitForTimeout(700);
- await page.screenshot({path:'artifacts/alpha05-night-lights.png',fullPage:false});
+ console.log('NIGHT_MENU_OK',JSON.stringify({level:await page.locator('#light-level').innerText(),mode:await page.locator('#weather').inputValue(),effect:await page.locator('#light-pattern').inputValue()}));
+ await page.screenshot({path:'artifacts/alpha05-night-lights.png',fullPage:false,timeout:60000});
  // Test controls without affecting official race results.
  await page.locator('#light-power').uncheck();
  assert.match(await page.locator('#light-status').innerText(),/apagados/);
