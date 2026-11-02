@@ -39,7 +39,7 @@ const challengers = [
 
 const toRunner = ([symbol, name, color], tier, index) => ({
   symbol, name, color: color || palette[index % palette.length],
-  coat: ['#574b46','#684f42','#4b5058','#76604f','#49433f','#69564d'][index % 6],
+  coat: ['#55352c','#a55e39','#454e51','#d0b493','#252a2b','#ba8756','#e5dbca','#77553e','#8d9092','#ba7d42','#3a3030','#f0e9dc'][index % 12],
   tier,
   // Within each class, the first few legacy favorites keep a little extra airtime.
   weight: tier === 'star' ? [5,4.5,4,3.5,2.5,2,1.7,1.5][index] : tier === 'core' ? 1.15 : 1,
