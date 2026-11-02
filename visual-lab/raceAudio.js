@@ -34,6 +34,21 @@ export function createRaceAudio(){
   master.gain.setTargetAtTime(volume,ctx.currentTime,.04);
   return true;
  }
+ function celebrate(){
+  if(!ctx||!playing)return;
+  crowdGain.gain.cancelScheduledValues(ctx.currentTime);
+  crowdGain.gain.setTargetAtTime(.30,ctx.currentTime,.20);
+  crowdGain.gain.setTargetAtTime(.10,ctx.currentTime+4.8,1.4);
+  // An original crowd roar, not a sampled or licensed sound file.
+  const rumble=ctx.createOscillator(),gain=ctx.createGain();
+  rumble.type='sawtooth';rumble.frequency.value=56;
+  const low=ctx.createBiquadFilter();low.type='lowpass';low.frequency.value=135;
+  gain.gain.setValueAtTime(.0001,ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(.028,ctx.currentTime+.55);
+  gain.gain.linearRampToValueAtTime(.0001,ctx.currentTime+5.2);
+  rumble.connect(low).connect(gain).connect(master);
+  rumble.start();rumble.stop(ctx.currentTime+5.3);
+ }
  function stop(){
   playing=false;manualMute=true;
   if(ctx)master.gain.setTargetAtTime(0,ctx.currentTime,.05);
@@ -80,7 +95,7 @@ export function createRaceAudio(){
    nextHoof=time+interval;
   }
  }
- return {start,stop,update,setVolume,get enabled(){return playing},get volume(){return volume}};
+ return {start,stop,update,setVolume,celebrate,get enabled(){return playing},get volume(){return volume}};
 }
 export function createNarration(){
  let enabled=false,lastMessage='',lastAt=0;
