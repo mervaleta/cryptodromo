@@ -108,6 +108,9 @@ export function createParadeVillage(scene,{quality='balanced'}={}){
   cube(market,x,2.3,146.8,18,1.2,1.2,M.ivory);
   for(const end of [-1,1])cube(market,x+end*11.8,2.4,145.8,.3,4.8,.3,M.steel);
   sign(labels[i],market,x,5.1,145.5,20);
+  // Shared emissive strips bring the food court to life without more shadows.
+  cube(market,x,4.19,145.3,21,.19,.25,M.lamp);
+  for(const end of [-1,1])cube(market,x+end*10.5,3.15,145.3,.17,1.7,.26,M.lamp);
   // Food service at the back, public boardwalk in front.
   cube(market,x,.18,141,25,.16,6,M.road);
  }
@@ -121,6 +124,7 @@ export function createParadeVillage(scene,{quality='balanced'}={}){
   const roof=mesh(coneGeo,i%2?M.ivory:M.tent,tent);roof.scale.set(17,6,13);
   roof.position.set(x,7.15,z);roof.rotation.y=Math.PI/4;
   cube(tent,x,1.8,z+1,10,1,3,M.wood);
+  cube(tent,x,4.1,z+7.9,3.8,.25,.35,M.lamp);
  }
  // Machinery and horse supplies. Vehicles are parked OUTSIDE the racing oval.
  const yard=new THREE.Group();yard.name='Maquinaria y aprovisionamiento de caballos';root.add(yard);
