@@ -1,4 +1,4 @@
-import { TOKEN_ROSTER } from '/race-lab/source/src/data/tokenRoster.js';
+import { TOKEN_ROSTER } from '/race-lab/source/src/data/tokenRoster.js?v=coat-20261102';
 const labels={star:'Estrella',core:'Principal',challenger:'Desafiante'};
 const descriptions={star:'Los protagonistas más frecuentes del fixture, mezclados con el resto del plantel en cada carrera.',core:'El núcleo del plantel. Cuatro corredores de esta categoría participan en cada carrera.',challenger:'Nuevos rivales en cada largada. Cuatro desafiantes comparten la pista con estrellas y principales.'};
 const $=s=>document.querySelector(s);
