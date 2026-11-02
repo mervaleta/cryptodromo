@@ -21,6 +21,7 @@ import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/da
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {mountTrackSplitsPanel} from './trackSplitsPanel.js?v=alpha15-splits-1';
+import {createSplitTrackMarkers} from './trackSplitMarkers.js?v=alpha15-splits-1';
 
 // Alpha 05: +20% physical/visual course (410 → 492 units), same official race and 60s.
 const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
@@ -299,6 +300,7 @@ const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FI
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode='straight';
+const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
 // Dust particles when running; no effect on outcomes.
 const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
@@ -323,6 +325,7 @@ const splitPanel=mountTrackSplitsPanel(document.querySelector('#race-splits'),{m
 splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
 splitModeSelect.addEventListener('change',()=>{
  splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
+ trackSplitMarkers.update({layout:layoutMode,splitMode:splitModeSelect.value});
  splitPanel.update(elapsed,{finishAuthorized:finishShown});
 });
 let overtakeCount=0,previousOrder='';
@@ -669,6 +672,7 @@ const roofBase=C.roof.color.clone(),stoneBase=C.concrete.color.clone(),grassBase
 const layoutSelect=document.querySelector('#layout');
 function setLayout(mode){
  layoutMode=mode;
+ trackSplitMarkers.update({layout:mode,splitMode:splitModeSelect.value});
  straightCourse.visible=mode==='straight';
  alternateTracks.select(mode);
  gateFrames.visible=mode!=='oval';
