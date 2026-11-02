@@ -3,6 +3,7 @@ import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
 import {tvShot,cameraBlend} from './cinematicCamera.js?v=alpha10-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
+import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha13-1';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha09-finish-1';
@@ -280,6 +281,10 @@ function updateFinishBurst(){
  finishBurst.material.opacity=.68*Math.max(0,1-t/14);
 }
 
+// Independent exterior for the Satoshi alpha14 race, using three-venue shared presets.
+// Does not recreate course, crowd, sky, horse assets, rain, spotlights or cameras.
+const liveDistrict=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',
+  quality:softwareGPU||mobile?'eco':'balanced'});
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
@@ -587,6 +592,7 @@ function setWeather(mode){
  rain.visible=wet;
  for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?85:0;}
  nightLights.configure({night});
+ liveDistrict.setEnvironment({hour,type:wet?'rain':night?'night':'clear',wetness:trackFX.wetness});
 }
 weatherSelect.value='auto';
 weatherSelect.addEventListener('change',()=>{setWeather(weatherSelect.value);applyLightingControls();});
@@ -774,6 +780,8 @@ function updateEnvironment(){
    C.roof.color.copy(roofBase).lerp(new THREE.Color('#1c2825'),wet*.38);
    C.roof.roughness=.46-wet*.24;
    C.concrete.color.copy(stoneBase).lerp(new THREE.Color('#333e3d'),wet*.26);
+    liveDistrict.setEnvironment({hour:getSolarMinutes()/60,
+      type:weatherSelect.value==='rain'?'rain':isSolarNight()?'night':'clear',wetness:wet});
    for(const horse of horses)horse.model.setWetness?.(wet);
    wetState.textContent='Humedad del estadio '+Math.round(wet*100)+'% · '+
      (weatherSelect.value==='rain'?'acumulando agua':wet>.03?'secándose gradualmente':'superficie seca');
