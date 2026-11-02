@@ -67,9 +67,9 @@ try{
  const initial=await page.evaluate(()=>({status:document.querySelector('#status')?.textContent,canvas:[document.querySelector('canvas').width,document.querySelector('canvas').height],horses:document.querySelectorAll('#standings li').length}));
  console.log('SCENE_INIT',JSON.stringify(initial));
  const deployedScript=await page.evaluate(async()=>{
-  const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha08-'+Date.now(),{cache:'no-store'})).text();
-  return {hasRunout:source.includes('coastDistance(p.distanceAt60,exitVelocity,elapsed-60)'),
-   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha08-surface-1'),
+  const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha09-'+Date.now(),{cache:'no-store'})).text();
+  return {hasRunout:source.includes('broadcastRunoutDistance({...p,exitVelocity},leaderMeters,elapsed-60)'),
+   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha09-gait-1'),
    length:source.length,engineStatus:document.querySelector('#race-biography')?.textContent};
  });
  console.log('PUBLIC_ENGINE_VERSION',JSON.stringify(deployedScript));
@@ -101,9 +101,14 @@ try{
    status:await page.locator('#live-state').innerText()
  }));
  assert.match(nowLabel,/^\d{2}:\d{2}$/);
- await page.click('#live-now');
- assert.match(await page.locator('#live-now').innerText(),/SALIR/);
- await page.click('#live-now');
+ // The default view is continuous LIVE, never waiting for a Start click.
+ assert.equal(await page.locator('#automatic-label').isVisible(),true);
+ assert.equal(await page.locator('#start').isVisible(),false);
+ await page.click('#live-now'); // switch to manual replay for deterministic QA
+ assert.equal(await page.locator('#start').isVisible(),true);
+ await page.click('#live-now'); // go back to automatic broadcast
+ assert.equal(await page.locator('#automatic-label').isVisible(),true);
+ await page.click('#replay-mode'); // opt into replay once for this test only
  await page.click('#reset');
  await page.selectOption('#surface','grass');
  assert.equal(await page.locator('#surface').inputValue(),'grass');
@@ -137,6 +142,9 @@ try{
  await page.locator('#light-power').check();
  await page.selectOption('#light-pattern','steady');
  await page.click('#tab-race');
+ await page.selectOption('#weather','rain');
+ await page.waitForTimeout(1100);
+ console.log('RAIN_WETNESS',await page.locator('#wet-state').innerText());
  await page.selectOption('#weather','golden');
  await page.click('#start');
  const autoAudio=await page.locator('#sound').getAttribute('aria-pressed');
