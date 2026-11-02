@@ -10,17 +10,18 @@ const fromHex=(hex)=>{const c=hex.replace('#','');const s=c.length===3?c.split('
 const hsl=(hex)=>{const [r,g,b]=fromHex(hex),ma=Math.max(r,g,b),mi=Math.min(r,g,b),d=ma-mi;let h=0,s=0,l=(ma+mi)/2;if(d){s=d/(1-Math.abs(2*l-1));switch(ma){case r:h=((g-b)/d)%6;break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;}h*=60;}return [(h+360)%360,s,l];};
 const toHexHSL=(h,s,l)=>{const a=s*Math.min(l,1-l);const f=n=>{const k=(n+h/30)%12,c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(c*255).toString(16).padStart(2,'0');};return '#'+f(0)+f(8)+f(4);};
 export function paletteForToken(token={}){
- const accent=token.color||'#f7931a',coat=accent,[h,s]=hsl(accent);
+ const accent=token.color||'#f7931a',isBTC=token.symbol==='BTC',coat=isBTC?'#a65b37':accent,[h,s]=hsl(accent);
  return {
    coat,
-   shade:shade(coat,.65),
-   legs:shade(coat,.83),
-   mane:toHexHSL((h+295)%360,.68,.27),
-   maneDark:toHexHSL((h+285)%360,.59,.14),
-   tail:toHexHSL((h+295)%360,.68,.27),
-   hoof:toHexHSL((h+295)%360,.48,.17),
-   bridle:'#cfc9b9',
+   shade:shade(coat,isBTC?.57:.65),
+   legs:isBTC?'#573b35':shade(coat,.83),
+   mane:isBTC?'#32201f':toHexHSL((h+295)%360,.68,.27),
+   maneDark:isBTC?'#180f17':toHexHSL((h+285)%360,.59,.14),
+   tail:isBTC?'#36201b':toHexHSL((h+295)%360,.68,.27),
+   hoof:isBTC?'#251c22':toHexHSL((h+295)%360,.48,.17),
+   bridle:isBTC?'#edaf45':'#cfc9b9',
    outline:'#090a10',
+   toonBTC:isBTC,
    accent,
  };
 }
@@ -89,11 +90,14 @@ export function drawHorse(ctx,master,{frame=0,palette={},dustLevel=.5,shadowLeve
  const maneGrad=ctx.createLinearGradient(70,80,130,125);
  maneGrad.addColorStop(0,shade(c.mane,1.16));maneGrad.addColorStop(.72,c.mane);maneGrad.addColorStop(1,shade(c.mane,.78));
  fill(ctx,layers.mane,maneGrad);
+ if(c.toonBTC&&layers.mane){ctx.save();ctx.strokeStyle='rgba(255,143,34,.88)';ctx.lineWidth=1.35;ctx.lineJoin='round';ctx.stroke(layers.mane);ctx.restore();}
  fill(ctx,layers.maneDark,c.maneDark);
  // Tail occupies the leftmost part of the mane mask. Colorize its area independently.
  if(layers.mane){ctx.save();ctx.beginPath();ctx.rect(0,55,90,80);ctx.clip();fill(ctx,layers.mane,c.tail);ctx.restore();}
  fill(ctx,layers.hoof,c.hoof);
+ if(c.toonBTC&&layers.hoof){ctx.save();ctx.strokeStyle='#0e1018';ctx.lineWidth=2.2;ctx.stroke(layers.hoof);ctx.restore();}
  fill(ctx,layers.gear,c.bridle);
+ if(c.toonBTC&&layers.coat){ctx.save();ctx.strokeStyle='rgba(255,151,53,.72)';ctx.lineWidth=1.45;ctx.lineJoin='round';ctx.stroke(layers.coat);ctx.restore();}
  // Thin warm reflected light on the inside of the silhouette reads clearly on black.
  if(layers.coat){
    ctx.save();ctx.clip(layers.coat,'evenodd');
@@ -117,7 +121,7 @@ export function makeFrameCanvas(master,{width=680,height=680,...options}={}){
 export function createVectorHorseTexture(THREE,master,token,{size=512,fps=12,zoomToArt=true}={}){
  const canvas=document.createElement('canvas');canvas.width=canvas.height=size;
  const ctx=canvas.getContext('2d');const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
- texture.generateMipmaps=true;texture.minFilter=THREE.LinearMipmapLinearFilter;
+ texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;
  let current=-1,lastPalette=paletteForToken(token),dustLevel=1.05,shadowLevel=1.1;
  function paint(frame){ctx.clearRect(0,0,size,size);const scale=zoomToArt?size/158:size/170;const offsetX=zoomToArt?-12*scale:0;const offsetY=zoomToArt?size*.5-124*scale:0;drawHorse(ctx,master,{frame,palette:lastPalette,scale,offsetX,offsetY,dustLevel,shadowLevel,seed:hashString(token?.symbol||'BTC')});texture.needsUpdate=true;}
  return {
