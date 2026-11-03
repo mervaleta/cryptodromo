@@ -25,6 +25,7 @@ test('pilot uses the established authored GLB Gallop, without jockeys',()=>{
  assert.match(groom,/crpHair15ManeWeight/);
  assert.match(groom,/crpHair15TailWeight/);
  assert.match(groom,/crpHair15TailBend/);
+ assert.match(groom,/sampleBakedHair/);
  assert.match(groom,/isCompatibleHair/);
  assert.doesNotMatch(groom,/GLTFLoader|TextureLoader|\.png|\.jpg|CanvasTexture|PlaneGeometry/);
 });
