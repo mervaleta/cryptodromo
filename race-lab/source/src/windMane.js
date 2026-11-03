@@ -9,7 +9,7 @@
  *
  * Geometry signature checks deliberately fail closed if the GLB changes.
  */
-const VERSION='crp-mane-wind-v1';
+const VERSION='crp-mane-wind-v2-gait';
 const BEGIN='#include <begin_vertex>';
 const COMMON='#include <common>';
 const VERTEX_UNIFORMS=`
@@ -32,6 +32,20 @@ const VERTEX_DISPLACEMENT=`
 
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(value))?Number(value):min));
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+
+/**
+ * Only galloping generates self-induced mane airflow. Walking, trotting and
+ * stationary horses respond to external wind only above the gale threshold.
+ * Rain alone does not count as a gale. The racer preview can opt out entirely.
+ */
+export function maneMotionTarget({wind=.55,speed=1,gait='Idle',motionEnabled=true,reducedMotion=false}={}){
+ if(!motionEnabled||reducedMotion)return 0;
+ const breeze=clamp(wind,0,2),rate=clamp(speed,0,3.5);
+ const galloping=/^gallop$/i.test(String(gait).trim());
+ const gallop=galloping?smooth(.12,.55,rate)*(.25+.23*rate+.24*breeze):0;
+ const gale=smooth(1.45,2,breeze)*.72;
+ return clamp(gallop+gale,0,1.4);
+}
 
 /** CPU mirror of the GLSL tip mask, for asset and regression verification. */
 export function maneTipWeight(x,y,z){
@@ -80,13 +94,15 @@ export function createWindMane(bindings,{seed=0}={}){
  return {
   get enabled(){return active&&channels.length>0;},
   get channelCount(){return active?channels.length:0;},
-  update(delta,{wind=.55,speed=1,reducedMotion=false}={}){
+  get motion(){return active?(channels[0]?.motion.value||0):0;},
+  update(delta,{wind=.55,speed=1,gait='Idle',motionEnabled=true,reducedMotion=false}={}){
    if(!active)return;
    const dt=clamp(delta,0,.1),rate=clamp(speed,0,3.5);
-   const motion=reducedMotion?0:clamp(.12+clamp(wind,0,2)*.43+rate*.13,0,1.4);
+   const motion=maneMotionTarget({wind,speed:rate,gait,motionEnabled,reducedMotion});
    for(const channel of channels){
     channel.time.value+=dt*(.85+rate*.23);
-    channel.motion.value=motion;
+    channel.motion.value=(reducedMotion||!motionEnabled)?0:
+      channel.motion.value+(motion-channel.motion.value)*(1-Math.exp(-dt*12));
    }
   },
   dispose(){active=false;channels.length=0;}
