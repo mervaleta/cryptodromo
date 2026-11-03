@@ -35,3 +35,15 @@ body>main,body>div#app{max-width:1480px}
 @media(max-width:820px){.sitebar-inner{grid-template-columns:1fr auto;gap:0 16px;padding:8px 0}.site-brand{height:56px;width:205px}.site-nav{grid-column:1/-1;grid-row:2;justify-content:flex-start;gap:clamp(12px,4vw,28px);overflow-x:auto;scrollbar-width:none}.site-nav::-webkit-scrollbar{display:none}.site-action{grid-column:2;grid-row:1}.site-footer-grid{grid-template-columns:1fr 1fr}.site-footer-brand{grid-column:1/-1}}
 @media(max-width:540px){.sitebar{min-height:72px!important}.sitebar-inner,.site-footer-inner{width:calc(100% - 32px)}.sitebar-inner{min-height:72px;grid-template-columns:minmax(0,1fr) auto;gap:0 8px}.site-brand{width:178px;height:48px}.site-action{min-height:38px;padding:0 10px;font-size:9px!important}.site-nav{width:100%;gap:18px;min-height:38px}.site-nav a{font-size:9px!important;min-height:36px}.site-footer-grid{gap:22px 14px}.site-footer-meta{flex-direction:column}.wrap,.site-width,main.page{width:calc(100% - 32px)!important}.page-body{width:calc(100% - 32px)!important}}
 @media(prefers-reduced-motion:reduce){.sitebar *{scroll-behavior:auto!important;transition:none!important}}
+
+/* CRP visual harmonization | additive shared-shell layer. No 3D or race logic. */
+:root{--crp-bg:#080909;--crp-panel:#1b1d1d;--crp-raised:#252828;--crp-border:#363b3a;--crp-green:#7ace7a;--crp-red:#cd0604;--crp-text:#f5f7f6;--crp-muted:#a6b0ac;--crp-content-width:1480px}
+.sitebar{background:rgba(9,10,10,.97)!important;border-bottom-color:var(--crp-border)!important}
+.site-nav a[aria-current=page]{box-shadow:inset 0 -2px var(--crp-green)}
+.site-action{background:var(--crp-green)!important;border-color:var(--crp-green)!important;color:#071108!important;box-shadow:none}
+.site-action:hover{background:#9cdd9c!important}
+.site-footer{background:var(--crp-bg);border-top-color:var(--crp-border);color:var(--crp-muted)}
+.site-footer h2,.site-footer h3{color:var(--crp-green)}
+.site-footer-meta{border-top-color:var(--crp-border)}
+.site-skip{background:var(--crp-green);color:#071108!important}
+.sitebar :is(a,button):focus-visible,.site-footer a:focus-visible{outline:2px solid var(--crp-green);outline-offset:3px}
