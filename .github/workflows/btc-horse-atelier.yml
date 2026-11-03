@@ -42,5 +42,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: btc-atelier-stage
-          path: artifacts/btc-3d-groom-v2-preview.png
+          path: |
+            artifacts/btc-3d-groom-v2-preview.png
+            artifacts/btc-original-before.png
+            artifacts/btc-hero-after-profile.png
+            artifacts/btc-hero-after-rear.png
           if-no-files-found: ignore
