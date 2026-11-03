@@ -6,6 +6,7 @@
 <title>Modo Parade · Cryptódromo</title>
 <link rel="icon" href="/assets/cryptodromo-logo.png">
 <link rel="stylesheet" href="/assets/race-site-hub.css?v=parade16">
+<link rel="stylesheet" href="/assets/camera-console.css?v=alpha17-1">
 <style>
 :root{color-scheme:dark;--gold:#e8ca8d;--green:#67d6aa;--ink:#0a1c16}
 *{box-sizing:border-box}.sitebar{position:relative}body{background:radial-gradient(ellipse at top,#19352c,#07130f 70%);color:#e8efe9}
@@ -44,6 +45,11 @@
 .notice{margin-top:14px;border-left:3px solid var(--gold);padding:12px 18px;background:#23281e;color:#e3d3ac;font-size:12px;line-height:1.6}
 @media(max-width:1100px){.cockpit{grid-template-columns:1fr}.controls-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){.controls-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.drift{right:8px;bottom:8px;grid-template-columns:repeat(3,40px)}.drift button{min-width:38px;min-height:37px}.headline h1{font-size:41px}.overlay{left:9px;right:9px;top:9px}.hud{padding:8px}.hud small{font-size:9px}}
+
+/* Float pad only on touch screens or by explicit desktop opt-in. */
+.drift{display:none}
+.drift.is-visible{display:grid}
+/* Touch visibility is initialized from pointer capabilities in parade.js. */
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head>
@@ -63,7 +69,7 @@
 <div class="hud"><small>DESFILE EN EL ÓVALO</small><strong id="wave-label">Cargando caballos…</strong><small id="parade-status">Iniciando escena 3D</small></div>
 <div class="hud" style="text-align:right"><small>DRON / RENDIMIENTO</small><strong id="fps">FPS …</strong><small id="camera-readout">Altura 100 m · 48°</small></div>
 </div>
-<div class="drift" role="group" aria-label="Controles táctiles del dron">
+<div class="drift" id="drone-pad" role="group" aria-label="Controles táctiles del dron">
 <div></div><button type="button" data-move="ArrowUp" aria-label="Avanzar">↑</button><div></div>
 <button type="button" data-move="ArrowLeft" aria-label="Desplazarse a la izquierda">←</button>
 <button type="button" data-move="ArrowDown" aria-label="Retroceder">↓</button>
@@ -71,6 +77,11 @@
 <button class="wide" type="button" data-move="KeyQ" aria-label="Girar izquierda">↶</button>
 <button class="wide" type="button" data-move="KeyR" aria-label="Subir">SUBIR</button>
 <button class="wide" type="button" data-move="KeyE" aria-label="Girar derecha">↷</button>
+<button class="wide" type="button" data-move="KeyT" aria-label="Inclinar arriba">TILT ↑</button>
+<button class="wide" type="button" data-move="KeyF" aria-label="Bajar">BAJAR</button>
+<button class="wide" type="button" data-move="KeyG" aria-label="Inclinar abajo">TILT ↓</button>
+<button class="wide" type="button" data-camera-wheel="8" aria-label="Acercamiento">＋</button>
+<button class="wide" type="button" data-camera-wheel="-8" aria-label="Alejamiento">−</button>
 </div>
 </div>
 <div class="cockpit">
@@ -94,27 +105,35 @@
 <div class="bar" role="progressbar" aria-label="Progreso del grupo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><span id="progress-inner"></span></div>
 <div class="pills" id="runner-list" aria-label="Caballos en el desfile"></div>
 </section>
-<section class="control-panel">
-<h2>Dron de exploración</h2>
-<div class="controls-grid">
-<label>Modo de cámara<select id="camera-mode"><option value="free">Vuelo manual</option><option value="orbit">Órbita del edificio</option><option value="follow">Seguir caballo</option></select></label>
-<label>Lugar de interés<select id="sight"></select></label>
+<section class="camera-deck" id="parade-camera-deck" aria-label="Consola unificada de cámaras">
+<div class="camera-intro"><div><h3>Dirección de cámaras · Parade</h3><p>Mismos ejes que en LIVE: desplazamiento, encuadre, perspectiva y lente se ajustan por separado.</p></div><span class="camera-reading" id="camera-readout-panel">VISTA · LIBRE</span></div>
+<div class="camera-grid">
+<label>Modo de cámara<select id="camera-mode"><option value="free">Dron · vuelo libre</option><option value="orbit">Órbita arquitectónica</option><option value="follow">Seguir caballo</option><option value="crane">Grúa aérea · óvalo</option></select></label>
+<label>Lugar de interés<select id="sight" aria-label="Punto de interés del estadio"></select></label>
 <label>Caballo a seguir<select id="follow-horse"></select></label>
-<label>Altura <output id="height-label">80 m</output><input id="height" type="range" min="4" max="190" value="95"></label>
-<label>Rotación horizontal <output id="yaw-label">0°</output><input id="yaw" type="range" min="-180" max="180" value="0"></label>
-<label>Ángulo vertical <output id="pitch-label">-35°</output><input id="pitch" type="range" min="-85" max="24" value="-35"></label>
-<label>Zoom / FOV <output id="fov-label">48°</output><input id="fov" type="range" min="19" max="89" value="48"></label>
-<label>Velocidad del dron <output id="speed-label">32 m/s</output><input id="camera-speed" type="range" min="4" max="130" value="32"></label>
-<label>Distancia de órbita <output id="distance-label">95 m</output><input id="distance" type="range" min="14" max="390" value="95"></label>
+<label>Giro horizontal <output id="yaw-label">0°</output><input id="yaw" data-camera-field="yaw" data-unit="°" data-default="0" type="range" min="-180" max="180" value="0" step="1"></label>
+<label>Inclinación vertical <output id="pitch-label">-35°</output><input id="pitch" data-camera-field="pitch" data-unit="°" data-default="-35" type="range" min="-85" max="24" value="-35" step="1"></label>
+<label>Altura del dron <output id="height-label">95 m</output><input id="height" data-camera-field="height" data-unit=" m" data-default="95" type="range" min="4" max="190" value="95"></label>
+<label>Acercamiento / Dolly <output id="distance-label">95 m</output><input id="distance" data-camera-field="distance" data-unit=" m" data-default="95" type="range" min="14" max="390" value="95"></label>
+<label>Óptica / Zoom <output id="fov-label">48°</output><input id="fov" data-camera-field="fov" data-unit="°" data-default="48" type="range" min="19" max="89" value="48"></label>
+<label>Desplazamiento lateral <output id="lateral-label">0 m</output><input id="lateral" data-camera-field="lateral" data-unit=" m" data-default="0" type="range" min="-90" max="90" value="0"></label>
+<label>Velocidad de vuelo <output id="speed-label">32 m/s</output><input id="camera-speed" data-camera-field="speed" data-unit=" m/s" data-default="32" type="range" min="4" max="130" value="32"></label>
 </div>
-<div class="btnrow"><button type="button" id="reset-drone">Restablecer dron</button><button type="button" id="visit-sight">Sobrevolar lugar elegido</button></div>
-<div class="keyboard">
-<kbd>↑↓←→</kbd> o <kbd>W A S D</kbd> para mover · <kbd>Q E</kbd> para girar · <kbd>R F</kbd> subir o bajar · <kbd>T G</kbd> inclinar · <kbd>Shift</kbd> acelerar · arrastrar el ratón para orientar y rueda para hacer zoom.
+<div class="camera-heading">Control fino de la toma</div>
+<div class="camera-nudge" aria-label="Movimiento manual de cámara">
+<button type="button" data-camera-nudge="yaw:-12" aria-label="Girar a izquierda">↶</button>
+<button type="button" data-camera-nudge="yaw:12" aria-label="Girar a derecha">↷</button>
+<button type="button" data-camera-nudge="pitch:8" aria-label="Inclinar hacia arriba">↑</button>
+<button type="button" data-camera-nudge="pitch:-8" aria-label="Inclinar hacia abajo">↓</button>
+<button type="button" data-camera-nudge="distance:-12" aria-label="Acercar">＋</button>
+<button type="button" data-camera-nudge="distance:12" aria-label="Alejar">−</button>
 </div>
+<div class="camera-quick"><button type="button" data-camera-reset id="reset-drone">↺ Restablecer dron</button><button type="button" id="visit-sight">Visitar lugar elegido</button><button type="button" id="toggle-camera-pad" aria-controls="drone-pad" aria-pressed="false">Mostrar mandos táctiles</button></div>
+<p class="camera-hint">Arrastrá sobre el estadio para girar e inclinar. Rueda: acercamiento físico. Ctrl + rueda: zoom óptico. Flechas/WASD: mover. Q/E: giro; R/F: subir/bajar; T/G: inclinación; Shift: acelerar. Los ajustes permanecen disponibles también al seguir un caballo.</p>
 </section>
 </div>
 <p class="notice"><strong>Modo contemplativo independiente.</strong> Los cien corredores se presentan en grupos de hasta doce; cada uno da una vuelta completa a ritmo de paseo. Esta visualización no cambia el fixture, precios sintéticos, ganadores ni horarios de la transmisión principal. Los camiones son ambientación, no obstáculos de la pista.</p>
 <footer>CRYPTÓDROMO · Alpha 16 integrada al campeonato. <a href="/">Regresar a la carrera LIVE</a> · <a href="/estadio/">Explorar el estadio institucional</a></footer>
 </main>
-<script type="module" src="./parade.js?v=alpha16-tour-4"></script>
+<script type="module" src="./parade.js?v=alpha17-camera-1"></script>
 </body></html>

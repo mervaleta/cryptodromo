@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
 import {cameraBlend} from './cinematicCamera.js?v=alpha10-1';
+import {reframeCamera,countdownVisibility} from './cameraRig.js?v=alpha17-1';
+import {bindCameraPanel} from './cameraPanel.js?v=alpha17-1';
 import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
@@ -403,7 +405,7 @@ function setRace(index){
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
  lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
  finishController.reset();tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
- finishCelebration.hidden=true;presentation.hidden=true;
+ finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
@@ -467,17 +469,19 @@ const qaManual=initialQa;
 let liveFollowing=!qaManual,lastLiveIndex=-1,lastPhase='',lastPresented=-1;
 function syncControlMode(){
  const manual=!liveFollowing;
+ if(manual)stage.classList.remove('is-presenting');
  for(const button of [start,resetButton,nextButton])button.hidden=!manual;
  autoLabel.hidden=manual;
  replayButton.textContent=manual?'● VOLVER A LIVE AUTOMÁTICO':'▶ MODO REPLAY MANUAL';
  liveNowButton.textContent=manual?'● SINTONIZAR LIVE':'● LIVE AUTOMÁTICO';
 }
 function showPresentation(nextRace,seconds){
+ stage.classList.add('is-presenting');
  const slotIndex=Math.min(11,Math.floor(Math.max(0,seconds)/5));
  presentation.hidden=false;
  presentCountdown.textContent=formatCountdown(60-seconds);
  if(seconds>=55)presentCountdown.textContent='LARGADA EN '+Math.max(1,Math.ceil(60-seconds));
- clockEl.textContent=formatCountdown(60-seconds);
+ // The presentation overlay owns the ONLY visible countdown in the stage.
  if(slotIndex===lastPresented)return;
  lastPresented=slotIndex;
  const token=nextRace.entries[slotIndex],stats=biographyStats.get(token.symbol);
@@ -537,6 +541,7 @@ function updateLiveProgram(){
   return;
  }
  presentation.hidden=true;
+ stage.classList.toggle('is-presenting',!countdownVisibility(phase.phase,!liveFollowing).dial);
  document.querySelector('.dial div').textContent=phase.phase===PHASES.RACE?'TIEMPO DE CARRERA':'ACTA DE LLEGADA';
  if(phase.phase===PHASES.RACE){
   running=true;if(Math.abs(elapsed-now.slotSeconds)>1)elapsed=now.slotSeconds;
@@ -607,6 +612,9 @@ const cloudCover=document.querySelector('#cloud-cover'),fogIntensity=document.qu
 const cloudCoverLabel=document.querySelector('#cloud-cover-label'),fogIntensityLabel=document.querySelector('#fog-intensity-label');
 const sunlightLabel=document.querySelector('#sunlight-label');
 const angleInput=document.querySelector('#camera-angle'),heightInput=document.querySelector('#camera-height');
+const pitchInput=document.querySelector('#camera-pitch'),
+  distanceInput=document.querySelector('#camera-distance'),
+  lateralInput=document.querySelector('#camera-lateral');
 const angleLabel=document.querySelector('#camera-angle-label'),heightLabel=document.querySelector('#camera-height-label');
 const stadiumClock=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 function currentStadiumMinutes(){
@@ -743,22 +751,77 @@ graphicsModeSelect.addEventListener('change',()=>{
  }
 });
 applyQualityPreset(detectedQuality);
-cameraZoom.addEventListener('input',()=>{camera.fov=Number(cameraZoom.value);zoomLabel.textContent=camera.fov+'°';camera.updateProjectionMatrix();});
-angleInput.addEventListener('input',()=>{angleLabel.textContent=angleInput.value+'°';});
-heightInput.addEventListener('input',()=>{heightLabel.textContent=heightInput.value+' m';});
+// Shared camera deck: the input IDs survive for existing browser tests.
+const cameraPanel=bindCameraPanel(document.querySelector('#camera-deck'),{
+ onChange:(key)=>{
+  if(key==='fov'||key==='reset'){
+   camera.fov=Number(cameraZoom.value);camera.updateProjectionMatrix();
+  }
+  const reading=document.querySelector('#camera-reading');
+  reading.textContent='VISTA · '+camSelect.options[camSelect.selectedIndex].textContent;
+ }
+});
+camSelect.addEventListener('change',()=>{
+ cameraFocusReady=false;
+ document.querySelector('#camera-reading').textContent='VISTA · '+
+   camSelect.options[camSelect.selectedIndex].textContent;
+});
+camera.fov=cameraPanel.get('fov');camera.updateProjectionMatrix();
+// Direct manual adjustment is always available from the camera tab.
+for(const [id,mode] of [['camera-view-front','grandstand'],
+ ['camera-view-top','aerial'],['camera-view-ground','low']]){
+ document.getElementById(id).addEventListener('click',()=>{
+  camSelect.value=mode;camSelect.dispatchEvent(new Event('change'));
+  cameraPanel.restore();
+ });
+}
+let cameraDrag=null;
+canvas.addEventListener('pointerdown',event=>{
+ if(event.button!==0)return;
+ cameraDrag={x:event.clientX,y:event.clientY,pointerId:event.pointerId};
+ canvas.setPointerCapture(event.pointerId);
+});
+canvas.addEventListener('pointermove',event=>{
+ if(!cameraDrag||cameraDrag.pointerId!==event.pointerId)return;
+ const dx=event.clientX-cameraDrag.x,dy=event.clientY-cameraDrag.y;
+ cameraDrag.x=event.clientX;cameraDrag.y=event.clientY;
+ cameraPanel.nudge('yaw',dx*.32);
+ cameraPanel.nudge('pitch',-dy*.27);
+});
+for(const eventName of ['pointerup','pointercancel','lostpointercapture'])
+ canvas.addEventListener(eventName,()=>{cameraDrag=null;});
+canvas.addEventListener('wheel',event=>{
+ event.preventDefault();
+ cameraPanel.nudge(event.ctrlKey?'fov':'distance',Math.sign(event.deltaY)*(event.ctrlKey?2:10));
+},{passive:false});
 
 // The lighting console is its own accessible tab. It never touches race data.
-const tabRace=document.querySelector('#tab-race'),tabLight=document.querySelector('#tab-light');
-const panelRace=document.querySelector('#panel-race'),panelLight=document.querySelector('#panel-light');
-function switchConsole(showLights){
- tabRace.classList.toggle('active',!showLights);
- tabLight.classList.toggle('active',showLights);
- tabRace.setAttribute('aria-selected',String(!showLights));
- tabLight.setAttribute('aria-selected',String(showLights));
- panelRace.hidden=showLights;panelLight.hidden=!showLights;
+const tabRace=document.querySelector('#tab-race'),
+ tabLight=document.querySelector('#tab-light'),tabCamera=document.querySelector('#tab-camera');
+const panelRace=document.querySelector('#panel-race'),
+ panelLight=document.querySelector('#panel-light'),panelCamera=document.querySelector('#panel-camera');
+function switchConsole(mode){
+ for(const [kind,tab,panel] of [
+  ['race',tabRace,panelRace],['light',tabLight,panelLight],['camera',tabCamera,panelCamera]
+ ]){
+  const active=mode===kind;
+  tab.classList.toggle('active',active);
+  tab.setAttribute('aria-selected',String(active));
+  tab.tabIndex=active?0:-1;
+  panel.hidden=!active;
+ }
 }
-tabRace.addEventListener('click',()=>switchConsole(false));
-tabLight.addEventListener('click',()=>switchConsole(true));
+tabRace.addEventListener('click',()=>switchConsole('race'));
+tabLight.addEventListener('click',()=>switchConsole('light'));
+tabCamera.addEventListener('click',()=>switchConsole('camera'));
+document.addEventListener('keydown',event=>{
+ if(panelCamera.hidden||event.target.closest?.('input,select,textarea'))return;
+ const actions={ArrowLeft:['yaw',-5],ArrowRight:['yaw',5],ArrowUp:['pitch',5],
+  ArrowDown:['pitch',-5],Equal:['distance',-10],Minus:['distance',10],
+  PageUp:['height',5],PageDown:['height',-5]};
+ const action=actions[event.code];if(!action)return;
+ event.preventDefault();cameraPanel.nudge(...action);
+});
 const lightPower=document.querySelector('#light-power');
 const lightDimmer=document.querySelector('#light-dimmer');
 const lightColor=document.querySelector('#light-color');
@@ -837,6 +900,23 @@ function adjustCamera(dt){
  }else if(mode==='aerial'){
    goal.set(0,layoutMode==='oval'?285:300,layoutMode==='oval'?145:155);
    target.set(0,0,layoutMode==='oval'?35:0);
+ }else if(mode==='overview'){
+   goal.set(85,142,290);target.set(0,4,5);
+ }else if(mode==='low'){
+   goal.set(point.x-tx*9+nx*11,1.65,point.z-tz*9+nz*11);
+   target.set(point.x+tx*18,1.8,point.z+tz*18);
+ }else if(mode==='side'){
+   goal.set(point.x+nx*24,3.8,point.z+nz*24);
+   target.set(point.x+tx*10,2.1,point.z+tz*10);
+ }else if(mode==='reverse'){
+   goal.set(point.x+tx*30-nx*19,12,point.z+tz*30-nz*19);
+   target.set(point.x,2.1,point.z);
+ }else if(mode==='startline'){
+   const startPoint=trackPoint(layoutMode,0,5.5);
+   goal.set(startPoint.x-startPoint.tangentX*21+startPoint.sideX*16,9,
+     startPoint.z-startPoint.tangentZ*21+startPoint.sideZ*16);
+   target.set(startPoint.x+startPoint.tangentX*18,2.0,
+     startPoint.z+startPoint.tangentZ*18);
  }else if(mode==='finish'){
    const finish=trackPoint(layoutMode,1,5.5);
    goal.set(finish.x+finish.sideX*29,7,finish.z+finish.sideZ*29);
@@ -868,12 +948,13 @@ function adjustCamera(dt){
    target.set(point.x+tx*17,2.05,point.z+tz*17);
  }
  const blend=cameraBlend(dt,mode==='finish'?1.8:2.7);
- // Orbit manual rotation around the look-at point, independent of zoom and height.
- const theta=Number(angleInput.value)*Math.PI/180;
- const offsetX=goal.x-target.x,offsetZ=goal.z-target.z;
- goal.x=target.x+offsetX*Math.cos(theta)-offsetZ*Math.sin(theta);
- goal.z=target.z+offsetX*Math.sin(theta)+offsetZ*Math.cos(theta);
- goal.y=Math.max(1.2,goal.y+Number(heightInput.value));
+ const composed=reframeCamera(goal,target,{
+  yaw:Number(angleInput.value),pitch:Number(pitchInput.value),
+  height:Number(heightInput.value),distance:Number(distanceInput.value),
+  lateral:Number(lateralInput.value)
+ });
+ goal.set(composed.position.x,composed.position.y,composed.position.z);
+ target.set(composed.focus.x,composed.focus.y,composed.focus.z);
  camera.position.lerp(goal,blend);
  if(!cameraFocusReady){cameraFocus.copy(target);cameraFocusReady=true;}
  else cameraFocus.lerp(target,cameraBlend(dt,3.8));
@@ -1023,7 +1104,7 @@ function animate(now,draw=true){
   nightLights.update(now/1000);
   cloudLayer.update(now/1000);
   liveVillage.update(now/1000);
-  updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
+  updateFinishBurst();particles(dt);adjustCamera(Math.min(.45,realSeconds));renderer.render(scene,camera);
   const feedback=qualityGovernor.sample(Math.max(1,now-lastRenderedAt),now);
   lastRenderedAt=now;
   if(graphicsModeSelect.value==='auto'&&feedback.changed){
@@ -1051,6 +1132,27 @@ setInterval(()=>{
 },85);
 // Opt-in QA seek for deterministic replay verification. Only present with
 // ?finish-qa=alpha06 and never changes official prices, doses or ranking.
+// Opt-in staging-only diagnostics. Never activates without the query token.
+if(new URLSearchParams(location.search).get('camera-qa')==='alpha17'){
+ window.__cryptodromoCameraQA=Object.freeze({
+  state:()=>({
+   position:camera.position.toArray(),lookAt:cameraFocus.toArray(),
+   stagePresenting:stage.classList.contains('is-presenting'),
+   presentCount:presentCountdown.textContent,
+   presentationVisible:!presentation.hidden,
+   clock:clockEl.textContent,view:camSelect.value
+  }),
+  previewPresentation:(seconds=30)=>{
+   liveFollowing=false;running=false;
+   showPresentation(race,Math.max(0,Math.min(59,Number(seconds)||0)));
+   return this;
+  },
+  resume:()=>{
+   presentation.hidden=true;stage.classList.remove('is-presenting');
+   liveFollowing=true;lastLiveIndex=-1;updateLiveProgram();
+  }
+ });
+}
 if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
  window.__cryptodromoQA={
   jumpNearFinish(){if(!running)throw new Error('Start race before seeking');elapsed=59.7;},
