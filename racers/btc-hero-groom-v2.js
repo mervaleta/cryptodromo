@@ -49,13 +49,13 @@ function buildGroom(source,settings){
   const lateral=(layer-(layers-1)*.5)*(mane?.00085:.00061)+
     (phase-.5)*.00020;
   const yRoot=mane?(-.0287+.0164*along+(.5-phase)*.00045):
-    (.0196+.0009*(secondary-.5));
-  const zRoot=mane?(.0437-.007*along):(.0316+.0013*(secondary-.5));
+    (.0181+.0014*(secondary-.5));
+  const zRoot=mane?(.0437-.007*along):(.0321+.0008*(secondary-.5));
   const anchor=pick(mane,yRoot,lateral,zRoot);
   const p=src[anchor];
   // The width grows from a thin root to a sculpted belly then pinches
   // to a fine, curved tip. The cross section is an elliptical lens.
-  const length=(mane?.0083+.0067*phase:.0113+.0085*phase)*
+  const length=(mane?.0083+.0067*phase:.0175+.0085*phase)*
      (mane?settings.maneSize:settings.tailSize)*(0.88+layer*.056);
   const width=(mane?.00098:.00115)*(.81+.27*secondary);
   const root=verts.length/3;
@@ -69,16 +69,18 @@ function buildGroom(source,settings){
    const x=p[0]+rootTilt*u+.00018*Math.sin(u*Math.PI*1.5+phase*8)*u;
    const y=p[1]+length*(u+.045*Math.sin(Math.PI*u))+
       .00014*Math.sin(Math.PI*u*1.6+phase*4);
-   const z=p[2]+bend*swell+
-     (mane?(-.00105*u*u):(-.0018*u*u))+
+   const z=p[2]+(mane?bend*swell:(.0018+.0012*phase)*swell)+
+     (mane?(-.00105*u*u):(-.0050*u*u))+
      .00028*Math.sin(u*TAU+secondary*6)*u;
    for(let side=0;side<SIDES;side++){
     const a=side/SIDES*TAU;
     verts.push(x+Math.cos(a)*w*.65,y+Math.sin(a)*w*.15,
       z+Math.sin(a)*w*1.18);
     for(let c=0;c<4;c++){
-     skIndices.push(bones.getComponent(anchor,c));
-     skWeights.push(weights.getComponent(anchor,c));
+     // Tail uses stable rump binding: the original Tail1..7 gallop action
+     // otherwise rotates the entire new groom upward like a rigid fan.
+     skIndices.push(mane?bones.getComponent(anchor,c):(c===0?1:0));
+     skWeights.push(mane?weights.getComponent(anchor,c):(c===0?1:0));
     }
     const ridge=(side===1||side===2)?.21:(side===5||side===6?-.08:.04);
     const tint=.76+.12*phase+.05*Math.sin(j*1.7)+
