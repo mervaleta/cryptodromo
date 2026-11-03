@@ -99,6 +99,7 @@ Object.defineProperty(window,'__cryptodromoParadeQA',{configurable:false,value:O
  snapshot:()=>({parade:parade.snapshot(),drone:drone.snapshot(),ready:isReady,
   models:horseModels.length,walkClips:[...selectedWalkClips],village:village.stats,
   cameraPosition:camera.position.toArray(),cameraFov:camera.fov,
+  targetCameraPosition:drone.view(cameraInterest).position,
   stage:{w:renderer.domElement.width,h:renderer.domElement.height}})
 })});
 let cameraInterest={id:'pista',name:'Óvalo y caballos',x:0,y:1,z:72};
@@ -351,7 +352,7 @@ async function loadModels(){
 loadModels();
 function animate(now){
  requestAnimationFrame(animate);
- const dt=Math.min(.08,Math.max(0,(now-last)/1000));last=now;
+ const realSeconds=Math.max(0,(now-last)/1000),dt=Math.min(.08,realSeconds);last=now;
  if(!isReady)return;
  const state=parade.update(dt);
  if(state.waveIndex!==waveIndex)loadWave(state);
@@ -373,7 +374,7 @@ function animate(now){
  const v=drone.view(drone.snapshot().mode==='follow'?followTarget:cameraInterest);
  position.set(v.position.x,v.position.y,v.position.z);
  target.set(v.lookAt.x,v.lookAt.y,v.lookAt.z);
- const blend=1-Math.exp(-dt*5.5);
+ const blend=1-Math.exp(-Math.min(.45,realSeconds)*5.5);
  if(!droneFocusReady){camera.position.copy(position);cameraAim.copy(target);droneFocusReady=true;}
  else{camera.position.lerp(position,blend);cameraAim.lerp(target,blend);}
  camera.lookAt(cameraAim);
