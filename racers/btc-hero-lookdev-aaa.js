@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js';
-export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-01';
+export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-02';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export function createBTCAAAHeroGroom(root,options={}){
  const stage=Math.floor(clamp(options.lookdevStage??10,1,10));
@@ -33,6 +33,18 @@ export function createBTCAAAHeroGroom(root,options={}){
  }
  // Iteration 01: auditable, reversible integration of the proven v3 groom.
  const passNotes=['01 · Original GLB, Gallop, old Hair visibility and safety contract'];
+ // Iteration 02: wider, continuously rolled neck silhouette without rigid cards.
+ if(stage>=2){
+  for(let i=0;i<position.count;i++){
+   if(region.getX(i)>.5)continue;
+   const u=clamp(section.getX(i),0,1),s=stripe.getX(i);
+   const body=Math.pow(Math.sin(Math.PI*u),.78);
+   position.setX(i,position.getX(i)*(1+.135*body));
+   position.setZ(i,position.getZ(i)+.00014*body*body*Math.sin(s*15.4+u*3.2));
+  }
+  passNotes.push('02 · Neck crest: integrated organic volume and silhouette');
+ }
+ if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  const baseline={vertices:position.count,drawCallsAdded:1};
  return {
   ...hero,
