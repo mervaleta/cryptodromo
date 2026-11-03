@@ -17,8 +17,8 @@ export const DENSITY_PRESETS=Object.freeze({
 });
 export const HORSE_VISUAL_TUNING=Object.freeze({
  baselineHeight:2.85,
- recommendedHeight:2.98,
- maxWithoutGateRevision:2.98,
+ recommendedHeight:2.92,
+ maxWithoutGateRevision:2.92,
  gateRoofHeight:3.02,
  warning:'Do not exceed the starting gate clearance without raising gate geometry.'
 });
