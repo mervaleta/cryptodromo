@@ -32,7 +32,7 @@ try{
  });
  await page.waitForTimeout(1700);
  await mkdir('artifacts',{recursive:true});
- await page.screenshot({path:'artifacts/procedural-live-daylight.png',timeout:60000,animations:'disabled'});
+ await page.locator('#stage').screenshot({path:'artifacts/procedural-live-daylight.png',timeout:60000,animations:'disabled'});
  assert.deepEqual(errors,[],'Browser or shader errors: '+errors.slice(0,7).join('; '));
  console.log('PROCEDURAL_LIVE_OK',JSON.stringify(shot));
 }finally{
