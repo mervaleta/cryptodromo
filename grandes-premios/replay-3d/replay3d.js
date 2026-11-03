@@ -19,7 +19,7 @@ let replay,renderer,scene,camera,venue,actors=[],playing=false,lastTime=0,elapse
 const mobile=matchMedia('(max-width: 730px)').matches;
 function fail(message){
  status.textContent=message;status.style.color='#ffd9a0';
- const a=document.createElement('a');a.href='/grandes-premios/';a.textContent=' Volver al replay 2D';a.style.color='#ffe0a8';status.append(a);
+ const a=document.createElement('a');a.href='/grandes-premios/?day='+encodeURIComponent(String(day))+'&race='+encodeURIComponent(String(race))+(archive?'&archive=1':'');a.textContent=' Volver al replay 2D';a.style.color='#ffe0a8';status.append(a);
 }
 function place(){
  const frames=replayFrame(replay,elapsed),bySymbol=new Map(frames.map(x=>[x.symbol,x]));
