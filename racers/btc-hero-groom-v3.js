@@ -4,7 +4,7 @@
  * The horse GLB, original bones and Gallop animation are not changed.
  */
 import * as THREE from 'three';
-export const GROOM_VERSION='btc-groom-v3-shell-1';
+export const GROOM_VERSION='btc-groom-v3-shell-2';
 const PI=Math.PI, TAU=Math.PI*2;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
 function findHair(root){
@@ -29,35 +29,26 @@ function buildGeometry(source,options){
   section.push(u);region.push(r);stripe.push(s);
   colors.push(c,c*.967,c*.926);return n;
  }
- // Smoothly derive skin weights from the existing GLB neck mane vertices.
- const nearest=(y,z)=>{
-  const candidates=[];
-  for(let i=0;i<pos.count;i++){
-   const vy=pos.getY(i);if(vy>-.0104)continue;
-   const d=(vy-y)**2*2.5+(pos.getZ(i)-z)**2;
-   candidates.push([i,d]);
-  }
-  candidates.sort((a,b)=>a[1]-b[1]);
-  const jointW=new Map();
-  for(const [i,d] of candidates.slice(0,7)){
-   const inv=1/(d+3e-8);
-   for(let k=0;k<4;k++){
-    const b=jo.getComponent(i,k),v=sw.getComponent(i,k)*inv;
-    jointW.set(b,(jointW.get(b)||0)+v);
-   }
-  }
-  const top=[...jointW.entries()].sort((a,b)=>b[1]-a[1]).slice(0,4);
-  const sum=top.reduce((s,a)=>s+a[1],0)||1;
-  return {bones:[...top.map(a=>a[0]),0,0,0,0].slice(0,4),
-    ws:[...top.map(a=>a[1]/sum),0,0,0,0].slice(0,4)};
- };
+ // The old Hair primitive mixes actual neck hair with Ear hair weights.
+ // Reusing the nearest ear weights folds the whole shell into plastic spikes.
+ // Instead smoothly blend only the EXISTING four neck/head joints.
+ const smooth=(x)=>{x=clamp(x,0,1);return x*x*(3-2*x);};
+ function nearest(y){
+  const t=clamp((y+.0293)/.0179,0,1);
+  const w5=.62*smooth((t-.50)/.50);
+  const w8=.30*(1-smooth(t/.28));
+  const w7=.62*(1-smooth((t-.12)/.63));
+  const w6=Math.max(0,1-w5-w8-w7);
+  const sum=w5+w6+w7+w8||1;
+  return {bones:[5,6,7,8],ws:[w5/sum,w6/sum,w7/sum,w8/sum]};
+ }
  // ONE double-surfaced hair shell follows the full neck crest.
  const N=44,M=29,sheets=[[],[]];
  for(let side=0;side<2;side++){
   for(let i=0;i<=N;i++){
    const s=i/N,rootY=-.0293+.0179*s;
    const rootZ=.0444-.0068*s+.0004*Math.sin(PI*s);
-   const skin=nearest(rootY,rootZ),row=[];
+   const skin=nearest(rootY),row=[];
    for(let k=0;k<=M;k++){
     const u=k/M,bulge=Math.sin(PI*u),late=Math.pow(u,3);
     const edge=.46*Math.sin(s*PI*13)+.21*Math.sin(s*PI*21+.4);
