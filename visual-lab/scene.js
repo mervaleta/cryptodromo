@@ -948,9 +948,17 @@ function adjustCamera(dt){
  });
  goal.set(composed.position.x,composed.position.y,composed.position.z);
  target.set(composed.focus.x,composed.focus.y,composed.focus.z);
- camera.position.lerp(goal,blend);
- if(!cameraFocusReady){cameraFocus.copy(target);cameraFocusReady=true;}
- else cameraFocus.lerp(target,cameraBlend(dt,3.8));
+ // On a throttled renderer or a director cut, catching up gradually can
+ // leave the camera showing an empty stretch of track while the pack is far
+ // away. Treat large displacements as a TV cut, not a long camera drift.
+ if(!cameraFocusReady||camera.position.distanceToSquared(goal)>85*85){
+  camera.position.copy(goal);
+  cameraFocus.copy(target);
+  cameraFocusReady=true;
+ }else{
+  camera.position.lerp(goal,blend);
+  cameraFocus.lerp(target,cameraBlend(dt,3.8));
+ }
  camera.lookAt(cameraFocus);
 }
 function particles(dt){
