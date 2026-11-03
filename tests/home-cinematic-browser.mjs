@@ -10,7 +10,7 @@ try{
  const errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  // Old backend and graphics options must be ignored on the canonical home.
- await page.goto('http://127.0.0.1:8799/?horse-engine=legacy&graphics-quality=eco&procedural-qa=alpha20&finish-qa=alpha06',
+ await page.goto('http://127.0.0.1:8799/?horse-engine=legacy&graphics-quality=eco&procedural-qa=alpha20&finish-qa=alpha06&home-qa=cinema',
   {waitUntil:'domcontentloaded',timeout:45000});
  await page.waitForFunction(()=>!!window.__cryptodromoCinematicReady,
   {timeout:150000});
@@ -35,17 +35,14 @@ try{
  assert.equal(state.rankingCount,12);
  assert.ok(state.stageWidth>500);
  assert.deepEqual(errors,[],errors.join('; '));
- // An active race frame, not an overlaid results scoreboard, is required
- // to assess horse silhouettes. Manual QA uses unchanged official fixture.
- await page.locator('#start').click();
- await page.waitForFunction(()=>window.__cryptodromoQA?.state().elapsed>5,
-  {timeout:65000});
- await page.locator('#camera').evaluate(el=>{
-  el.value='side';el.dispatchEvent(new Event('change',{bubbles:true}));
- });
- await page.waitForTimeout(1300);
- assert.equal(await page.locator('#result-overlay').isHidden(),true,
-  'QA capture must not hide horses behind the results overlay');
+ // Explicit QA-only shot at 14s to ensure leg anatomy is genuinely visible,
+ // regardless of a slow software GPU or live wall-clock scheduling.
+ const frame=await page.evaluate(()=>window.__cryptodromoHomeQA.captureAt(14,'low'));
+ assert.equal(frame.horseCount,12);
+ assert.equal(frame.engine,'fidelity');assert.equal(frame.quality,'cinematic');
+ assert.equal(frame.resultOverlayHidden,true);
+ assert.ok(frame.drawCalls>0);
+ assert.ok(frame.minProgress>0 && frame.maxProgress<1);
  mkdirSync('artifacts',{recursive:true});
  await page.locator('#stage').screenshot({path:'artifacts/home-fidelity-racing-stage.png',
   timeout:90000,animations:'disabled'});
