@@ -42,7 +42,7 @@ export function createPreview(canvas,onFailure=()=>{}){
 
  let horse=null,hair=null,hero=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.30,tailSize=1.25,hairColor='#39231d';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
@@ -77,7 +77,7 @@ export function createPreview(canvas,onFailure=()=>{}){
     throw Error('No se encontró la crin y cola originales del caballo BTC');
    }
    try{
-    if(candidate){nextHero=createBTC3DHeroGroom(next.root);next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);}
+    if(candidate){nextHero=createBTC3DHeroGroom(next.root,{maneSize,tailSize,color:hairColor});next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);}
    }catch(error){nextHair?.dispose();next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHair=hair,prevHero=hero;
@@ -95,6 +95,9 @@ export function createPreview(canvas,onFailure=()=>{}){
  }
  function setWind(value){wind=clamp(value,0,2);}
  function setSpeed(value){speed=clamp(value,.5,1.6);}
+ function setManeSize(value){maneSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant==='enhanced')rebuild();}
+ function setTailSize(value){tailSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant==='enhanced')rebuild();}
+ function setHairColor(value){if(/^#[0-9a-f]{6}$/i.test(value)){hairColor=value;hero?.setColor(value);}}
  function pause(value){paused=!!value;horse?.play(paused?'Idle':'Gallop',.2);}
  const clock=new THREE.Clock();
  renderer.setAnimationLoop(()=>{
@@ -108,9 +111,9 @@ export function createPreview(canvas,onFailure=()=>{}){
   controls.update();renderer.render(scene,camera);
  });
  return {
-  select,pause,setVariant,setWind,setSpeed,setCamera,
+  select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,
   snapshot:()=>({
-   symbol:renderedSymbol,variant:renderedVariant,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,camera:cameraView,
+   symbol:renderedSymbol,variant:renderedVariant,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
    originalAsset:true,jockey:false,maneEnabled:!!hair?.channelCount,
    maneMotion:hair?.snapshot?.mane||0,tailMotion:hair?.snapshot?.tail||0,
    hairSystem:hair?.snapshot||null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
