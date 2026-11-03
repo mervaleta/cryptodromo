@@ -47,13 +47,18 @@ function request_token(array $payload): void {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
     if ($origin && parse_url($origin, PHP_URL_HOST) !== ($_SERVER['HTTP_HOST'] ?? '')) fail('Origen no permitido', 403);
 }
+function demo_now(): int {
+    // Sólo para pruebas reproducibles del servidor PHP embebido; nunca en FPM/Hostinger.
+    $testing = getenv('STABLES_TEST_UNIX');
+    return PHP_SAPI === 'cli-server' && $testing !== false ? (int)$testing : time();
+}
 function now_round(): int {
     $anchor = (new DateTimeImmutable('2026-11-02 00:00:00', new DateTimeZone('America/Argentina/Buenos_Aires')))->getTimestamp();
-    return (int) floor((time() - $anchor) / 180);
+    return (int) floor((demo_now() - $anchor) / 180);
 }
 function completed_round(): int {
     $anchor = (new DateTimeImmutable('2026-11-02 00:00:00', new DateTimeZone('America/Argentina/Buenos_Aires')))->getTimestamp();
-    return (int) floor((time() - $anchor - 60) / 180);
+    return (int) floor((demo_now() - $anchor - 60) / 180);
 }
 function fixture(): array {
     static $fixture = null;
@@ -68,6 +73,9 @@ function fixture(): array {
 }
 function db(): PDO {
     $directory = dirname(__DIR__, 2) . '/cryptodromo-stables-private';
+    if (PHP_SAPI === 'cli-server' && getenv('STABLES_TEST_DIR')) {
+        $directory = (string)getenv('STABLES_TEST_DIR');
+    }
     if (!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory)) {
         throw new RuntimeException('No hay almacenamiento privado disponible');
     }
@@ -294,6 +302,13 @@ try {
         }
         $s=my_stable($db,$owner);
         $effective=now_round()+1; // no se inscribe durante una carrera iniciada
+        if ($s && ($action==='roster' || $action==='upgrade')) {
+            // Rechazar modificaciones sucesivas durante el mismo intervalo,
+            // porque ambas tendrían la misma hora efectiva y duplicarían filas.
+            $future=$db->prepare('SELECT 1 FROM demo_roster WHERE stable_id=? AND from_round>=? LIMIT 1');
+            $future->execute([(int)$s['id'],$effective]);
+            if ($future->fetchColumn()) fail('Ya hay una modificación pendiente para la próxima largada',409);
+        }
         if($action==='create'){
             if($s)fail('Ya tenés una escudería',409);
             $name=valid_name($payload['name']??'');
