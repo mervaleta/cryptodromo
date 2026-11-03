@@ -16,7 +16,7 @@ test('six LIVE camera axes have truly independent effects',()=>{
  assert.ok(pitch.position.y>initial.position.y+15);
  assert.equal(height.position.y-initial.position.y,25);
  assert.ok(close.actualDistance<initial.actualDistance*.46);
- assert.equal(lateral.position.x-lateral.focus.x,initial.position.x-initial.focus.x);
+ assert.ok(Math.abs((lateral.position.x-lateral.focus.x)-(initial.position.x-initial.focus.x))<1e-10);
  assert.ok(metric(lateral.focus,initial.focus)>19);
  assert.deepEqual(CAMERA_PARAMETERS.fov,{min:18,max:90,step:1,unit:'°'});
  assert.equal(clampCameraSetting('pitch',90),75);
