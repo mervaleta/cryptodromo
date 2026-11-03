@@ -10,16 +10,19 @@
 .btc-atelier-panel label{display:grid;gap:5px;font-size:11px;color:#d4e2d3}
 .btc-atelier-panel input{width:100%;accent-color:#d2b47c}
 .btc-atelier-panel a{color:#edcd8d;font-size:11px;text-decoration:underline}
+body.btc-hair-preview #horse-view{height:520px}
+body.btc-hair-preview .stage{background:radial-gradient(ellipse at 45% 52%,#51614b 0%,#17231a 60%,#0b1410 100%)}
+@media(max-width:700px){body.btc-hair-preview #horse-view{height:400px}}
 </style><link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script></head>
 <body><a class="skip" href="#roster">Ir al plantel</a><a class="site-skip" href="#main-content">Saltar al contenido</a><header class="sitebar"><div class="sitebar-inner"><a class="site-brand" href="/" aria-label="Cryptodromo, inicio"><img src="/assets/cryptodromo-logo.png" alt="Cryptodromo"></a><nav class="site-nav" aria-label="Navegación principal"><a href="/">Carrera</a><a href="/racers/" aria-current="page">Corredores</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/grandes-premios/">Grandes Premios</a><a href="/cronicas/">Crónicas</a><a href="/apuestas/">Apuestas · demo</a><a href="/estadio/">Estadio</a><a href="/parade/">Modo Parade</a><a href="/institucional/">Proyecto</a></nav><a class="site-action" href="/">Ver la carrera ↗</a></div></header>
 <main id="main-content"><section class="intro"><div><p class="eyebrow">EL PADDOCK / PLANTEL DE CARRERA</p><h1>Cien identidades.<br><em>Una misma pista.</em></h1><p class="lede">Conocé a los corredores del Cryptodromo. Cada token tiene su caballo, sus colores y un lugar en la largada.</p></div><div class="numbers"><div><strong id="total">100</strong><span>CORREDORES</span></div><div><strong>12</strong><span>POR CARRERA</span></div><div><strong>480</strong><span>CARRERAS / DÍA</span></div></div></section>
 <section class="feature" aria-labelledby="horse-name"><div class="stage"><div class="stage-top"><span>VISTA DEL CABALLO</span><span id="preview-state">Preparando modelo 3D animado…</span></div><div id="horse-view"><canvas id="horse-canvas" aria-label="Vista tridimensional del caballo sin jockey seleccionado"></canvas><div id="preview-fallback" hidden>La vista 3D no está disponible. Podés consultar todos los corredores y sus colores.</div></div><div class="stage-bottom"><span>CABALLO 3D · SIN JOCKEY · COLORES DEL TOKEN</span><button id="stage-toggle" type="button" aria-pressed="false" aria-label="Alternar entre el fondo de hipódromo y el fondo negro">Fondo negro</button><button id="motion" type="button" aria-pressed="true">Pausar galope</button></div></div><div class="profile"><p class="eyebrow" id="horse-tier">ESTRELLA</p><div class="identity"><h2 id="horse-symbol">BTC</h2><span id="horse-number">01 / 100</span></div><h3 id="horse-name">Bitcoin</h3><p id="horse-description">Los protagonistas más frecuentes del fixture, mezclados con el resto del plantel en cada carrera.</p><a id="btc-atelier-entry" class="btc-atelier-entry" href="?atelier=btc#BTC" hidden>Probar animación experimental de BTC</a>
 <div id="btc-atelier-panel" class="btc-atelier-panel" hidden aria-label="Laboratorio de animación BTC">
 <h3>LABORATORIO BTC · GALOPE ORIGINAL</h3>
-<p>Antes y después del pelo: crin del cuello, puntas y cola con viento e inercia independiente. Misma anatomía y galope original, sin jockey.</p>
+<p>Antes y después del pelo: crin del cuello, puntas y cola con movimientos precalculados en bucle. Misma anatomía y galope original, sin jockey.</p>
 <div class="btc-buttons" role="group" aria-label="Comparar animación">
 <button type="button" data-btc-variant="original" aria-pressed="false">Original</button>
-<button type="button" data-btc-variant="enhanced" aria-pressed="true">Crin + cola v1.5</button>
+<button type="button" data-btc-variant="enhanced" aria-pressed="true">Crin + cola animadas</button>
 </div>
 <label>Viento · <output id="btc-wind-value">0.95</output>
 <input id="btc-wind" aria-label="Intensidad del viento" type="range" min="0" max="2" step=".05" value=".95"></label>
@@ -31,7 +34,7 @@
 <button type="button" data-btc-camera="rear">Atrás</button>
 <button type="button" data-btc-camera="detail">Detalle</button>
 </div>
-<p>Arrastrá el caballo para girarlo y usá el botón Pausar galope debajo del visor. El modo Original conserva el pelo anterior; v1.5 sólo cambia la crin y la cola. La carrera y los otros 99 tokens no se modifican.</p>
+<p>Arrastrá el caballo para girarlo y usá el botón Pausar galope debajo del visor. El modo Original conserva el pelo anterior; la variante sólo cambia la crin y la cola. La carrera y los otros 99 tokens no se modifican.</p>
 <a href="/racers/#BTC">Volver a la ficha habitual de BTC</a>
 </div><section class="horse-biography"><h3>Biografía del caballo</h3><p id="horse-story">Identidad ficticia de pista, determinada por el color, la categoría y el símbolo del token.</p>
 <h3>Estadísticas · 7 jornadas sintéticas</h3><div class="horse-stat-grid" id="horse-stat-grid"><span>Calculando participaciones, podios y victorias…</span></div></section><div class="palette"><div><span>COLOR DE CARRERA</span><strong><i id="color-swatch"></i><code id="horse-color">#F7931A</code></strong></div><div><span>PELAJE</span><strong><i id="coat-swatch"></i><code id="horse-coat">#55352C</code></strong></div></div><p class="profile-note">Los colores se toman del mismo plantel que utiliza la carrera.</p><a class="cta" href="/">Ir a la pista <span>↗</span></a></div></section>
