@@ -70,6 +70,11 @@ try{
  await page.goto(base+'/parade/',{waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>window.__cryptodromoParadeQA?.snapshot().ready,{timeout:80000});
  assert.equal(await page.locator('#parade-camera-deck').isVisible(),true);
+ assert.equal(await page.locator('#drone-pad').isVisible(),false,'Desktop stage should stay free of a floating touch keypad');
+ await page.click('#toggle-camera-pad');
+ assert.equal(await page.locator('#drone-pad').isVisible(),true);
+ await page.click('#toggle-camera-pad');
+ assert.equal(await page.locator('#drone-pad').isVisible(),false);
  await page.selectOption('#camera-mode','orbit');
  await page.selectOption('#sight','tribunas');
  await page.waitForTimeout(1200);
