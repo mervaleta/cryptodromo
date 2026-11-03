@@ -102,9 +102,12 @@ try{
  await page.locator('#fog-intensity').evaluate(input=>{input.value='145';input.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.locator('#cloud-cover-label').innerText()).trim(),'85%');
  assert.equal((await page.locator('#fog-intensity-label').innerText()).trim(),'145%');
+ await page.click('#tab-camera');
+ assert.equal(await page.locator('#panel-camera').isVisible(),true,'Unified camera panel must open');
  await page.selectOption('#camera','leader');
  await page.selectOption('#camera','orbit');
  await page.selectOption('#camera','broadcast');
+ await page.click('#tab-race');
  const nowLabel=await page.locator('#live-current').innerText();
  console.log('LIVE_SCHEDULE',JSON.stringify({
    current:nowLabel,
