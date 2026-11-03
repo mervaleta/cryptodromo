@@ -1,0 +1,45 @@
+name: Verify BTC 3D Hero Groom deployed
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/verify-btc-3d-groom-public.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Check actual public BTC runner page and updated 3D renderer
+        shell: bash
+        run: |
+          set -uo pipefail
+          root='https://race.cryptodromo.com'
+          published=0
+          for attempt in $(seq 1 15); do
+            original=$(mktemp)
+            groom=$(mktemp)
+            viewer=$(mktemp)
+            html=$(mktemp)
+            js=$(curl -L -sS --max-time 18 -o "$original" -w '%{http_code}' "$root/racers/racers.js?btc3d=20261103-$attempt" || true)
+            gr=$(curl -L -sS --max-time 18 -o "$groom" -w '%{http_code}' "$root/racers/btc-hero-groom-v2.js?btc3d=20261103-$attempt" || true)
+            vw=$(curl -L -sS --max-time 18 -o "$viewer" -w '%{http_code}' "$root/racers/btc-atelier-preview.js?btc3d=20261103-$attempt" || true)
+            ht=$(curl -L -sS --max-time 18 -o "$html" -w '%{http_code}' "$root/racers/?btc3d=20261103-$attempt" || true)
+            echo "attempt $attempt HTTP JS=$js GROOM=$gr VIEWER=$vw HTML=$ht"
+            if [ "$js" = 200 ] && [ "$gr" = 200 ] && [ "$vw" = 200 ] && [ "$ht" = 200 ] && \
+              grep -q "atelierMode!=='off'&&selected.symbol==='BTC'" "$original" && \
+              grep -q 'createBTC3DHeroGroom' "$groom" && \
+              grep -q 'applyBTCCoatLook' "$viewer" && \
+              grep -q 'btc-3d-groom-v2-1' "$html"; then
+              published=1
+              echo '::notice::BTC 3D groom and normal Bitcoin profile are published on race.cryptodromo.com'
+              rm -f "$original" "$groom" "$viewer" "$html"
+              break
+            fi
+            rm -f "$original" "$groom" "$viewer" "$html"
+            sleep 10
+          done
+          if [ "$published" != 1 ]; then
+            echo '::error::Hostinger is not serving the merged BTC 3D model. Check sync and cache.'
+            exit 1
+          fi
