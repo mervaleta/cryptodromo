@@ -16,8 +16,8 @@ export function mountPresentationHorse(container){
   const request=++serial;
   try{
    const next=await createHorse({coat:entry.coat||'#956342',accent:entry.color||'#f7931a',symbol:entry.symbol||'BTC',height:2.85,mode:'Walk'});
-   if(!active||request!==serial){next.root.traverse(o=>{if(o.isMesh)o.geometry?.dispose?.()});return;}
-   if(horse)scene.remove(horse.root);
+   if(!active||request!==serial){next.dispose();return;}
+   if(horse)horse.dispose();
    horse=next;scene.add(horse.root);horse.play('Walk');container.dataset.preview='ready';
   }catch(err){container.dataset.preview='unavailable';console.warn('Presentation horse preview:',err);}
  }
@@ -28,5 +28,5 @@ export function mountPresentationHorse(container){
   requestAnimationFrame(frame);
  }
  requestAnimationFrame(frame);
- return {show,dispose(){active=false;serial++;observer.disconnect();renderer.dispose();renderer.domElement.remove();}};
+ return {show,dispose(){active=false;serial++;observer.disconnect();horse?.dispose();renderer.dispose();renderer.domElement.remove();}};
 }
