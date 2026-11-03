@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js';
-export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-06';
+export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-9';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export function createBTCAAAHeroGroom(root,options={}){
  const stage=Math.floor(clamp(options.lookdevStage??10,1,10));
@@ -99,6 +99,25 @@ export function createBTCAAAHeroGroom(root,options={}){
   hair.customProgramCacheKey=()=>String(previousKey?.()||'')+'|btc-aaa-wind-6';
   hair.needsUpdate=true;
   passNotes.push('06 · Secondary wind: delayed tips and stable skinned roots');
+ }
+
+ // Iteration 09: small anatomical material details without changing topology.
+ if(stage>=9){
+  const refined=new Set();
+  root.traverse(part=>{
+   if(!part.isMesh || part===mesh)return;
+   for(const material of [part.material].flat()){
+    if(!material||refined.has(material))continue;
+    if(/eye|iris|pupil/i.test(material.name||'')){
+     material.metalness=0;material.roughness=Math.min(material.roughness??.5,.34);
+     material.needsUpdate=true;refined.add(material);
+    }else if(/hoof|shoe/i.test(material.name||'')){
+     material.metalness=0;material.roughness=Math.max(material.roughness??.65,.65);
+     material.needsUpdate=true;refined.add(material);
+    }
+   }
+  });
+  passNotes.push('09 · Anatomical detail: eyes and hooves, no added accessories');
  }
  const baseline={vertices:position.count,drawCallsAdded:1};
  return {
