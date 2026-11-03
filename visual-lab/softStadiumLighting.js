@@ -41,7 +41,7 @@ export function createSoftStadiumLighting({THREE,scene,quality='balanced',radius
   const warm=clamp((7500-settings.temperature)/5100,0,1);
   const color=new THREE.Color().setRGB(1,1-.21*warm,1-.45*warm);
   bulbMat.color.copy(color);
-  sprites.forEach(s=>{s.material.opacity=settings.night?.6*settings.glow:0;s.scale.setScalar(18*settings.spread);s.scale.z=1;s.material.color.copy(color);});
+  sprites.forEach((s,i)=>{s.visible=i<Math.min(count,limits[settings.quality]||limits.balanced);s.material.opacity=settings.night?.6*settings.glow:0;s.scale.setScalar(18*settings.spread);s.scale.z=1;s.material.color.copy(color);});
   lights.forEach(l=>{l.intensity=settings.night?.55*settings.intensity:0;l.color.copy(color);});
   return {...settings};
  }
