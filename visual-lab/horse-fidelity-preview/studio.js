@@ -42,10 +42,11 @@ const newProfile=i=>{
  if(i===0)return normalizeHorseProfile({...p,
   archetype:$('archetype').value,coat:$('coat').value,
   maneStyle:$('mane').value,tailStyle:$('tail').value,
-  marking:$('marking').value,quality:$('quality').value,
+  marking:$('marking').value,gaitStyle:$('gait').value,quality:$('quality').value,
   wetness:Number($('wet').value)/100,mud:Number($('mud').value)/100,number:1
  });
- return normalizeHorseProfile({...p,quality:$('quality').value,number:i+1});
+ return normalizeHorseProfile({...p,quality:$('quality').value,number:i+1,
+  gaitStyle:$('gait').value});
 };
 function addHorse(i){
  const model=createProceduralHorse({THREE,profile:newProfile(i)});
@@ -121,6 +122,9 @@ for(const id of ['archetype','quality'])$(id).addEventListener('change',()=>{
  if(id==='quality')replaceAll();else replaceHero();
 });
 for(const id of ['coat','mane','tail','marking'])$(id).addEventListener('change',updateLook);
+$('gait').addEventListener('change',()=>{
+ horses.forEach(h=>h.setGaitStyle($('gait').value));updateMetrics();
+});
 for(const id of ['wet','mud'])$(id).addEventListener('input',()=>{applyWeather();updateMetrics();});
 $('weather').addEventListener('change',applyWeather);
 $('rate').addEventListener('input',()=>{
@@ -133,7 +137,7 @@ $('animate').addEventListener('click',()=>{
 });
 $('reset').addEventListener('click',()=>{
  for(const [id,value] of Object.entries({
-  archetype:'thoroughbred',coat:'bay',mane:'sport',tail:'natural',marking:'star',
+  archetype:'thoroughbred',coat:'bay',mane:'sport',tail:'natural',gait:'ik',marking:'star',
   quality:'balanced',weather:'golden',wet:'0',mud:'0',rate:'100'
  }))$(id).value=value;
  moving=false;mode='portrait';time=0;replaceAll();applyWeather();
