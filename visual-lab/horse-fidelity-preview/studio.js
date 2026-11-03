@@ -43,9 +43,9 @@ const newProfile=i=>{
   archetype:$('archetype').value,coat:$('coat').value,
   maneStyle:$('mane').value,tailStyle:$('tail').value,
   marking:$('marking').value,quality:$('quality').value,
-  wetness:Number($('wet').value)/100,mud:Number($('mud').value)/100
+  wetness:Number($('wet').value)/100,mud:Number($('mud').value)/100,number:1
  });
- return normalizeHorseProfile({...p,quality:$('quality').value});
+ return normalizeHorseProfile({...p,quality:$('quality').value,number:i+1});
 };
 function addHorse(i){
  const model=createProceduralHorse({THREE,profile:newProfile(i)});
