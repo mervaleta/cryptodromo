@@ -45,7 +45,8 @@ function input(): array {
 function request_token(array $payload): void {
     if (!hash_equals((string)$_SESSION['stable_csrf'], (string)($payload['csrf'] ?? ''))) fail('Sesión vencida; recargá la página', 403);
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-    if ($origin && parse_url($origin, PHP_URL_HOST) !== ($_SERVER['HTTP_HOST'] ?? '')) fail('Origen no permitido', 403);
+    $requestHost = parse_url('https://' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST);
+    if ($origin && strcasecmp((string)parse_url($origin, PHP_URL_HOST), (string)$requestHost) !== 0) fail('Origen no permitido', 403);
 }
 function demo_now(): int {
     // Sólo para pruebas reproducibles del servidor PHP embebido; nunca en FPM/Hostinger.
