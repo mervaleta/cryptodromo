@@ -47,7 +47,9 @@ function makeCoat(root,coats) {
    yy-=.00050*nose;
    pos.setXYZ(i,xx,yy,zz);
   }
-  pos.needsUpdate=true;copy.computeVertexNormals();copy.computeBoundingSphere();
+  // Preserve the GLB's angle-weighted smoothed normals; recalculating after
+  // separating skin triangles makes the entire horse look faceted.
+  pos.needsUpdate=true;copy.computeBoundingSphere();
   mesh.geometry=copy;originals.push({mesh,original,copy});
   for(const m of [mesh.material].flat()){
    if(!m||materials.has(m))continue;
@@ -118,7 +120,7 @@ function createGroomGeometry(maneSize,tailSize){
   const vol=isHero?1.0:isFine?.15:.43;
   const length=mane?
     (.010+.0026*wave(PI*s))*(.77+.35*p)*maneSize*(isFine?.91:isHero?1.16:1):
-    (.021+.0050*p)*tailSize*(isFine?.86:isHero?1.08:1);
+    (.025+.0060*p)*tailSize*(isFine?.86:isHero?1.08:1);
   const radius=(mane?.00073:.00087)*vol*(.78+.3*q);
   const start=xyz.length/3;
   const side=flank;
