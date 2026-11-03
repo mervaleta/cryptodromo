@@ -1,5 +1,21 @@
 # Alpha21 · Paquete de galope, cascos y acabado arquitectónico
 
+## Estado de compatibilidad revisado · 3 noviembre 2026
+
+Auditoría contra `main fef892d5` y la integración optativa **PR #48**:
+- Alpha22 del PR #47 fue preservado íntegramente por PR #48 (archivos con SHA idéntico).
+- El LIVE Alpha20 ya tiene `horse-engine=legacy` y `horse-engine=procedural`, y PR #48 agrega `horse-engine=fidelity`. **No reimplementar estos motores ni las gateras.**
+- Esta rama Alpha21 sigue **separada, sin tocar el LIVE** y ofrece pulido opcional. Actualizado `racePolishKit.js` para ejecutar la corrección de cuello/cabeza/espalda/cola **exclusivamente en modelos legacy GLB**; en Alpha20 y Alpha22 conserva sus propias articulaciones. Los tres reciben sólo una llamada `horse.update` por fotograma.
+- Alpha22 expone `hoofPhase`: se puede usar para el spray de cascos. Alpha20 procedural todavía no lo expone, por lo que no deben inventarse impactos a partir del reloj ni mezclarse varios sistemas de partículas.
+- **No fusionar Alpha21 ni #47 directamente tras el PR #48 sin revisar diff.** Si se fusiona #48, el PR #47 queda duplicado; conservarlo sólo como referencia de desarrollo.
+- Los efectos de tierra y acabados de estadio deben comprobarse contra el nuevo `proceduralGround.js`, las gradas existentes y Alpha19 tres pistas para no duplicar vegetación, señalética ni materiales.
+- El renderizador GLB debe permanecer como respaldo hasta superar control visual, colisiones y FPS en equipos reales.
+- Los modelos NONECG aportados son **únicamente referencias de anatomía/look**. No se prevé importar, convertir ni redistribuir esos assets; la estrategia acordada es **geometría + pelaje + animación originales y procedurales, sin PNG ni sprites**.
+- Pruebas PR #48: Alpha22, gateras, estadio y Procedural LIVE aprobadas. La suite de cámaras falló por **timeout de una captura en Chromium SwiftShader**, no por una excepción demostrada del motor de carreras. Revalidar por separado.
+
+---
+
+
 **ESTADO: DESARROLLADO EN RAMA AISLADA · NO PUBLICADO · NO FUSIONAR HASTA VERIFICAR CAMBIOS AJENOS.**
 
 Base confirmada: `main` en `dae4dfab3b13c0d9f6a0ae414a1f72964b8bd7e0` (Alpha20). Otros agentes trabajan sobre tribunas, Alpha19 (tres pistas), motores, comunidad, temporadas, billetera. Este paquete NO edita `visual-lab/scene.js`, `race-lab/source/src/horse.js`, `gaitRefiner.js`, `windMane.js`, `trackSurface.js`, el fixture ni los resultados.
@@ -81,4 +97,4 @@ racePolish.updateFrame({delta:dt,weather:weatherSelect.value,
 
 ## Calidad AAA: alcance y límites
 
-El paquete mejora el timing, el acabado, el acoplamiento casco/superficie y el detalle de encuadres, pero el GLB actual sigue siendo low poly. Para acabado fotorrealista será necesario convertir y optimizar el material NONECG que el usuario tiene (Maya/FBX, mapas PBR, rig y animación horneados, LOD y licencia de uso). No atribuirle una licencia abierta ni sobrescribir el caballo actual hasta verificar la conversión y un presupuesto de rendimiento móvil.
+El paquete mejora el timing, el acabado, el acoplamiento casco/superficie y los encuadres; el caballo GLB es un respaldo opcional. El camino artístico principal ahora es el caballo **original y procedural** de Alpha20/Alpha22, cuyo pelaje, anatomía, crines y geometría se pueden refinar en iteraciones sin imágenes externas. NONECG se usa exclusivamente como referencia estética y anatómica. Se necesitan comparativas visuales, colisiones verificadas y perfiles de rendimiento móvil para declarar calidad AAA.
