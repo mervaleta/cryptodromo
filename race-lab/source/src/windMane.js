@@ -69,8 +69,8 @@ export function createWindMane(bindings,{seed=0}={}){
    if(!shader.vertexShader?.includes(BEGIN)||!shader.vertexShader.includes(COMMON))return;
    shader.uniforms.crpManeTime=uniforms.time;
    shader.uniforms.crpManeMotion=uniforms.motion;
-   shader.vertexShader=shader.vertexShader.replace(COMMON,COMMON+'\\n'+VERTEX_UNIFORMS);
-   shader.vertexShader=shader.vertexShader.replace(BEGIN,BEGIN+'\\n'+VERTEX_DISPLACEMENT);
+   shader.vertexShader=shader.vertexShader.replace(COMMON,COMMON+'\n'+VERTEX_UNIFORMS);
+   shader.vertexShader=shader.vertexShader.replace(BEGIN,BEGIN+'\n'+VERTEX_DISPLACEMENT);
   };
   material.customProgramCacheKey=()=>VERSION+'|'+(previousKey?.()||'');
   material.needsUpdate=true;
