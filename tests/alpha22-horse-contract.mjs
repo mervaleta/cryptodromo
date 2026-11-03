@@ -56,7 +56,9 @@ test('Alpha22 attaches through the existing LIVE horse facade without a duplicat
  assert.ok(!scene.includes('horse-fidelity/proceduralHorse.js'));
  assert.match(scene,/import \{createHorse,selectedHorseRenderer\}/);
  assert.match(bridge,/createAlpha22RaceHorse/);
- assert.match(bridge,/createProceduralRaceHorse/);
+ assert.match(bridge,/return 'fidelity'/);
+ assert.doesNotMatch(bridge,/createProceduralRaceHorse|createLegacyHorse/,
+  'The public race must use only Alpha22 Fidelity');
  assert.equal((scene.match(/applyGateStaging\(\{horses,gate:gateKit/g)||[]).length,1);
  assert.equal((scene.match(/for\(const h of horses\)h\.model\.update\(/g)||[]).length,1);
 });
