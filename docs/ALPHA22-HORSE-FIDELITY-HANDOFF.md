@@ -49,7 +49,8 @@ El manual adjunto `Horses_Manual.pdf` describe un caballo realista animado para 
 - `visual-lab/horse-fidelity/horseProfiles.js`: 4 conformaciones (sangre pura, potencia, elegante, resistencia), 8 pelajes, identidad por seed, parámetros validados.
 - `visual-lab/horse-fidelity/horseGeometry.js`: superficies 3D por loft de sección transversal suave; torso, cuello, cabeza, músculos, extremidades y zócalos.
 - `visual-lab/horse-fidelity/horseShader.js`: material físico analítico con grano 3D, pigmentación, roughness, humedad y barro. Ningún mapa de imagen.
-- `visual-lab/horse-fidelity/horseJockey.js`: jockey, casco, guantes, botas, brazos y riendas geométricos originales; visibilidad conmutable, altura prevista debajo de la gatera Alpha20.\n- `visual-lab/horse-fidelity/horseGroom.js`: crin, flequillo y cola como tiras geométricas volumétricas entrecruzadas; estilos cortos/deportivos/largos, movimiento de viento.
+- `visual-lab/horse-fidelity/horseJockey.js`: jockey, casco, guantes, botas, brazos y riendas geométricos originales; visibilidad conmutable, altura prevista debajo de la gatera Alpha20.
+- `visual-lab/horse-fidelity/horseGroom.js`: crin, flequillo y cola como tiras geométricas volumétricas entrecruzadas; estilos cortos/deportivos/largos, movimiento de viento.
 - `visual-lab/horse-fidelity/horseRaceLivery.js`: mantilla geométrica curvada, colores del corredor y números 1-99 mediante segmentos 3D. Sin fuentes, sprites ni atlas.
 - `visual-lab/horse-fidelity/horseGaitIK.js`: trayectoria analítica de cascos con apoyo/recuperación y resolución inversa de dos huesos por pata; conserva opción de movimiento anterior para comparar.
 - `visual-lab/horse-fidelity/proceduralHorse.js`: ensamblador con rig original de articulaciones para galope en cuatro tiempos; ojos, orejas, hocico, cascos, marcas y APIs de carrera.
