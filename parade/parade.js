@@ -186,7 +186,7 @@ function setQuality(name){
  renderer.shadowMap.enabled=name!=='eco'&&!softwareGPU;
  sun.castShadow=renderer.shadowMap.enabled;
  village.setQuality(name);district.setQuality(name);
- softLighting.apply({glow:name==='eco'?.35:.8});
+ softLighting.apply({quality:name==='eco'?'low':name==='cinematic'?'high':'balanced',glow:name==='eco'?.35:.8});
  horseSurfaceSettings.quality=name==='eco'?'performance':name==='cinematic'?'cinematic':'balanced';
  horseModels.forEach(h=>h.setVisualQuality?.(horseSurfaceSettings.quality));
  resize();
