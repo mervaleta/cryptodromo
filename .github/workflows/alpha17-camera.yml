@@ -1,0 +1,63 @@
+name: Alpha17 camera console + countdown preflight
+on:
+  push:
+    branches: ['prep/alpha17-camera-director-countdown']
+    paths:
+      - 'visual-lab/**'
+      - 'parade/**'
+      - 'assets/camera-console.css'
+      - 'index.html'
+      - 'tests/alpha17-**'
+      - 'tests/alpha13-home.mjs'
+      - 'tests/alpha16-parade.mjs'
+      - 'tests/stadium-live-integration.mjs'
+      - '.github/workflows/alpha17-camera.yml'
+  pull_request:
+    branches: [main]
+    paths: ['visual-lab/**','parade/**','index.html','assets/camera-console.css','tests/alpha17-*']
+  workflow_dispatch:
+concurrency:
+  group: alpha17-camera-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  camera-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Three.js for 3D stadium module tests
+        run: npm ci --prefix race-lab/source --no-audit --no-fund
+      - name: Parse every touched JavaScript module
+        run: |
+          for f in visual-lab/scene.js visual-lab/cameraRig.js visual-lab/cameraPanel.js \
+            parade/drone.js parade/parade.js tests/alpha17-camera.mjs tests/alpha17-camera-browser.mjs; do
+            node --check "$f"
+          done
+      - name: Verify independent axes, 100 horse parade, stadium contracts
+        run: |
+          node --test tests/alpha17-camera.mjs tests/alpha16-parade.mjs tests/alpha13-home.mjs tests/stadium-live-integration.mjs
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Preview BOTH camera systems without touching LIVE production
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/alpha17-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/alpha17-camera-browser.mjs
+          node tests/alpha16-parade-browser.mjs
+      - name: Save comparison screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpha17-camera-console-local-preview
+          path: artifacts/
+          retention-days: 30
+          if-no-files-found: ignore
