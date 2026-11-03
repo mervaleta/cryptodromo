@@ -100,7 +100,9 @@ try{
  await change('#fov',34);
  assert.equal(await page.locator('#distance-label').textContent(),'170 m');
  assert.equal(await page.locator('#fov-label').innerText(),'34°');
- await page.locator('#stage').screenshot({path:'artifacts/alpha17-parade-orbit.png',timeout:40000});
+ // The stage is animated continuously; a locator screenshot waits for layout stability.
+  // Capture the viewport directly so camera QA cannot stall on live WebGL motion.
+  await page.screenshot({path:'artifacts/alpha17-parade-orbit.png',timeout:40000});
  await page.selectOption('#camera-mode','follow');
  await page.waitForTimeout(300);
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'follow');
