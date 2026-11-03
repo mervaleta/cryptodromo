@@ -1,0 +1,42 @@
+name: BTC horse atelier pilot
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/**'
+      - 'tests/btc-horse-atelier-*.mjs'
+      - '.github/workflows/btc-horse-atelier.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  btc-pilot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Verify BTC-only safety contract
+        run: |
+          node --check racers/btc-atelier-preview.js
+          node --check racers/racers.js
+          node --test tests/btc-horse-atelier-contract.mjs
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Test normal and BTC atelier runner cards
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/crp-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-horse-atelier-browser.mjs
+      - name: Keep pilot screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-atelier-stage
+          path: artifacts/btc-atelier-preview.png
+          if-no-files-found: ignore
