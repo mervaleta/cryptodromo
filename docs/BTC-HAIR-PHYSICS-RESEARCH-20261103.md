@@ -32,7 +32,7 @@ Date: 2026-11-03
 ## Decision: v1.5
 - Keep the 510-vertex skinned mesh and render under existing Three.js/WebGL2.
 - Separate neck/tail by validated rest-space coordinate masks.
-- Use small independent damped springs in JS, transfer 4-5 floats as uniforms, and deform the original mesh in its vertex shader BEFORE skeletal skinning.
+- Bake 96 visual motion samples once, loop them with interpolation, transfer a few floats as uniforms, and deform the original mesh in its vertex shader BEFORE skeletal skinning. No per-frame physics is performed.
 - No physics engine added, no new meshes, no texture files, no new race systems.
 - Enable exclusively in /racers/?atelier=btc#BTC; leave the normal catalogue and LIVE race untouched.
 - Baseline version must be able to be toggled in the same preview.
@@ -41,7 +41,7 @@ Date: 2026-11-03
 ## Acceptance
 1. Original GLB and Gallop remain intact; no jockeys.
 2. Distinct root-to-tip masks for both parts.
-3. Tail motion advances independently of the mane.
+3. Tail looping keyframes advance with a different phase than the mane.
 4. Browser renders with no page errors.
 5. Visual comparison of head, profile and rear at normal/strong wind.
 6. Keep work isolated until owner approves the result.
