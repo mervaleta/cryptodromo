@@ -4,7 +4,7 @@
  * The horse GLB, original bones and Gallop animation are not changed.
  */
 import * as THREE from 'three';
-export const GROOM_VERSION='btc-groom-v3-clumps-2';
+export const GROOM_VERSION='btc-groom-v3-flyaways-3';
 const PI=Math.PI, TAU=Math.PI*2;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
 function findHair(root){
@@ -47,7 +47,7 @@ function buildGeometry(source,options){
  for(let side=0;side<2;side++){
   for(let i=0;i<=N;i++){
    const s=i/N,rootY=-.0293+.0179*s;
-   const rootZ=.0444-.0068*s+.0004*Math.sin(PI*s);
+   const rootZ=.0431-.0060*s+.00035*Math.sin(PI*s);
    const skin=nearest(rootY),row=[];
    for(let k=0;k<=M;k++){
     const u=k/M,bulge=Math.sin(PI*u),late=Math.pow(u,3);
@@ -55,7 +55,7 @@ function buildGeometry(source,options){
     const length=(.0071+.0025*Math.sin(s*PI))*
       options.maneSize*(1+late*edge*.10);
     const y=rootY+length*(u+.04*bulge);
-    const z=rootZ+.0031*bulge-.0009*u*u+
+    const z=rootZ+.00128*bulge-.00070*u*u+
       .00030*late*Math.sin(s*PI*13);
     const halfW=(.00013+.00275*Math.pow(bulge,.72))*
       options.maneSize*(.90+.08*Math.cos(PI*6*s));
@@ -114,11 +114,11 @@ function buildGeometry(source,options){
  // ITERATION 2: a sparse set of curved highlight locks integrated into the
  // SAME BufferGeometry. The full, continuous shell remains dominant.
  // These are slim tapered strands, not dozens of rigid plastic wedges.
- function strand(mane,id,count,flank=1){
-  const SEG=19,CIRCLE=7,begin=p.length/3,phase=id*2.399963;
-  const s=(id+.38)/count;
+ function strand(mane,id,count,flank=1,fine=false){
+  const SEG=25,CIRCLE=8,begin=p.length/3,phase=id*2.399963+(fine?1.71:0);
+  const s=(id+(fine?.12:.38))/count;
   const rootY=-.0293+.0179*s;
-  const rootZ=.0444-.0068*s+.0004*Math.sin(PI*s);
+  const rootZ=.0431-.0060*s+.00035*Math.sin(PI*s);
   const skin=mane?nearest(rootY):{bones:[1,0,0,0],ws:[1,0,0,0]};
   const angle=TAU*id/count;
   for(let k=0;k<=SEG;k++){
@@ -126,21 +126,22 @@ function buildGeometry(source,options){
    let cx,cy,cz,width,depth;
    if(mane){
     const len=(.0067+.0015*Math.sin(s*PI))*
-      options.maneSize*(.83+.22*Math.sin(phase));
+      options.maneSize*(.83+.22*Math.sin(phase))*(fine?1.13:1);
     cy=rootY+len*u;
-    cz=rootZ+.0031*bulge-.0009*u*u+.00018*Math.sin(phase+u*5);
-    cx=flank*(.0013+.0027*bulge)*options.maneSize;
-    width=(.00011+.00054*Math.pow(bulge,.70))*Math.pow(1-u,.23);
-    depth=(.00017+.00029*bulge)*Math.pow(1-u,.28);
+    cz=rootZ+.00128*bulge-.00070*u*u+.00014*Math.sin(phase+u*5)+
+      (fine?.00035*u:0);
+    cx=flank*(.00038+.00230*bulge)*options.maneSize+(fine?flank*.00032*u:0);
+    width=(.00011+(fine?.000075:.00038)*Math.pow(bulge,.70))*Math.pow(1-u,.23);
+    depth=(.00010+(fine?.000075:.00024)*bulge)*Math.pow(1-u,.28);
    }else{
-    cy=.0194+.0226*options.tailSize*u+tip*.0017*Math.sin(phase);
+    cy=.0194+.0226*options.tailSize*u+tip*(fine?.0035:.0017)*Math.sin(phase);
     const centerZ=.0319+.0029*Math.sin(PI*.93*u)-.0046*u;
     const rx=(.0011+.0033*Math.pow(bulge,.72))*Math.max(.055,Math.pow(1-u,.36))*options.tailSize;
     const rz=(.0013+.0024*Math.pow(bulge,.78))*Math.max(.055,Math.pow(1-u,.36))*options.tailSize;
     cx=Math.cos(angle)*(rx+.00022);
     cz=centerZ+Math.sin(angle)*(rz+.00019);
-    width=(.00011+.00052*bulge)*Math.pow(1-u,.32);
-    depth=(.00012+.00032*bulge)*Math.pow(1-u,.35);
+    width=(.00010+(fine?.00009:.00045)*bulge)*Math.pow(1-u,.32);
+    depth=(.00011+(fine?.00008:.00029)*bulge)*Math.pow(1-u,.35);
    }
    const narrow=Math.max(.025,Math.pow(1-u,.60));
    for(let a=0;a<CIRCLE;a++){
@@ -165,6 +166,13 @@ function buildGeometry(source,options){
   strand(true,i,maneHighlights,-1);
  }
  for(let i=0;i<tailHighlights;i++)strand(false,i,tailHighlights);
+ // Stray hairs: thin pre-formed ribbons, animated by the same shader.
+ const maneFlyaways=19,tailFlyaways=16;
+ for(let i=0;i<maneFlyaways;i++){
+  strand(true,i,maneFlyaways,1,true);
+  strand(true,i,maneFlyaways,-1,true);
+ }
+ for(let i=0;i<tailFlyaways;i++)strand(false,i,tailFlyaways,1,true);
  const g=new THREE.BufferGeometry();
  g.setIndex(ix);
  g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
@@ -211,7 +219,8 @@ export function createBTC3DHeroGroom(root,options={}){
  let disposed=false;
  return {
   get snapshot(){return {version:GROOM_VERSION,mode:'continuous-volume',
-    maneBodies:1,tailBodies:1,maneHighlightStrands:24,tailHighlightStrands:8,oldHairHidden:!source.visible,
+    maneBodies:1,tailBodies:1,maneHighlightStrands:24,tailHighlightStrands:8,
+    maneFlyaways:38,tailFlyaways:16,oldHairHidden:!source.visible,
     vertices:geometry.attributes.position.count,modelPreserved:true,
     jockey:false,disposed};},
   update(dt,{wind=1,speed=1,running=true}={}){
