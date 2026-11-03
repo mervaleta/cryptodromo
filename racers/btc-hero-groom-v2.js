@@ -38,7 +38,7 @@ function buildGroom(source,settings){
   }
   return nearest;
  };
- const add=(mane,j,n,fine=false)=>{
+ const add=(mane,j,n,fine=false,core=false)=>{
   // Layered base/root layout, avoiding the solid row of identical tubes.
   const layers=mane?4:5;
   const slot=Math.floor(j/layers),layer=j%layers;
@@ -56,8 +56,8 @@ function buildGroom(source,settings){
   // The width grows from a thin root to a sculpted belly then pinches
   // to a fine, curved tip. The cross section is an elliptical lens.
   const length=(mane?.0083+.0067*phase:.0125+.0065*phase)*
-     (mane?settings.maneSize:settings.tailSize)*(0.88+layer*.056)*(fine?(.83+.45*secondary):1);
-  const width=(mane?.00098:.00115)*(.81+.27*secondary)*(fine?.26:1);
+     (mane?settings.maneSize:settings.tailSize)*(0.88+layer*.056)*(fine?(.83+.45*secondary):core?.80:1);
+  const width=(mane?.00098:.00115)*(.81+.27*secondary)*(fine?.26:core?1.70:1);
   const root=verts.length/3;
   const rootTilt=(phase-.5)*.00055+(fine?(secondary-.5)*.00070:0);
   const bend=(mane?.0021:.0028)*(.7+phase*.6);
@@ -66,11 +66,12 @@ function buildGroom(source,settings){
    const swell=Math.sin(Math.PI*u);
    const envelope=Math.max(.01,Math.sin(Math.PI*Math.pow(u,.62)))*(.85+.18*Math.sin(Math.PI*u));
    const w=width*(.22+.93*Math.min(1,u*9))*envelope;
-   const x=p[0]+rootTilt*u+.00018*Math.sin(u*Math.PI*1.5+phase*8)*u;
+   const x=p[0]+rootTilt*u+(mane?0:(layer-2)*.00105*u)+
+     .00018*Math.sin(u*Math.PI*1.5+phase*8)*u;
    const y=p[1]+length*(u+.045*Math.sin(Math.PI*u))+
       .00014*Math.sin(Math.PI*u*1.6+phase*4);
    const z=p[2]+(mane?bend*swell+(layer-1.5)*.00048:(.0014+.001*phase)*swell)+
-     (mane?(-.00105*u*u):(-.0050*u*u))+
+     (mane?(-.00105*u*u):(-.0033*u*u))+
      .00028*Math.sin(u*TAU+secondary*6)*u;
    for(let side=0;side<SIDES;side++){
     const a=side/SIDES*TAU;
@@ -84,9 +85,9 @@ function buildGroom(source,settings){
     }
     const ridge=(side===1||side===2)?.21:(side===5||side===6?-.08:.04);
     const tint=.76+.12*phase+.05*Math.sin(j*1.7)+
-      ridge+.075*swell+(fine?.18:0);
+      ridge+.075*swell+(fine?.18:core?-.10:0);
     colors.push(tint*1.08,tint*.96,tint*.89);
-    tips.push(u);lockIds.push(j+(mane?0:100)+(fine?300:0));regions.push(mane?0:1);
+    tips.push(u);lockIds.push(j+(mane?0:100)+(fine?300:core?600:0));regions.push(mane?0:1);
    }
   }
   for(let k=0;k<STEPS;k++)for(let a=0;a<SIDES;a++){
@@ -101,6 +102,10 @@ function buildGroom(source,settings){
  const fineMane=24,fineTail=18;
  for(let j=0;j<fineMane;j++)add(true,j,fineMane,true);
  for(let j=0;j<fineTail;j++)add(false,j,fineTail,true);
+ // Swept volumetric core reduces the comb-like appearance from rear.
+ const coreMane=6,coreTail=10;
+ for(let j=0;j<coreMane;j++)add(true,j,coreMane,false,true);
+ for(let j=0;j<coreTail;j++)add(false,j,coreTail,false,true);
  const geometry=new THREE.BufferGeometry();
  geometry.setIndex(idx);
  geometry.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
@@ -160,8 +165,9 @@ export function createBTC3DHeroGroom(root,options={}){
  mesh.bindMatrixInverse.copy(original.bindMatrixInverse);
  let disposed=false;
  return {
-  get snapshot(){return {version:HERO_GROOM_VERSION,locks:settings.maneLocks+settings.tailLocks+42,
+  get snapshot(){return {version:HERO_GROOM_VERSION,locks:settings.maneLocks+settings.tailLocks+42+16,
     maneLocks:settings.maneLocks,tailLocks:settings.tailLocks,fineManeLocks:24,fineTailLocks:18,
+    coreManeLocks:6,coreTailLocks:10,
     vertices:geometry.attributes.position.count,
     modelPreserved:true,jockey:false,disposed};},
   update(dt,{wind=1,speed=1,running=true}={}){
