@@ -43,6 +43,9 @@ try{
  },null,{timeout:20000});
  await page.locator('[data-btc-variant="original"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.variant==='original');
+ await page.locator('[data-btc-camera="profile"]').click();
+ mkdirSync('artifacts',{recursive:true});
+ await page.locator('#horse-view').screenshot({path:'artifacts/btc-original-before.png',timeout:60000});
  await page.locator('[data-btc-variant="enhanced"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.variant==='enhanced');
  await page.locator('button.runner[data-symbol="ETH"]').click();
@@ -54,6 +57,10 @@ try{
  await page.locator('button.runner[data-symbol="BTC"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:60000});
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
+ await page.locator('[data-btc-camera="profile"]').click();
+ await page.locator('#horse-view').screenshot({path:'artifacts/btc-hero-after-profile.png',timeout:60000});
+ await page.locator('[data-btc-camera="rear"]').click();
+ await page.locator('#horse-view').screenshot({path:'artifacts/btc-hero-after-rear.png',timeout:60000});
  mkdirSync('artifacts',{recursive:true});
  try{
   await page.locator('.feature').screenshot({path:'artifacts/btc-3d-groom-v2-preview.png',timeout:60000,animations:'disabled'});
