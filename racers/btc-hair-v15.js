@@ -1,6 +1,6 @@
 /**
  * BTC Mane & Tail Atelier v1.5 (visual pilot only).
- * Procedural vertex deformation of the ORIGINAL skinned Hair primitive.
+ * Baked looping motion drives vertex deformation of the ORIGINAL skinned Hair primitive.
  * No new meshes, images or skeleton overrides. All offsets happen before skinning.
  * Neck mane: rest-space y < -0.011. Tail: y > 0.015. These coordinates are
  * verified against the existing Quaternius GLB; fail closed on replacement.
@@ -62,7 +62,7 @@ const vertexEffect=`
 `;
 const fragmentCommon='varying vec3 crpHair15Rest;';
 const fragmentSheen=`
-  // Small analytic fiber breakup: no PNG, no CanvasTexture, no extra draw calls.
+  // Fine fiber highlights, calculated directly from existing hair vertices.
   float crpHair15Fiber=sin(crpHair15Rest.y*1180.0+crpHair15Rest.z*670.0);
   float crpHair15Fine=sin(crpHair15Rest.z*1910.0-crpHair15Rest.x*1540.0);
   diffuseColor.rgb*=0.974+0.018*crpHair15Fiber+0.012*crpHair15Fine;
@@ -87,10 +87,30 @@ export function isCompatibleHair(mesh){
    Math.abs(b.max.z-.045763)<.006;
 }
 
-function springStep(state,target,stiffness,friction,dt){
- const acceleration=(target-state.position)*stiffness-state.velocity*friction;
- state.velocity=clamp(state.velocity+acceleration*dt,-8,8);
- state.position=clamp(state.position+state.velocity*dt,-2.3,2.3);
+/**
+ * 96 pose samples baked ONCE at load (one lightweight, looping hair animation).
+ * They drive all vertices on the existing skinned Hair mesh through uniforms.
+ * This is not a wind simulation. Mane and tail have different timing, giving
+ * the visual impression of mass and lag with trivial per-frame computation.
+ */
+const HAIR_LOOP_SECONDS=2.65;
+const HAIR_FRAME_COUNT=96;
+const FRAMES=Object.freeze(Array.from({length:HAIR_FRAME_COUNT},(_,i)=>{
+ const p=i/HAIR_FRAME_COUNT, a=TAU*p;
+ return Object.freeze({
+  mane:.66*Math.sin(a-.15)+.23*Math.sin(a*2+.54)+.11*Math.sin(a*3-1.1),
+  tail:.73*Math.sin(a-.98)+.20*Math.sin(a*2-.33)+.07*Math.sin(a*3+.84),
+  flutter:.65*Math.sin(a*3+.43)+.35*Math.sin(a*5-.6)
+ });
+}));
+export const BAKED_HAIR_FRAMES=HAIR_FRAME_COUNT;
+export function sampleBakedHair(timeSeconds=0){
+ const phase=(((Number(timeSeconds)||0)/HAIR_LOOP_SECONDS)%1+1)%1;
+ const x=phase*HAIR_FRAME_COUNT,i=Math.floor(x),t=x-i;
+ const a=FRAMES[i],b=FRAMES[(i+1)%HAIR_FRAME_COUNT];
+ return {mane:a.mane+(b.mane-a.mane)*t,
+  tail:a.tail+(b.tail-a.tail)*t,
+  flutter:a.flutter+(b.flutter-a.flutter)*t};
 }
 export function createBTCHairAtelier(root){
  if(!root?.traverse)throw new TypeError('Horse Object3D required');
@@ -127,8 +147,7 @@ export function createBTCHairAtelier(root){
    channels.push({u,material,previousCompile,previousKey});
   }
  });
- const mane={position:0,velocity:0},tail={position:0,velocity:0};
- let time=0,lastSpeed=0,active=true;
+ let time=0,active=true;
  return {
   get channelCount(){return active?channels.length:0;},
   get snapshot(){return {version:BTC_HAIR_VERSION,mane:channels[0]?.u.mane.value||0,
@@ -138,21 +157,20 @@ export function createBTCHairAtelier(root){
    if(!active)return;
    const dt=clamp(delta,0,.05);
    if(dt<=0)return;
-   time+=dt;
-   const rate=clamp(speed,0,2),w=clamp(wind,0,2);
-   const gust=.07*Math.sin(time*.93)+.055*Math.sin(time*1.67+.7);
-   const air=clamp(.11+w*.40+(running?rate*.53:0)+gust,0,2.15);
-   const acceleration=clamp((rate-lastSpeed)/Math.max(dt,.01),-2.5,2.5);
-   lastSpeed+=(rate-lastSpeed)*(1-Math.exp(-dt*5.5));
-   const bounce=running?Math.sin(TAU*clamp(phase,0,1))*.19:0;
-   springStep(mane,air*.68-acceleration*.13+bounce,29,9.6,dt);
-   springStep(tail,air*.61+acceleration*.10-bounce*.55,14,6.8,dt);
+   // Playback only: no wind field, hair particles, iterative solver or collisions.
+   // Slider controls visual intensity, not physical atmosphere.
+   const rate=clamp(speed,.5,1.6);
+   time+=dt*(.72+rate*.28);
+   const pose=sampleBakedHair(time);
+   const intensity=clamp(.15+clamp(wind,0,2)*.56,0,1.35);
+   const gallop=running?clamp(rate,0,1.6):0;
+   const bounce=running?.11*Math.sin(TAU*clamp(phase,0,1)):0;
    for(const {u} of channels){
     u.time.value=time;
-    u.mane.value=mane.position;
-    u.tail.value=tail.position;
-    u.air.value=air;
-    u.gallop.value=running?clamp(rate,0,1.6):0;
+    u.mane.value=intensity*(pose.mane+bounce);
+    u.tail.value=intensity*(pose.tail-bounce*.4);
+    u.air.value=intensity*(.72+pose.flutter*.18);
+    u.gallop.value=gallop;
    }
   },
   dispose(){
