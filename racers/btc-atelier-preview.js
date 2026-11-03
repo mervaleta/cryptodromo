@@ -9,10 +9,10 @@ import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1'
 import {createBTCHairAtelier} from './btc-hair-v15.js?v=btc-hair-v15-1';
 
 const CAMERA_POSITIONS={
- profile:[3.7,2.6,6.5],
- front:[6.4,2.45,.15],
- rear:[-6.4,2.45,.15],
- detail:[3.0,2.65,4.1]
+ profile:[2.85,2.25,5.15],
+ front:[4.85,2.28,.15],
+ rear:[-4.85,2.28,.15],
+ detail:[1.95,2.30,3.60]
 };
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number(x)||0));
 export function createPreview(canvas,onFailure=()=>{}){
