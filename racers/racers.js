@@ -78,7 +78,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-3d-groom-v2-1':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-groom-v3-shell-1':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -121,7 +121,7 @@ import(previewModule).then(({createPreview})=>{
   preview.setHairColor($('#btc-hair-color').value);
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
  }
- $('#preview-state').textContent=btcAtelier?'BTC · HERO GROOM 3D · ORIGINAL GALLOP · SIN JOCKEY':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · CRIN Y COLA CONTINUAS · GALOPE ORIGINAL · SIN JOCKEY':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;

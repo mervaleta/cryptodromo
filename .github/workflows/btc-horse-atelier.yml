@@ -5,6 +5,7 @@ on:
     paths:
       - 'racers/**'
       - 'tests/btc-horse-atelier-*.mjs'
+      - 'tests/btc-horse-lookdev-10.mjs'
       - 'tests/btc-hair-v15-contract.mjs'
       - '.github/workflows/btc-horse-atelier.yml'
   workflow_dispatch:
@@ -22,7 +23,10 @@ jobs:
         run: |
           node --check racers/btc-atelier-preview.js
           node --check racers/btc-hair-v15.js
-          node --check racers/btc-hero-groom-v2.js
+          node --check racers/btc-hero-groom-v3.js
+          node --check racers/btc-hero-lookdev-aaa.js
+          node --check racers/btc-coat-look-v3.js
+          node --check tests/btc-horse-lookdev-10.mjs
           node --check racers/btc-coat-look-v2.js
           node --check racers/racers.js
           node --test tests/btc-horse-atelier-contract.mjs tests/btc-hair-v15-contract.mjs
@@ -37,14 +41,22 @@ jobs:
           trap 'kill "$SERVER_PID" || true' EXIT
           sleep 2
           node tests/btc-horse-atelier-browser.mjs
+      - name: Capture ten real BTC 3D lookdev iterations in Chromium
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/crp-lookdev-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-horse-lookdev-10.mjs
       - name: Keep pilot screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-atelier-stage
+          name: btc-atelier-10-pass-real-webgl
           path: |
-            artifacts/btc-3d-groom-v2-preview.png
+            artifacts/btc-groom-v3-iteration1.png
             artifacts/btc-original-before.png
             artifacts/btc-hero-after-profile.png
             artifacts/btc-hero-after-rear.png
+            artifacts/horse-lookdev/**
           if-no-files-found: ignore

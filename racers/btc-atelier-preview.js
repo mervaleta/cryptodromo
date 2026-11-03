@@ -6,12 +6,16 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
-import {createBTCHairAtelier} from './btc-hair-v15.js?v=btc-hair-v15-1';
-import {createBTC3DHeroGroom} from './btc-hero-groom-v2.js?v=btc-hero-groom-v2-1';
+import {createBTCAAAHeroGroom as createBTC3DHeroGroom} from './btc-hero-lookdev-aaa.js?v=btc-aaa-lookdev-stage-01';
 import {applyBTCCoatLook} from './btc-coat-look-v2.js?v=btc-coat-look-v2-1';
+import {applyBTCCoatLook as applyBTCCoatLookV3} from './btc-coat-look-v3.js?v=btc-studio-satin-coat-v3';
 
+const lookdevStage=Math.max(1,Math.min(10,Math.floor(Number(new URLSearchParams(location.search).get('lookdev')||10))||10));
+// CI-only repeatable Gallop pose for pixel-comparable screenshots.
+const qaFixedGallopFrame=new URLSearchParams(location.search).get('qaFrame')==='1';
 const CAMERA_POSITIONS={
  profile:[2.25,2.0,4.35],
+ 'three-quarter':[3.10,2.23,3.65],
  front:[3.85,2.12,.13],
  rear:[-3.85,2.12,.13],
  detail:[1.65,2.20,3.20]
@@ -22,7 +26,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.13;
+ renderer.toneMappingExposure=lookdevStage>=8?1.08:1.13;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();
  const camera=new THREE.PerspectiveCamera(33,1,.1,55);
@@ -33,16 +37,17 @@ export function createPreview(canvas,onFailure=()=>{}){
  controls.minDistance=2.7;
  controls.maxDistance=11;
  controls.enablePan=false;
- scene.add(new THREE.HemisphereLight('#f1f9f0','#304539',1.8));
+ scene.add(new THREE.HemisphereLight('#f1f9f0','#304539',lookdevStage>=8?1.65:1.8));
  const key=new THREE.DirectionalLight('#ffedcb',2.8);key.position.set(-3,7,6);
- key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0003;scene.add(key);
+ key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0003;if(lookdevStage>=8){key.shadow.radius=2.5;key.shadow.normalBias=.014;}scene.add(key);
  const fill=new THREE.DirectionalLight('#c0d8ff',1.68);fill.position.set(5,5,-6);scene.add(fill);
- const edge=new THREE.DirectionalLight('#f9c37d',1.55);edge.position.set(3,4,5);scene.add(edge);
+ const edge=new THREE.DirectionalLight('#f9c37d',lookdevStage>=8?1.83:1.55);edge.position.set(3,4,5);scene.add(edge);
  const platformMat=new THREE.MeshStandardMaterial({color:'#27332b',roughness:.94});
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,64);
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;platform.receiveShadow=true;scene.add(platform);
 
- let horse=null,hair=null,hero=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
+ let horse=null,hero=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
+ let qaFrameApplied=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#45312c';
  const resize=()=>{
@@ -72,20 +77,16 @@ export function createPreview(canvas,onFailure=()=>{}){
    if(disposed||request!==selection){next.dispose();return;}
    next.root.scale.setScalar(.78);
    // Hair is an isolated preview-layer upgrade: original body, gait, pigmentation.
-   const nextHair=candidate?createBTCHairAtelier(next.root):null;
+   const nextHair=null;
    let nextHero=null;
-   if(candidate&&nextHair?.channelCount!==1){
-    nextHair?.dispose();next.dispose();
-    throw Error('No se encontró la crin y cola originales del caballo BTC');
-   }
    try{
-    if(candidate){nextHero=createBTC3DHeroGroom(next.root,{maneSize,tailSize,color:hairColor});next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);applyBTCCoatLook(next.root);}
-   }catch(error){nextHair?.dispose();next.dispose();throw error;}
+    if(candidate){nextHero=createBTC3DHeroGroom(next.root,{maneSize,tailSize,color:hairColor,lookdevStage});next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);(lookdevStage>=7?applyBTCCoatLookV3:applyBTCCoatLook)(next.root);}
+   }catch(error){next.dispose();throw error;}
    scene.add(next.root);
-   const prev=horse,prevHair=hair,prevHero=hero;
-   horse=next;hair=nextHair;hero=nextHero;
+   const prev=horse,prevHero=hero;
+   horse=next;hero=nextHero;qaFrameApplied=false;
    renderedSymbol=token.symbol;renderedVariant=candidate?'enhanced':'original';
-   prevHero?.dispose();prevHair?.dispose();prev?.dispose();
+   prevHero?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
   }
@@ -106,9 +107,18 @@ export function createPreview(canvas,onFailure=()=>{}){
   if(disposed)return;
   const dt=Math.min(clock.getDelta(),.05);
   if(!document.hidden){
-   horse?.update(dt,speed);
-   hair?.update(dt,{wind,speed,phase:horse?.hoofPhase||0,running:!paused});
-   hero?.update(dt,{wind,speed,running:!paused});
+   if(qaFixedGallopFrame){
+    if(horse&&!qaFrameApplied){
+     // The original horse update clamps delta to 0.1. Four steps advance
+     // exactly 0.4 authored Gallop seconds, then hold that sculpted pose.
+     for(let i=0;i<4;i++)horse.update(.1,1);
+     hero?.update(.033,{wind,speed,running:true});
+     qaFrameApplied=true;
+    }
+   }else{
+    horse?.update(dt,speed);
+    hero?.update(dt,{wind,speed,running:!paused});
+   }
   }
   controls.update();renderer.render(scene,camera);
  });
@@ -116,15 +126,15 @@ export function createPreview(canvas,onFailure=()=>{}){
   select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,
   snapshot:()=>({
    symbol:renderedSymbol,variant:renderedVariant,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
-   originalAsset:true,jockey:false,maneEnabled:!!hair?.channelCount,
-   maneMotion:hair?.snapshot?.mane||0,tailMotion:hair?.snapshot?.tail||0,
-   hairSystem:hair?.snapshot||null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
+   originalAsset:true,jockey:false,maneEnabled:!!hero?.snapshot,
+   maneMotion:hero?.snapshot?.mode||null,tailMotion:hero?.snapshot?.mode||null,
+   hairSystem:null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
    hoofPhase:horse?.hoofPhase||0,drawCalls:renderer.info.render.calls
   }),
   dispose(){
    if(disposed)return;disposed=true;selection++;
    renderer.setAnimationLoop(null);observer.disconnect();controls.dispose();
-   hero?.dispose();hair?.dispose();horse?.dispose();scene.remove(platform);
+   hero?.dispose();horse?.dispose();scene.remove(platform);
    platformGeo.dispose();platformMat.dispose();renderer.dispose();
   }
  };

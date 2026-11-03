@@ -15,13 +15,13 @@ test('only BTC uses the new groom by default; legacy mode is reversible',()=>{
 test('pilot uses the established authored GLB Gallop, without jockeys',()=>{
  const pilot=read('racers/btc-atelier-preview.js');
  assert.match(pilot,/import \{createHorse\} from '\.\.\/race-lab\/source\/src\/horse\.js/);
- assert.match(pilot,/createBTCHairAtelier/);
+ assert.match(pilot,/createBTC3DHeroGroom/);
  assert.match(pilot,/createBTC3DHeroGroom/);
  assert.match(pilot,/applyBTCCoatLook/);
  assert.match(pilot,/maneMotion:false/);
  assert.match(pilot,/mode:paused\?'Idle':'Gallop'/);
  assert.match(pilot,/setWind/);
- assert.match(pilot,/hair\?\.update/);
+ assert.match(pilot,/hero\?\.update/);
  assert.match(pilot,/setSpeed/);
  assert.doesNotMatch(pilot,/Alpha22|createAlpha22RaceHorse|horse-fidelity|jockey:true/);
  const groom=read('racers/btc-hair-v15.js');
