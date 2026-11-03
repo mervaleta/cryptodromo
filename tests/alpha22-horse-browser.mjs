@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {mkdirSync,writeFileSync,existsSync} from 'node:fs';
 import {chromium} from 'playwright';
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
@@ -20,6 +20,23 @@ try{
  assert.equal(horseAssets.length,0,'No textures or animal models fetched');
  assert.ok(s.heroStats.vertices>500,'Procedural vertices should have volume');
  assert.ok(s.heroStats.hairStrands>25,'Geometric hair must exist');
+ const bridge=await page.evaluate(()=>window.__cryptodromoAlpha22QA.bridgeSmoke());
+ assert.equal(bridge.procedural,true);
+ assert.equal(bridge.textureFree,true);
+ assert.equal(bridge.number,3);
+ assert.equal(bridge.hasJockey,true);
+ if(existsSync('visual-lab/proceduralHorse.js')){
+  await page.locator('#compare').click();
+  await page.waitForFunction(()=>window.__cryptodromoAlpha22QA.snapshot().baselineMounted,
+    {timeout:15000});
+  const compare=await page.evaluate(()=>window.__cryptodromoAlpha22QA.snapshot());
+  assert.equal(compare.mode,'compare');
+  mkdirSync('artifacts',{recursive:true});
+  await page.locator('#stage').screenshot({
+   path:'artifacts/alpha22-alpha20-side-by-side.png',animations:'disabled'});
+  await page.locator('#compare').click();
+ }
+
  mkdirSync('artifacts',{recursive:true});
  await page.locator('#stage').screenshot({path:'artifacts/alpha22-procedural-portrait.png',animations:'disabled'});
  await page.locator('[data-view=grid]').click();
@@ -32,6 +49,7 @@ try{
  await page.locator('#coat').selectOption('palomino');
  await page.locator('#mane').selectOption('flowing');
  await page.locator('#marking').selectOption('blaze');
+ await page.locator('#jockey').selectOption('yes');
  await page.locator('#quality').selectOption('high');
  await page.locator('#weather').selectOption('rain');
  await page.locator('#wet').evaluate(el=>{el.value='83';el.dispatchEvent(new Event('input',{bubbles:true}));});
@@ -41,6 +59,7 @@ try{
  assert.equal(s.selectedProfile.coat,'palomino');
  assert.equal(s.selectedProfile.marking,'blaze');
  assert.equal(s.selectedProfile.quality,'high');
+ assert.equal(s.selectedProfile.jockey,true);
  assert.equal(s.allTextureFree,true);
  assert.ok(s.heroStats.vertices>1000);
  await page.locator('#stage').screenshot({path:'artifacts/alpha22-hi-fidelity-wet-palomino.png',animations:'disabled'});
