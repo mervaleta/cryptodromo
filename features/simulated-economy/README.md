@@ -71,3 +71,26 @@ El despliegue con dinero real exige revisión legal/regulatoria por jurisdicció
 La implementación conserva tres operaciones separadas: `quoteDeposit({channel,method,packageUsd})` cotiza; `createDepositIntent(state,request)` genera una solicitud pendiente; `resolveDepositIntent(state,id,decision)` simula el callback que confirma o cancela. Un proveedor real reemplazará estas operaciones **solo en servidor**, con firma del webhook, importe confirmado, tipo de moneda/red, caducidad, protección de replays, límites, control antifraude y conciliación. Nunca confiar en ID de pago, cantidad, estado ni tasa enviada desde navegador. Para cripto se deberá verificar red, confirmaciones y montos recibidos y gestionar pagos incompletos; para fiat, cancelaciones, reembolsos y contracargos.
 
 Las tasas de pantalla son un **fixture didáctico, no cotizaciones fiables ni negociación financiera**. Los USD demo no tienen respaldo, no hay token en la cadena y las equivalencias no implican promesa de convertibilidad externa.
+
+## Actualización de integración frente a Main del 3/11
+
+- **Escuderías ya están integradas:** `/stables/`, `/championship/` y `/api/stables.php`. Manejan créditos de escudería en SQLite con identidad de invitado por sesión PHP y XP oficial. **No usar estos saldos como USD demo o créditos CR de apuestas**: son productos distintos. No agregar una segunda acreditación al servicio de escuderías ni mezclar sus ledgers sin contrato explícito.
+- **Navegación universal:** `assets/crp-global-nav.js` y su CSS controlan el menú. Nuestra página aislada no debe sobrescribir esos archivos. Tras la fusión, enlazar `/demo-caja/` en el menú de la taquilla mediante el mecanismo compartido, no reescribir cada cabecera.
+- **Fase III de clubes/temporadas:** PR deportivo en borrador, no tocar sus páginas ni editar `/clubes/`.
+- **Cambio de rama:** `main` avanzó; revalidar antes de fusionar y ejecutar QA en preview.
+
+## Retiros simulados y comisiones (añadidos)
+
+`withdrawals.js` conserva una máquina de estados: `pending → approved → processing → completed`, con `rejected` o `cancelled` desde pending/approved, y `failed` desde processing. Al crear la solicitud se reserva el importe entero (incluye comisión). En completado se registran importe neto y comisión, sin alterar otra vez el saldo. En rechazo, cancelación o fallo se reintegra **una sola vez** el importe reservado.
+
+Tarifas de prueba, editables en `WITHDRAWAL_METHODS`, con **porcentaje en puntos básicos + fijo, redondeando la parte variable hacia arriba**:
+
+| Destino ficticio | Fijo USD demo | Variable | Mínimo USD demo |
+|---|---:|---:|---:|
+| Transferencia bancaria | 0,25 | 1,00% | 5 |
+| USDT de demostración | 0,50 | 0,50% | 10 |
+| BTC de demostración | 1,00 | 0,75% | 15 |
+
+Estas comisiones **no representan tarifas reales** de proveedores ni permiten transferencias externas. Todas las operaciones se ejecutan en el navegador, por lo que no resisten manipulación del usuario, cambios de reloj ni concurrencia. Para el producto real, llevar solicitudes/estados al backend, bloquear fondos transaccionalmente, aplicar idempotencia por evento verificable y reconciliar con proveedor de payouts autorizado.
+
+Pruebas nuevas en `withdrawals.test.mjs`. Ejecutar `cd features/simulated-economy && npm test` en un checkout de la rama. En este entorno no pude acceder al repositorio vía red desde el contenedor de ejecución, por lo que los tests siguen sin verificarse por ejecución local.
