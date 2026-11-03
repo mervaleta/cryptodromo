@@ -344,6 +344,18 @@ splitModeSelect.addEventListener('change',()=>{
 });
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
+// Read-only diagnostics opt in, for repeatable browser comparisons, never for scoring.
+if(horseEngineMode==='procedural'&&new URLSearchParams(location.search).get('procedural-qa')==='alpha20'){
+ window.__cryptodromoProceduralQA=Object.freeze({
+  snapshot:()=>Object.freeze({
+   ready:horses.length===12,generated:horses.filter(h=>h.model.generated).length,
+   horses:horses.length,seeded:horses.map(h=>h.model.seed),
+   symbols:race.entries.map(e=>e.symbol),
+   officialRanking:officialRanking(profiles).map(e=>e.symbol),gateCount:gateKit.entries?.length??12,
+   renderer:horseEngineMode,drawCalls:renderer.info.render.calls
+  })
+ });
+}
 let maneWind=.55; // matches stadium cloud wind; never affects the race engine
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
 let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
