@@ -20,7 +20,7 @@ import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
-import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha20-procedural-2';
+import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha22-fidelity-1';
 import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
@@ -42,7 +42,8 @@ if(horseEngineControl){
  horseEngineControl.value=horseEngineMode;
  horseEngineControl.addEventListener('change',()=>{
   const next=new URL(location.href);
-  if(horseEngineControl.value==='procedural')next.searchParams.set('horse-engine','procedural');
+  const selected=horseEngineControl.value;
+  if(selected==='procedural'||selected==='fidelity')next.searchParams.set('horse-engine',selected);
   else next.searchParams.delete('horse-engine');
   location.assign(next.href);
  });
@@ -142,7 +143,7 @@ const earth=mat('#f0e2d4',.93);earth.map=earthTexture;
 // Procedural mode uses analytic GPU materials, preserving the old look for comparison.
 // Reuse the existing tile as a subtle height detail map: no extra network asset.
 earth.bumpMap=earthTexture;earth.bumpScale=.047;
-const proceduralGround=horseEngineMode==='procedural'?installProceduralGround({grass,track:earth}):null;
+const proceduralGround=horseEngineMode!=='legacy'?installProceduralGround({grass,track:earth}):null;
 box(850,.35,260,0,-.33,0,grass);
 const straightSceneIndex=scene.children.length;
 box(812,.13,38,0,-.06,0,earth);
@@ -345,11 +346,11 @@ splitModeSelect.addEventListener('change',()=>{
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
 // Read-only diagnostics opt in, for repeatable browser comparisons, never for scoring.
-if(horseEngineMode==='procedural'&&new URLSearchParams(location.search).get('procedural-qa')==='alpha20'){
+if(horseEngineMode!=='legacy'&&new URLSearchParams(location.search).get('procedural-qa')==='alpha20'){
  window.__cryptodromoProceduralQA=Object.freeze({
   snapshot:()=>Object.freeze({
-   ready:horses.length===12,generated:horses.filter(h=>h.model.generated).length,
-   horses:horses.length,seeded:horses.map(h=>h.model.seed),
+   ready:horses.length===12,generated:horses.filter(h=>h.model.generated||h.model.procedural).length,
+   horses:horses.length,seeded:horses.map(h=>h.model.seed??h.model.profile?.seed??null),
    symbols:race.entries.map(e=>e.symbol),
    officialRanking:officialRanking(profiles).map(e=>e.symbol),gateCount:gateKit.entries?.length??12,
    renderer:horseEngineMode,drawCalls:renderer.info.render.calls
@@ -417,12 +418,12 @@ async function bootHorses(){
   // No floating symbol sprites: the marks are part of the 3D horse skin shader.
   scene.add(model.root);
   model.setWind?.(maneWind);
-  model.setVisualQuality?.(softwareGPU||mobile?'performance':'balanced');
+  model.setVisualQuality?.(activeQuality==='eco'?'performance':activeQuality==='cinematic'?'cinematic':'balanced');
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
  setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
- status.textContent='CAMPO PREPARADO · 12 CORREDORES'+(horseEngineMode==='procedural'?' · MODELOS GENERADOS':'');
+ status.textContent='CAMPO PREPARADO · 12 CORREDORES'+(horseEngineMode!=='legacy'?' · MODELOS GENERADOS':'');
 }
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
@@ -442,7 +443,7 @@ function setRace(index){
   horses.forEach((h,i)=>{
    const e=race.entries[i];h.entry=e;h.progress=0;h.visualMeters=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
     h.model.root.position.set(first.x,0,first.z);h.model.root.rotation.y=first.heading;
-   h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
+   h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,number:i+1});
    h.model.setBank?.(0);
    h.visualSpeed=1;h.model.play('Idle');
   });
