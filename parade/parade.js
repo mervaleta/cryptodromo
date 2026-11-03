@@ -277,12 +277,14 @@ addEventListener('keydown',event=>{
 });
 addEventListener('keyup',event=>keyboardKeys.delete(event.code));
 addEventListener('blur',()=>{keyboardKeys.clear();pointerKeys.clear();});
-$('toggle-camera-pad').addEventListener('click',()=>{
- const pad=$('drone-pad');
- const visible=pad.classList.toggle('is-visible');
- $('toggle-camera-pad').setAttribute('aria-pressed',String(visible));
- $('toggle-camera-pad').textContent=visible?'Ocultar mandos táctiles':'Mostrar mandos táctiles';
-});
+const pad=$('drone-pad'),padToggle=$('toggle-camera-pad');
+function showCameraPad(visible){
+ pad.classList.toggle('is-visible',visible);
+ padToggle.setAttribute('aria-pressed',String(visible));
+ padToggle.textContent=visible?'Ocultar mandos táctiles':'Mostrar mandos táctiles';
+}
+showCameraPad(matchMedia('(pointer:coarse)').matches);
+padToggle.addEventListener('click',()=>showCameraPad(!pad.classList.contains('is-visible')));
 for(const button of document.querySelectorAll('[data-move]')){
  const value=button.dataset.move;
  button.addEventListener('pointerdown',event=>{
