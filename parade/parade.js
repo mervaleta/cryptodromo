@@ -5,7 +5,8 @@ import {createHorse} from '../race-lab/source/src/horse.js?v=alpha16-mane-1';
 import {createLiveStadiumDistrict} from '../visual-lab/stadiumDistrict.js?v=stadium-live-1';
 import {createCloudLayer} from '../visual-lab/cloudLayer.js?v=alpha15-2';
 import {createParadeController,PARADE_WAVES,WAVES} from './march.js?v=alpha16-1';
-import {createDroneRig,droneInputs} from './drone.js?v=alpha16-1';
+import {createDroneRig,droneInputs} from './drone.js?v=alpha17-1';
+import {bindCameraPanel} from '../visual-lab/cameraPanel.js?v=alpha17-1';
 import {createParadeVillage} from './scenery.js?v=alpha16-2';
 
 const $=id=>document.getElementById(id),canvas=$('parade-canvas'),stage=$('stage');
@@ -99,6 +100,8 @@ Object.defineProperty(window,'__cryptodromoParadeQA',{configurable:false,value:O
  snapshot:()=>({parade:parade.snapshot(),drone:drone.snapshot(),ready:isReady,
   models:horseModels.length,maneEnabled:horseModels.filter(h=>h.maneWindEnabled).length,
   maneWind:paradeManeWind,walkClips:[...selectedWalkClips],village:village.stats,
+  cameraPosition:camera.position.toArray(),cameraFov:camera.fov,
+  targetCameraPosition:drone.view(cameraInterest).position,
   stage:{w:renderer.domElement.width,h:renderer.domElement.height}})
 })});
 let cameraInterest={id:'pista',name:'Óvalo y caballos',x:0,y:1,z:72};
@@ -205,28 +208,34 @@ function loadWave(state){
   opt.textContent=runner.symbol+' · '+runner.name;$('follow-horse').append(opt);
  }
 }
+// Same control binding used by the cinematic LIVE camera panel.
+const cameraPanel=bindCameraPanel($('parade-camera-deck'),{
+ onChange:(key,value)=>{
+  if(key==='reset'){resetDrone();return;}
+  const attr={height:'y',yaw:'yaw',pitch:'pitch',fov:'fov',distance:'distance',
+   lateral:'lateral',speed:'speed'}[key];
+  if(!attr)return;
+  drone.setPose({[attr]:key==='yaw'||key==='pitch'?value*Math.PI/180:value});
+  syncControls();
+ }
+});
 function syncControls(){
  const p=drone.snapshot();
- $('height').value=String(Math.round(p.y));
- $('yaw').value=String(Math.round(p.yaw*180/Math.PI));
- $('pitch').value=String(Math.round(p.pitch*180/Math.PI));
- $('fov').value=String(Math.round(p.fov));
- $('camera-speed').value=String(Math.round(p.speed));
- $('distance').value=String(Math.round(p.distance));
- $('height-label').textContent=Math.round(p.y)+' m';
- $('yaw-label').textContent=Math.round(p.yaw*180/Math.PI)+'°';
- $('pitch-label').textContent=Math.round(p.pitch*180/Math.PI)+'°';
- $('fov-label').textContent=Math.round(p.fov)+'°';
- $('speed-label').textContent=Math.round(p.speed)+' m/s';
- $('distance-label').textContent=Math.round(p.distance)+' m';
+ cameraPanel.sync({
+  height:Math.round(p.y),yaw:Math.round(p.yaw*180/Math.PI),
+  pitch:Math.round(p.pitch*180/Math.PI),fov:Math.round(p.fov),
+  distance:Math.round(p.distance),speed:Math.round(p.speed),
+  lateral:Math.round(p.lateral)
+ });
  $('camera-readout').textContent=Math.round(p.y)+' m · '+Math.round(p.fov)+'° · '+p.mode.toUpperCase();
+ $('camera-readout-panel').textContent='VISTA · '+$('camera-mode').options[$('camera-mode').selectedIndex].textContent;
 }
-const controlBindings={height:['y',1],yaw:['yaw',Math.PI/180],pitch:['pitch',Math.PI/180],
- fov:['fov',1],'camera-speed':['speed',1],distance:['distance',1]};
-for(const [id,[key,multiplier]] of Object.entries(controlBindings)){
- $(id).addEventListener('input',()=>{drone.setPose({[key]:Number($(id).value)*multiplier});syncControls();});
-}
-$('camera-mode').addEventListener('change',()=>{drone.setMode($('camera-mode').value);syncControls();});
+$('camera-mode').addEventListener('change',()=>{
+ const mode=$('camera-mode').value;
+ drone.setMode(mode);
+ if(mode==='crane')drone.setPose({pitch:-1.08,distance:210,y:115,fov:58,lateral:0});
+ syncControls();
+});
 // Curated architectural establishing shots. They change ONLY camera
 // orientation and framing; the user can immediately override them manually.
 const shotPresets={
@@ -249,10 +258,9 @@ function flyToSight(){
 $('sight').addEventListener('change',flyToSight);
 $('visit-sight').addEventListener('click',flyToSight);
 function resetDrone(){
- drone.setPose({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32,distance:95,mode:'free'});
+ drone.setPose({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32,distance:95,lateral:0,mode:'free'});
  $('camera-mode').value='free';$('sight').value='pista';cameraInterest=sights[0];syncControls();
 }
-$('reset-drone').addEventListener('click',resetDrone);
 $('time-scale').addEventListener('input',()=>{
  parade.setTimeScale(Number($('time-scale').value));
  $('time-scale-label').textContent=$('time-scale').value+'×';
@@ -273,6 +281,14 @@ addEventListener('keydown',event=>{
 });
 addEventListener('keyup',event=>keyboardKeys.delete(event.code));
 addEventListener('blur',()=>{keyboardKeys.clear();pointerKeys.clear();});
+const pad=$('drone-pad'),padToggle=$('toggle-camera-pad');
+function showCameraPad(visible){
+ pad.classList.toggle('is-visible',visible);
+ padToggle.setAttribute('aria-pressed',String(visible));
+ padToggle.textContent=visible?'Ocultar mandos táctiles':'Mostrar mandos táctiles';
+}
+showCameraPad(matchMedia('(pointer:coarse)').matches);
+padToggle.addEventListener('click',()=>showCameraPad(!pad.classList.contains('is-visible')));
 for(const button of document.querySelectorAll('[data-move]')){
  const value=button.dataset.move;
  button.addEventListener('pointerdown',event=>{
@@ -292,12 +308,27 @@ canvas.addEventListener('pointerdown',event=>{
 canvas.addEventListener('pointermove',event=>{
  if(!dragging)return;
  const dx=event.clientX-lastX,dy=event.clientY-lastY;lastX=event.clientX;lastY=event.clientY;
- drone.nudgeAim(-dx*.0042,-dy*.0034);syncControls();
+ drone.nudgeAim(dx*.0042,-dy*.0034);syncControls();
 });
 for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,()=>{dragging=false;});
 canvas.addEventListener('wheel',event=>{
- event.preventDefault();drone.zoom(Math.sign(event.deltaY)*2.3);syncControls();
+ event.preventDefault();
+ if(event.ctrlKey)drone.zoom(Math.sign(event.deltaY)*2.3);
+ else drone.dolly(-Math.sign(event.deltaY)*8);
+ syncControls();
 },{passive:false});
+for(const button of document.querySelectorAll('[data-camera-wheel]')){
+ button.addEventListener('click',()=>{
+  drone.dolly(Number(button.dataset.cameraWheel)||0);syncControls();
+ });
+}
+addEventListener('keydown',event=>{
+ if(event.target instanceof HTMLElement&&event.target.closest('input,textarea,select,button'))return;
+ if(event.code==='Equal'||event.code==='Minus'){
+  event.preventDefault();
+  drone.dolly(event.code==='Equal'?8:-8);syncControls();
+ }
+});
 syncControls();
 function selectFollowTarget(){
  const symbol=$('follow-horse').value;
@@ -305,6 +336,7 @@ function selectFollowTarget(){
  return model?{x:model.root.position.x,y:2,z:model.root.position.z}:cameraInterest;
 }
 let last=performance.now(),lastLabel=-Infinity,frames=0,frameSum=0;
+const cameraAim=new THREE.Vector3();let droneFocusReady=false;
 async function loadModels(){
  try{
   const created=await Promise.all(Array.from({length:12},async (_,i)=>{
@@ -333,7 +365,7 @@ async function loadModels(){
 loadModels();
 function animate(now){
  requestAnimationFrame(animate);
- const dt=Math.min(.08,Math.max(0,(now-last)/1000));last=now;
+ const realSeconds=Math.max(0,(now-last)/1000),dt=Math.min(.08,realSeconds);last=now;
  if(!isReady)return;
  const state=parade.update(dt);
  if(state.waveIndex!==waveIndex)loadWave(state);
@@ -355,7 +387,10 @@ function animate(now){
  const v=drone.view(drone.snapshot().mode==='follow'?followTarget:cameraInterest);
  position.set(v.position.x,v.position.y,v.position.z);
  target.set(v.lookAt.x,v.lookAt.y,v.lookAt.z);
- camera.position.copy(position);camera.lookAt(target);
+ const blend=1-Math.exp(-Math.min(.45,realSeconds)*5.5);
+ if(!droneFocusReady){camera.position.copy(position);cameraAim.copy(target);droneFocusReady=true;}
+ else{camera.position.lerp(position,blend);cameraAim.lerp(target,blend);}
+ camera.lookAt(cameraAim);
  if(camera.fov!==v.fov){camera.fov=v.fov;camera.updateProjectionMatrix();}
  const seconds=now/1000;
  village.update(seconds);clouds.update(seconds);
