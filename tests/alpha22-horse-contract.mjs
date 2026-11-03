@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 
 const moduleSource=name=>readFileSync(new URL('../visual-lab/horse-fidelity/'+name+'.js',import.meta.url),'utf8');
 const load=name=>import('data:text/javascript;charset=utf-8,'+encodeURIComponent(moduleSource(name)));
-const profile=await load('horseProfiles'),geometry=await load('horseGeometry'),shader=await load('horseShader');
+const profile=await load('horseProfiles'),geometry=await load('horseGeometry'),shader=await load('horseShader'),ik=await load('horseGaitIK'),livery=await load('horseRaceLivery');
 test('original procedural identity and eight coats, four anatomy morphologies',()=>{
  assert.ok(profile.PROCEDURAL_HORSE_VERSION.includes('alpha22'));
  assert.equal(Object.keys(profile.HORSE_ARCHETYPES).length,4);
@@ -53,4 +53,30 @@ test('all Alpha22 horse files are procedural and no external meshes',()=>{
 test('LIVE integration stays untouched in this staging branch',()=>{
  const scene=readFileSync(new URL('../visual-lab/scene.js',import.meta.url),'utf8');
  assert.ok(!scene.includes('horse-fidelity/proceduralHorse.js'));
+});
+
+test('generated horse race numbers are deterministic geometry, never painted bitmap',()=>{
+ assert.deepEqual(livery.segmentsForNumber(12).map(v=>v.length),[2,5]);
+ assert.equal(livery.segmentsForNumber(8)[0].length,7);
+ assert.throws(()=>livery.segmentsForNumber(0),/1-99/);
+});
+test('hoof plant and flight trajectory is continuous and pure',()=>{
+ assert.equal(ik.EQUINE_CONTACTS.length,4);
+ for(let leg=0;leg<4;leg++){
+  const c=ik.EQUINE_CONTACTS.find(x=>x.index===leg);
+  assert.equal(ik.hoofTrajectory(c.contact,leg).planted,true);
+  assert.equal(ik.hoofTrajectory(c.contact,leg).lift,0);
+  assert.equal(ik.hoofTrajectory(c.contact+.75,leg).planted,false);
+  assert.ok(ik.hoofTrajectory(c.contact+.75,leg).lift>0);
+ }
+});
+test('four limb two-link IK is finite, bounded and does not mutate race positions',()=>{
+ for(let phase=0;phase<1;phase+=.025)for(let i=0;i<4;i++){
+  const pose=ik.gallopLegPose(phase,i,{speed:1.3});
+  assert.ok(Number.isFinite(pose.shoulder)&&Number.isFinite(pose.knee));
+  assert.ok(Math.abs(pose.shoulder)<4&&Math.abs(pose.knee)<4);
+  assert.ok(pose.error<.07,'leg target should remain reachable or minimally clipped');
+ }
+ const support=ik.quadrupedSupport(.03);
+ assert.ok(support.planted>=0&&support.planted<=4);
 });
