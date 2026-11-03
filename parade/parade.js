@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from '../visual-lab/trackMath.js?v=alpha16-1';
-import {createHorse} from '../race-lab/source/src/horse.js?v=alpha16-mane-1';
+import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createLiveStadiumDistrict} from '../visual-lab/stadiumDistrict.js?v=stadium-live-1';
 import {createCloudLayer} from '../visual-lab/cloudLayer.js?v=alpha15-2';
 import {createParadeController,PARADE_WAVES,WAVES} from './march.js?v=alpha16-1';
@@ -99,7 +99,7 @@ let paradeManeWind=.5; // scenic breeze, independent of the Parade clock
 Object.defineProperty(window,'__cryptodromoParadeQA',{configurable:false,value:Object.freeze({
  snapshot:()=>({parade:parade.snapshot(),drone:drone.snapshot(),ready:isReady,
   models:horseModels.length,maneEnabled:horseModels.filter(h=>h.maneWindEnabled).length,
-  maneWind:paradeManeWind,walkClips:[...selectedWalkClips],village:village.stats,
+  maneWind:paradeManeWind,maneMotion:horseModels.map(h=>h.maneMotion),walkClips:[...selectedWalkClips],village:village.stats,
   cameraPosition:camera.position.toArray(),cameraFov:camera.fov,
   targetCameraPosition:drone.view(cameraInterest).position,
   stage:{w:renderer.domElement.width,h:renderer.domElement.height}})
@@ -343,7 +343,7 @@ async function loadModels(){
    const runner=WAVES[0].runners[i];
    const horse=await createHorse({
     coat:runner?.coat||'#996b54',accent:runner?.color||'#e5c68e',
-    symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk'
+    symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk',maneGait:'Walk'
    });
    horse.setWind?.(paradeManeWind);
    horse.userData={paradeSymbol:runner?.symbol||null};

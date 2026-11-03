@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {createGaitRefiner} from './gaitRefiner.js?v=alpha09-1';
 import {createFurIdentity} from './horseLivery.js?v=alpha14-ticker-1';
 import {smoothHorseNormals} from './horseSurface.js?v=alpha08-1';
-import {createWindMane} from './windMane.js?v=alpha16-mane-1';
+import {createWindMane} from './windMane.js?v=alpha18-gaitmane-1';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -26,7 +26,7 @@ async function loadHorseAsset(){
   return assetPromise;
 }
 
-export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop'}={}){
+export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop',maneMotion=true,maneGait=null}={}){
   const asset=await loadHorseAsset(),model=clone(asset.scene);model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model,true),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
   const visual=new THREE.Group();model.position.set(-center.x,-bounds.min.y,-center.z);visual.add(model);visual.scale.setScalar(height/size.y);visual.rotation.y=Math.PI/2;
@@ -65,6 +65,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
     root,clips:clips.map(clip=>clip.name),
     get hoofPhase(){return gait.phase;},
     get maneWindEnabled(){return mane.enabled;},
+    get maneMotion(){return mane.motion;},
     setWind(level=.55){maneWind=Math.max(0,Math.min(2,Number(level)||0));},
     setBank(radians=0){bankGoal=Math.max(-.12,Math.min(.12,Number(radians)||0));},
     setWetness(level){currentWetness=Math.max(0,Math.min(1,Number(level)||0));tintWetness();},
@@ -84,7 +85,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
         // The native Gallop clip is 0.583s; lock corrective keys to its clock.
         gait.refine(step,rate,action.time/action.getClip().duration);
       }
-      mane.update(step,{wind:maneWind,speed:rate,reducedMotion:!!reducedMotion?.matches});
+      mane.update(step,{wind:maneWind,speed:rate,gait:maneGait||action?.getClip().name,motionEnabled:maneMotion,reducedMotion:!!reducedMotion?.matches});
     },
     dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };

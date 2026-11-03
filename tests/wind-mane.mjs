@@ -30,7 +30,7 @@ test('only compatible skinned Hair geometry receives the effect',()=>{
  assert.equal(fx.channelCount,1);
  assert.equal(mat.needsUpdate,true);
  assert.equal(coat.needsUpdate,false);
- assert.match(mat.customProgramCacheKey(),/crp-mane-wind-v1/);
+ assert.match(mat.customProgramCacheKey(),/crp-mane-wind-v2-gait/);
 });
 
 test('shader animates rest-space hair before skinning, preserving original shader',()=>{
@@ -42,10 +42,10 @@ test('shader animates rest-space hair before skinning, preserving original shade
  assert.match(shader.vertexShader,/positive Y is the TAIL/);
  assert.equal(shader.fragmentShader,'unchanged');
  assert.equal(shader.uniforms.crpManeTime.value,0);
- fx.update(.1,{wind:1.6,speed:2.2});
+ fx.update(.1,{wind:1.6,speed:2.2,gait:'Gallop'});
  assert.ok(shader.uniforms.crpManeTime.value>0);
  assert.ok(shader.uniforms.crpManeMotion.value>.6);
- fx.update(.1,{wind:2,speed:3,reducedMotion:true});
+ fx.update(.1,{wind:2,speed:3,gait:'Gallop',reducedMotion:true});
  assert.equal(shader.uniforms.crpManeMotion.value,0);
  fx.dispose();assert.equal(fx.enabled,false);
 });

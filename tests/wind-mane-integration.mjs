@@ -10,7 +10,7 @@ test('the mane is attached to the same animated rig shared by Race, Parade and R
  assert.match(horse,/mane\.dispose\(\)/);
  assert.match(horse,/setWind\(level=/);
  for(const path of ['visual-lab/scene.js','parade/parade.js','racers/horse-preview.js'])
-  assert.match(source(path),/horse\.js\?v=alpha16-mane-1/,path);
+  assert.match(source(path),/horse\.js\?v=alpha18-gaitmane-1/,path);
  assert.match(source('parade/parade.js'),/maneEnabled:horseModels\.filter/);
 });
 test('weather changes mane wind only, never the official scoring or race time',()=>{
@@ -24,11 +24,11 @@ test('weather changes mane wind only, never the official scoring or race time',(
 });
 test('public entrypoints invalidate cached horse imports across the three modes',()=>{
  const expected=[
-  ['index.html','scene.js?v=alpha18-camera-density-mane-1'],
-  ['visual-lab/index.html','scene.js?v=alpha18-camera-density-mane-1'],
-  ['parade/index.html','parade.js?v=alpha18-camera-density-mane-1'],
-  ['racers/index.html','racers.js?v=alpha16-mane-1'],
-  ['racers/racers.js','horse-preview.js?v=alpha16-mane-1']
+  ['index.html','scene.js?v=alpha18-camera-density-gaitmane-1'],
+  ['visual-lab/index.html','scene.js?v=alpha18-camera-density-gaitmane-1'],
+  ['parade/index.html','parade.js?v=alpha18-camera-density-gaitmane-1'],
+  ['racers/index.html','racers.js?v=alpha18-gaitmane-1'],
+  ['racers/racers.js','horse-preview.js?v=alpha18-gaitmane-1']
  ];
  for(const [path,query] of expected)assert.ok(source(path).includes(query),path+' missing '+query);
 });

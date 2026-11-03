@@ -81,7 +81,7 @@ try{
  assert.equal(splitState.preset,'quarters');
  assert.equal(stage.horses,12);
  assert.ok(stage.clouds&&stage.fog&&stage.quality);
- assert.match(stage.script||'',/alpha18-camera-density-mane-1/);
+ assert.match(stage.script||'',/alpha18-camera-density-gaitmane-1/);
  assert.equal(faults.length,0,'3D runtime faults '+faults.join('; ').slice(0,800));
  // Alpha16 is a separate contemplative path: never replaces LIVE.
  faults.length=0;
@@ -93,6 +93,7 @@ try{
  assert.equal(parade.models,12);
  assert.equal(parade.maneEnabled,12,'all 12 production horses must have the new mane shader');
  assert.ok(parade.maneWind>.1,'production Parade must expose a real breeze');
+ assert.ok(parade.maneMotion.every(x=>x<.01),'Parade horses must not flutter at walking pace');
  assert.ok(parade.walkClips.every(clip=>/walk/i.test(clip)), 'GLB walk mode must be available');
  assert.equal(parade.village.stands,3);
  assert.equal(parade.village.foodStalls,6);

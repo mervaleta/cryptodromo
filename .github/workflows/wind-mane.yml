@@ -1,7 +1,7 @@
-name: Cryptodromo Alpha16 Wind Mane QA
+name: Cryptodromo Wind Mane Gait QA
 on:
   push:
-    branches: [main, feature/alpha16-wind-mane-integration-20261102]
+    branches: [main, feature/alpha18-gait-aware-mane-20261103]
     paths:
       - 'race-lab/source/src/horse.js'
       - 'race-lab/source/src/windMane.js'
@@ -9,6 +9,7 @@ on:
       - 'parade/parade.js'
       - 'racers/horse-preview.js'
       - 'tests/wind-mane.mjs'
+      - 'tests/wind-mane-gait-policy.mjs'
       - 'tests/wind-mane-integration.mjs'
       - 'tests/wind-mane-browser.mjs'
       - '.github/workflows/wind-mane.yml'
@@ -31,7 +32,7 @@ jobs:
         run: |
           for f in race-lab/source/src/{horse,windMane}.js visual-lab/scene.js parade/parade.js racers/{racers,horse-preview}.js tests/wind-mane*.mjs; do node --check "$f"; done
       - name: Unit, integration, and official racing contracts
-        run: node --experimental-default-type=module --test tests/wind-mane.mjs tests/wind-mane-integration.mjs tests/alpha16-parade.mjs tests/official-race.mjs
+        run: node --experimental-default-type=module --test tests/wind-mane.mjs tests/wind-mane-gait-policy.mjs tests/wind-mane-integration.mjs tests/alpha16-parade.mjs tests/official-race.mjs
       - name: Install Chromium
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
