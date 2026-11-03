@@ -42,4 +42,4 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 /* Shared advertising placements: presentation-only. */
-(function(){var s=document.createElement('script');s.src='/assets/ad-inventory.js?v=1';s.defer=true;document.head.appendChild(s)})();
+(function(){if(document.querySelector('script[src*="/assets/ad-inventory.js"]'))return;var s=document.createElement('script');s.src='/assets/ad-inventory.js?v=1';s.defer=true;document.head.appendChild(s)})();
