@@ -10,6 +10,7 @@ export const DENSITY_STANDS=Object.freeze([
  Object.freeze({x:-210,width:101}),Object.freeze({x:-5,width:122}),
  Object.freeze({x:207,width:101})
 ]);
+export const TRACKSIDE_LAYOUT=Object.freeze({courseEdge:-20.2,safetyRail:-25.5,spectatorRail:-31.5,frontRow:-36.5});
 export const DENSITY_PRESETS=Object.freeze({
  eco:Object.freeze({railSpacing:11,seatRows:3,crowdPerStand:38,flagsPerStand:9,trees:0}),
  balanced:Object.freeze({railSpacing:6,seatRows:5,crowdPerStand:130,flagsPerStand:20,trees:10}),
@@ -32,7 +33,9 @@ export function safeHorseHeight(requested=HORSE_VISUAL_TUNING.recommendedHeight)
 }
 export function validateDensityLayout(){
  return DENSITY_STANDS.every(({x,width})=>x-width/2>=-400&&x+width/2<=400)&&
-  -25.5 < -20.2;
+  TRACKSIDE_LAYOUT.safetyRail < TRACKSIDE_LAYOUT.courseEdge-5 &&
+  TRACKSIDE_LAYOUT.spectatorRail < TRACKSIDE_LAYOUT.safetyRail-5 &&
+  TRACKSIDE_LAYOUT.frontRow < TRACKSIDE_LAYOUT.spectatorRail-4;
 }
 /**
  * THREE injected for independent unit testing and to avoid a second copy of
@@ -114,7 +117,7 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
   }
  }
  // Low-planter rhythm fills the visually empty gap between track and stands,
- // while keeping a generous 52m clear central concourse.
+ // while retaining the original rear concourse and VIP circulation.
  for(let x=-380;x<=380;x+=28){
   if(Math.abs(x)<38)continue; // preserve central VIP / finish vista
   planters.push([x,.45,-57,7,.9,2.2]);
