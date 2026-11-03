@@ -69,7 +69,7 @@ function coatMaterial(color,seed){
    'float crpF=(crpHorseNoise(crpP*25.)-.5)*.13+(crpHorseNoise(crpP*107.)-.5)*.04;'+
    'diffuseColor.rgb*=1.+crpF;');
  };
- m.customProgramCacheKey=()=> 'crp-procedural-coat-v2';
+ m.customProgramCacheKey=()=> 'crp-procedural-coat-v2:'+seed;
  return m;
 }
 function capsuleBetween(parent,geometry,material,radius){
@@ -136,13 +136,13 @@ export function createProceduralRaceHorse({
   const o=add(hairG,mane,neck);
   o.position.set(.66+t*.58,2.00+t*.40,.01+Math.sin(seed+i*13)*.055);
   o.scale.set(1,.17+t*.06,1);o.rotation.z=-.43;
-  hair.push({mesh:o,phase:i*.47,type:'mane'});
+  hair.push({mesh:o,phase:i*.47,type:'mane',base:o.rotation.z});
  }
  for(let i=0;i<12;i++){
   const o=add(hairG,mane,body);
   o.position.set(-1.40-i*.021,1.52-i*.023,(i-5.5)*.014);
   o.scale.set(1,.38-i*.008,1);o.rotation.z=Math.PI*.40;
-  hair.push({mesh:o,phase:i*.31,type:'tail'});
+  hair.push({mesh:o,phase:i*.31,type:'tail',base:o.rotation.z});
  }
  // Jockey and saddle are solid generated meshes; no decals or raster number texture.
  const pad=add(ownG(new THREE.BoxGeometry(.80,.07,.91)),silk);
@@ -152,8 +152,8 @@ export function createProceduralRaceHorse({
  const rider=new THREE.Group();body.add(rider);
  const torso=ell(.14,2.45,0,.34,.24,.245,silk,rider);torso.rotation.z=.47;
  ell(-.24,2.22,0,.21,.16,.26,bone,rider);
- ell(.48,2.72,0,.13,.15,.13,skin,rider);
- ell(.47,2.85,0,.16,.12,.15,silk,rider);
+ ell(.48,2.64,0,.13,.15,.13,skin,rider);
+ ell(.47,2.76,0,.16,.11,.15,silk,rider);
  for(const side of [-1,1]){
   const armA={x:.28,y:2.53,z:side*.17},elbow={x:.53,y:2.32,z:side*.20},
     hand={x:1.05,y:2.16,z:side*.17};
@@ -202,7 +202,7 @@ export function createProceduralRaceHorse({
    limb.hoof.rotation.z=-.17*motion*Math.sin(a);
   }
   for(const h of hair){
-   h.mesh.rotation.z+=(h.type==='mane'?-1:1)*(motion*.07*Math.sin(clock+h.phase)+wind*.025*Math.sin(clock*.3+h.phase));
+   h.mesh.rotation.z=h.base+(h.type==='mane'?-1:1)*(motion*.07*Math.sin(clock+h.phase)+wind*.025*Math.sin(clock*.3+h.phase));
   }
   bank.rotation.z+=(targetBank-bank.rotation.z)*(1-Math.exp(-step*5));
  }
