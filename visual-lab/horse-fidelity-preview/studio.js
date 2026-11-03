@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createProceduralHorse} from '../horse-fidelity/proceduralHorse.js';
+import {createAlpha22RaceHorse} from '../horse-fidelity/horseAdapter.js';
 import {randomHorseProfile,normalizeHorseProfile,COAT_PRESETS} from '../horse-fidelity/horseProfiles.js';
 import {verifyTextureFreeMaterial} from '../horse-fidelity/horseShader.js';
 
@@ -213,6 +214,13 @@ window.__cryptodromoAlpha22QA={
   drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
   heroStats:horses[0]?.shapeStats
  }),
+ bridgeSmoke:()=>{
+  const h=createAlpha22RaceHorse({THREE,coat:'#6c4731',accent:'#f7931a',
+   symbol:'BTC',stallNumber:3,height:2.85,phase:.18,mode:'Gallop',quality:'balanced'});
+  const result={procedural:h.procedural,textureFree:h.isTextureFree,
+   number:h.profile.number,hoofPhase:h.hoofPhase,hasJockey:h.profile.jockey};
+  h.dispose();return result;
+ },
  setView:value=>{if(['portrait','grid','gallop'].includes(value)){mode=value;layout();}},
  dispose:()=>{horses.forEach(h=>h.dispose());horses=[];baseline?.dispose();baseline=null;}
 };
