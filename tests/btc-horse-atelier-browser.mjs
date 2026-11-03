@@ -22,8 +22,8 @@ try{
  assert.equal(state.hairSystem?.version,'btc-mane-tail-v15');
  assert.equal(state.hairSystem?.channels,1,'Mane and tail must be driven by the original skinned Hair primitive');
  assert.equal(state.heroGroom?.version,'btc-3d-groom-v2');
- assert.equal(state.heroGroom?.maneLocks,30);
- assert.equal(state.heroGroom?.tailLocks,20);
+ assert.equal(state.heroGroom?.maneLocks,52);
+ assert.equal(state.heroGroom?.tailLocks,35);
  assert.equal(state.heroGroom?.modelPreserved,true);
  assert.equal(state.heroGroom?.jockey,false);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
