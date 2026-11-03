@@ -24,7 +24,7 @@ export function visualHorseProfile(entry={},index=0,quality='balanced'){
  const base=randomHorseProfile(symbol,index);
  return {...base,coat:HEX.test(entry.coat||'')?closestCoatPreset(entry.coat):base.coat,
   accent:HEX.test(entry.color||'')?entry.color:base.accent,
-  quality:['eco','balanced','high'].includes(quality)?quality:'balanced'};
+  number:index+1,quality:['eco','balanced','high'].includes(quality)?quality:'balanced'};
 }
 export async function createRaceHorseVisual({THREE,entry,index=0,quality='balanced',
  mode='procedural',legacyFactory}={}){
