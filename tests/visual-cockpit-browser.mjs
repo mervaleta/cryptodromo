@@ -12,9 +12,13 @@ try{
  const look=page.locator('.crp-cockpit select').first();
  assert.equal(await look.inputValue(),'2','Right button should look by default');
  const before=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
- await page.locator('#parade-canvas').dispatchEvent('pointerdown',{button:2,pointerType:'mouse',pointerId:31,clientX:340,clientY:280});
- await page.locator('#parade-canvas').dispatchEvent('pointermove',{button:2,pointerType:'mouse',pointerId:31,clientX:390,clientY:310});
- await page.locator('#parade-canvas').dispatchEvent('pointerup',{button:2,pointerType:'mouse',pointerId:31,clientX:390,clientY:310});
+ const rect=await page.locator('#parade-canvas').boundingBox();
+ assert.ok(rect&&rect.width>300);
+ const start={x:rect.x+rect.width*.5,y:rect.y+rect.height*.5};
+ await page.mouse.move(start.x,start.y);
+ await page.mouse.down({button:'right'});
+ await page.mouse.move(start.x+55,start.y+35,{steps:4});
+ await page.mouse.up({button:'right'});
  const after=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
  assert.ok(Math.abs(after.yaw-before.yaw)>.1,'Right-button drag should change yaw');
  await tabs.filter({hasText:'Luces'}).click();
