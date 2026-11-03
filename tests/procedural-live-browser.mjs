@@ -14,13 +14,15 @@ try{
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>window.__cryptodromoProceduralQA?.snapshot().ready,{timeout:120000});
  const shot=await page.evaluate(()=>window.__cryptodromoProceduralQA.snapshot());
- assert.equal(shot.renderer,'procedural');
+ assert.equal(shot.renderer,'fidelity','obsolete URL mode cannot alter public horse engine');
  assert.equal(shot.horses,12);
  assert.equal(shot.generated,12,'All visible runners must be generated without GLB');
  assert.equal(new Set(shot.symbols).size,12);
  assert.equal(shot.officialRanking.length,12);
- assert.equal(await page.locator('#horse-engine').inputValue(),'procedural');
- await page.locator('#graphics-quality').selectOption('eco');
+ assert.equal(await page.locator('#horse-engine').inputValue(),'fidelity');
+ assert.equal(await page.locator('#graphics-quality').inputValue(),'cinematic');
+ assert.equal(await page.locator('#horse-engine').isHidden(),true);
+
  await page.locator('#surface').selectOption('grass');
  await page.locator('#weather').selectOption('noon');
  // The default automatic camera can sit inside the starting gates at 00:00.
