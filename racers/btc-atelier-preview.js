@@ -44,7 +44,7 @@ export function createPreview(canvas,onFailure=()=>{}){
 
  let horse=null,hair=null,hero=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.18,tailSize=1.16,hairColor='#50352b';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#45312c';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
