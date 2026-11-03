@@ -4,7 +4,7 @@ import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js';
 import {getRaceFixture,PRICE_FIXTURE,FIXTURE_DAYS,RACES_PER_DAY} from '../race-lab/source/src/data/raceFixture.js';
 import {createOfficialRace,officialRanking,officialAudit} from '../race-lab/source/src/data/officialRace.js';
 const html=readFileSync(new URL('../admin/fixture/index.html',import.meta.url),'utf8');
-assert.match(html,/\.\/fixture/); // keep this panel isolated from original pages
+assert.match(html,/href="\/fixture\/"/); // links to the current public fixture
 assert.match(html,/4 estrellas, 4 principales y 4 desafíos/);
 assert.match(html,/if\(original\)return original/);
 assert.match(html,/import \{TOKEN_ROSTER\} from '\/race-lab\/source\/src\/data\/tokenRoster\.js'/);
