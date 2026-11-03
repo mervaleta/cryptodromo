@@ -1,0 +1,57 @@
+name: Alpha23 No Fake Horses Recovery
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'visual-lab/horseLoadRecovery.js'
+      - 'visual-lab/scene.js'
+      - 'tests/alpha23-horse-recovery*.mjs'
+      - '.github/workflows/alpha23-horse-recovery.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax validation
+        run: |
+          node --check visual-lab/horseLoadRecovery.js
+          cp visual-lab/scene.js /tmp/crp-scene-alpha23.mjs
+          node --check /tmp/crp-scene-alpha23.mjs
+          node --check tests/alpha23-horse-recovery.mjs
+          node --check tests/alpha23-horse-recovery-browser.mjs
+      - name: Recover using actual Three.js procedural horses, never placeholders
+        run: node --test tests/alpha23-horse-recovery.mjs tests/procedural-live.mjs
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Force GLB 404 in LIVE and inspect recovery
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/alpha23-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/alpha23-horse-recovery-browser.mjs
+      - name: Preserve diagnostic screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpha23-procedural-not-boxes
+          path: artifacts/
+          retention-days: 30
+          if-no-files-found: ignore
