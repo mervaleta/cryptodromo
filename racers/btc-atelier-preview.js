@@ -42,7 +42,7 @@ export function createPreview(canvas,onFailure=()=>{}){
 
  let horse=null,hair=null,hero=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.30,tailSize=1.25,hairColor='#39231d';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.15,tailSize=1.10,hairColor='#4b2e25';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
