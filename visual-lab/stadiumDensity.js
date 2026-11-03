@@ -100,7 +100,7 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
   // Banner line makes empty concourse legible without introducing logos.
   for(let j=0;j<preset.flagsPerStand;j++){
    const sx=x-width/2+(j+.5)*width/preset.flagsPerStand;
-   flags.push([sx,5.0,-87.9,1.15,.55,.08]);
+   flags.push([sx,5.0,-32.9,1.15,.55,.08]);
   }
   for(let i=0;i<preset.crowdPerStand;i++){
    // Seeded deterministic population. No frame updates, no random flicker.
