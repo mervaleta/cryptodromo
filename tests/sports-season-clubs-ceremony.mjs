@@ -48,7 +48,7 @@ test('append-only writer is idempotent, hashes every file and refuses forged or 
   const again=await writeCompletedSeason({start:'2026-11-02',now:closedAt,outDir:folder});
   assert.equal(again.alreadyArchived,true);
   assert.equal(JSON.parse(await readFile(join(folder,'index.json'),'utf8')).seasons.length,1);
-  assert.rejects(writeCompletedSeason({start:'2026-11-09',now:closedAt,outDir:folder}),/Cannot archive/);
+  await assert.rejects(writeCompletedSeason({start:'2026-11-09',now:closedAt,outDir:folder}),/Cannot archive/);
   await writeFile(join(folder,'2026-11-02.json'),'{ "fake":true }');
   await assert.rejects(writeCompletedSeason({start:'2026-11-02',now:closedAt,outDir:folder}),/changed/);
  }finally{await rm(folder,{recursive:true,force:true});}
