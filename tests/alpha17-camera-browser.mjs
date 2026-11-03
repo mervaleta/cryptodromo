@@ -33,7 +33,7 @@ try{
  await change('#camera-lateral',15);
  assert.equal(await page.locator('#camera-pitch-label').innerText(),'27°');
  assert.equal(await page.locator('#camera-distance-label').innerText(),'60%');
- assert.equal(await page.locator('#camera-height-label').innerText(),'24 m');
+ assert.equal(await page.locator('#camera-height-label').textContent(),'24 m');
  await page.waitForTimeout(650);
  const initial=await page.evaluate(()=>window.__cryptodromoCameraQA.state());
  assert.ok(initial.position.every(Number.isFinite));
@@ -86,7 +86,7 @@ try{
   'Parade vertical angle must independently change camera eye height');
  await change('#distance',170);
  await change('#fov',34);
- assert.equal(await page.locator('#distance-label').innerText(),'170 m');
+ assert.equal(await page.locator('#distance-label').textContent(),'170 m');
  assert.equal(await page.locator('#fov-label').innerText(),'34°');
  await page.locator('#stage').screenshot({path:'artifacts/alpha17-parade-orbit.png',timeout:40000});
  await page.selectOption('#camera-mode','follow');
