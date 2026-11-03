@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js';
-export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-05';
+export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-06';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export function createBTCAAAHeroGroom(root,options={}){
  const stage=Math.floor(clamp(options.lookdevStage??10,1,10));
@@ -82,6 +82,23 @@ export function createBTCAAAHeroGroom(root,options={}){
   hair.clearcoatRoughness=.76;
   hair.needsUpdate=true;
   passNotes.push('05 · Hair shader: root depth, copper sheen, nonmetallic satin');
+ }
+ // Iteration 06: delayed tips; no additional skeletal motion at the root.
+ if(stage>=6){
+  const hair=mesh.material,previous=hair.onBeforeCompile;
+  const previousKey=hair.customProgramCacheKey?.bind(hair);
+  hair.onBeforeCompile=function(shader,renderer){
+   previous?.call(this,shader,renderer);
+   const needle='transformed.y+=w*mix(a*.00015,b*.00028,hairRegion);';
+   const wave='float lag=sin(hairClock*5.1-hairU*7.8-hairStripe*13.0);'+
+    'float trail=hairU*hairU*hairU*hairAmount;'+
+    'transformed.x+=trail*lag*mix(.000105,.000175,hairRegion);'+
+    'transformed.z+=trail*cos(hairClock*4.15-hairU*9.4+hairStripe*7.4)*.000085;';
+   shader.vertexShader=shader.vertexShader.replace(needle,needle+wave);
+  };
+  hair.customProgramCacheKey=()=>String(previousKey?.()||'')+'|btc-aaa-wind-6';
+  hair.needsUpdate=true;
+  passNotes.push('06 · Secondary wind: delayed tips and stable skinned roots');
  }
  const baseline={vertices:position.count,drawCallsAdded:1};
  return {
