@@ -111,4 +111,16 @@ $('scrub').addEventListener('input',event=>{
  playing=false;cancelAnimationFrame(animationId);
  elapsed=Number(event.target.value);lastFrame=0;$('play').textContent='Reproducir';draw();
 });
+
 render();
+const direct=new URLSearchParams(location.search);
+if(direct.has('day')&&direct.has('race')){
+ const targetDay=Number(direct.get('day')),targetRace=Number(direct.get('race'));
+ const match=events.find(e=>e.dayIndex===targetDay&&e.slotIndex===targetRace);
+ if(match){
+  if(direct.get('archive')==='1')$('visibility').value='archive';
+  $('day').value=String(match.dayIndex);
+  render();
+  if(match.absoluteIndex<=effectiveCutoff())showReplay(match);
+ }
+}
