@@ -71,7 +71,7 @@ function buildGroom(source,settings){
    const y=p[1]+length*(u+.045*Math.sin(Math.PI*u))+
       .00014*Math.sin(Math.PI*u*1.6+phase*4);
    const z=p[2]+(mane?bend*swell+(layer-1.5)*.00048:(.0014+.001*phase)*swell)+
-     (mane?(-.00105*u*u):(-.0033*u*u))+
+     (mane?(-.00105*u*u):(.00030*u-.00075*u*u))+
      .00028*Math.sin(u*TAU+secondary*6)*u;
    for(let side=0;side<SIDES;side++){
     const a=side/SIDES*TAU;
