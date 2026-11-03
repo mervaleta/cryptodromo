@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from '../visual-lab/trackMath.js?v=alpha16-1';
-import {createHorse} from '../race-lab/source/src/horse.js?v=alpha14-banking-1';
+import {createHorse} from '../race-lab/source/src/horse.js?v=alpha16-mane-1';
 import {createLiveStadiumDistrict} from '../visual-lab/stadiumDistrict.js?v=stadium-live-1';
 import {createCloudLayer} from '../visual-lab/cloudLayer.js?v=alpha15-2';
 import {createParadeController,PARADE_WAVES,WAVES} from './march.js?v=alpha16-1';
@@ -94,6 +94,7 @@ const drone=createDroneRig({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32}
 const position=new THREE.Vector3(),target=new THREE.Vector3();
 const pointerKeys=new Set(),keyboardKeys=new Set(),keys=new Set();
 let waveIndex=-1,horseModels=[],isReady=false,selectedWalkClips=[];
+let paradeManeWind=.5; // scenic breeze, independent of the Parade clock
 Object.defineProperty(window,'__cryptodromoParadeQA',{configurable:false,value:Object.freeze({
  snapshot:()=>({parade:parade.snapshot(),drone:drone.snapshot(),ready:isReady,
   models:horseModels.length,walkClips:[...selectedWalkClips],village:village.stats,
@@ -153,7 +154,9 @@ function lighting(){
  renderer.toneMappingExposure=night?1.31:sunset?1.11:1.04;
  village.setEnvironment({night,wetness:wet?1:0,lightLevel:ambient});
  district.setEnvironment({hour:h,type:wet?'rain':night?'night':'clear',wetness:wet?1:0});
- clouds.configure({cover:wet?.8:night?.42:.34,night,rain:wet,sunset,wind:.5});
+ paradeManeWind=wet?1.25:.5;
+ clouds.configure({cover:wet?.8:night?.42:.34,night,rain:wet,sunset,wind:paradeManeWind});
+ for(const horse of horseModels)horse.setWind?.(paradeManeWind);
 }
 for(const key of ['weather','daytime','daytime-auto','lights'])
  $(key).addEventListener('input',()=>{
@@ -309,6 +312,7 @@ async function loadModels(){
     coat:runner?.coat||'#996b54',accent:runner?.color||'#e5c68e',
     symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk'
    });
+   horse.setWind?.(paradeManeWind);
    horse.userData={paradeSymbol:runner?.symbol||null};
    const clips=horse.clips||[];
    const clip=pickClip(clips);
