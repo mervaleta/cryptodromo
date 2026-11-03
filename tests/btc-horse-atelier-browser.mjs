@@ -8,11 +8,11 @@ try{
  const page=await browser.newPage({viewport:{width:1390,height:920},deviceScaleFactor:1,reducedMotion:'no-preference'});
  const pageErrors=[];
  page.on('pageerror',err=>pageErrors.push(err.message));
- await page.goto('http://127.0.0.1:8799/racers/#BTC',{waitUntil:'domcontentloaded',timeout:50000});
+ await page.goto('http://127.0.0.1:8799/racers/?atelier=off#BTC',{waitUntil:'domcontentloaded',timeout:50000});
  assert.equal(await page.locator('#btc-atelier-entry').isVisible(),true);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),false);
  assert.equal(await page.evaluate(()=>Boolean(window.__cryptodromoBTCAtelierQA)),false);
- await page.goto('http://127.0.0.1:8799/racers/?atelier=btc#BTC',{waitUntil:'domcontentloaded',timeout:50000});
+ await page.goto('http://127.0.0.1:8799/racers/#BTC',{waitUntil:'domcontentloaded',timeout:50000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:120000});
  let state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(state.originalAsset,true);
@@ -30,6 +30,7 @@ try{
  assert.equal(state.heroGroom?.coreManeLocks,6);
  assert.equal(state.heroGroom?.coreTailLocks,10);
  assert.equal(state.heroGroom?.modelPreserved,true);
+ assert.equal(new URL(page.url()).searchParams.has('atelier'),false,'BTC hero groom must run on the normal profile');
  assert.equal(state.heroGroom?.jockey,false);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
  await page.locator('#btc-wind').evaluate(el=>{el.value='1.7';el.dispatchEvent(new Event('input',{bubbles:true}));});
