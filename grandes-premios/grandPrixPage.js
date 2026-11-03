@@ -27,7 +27,7 @@ function calendar(){
  $('events').innerHTML=events.filter(e=>e.dayIndex===day).map(event=>{
   const completed=event.absoluteIndex<=cut;
   const result=completed?grandPrixResult(event):null;
-  return '<div class="event"><div><strong>'+esc(event.name)+'</strong><small>Jornada '+(day+1)+' · carrera #'+String(event.slotIndex+1).padStart(3,'0')+' · '+esc(event.time)+' AR · '+event.participants.length+' caballos</small><span class="event-meta">'+(completed?'Ganador: '+esc(result.winner):'Programada · resultado oculto')+'</span></div><button type="button" data-gp="'+esc(event.id)+'" '+(completed?'':'disabled')+'>Ver repetición</button></div>';
+  return '<div class="event"><div><strong>'+esc(event.name)+'</strong><small>Jornada '+(day+1)+' · carrera #'+String(event.slotIndex+1).padStart(3,'0')+' · '+esc(event.time)+' AR · '+event.participants.length+' caballos</small><span class="event-meta">'+(completed?'Ganador: '+esc(result.winner):'Programada · resultado oculto')+'</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" data-gp="'+esc(event.id)+'" '+(completed?'':'disabled')+'>Replay 2D</button>'+(completed?'<a style="padding:10px 12px;border:1px solid #567d63;border-radius:5px;color:#d8eccf;text-decoration:none;white-space:nowrap" href="/grandes-premios/replay-3d/?day='+event.dayIndex+'&race='+event.slotIndex+(sourceMode()==='archive'?'&archive=1':'')+'">Replay 3D</a>':'')+'</div></div>';
  }).join('');
 }
 function render(){
@@ -111,4 +111,16 @@ $('scrub').addEventListener('input',event=>{
  playing=false;cancelAnimationFrame(animationId);
  elapsed=Number(event.target.value);lastFrame=0;$('play').textContent='Reproducir';draw();
 });
+
 render();
+const direct=new URLSearchParams(location.search);
+if(direct.has('day')&&direct.has('race')){
+ const targetDay=Number(direct.get('day')),targetRace=Number(direct.get('race'));
+ const match=events.find(e=>e.dayIndex===targetDay&&e.slotIndex===targetRace);
+ if(match){
+  if(direct.get('archive')==='1')$('visibility').value='archive';
+  $('day').value=String(match.dayIndex);
+  render();
+  if(match.absoluteIndex<=effectiveCutoff())showReplay(match);
+ }
+}

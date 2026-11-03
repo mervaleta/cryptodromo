@@ -5,6 +5,7 @@ on:
       - 'sports/**'
       - 'grandes-premios/**'
       - 'tests/grand-prix.mjs'
+      - 'tests/grand-prix-3d.mjs'
       - 'race-lab/source/src/data/**'
       - 'alpha15/raceRecords.js'
   pull_request:
@@ -22,5 +23,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --check sports/grandPrix.js && node --check grandes-premios/grandPrixPage.js
-      - run: node --experimental-default-type=module --test tests/grand-prix.mjs tests/official-race.mjs tests/track-splits.mjs tests/zed-sports-lab.mjs
+      - run: node --check sports/grandPrix.js && node --check grandes-premios/grandPrixPage.js && node --check grandes-premios/replay-3d/replay3d.js
+      - run: node --experimental-default-type=module --test tests/grand-prix.mjs tests/grand-prix-3d.mjs tests/official-race.mjs tests/track-splits.mjs tests/zed-sports-lab.mjs

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08110f">
+<meta name="description" content="Repetición 3D de Grandes Premios del Cryptódromo. Caballos y estadio oficiales sobre resultados sintéticos.">
+<title>Replay 3D · Grandes Premios · Cryptódromo</title>
+<link rel="icon" href="/assets/cryptodromo-logo.png">
+<link rel="stylesheet" href="/assets/race-site-hub.css?v=a14">
+<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1">
+<script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+<style>
+:root{color-scheme:dark}body{background:#06120e;color:#f3eee2;font-family:Inter,system-ui,Arial,sans-serif}
+.replay-shell{max-width:1480px;margin:0 auto;padding:25px clamp(14px,3vw,42px) 70px}
+.replay-shell h1{font:400 clamp(32px,5vw,62px) Georgia,serif;line-height:1.1;margin:10px 0}
+.replay-shell h1 em{color:#e4c28a}.sub{color:#b9cfc0;line-height:1.5;max-width:870px}
+.kicker{color:#74e1b2;font-size:11px;font-weight:800;letter-spacing:.18em}
+.banner{border:1px solid #836e45;background:#252019;color:#e9d1a6;padding:12px 16px;margin:20px 0;border-radius:6px;line-height:1.5}
+.replay-view{width:100%;height:clamp(360px,56vw,730px);position:relative;background:linear-gradient(#537a7e,#26453c);border:1px solid #42604c;border-radius:9px;overflow:hidden}
+#gp-three{display:block;width:100%;height:100%;touch-action:pan-y}
+#gp-status{position:absolute;top:12px;left:12px;background:#06150ee8;color:#c4f4d1;border:1px solid #49765a;padding:9px 12px;border-radius:4px;font-size:12px;z-index:3;max-width:76%}
+#gp-broadcast{position:absolute;top:12px;right:12px;padding:9px 11px;border-radius:4px;background:#07190ddc;color:#f1d49b;font-size:13px;font-weight:900;z-index:3}
+#gp-podium{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#03110ce8;z-index:5;text-align:center;padding:24px}
+#gp-podium[hidden]{display:none}
+.podium-card{max-width:660px;border:1px solid #a48a5a;border-radius:12px;background:#09241b;padding:25px;width:100%}
+.podium-card h2{font:400 36px Georgia,serif;margin:9px 0;color:#f3dfb1}
+.podium-places{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0}
+.podium-places div{background:#142d22;border:1px solid #466b56;border-radius:8px;padding:18px 8px}
+.podium-places strong{display:block;font-size:24px}.podium-places small{color:#b9d1c0}
+.gp-controls{display:flex;align-items:end;gap:11px;flex-wrap:wrap;background:#10251a;border:1px solid #34533e;padding:15px;border-radius:7px;margin:15px 0}
+.gp-controls button,.gp-controls select{background:#254c36;color:#f0f3e7;border:1px solid #567e64;border-radius:5px;padding:10px 13px;min-height:43px;cursor:pointer;font:inherit;font-size:13px}
+.gp-controls label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#abc5b3}
+#gp-seek{flex:1;min-width:175px;accent-color:#ddba7e}
+#gp-time{font-weight:800;font-variant-numeric:tabular-nums;color:#f4d7a2;min-width:90px;text-align:right}
+.gp-result{background:#0d2118;border:1px solid #294c39;padding:19px;margin:20px 0;border-radius:8px}
+.gp-result h2{font:400 25px Georgia,serif;margin:0 0 12px}
+.gp-result ol{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:0;list-style:none}
+.gp-result li{display:flex;justify-content:space-between;gap:8px;padding:9px;background:#183527;border-radius:4px;font-size:12px}
+.gp-result .swatch{width:9px;height:18px;border-radius:3px;margin-right:7px;display:inline-block;vertical-align:middle}
+.gp-result a{color:#ccebcf}.small{color:#9cb7a5;font-size:12px;line-height:1.6}
+.replay-view:focus-within{outline:1px solid #c2ad7c}
+@media(max-width:700px){.gp-result ol{grid-template-columns:repeat(2,1fr)}.podium-card h2{font-size:26px}.gp-controls{gap:8px}.gp-controls button{padding:9px}}
+</style></head>
+<body><header class="sitebar"><div class="sitebar-inner"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO</a><nav class="site-nav" aria-label="Navegación principal"><a href="/">Carrera</a><a href="/racers/">Corredores</a><a href="/fixture/">Fixture</a><a href="/estadisticas/">Estadísticas</a><a href="/grandes-premios/" aria-current="page">Grandes Premios</a><a href="/laboratorio/">Laboratorio</a><a href="/institucional/">Proyecto</a></nav></div></header>
+<script>
+window.addEventListener('error',event=>{
+ if(event.target?.tagName==='SCRIPT'||/Failed to resolve module|Failed to fetch dynamically imported module/i.test(event.message||'')){
+  const s=document.getElementById('gp-status');
+  if(s){s.textContent='No se pudo cargar Three.js. ';const a=document.createElement('a');a.textContent='Abrir reproducción 2D';a.href='/grandes-premios/'+location.search;a.style.color='#f2d9ab';s.append(a);}
+ }
+},true);
+</script><main class="replay-shell">
+<a href="/grandes-premios/" class="small">← Volver a Grandes Premios</a>
+<div class="kicker">CRYPTÓDROMO · REPLAY CINEMATOGRÁFICO</div>
+<h1 id="gp-title">Gran Premio <em>en 3D</em></h1>
+<p class="sub">Los mismos caballos animados y el Estadio Satoshi Nakamoto. Las posiciones de pista están impulsadas exclusivamente por el registro oficial del motor CRP-DOSE-FAIR-V1.</p>
+<div class="banner"><strong>DEMO SINTÉTICA.</strong> La semana es predeterminada y reproducible. Esto es una reconstrucción audiovisual, no una grabación de una transmisión real. No hay apuestas habilitadas.</div>
+<section class="replay-view" aria-label="Estadio y replay 3D">
+<canvas id="gp-three" aria-label="Vista tridimensional de doce caballos en la pista"></canvas>
+<div id="gp-status" role="status">Inicializando estadio…</div>
+<div id="gp-broadcast">REPLAY · 00:00</div>
+<div id="gp-podium" hidden><div class="podium-card"><div class="kicker">ACTA DEL GRAN PREMIO</div><h2>Podio de llegada</h2><div id="gp-medals" class="podium-places"></div><button id="gp-podium-dismiss" type="button">Volver a la pista</button></div></div>
+</section>
+<div class="gp-controls" id="gp-controls">
+<button type="button" id="gp-play" disabled>▶ Reproducir</button>
+<button type="button" id="gp-restart" disabled>↺ Reiniciar</button>
+<input id="gp-seek" type="range" min="0" max="60" step=".1" value="0" disabled aria-label="Posición temporal del replay">
+<label>Cámara<select id="gp-camera"><option value="grandstand">Tribuna</option><option value="follow">Persecución</option><option value="aerial">Aérea</option></select></label>
+<label>Velocidad<select id="gp-speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+<span id="gp-time">00.0 / 60</span>
+</div>
+<section class="gp-result"><h2>Clasificación oficial sintética</h2><ol id="gp-places"></ol><p class="small">La meteorología, la cámara, el galope y la ceremonia de podio no intervienen en la puntuación ni en la clasificación. Fuente: fixture synthetic-v1.</p></section>
+<p class="small" id="gp-audit">El replay 3D reutiliza el estadio procedural y el modelo 3D con animaciones del Cryptódromo actual. Si WebGL o el caballo GLB no están disponibles, se habilita una vista de archivo 2D.</p>
+</main><script type="module" src="./replay3d.js?v=gp3d-1"></script></body></html>

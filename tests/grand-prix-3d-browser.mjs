@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ const url='http://127.0.0.1:8799/grandes-premios/replay-3d/?day=0&race=119&archive=1';
+ await page.goto(url,{waitUntil:'domcontentloaded',timeout:40000});
+ await page.waitForFunction(()=>window.__cryptodromoGPReplayQA?.snapshot().ready||document.querySelector('#gp-status')?.textContent.includes('No se pudo'),{timeout:110000});
+ const state=await page.evaluate(()=>window.__cryptodromoGPReplayQA.snapshot());
+ assert.equal(state.ready,true,'3D should mount on Chromium SwiftShader');
+ assert.equal(state.horseCount,12);
+ assert.equal(state.hasVenue,true);assert.equal(state.synthetic,true);
+ assert.equal(await page.locator('#gp-places li').count(),12);
+ await page.locator('#gp-camera').selectOption('follow');
+ assert.equal((await page.evaluate(()=>window.__cryptodromoGPReplayQA.snapshot())).camera,'follow');
+ await page.locator('#gp-seek').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+ assert.ok(Math.abs((await page.evaluate(()=>window.__cryptodromoGPReplayQA.snapshot())).elapsed-30)<.1);
+ await page.locator('#gp-speed').selectOption('2');
+ await page.locator('#gp-play').click();
+ await page.waitForTimeout(350);
+ const next=await page.evaluate(()=>window.__cryptodromoGPReplayQA.snapshot());
+ assert.equal(next.playing,true);assert.ok(next.elapsed>30);
+ await page.locator('#gp-play').click();
+ await page.locator('#gp-seek').evaluate(el=>{el.value='59.8';el.dispatchEvent(new Event('input',{bubbles:true}))});
+ await page.locator('#gp-play').click();
+ await page.waitForFunction(()=>!document.querySelector('#gp-podium').hidden,{timeout:8000});
+ assert.equal(await page.locator('#gp-medals > div').count(),3);
+ assert.deepEqual(errors,[]);
+ console.log('GRAND_PRIX_3D_BROWSER_OK',JSON.stringify({horses:state.horseCount,venue:state.hasVenue,camera:'follow',podium:3,synthetic:true}));
+}finally{await browser.close();}
