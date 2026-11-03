@@ -17,6 +17,7 @@ renderer.toneMappingExposure=1.1;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#718c9e');
 scene.fog=new THREE.FogExp2('#718c9e',.0016);
 const camera=new THREE.PerspectiveCamera(48,1,.1,2500);
+camera.position.set(-361,12,43);camera.lookAt(-395,2,0);
 const ambient=new THREE.HemisphereLight('#e8f2ff','#4d4435',2.2);scene.add(ambient);
 const sun=new THREE.DirectionalLight('#ffe7bd',3.1);sun.position.set(-110,160,120);scene.add(sun);
 const groundMaterial=new THREE.MeshStandardMaterial({color:'#6d543b',roughness:.95});
@@ -115,7 +116,7 @@ function animate(now){
   localHour:$('weather').value==='night'?22:17.5,racePhase:playing?'race':'presentation'});
  moveCamera(dt);
  const w=Math.max(1,stage.clientWidth),h=Math.max(1,stage.clientHeight);
- if(canvas.width!==Math.round(w*renderer.getPixelRatio())||canvas.height!==Math.round(h*renderer.getPixelRatio())){
+ if(canvas.width!==Math.floor(w*renderer.getPixelRatio())||canvas.height!==Math.floor(h*renderer.getPixelRatio())){
   renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
  }
  renderer.render(scene,camera);requestAnimationFrame(animate);
@@ -133,4 +134,16 @@ async function init(){
  $('start').disabled=$('reset').disabled=false;
  reset();setQuality();setAtmosphere();requestAnimationFrame(animate);
 }
+window.__cryptodromoAlpha21QA={
+ snapshot:()=>({ready:horses.length===12,horseCount:horses.length,playing,elapsed,
+  camera:$('camera').value,quality:$('quality').value,surface:$('surface').value,
+  weather:$('weather').value,gateOpen:gates.openness,
+  averageCadence:polish.locomotion.rates.reduce((a,b)=>a+b,0)/12,
+  footDustInstances:polish.spray.capacity,stadiumTheme:polish.stadium.theme.title,
+  horseRootX:horses[0]?.model.root.position.x||null}),
+ seek:(time)=>{const t=Math.max(0,Math.min(59.8,Number(time)||0));
+  reset();start();elapsed=t;for(const h of horses)h.distance=t*14.1;
+  gates.update({secondsSinceStart:t,phase:'race'});},
+ reset
+};
 init().catch(e=>{console.error(e);error.textContent=String(e);setStatus('Error de carga 3D');});
