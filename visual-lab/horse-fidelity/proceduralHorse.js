@@ -250,6 +250,14 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   const mode=next==='performance'?'eco':next==='cinematic'?'high':next;
   if(['eco','balanced','high'].includes(mode)){
    groom.setQuality(mode);raceCloth.setQuality(mode);
+   // Eye catches, ear lining and hoof rings matter in a hero shot, not
+   // in twelve tiny distant horses. Eco preserves the anatomical silhouette.
+   for(const obj of meshes){
+    const micro=/Eye glimmer|Nostril wet edge|Ear inner|Hoof coronet|Hoof.+accent trim/.test(obj.name);
+    if(micro)obj.visible=mode!=='eco';
+    obj.castShadow=mode==='high';
+   }
+   skin.material.roughness=mode==='high'?.71:mode==='eco'?.86:.77;
   }
  }
  function setGaitStyle(value){gaitStyle=value==='swing'?'swing':'ik';
@@ -279,5 +287,6 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   setBank(radians){bankGoal=clamp(Number(radians),-.12,.12);},
   update,reset,dispose
  };
+ setVisualQuality(gq);
  return api;
 }
