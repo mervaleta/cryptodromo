@@ -1166,6 +1166,42 @@ if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
     lastCrossedAt,winners:officialSnapshot?.entries?.map(x=>x.symbol)};}
  };
 }
+// Explicit opt-in artistic inspection only. Never used during the actual
+// automatic broadcast. The official race fixture/result functions remain pure.
+if(new URLSearchParams(location.search).get('home-qa')==='cinema'){
+ window.__cryptodromoHomeQA=Object.freeze({
+  captureAt(seconds=14,shot='low'){
+   if(horses.length!==12)throw Error('Fidelity lineup not ready');
+   liveFollowing=false;running=false;finished=false;finishShown=false;
+   elapsed=Math.max(3,Math.min(48,Number(seconds)||14));
+   presentation.hidden=true;finishCelebration.hidden=true;
+   resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');
+   stage.classList.remove('is-presenting');
+   const finishMeters=officialRanking(profiles)[0].distanceAt60;
+   for(const h of horses){
+    const p=broadcastProfiles[h.index];
+    const dist=broadcastPosition(p,elapsed);
+    h.progress=dist/finishMeters;h.visualMeters=dist;
+    const world=trackPoint(layoutMode,h.progress,h.index);
+    h.model.root.position.set(world.x,0,world.z);
+    h.model.root.rotation.y=world.heading;
+    h.model.play('Gallop');h.model.update(.04,1.25);
+   }
+   camSelect.value=['side','low','rail','pack'].includes(shot)?shot:'low';
+   adjustCamera(20);updateStandings();
+   clockEl.textContent='00:'+String(Math.floor(elapsed)).padStart(2,'0');
+   status.textContent='CARRERA · INSPECCIÓN VISUAL CINE';
+   renderer.render(scene,camera);
+   return {engine:horseEngineMode,horseCount:horses.length,
+    minProgress:Math.min(...horses.map(h=>h.progress)),
+    maxProgress:Math.max(...horses.map(h=>h.progress)),
+    cameraPosition:camera.position.toArray(),
+    firstHorsePosition:horses[0].model.root.position.toArray(),
+    drawCalls:renderer.info.render.calls,quality:activeQuality,
+    resultOverlayHidden:resultsOverlay.hidden};
+  }
+ });
+}
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA FIDELITY';msg.textContent=String(e);window.__cryptodromoCinematicReady={engine:'fidelity',quality:'cinematic',count:0,usesPlaceholders:false,error:String(e)};});
