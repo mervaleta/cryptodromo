@@ -1,0 +1,77 @@
+name: Diagnose public fixture and stadiums (read-only)
+on:
+  push:
+    branches: [diagnostic/fixture-stadium-20261103]
+    paths: ['.github/workflows/diagnose-public-world.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-diagnosis:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Probe public HTTP responses and module MIME
+        shell: bash
+        run: |
+          set +e
+          for host in https://cryptodromo.com https://race.cryptodromo.com; do
+            for path in /stadiums/ /stadiums/fixture/ /estadio/ /assets/stadium-network-ui.mjs /assets/stadium-network-engine.mjs /estadio/estadio.js /race-lab/source/src/stadium/venue.js; do
+              url="$host$path"
+              echo "PROBE $url"
+              curl -LsS --max-time 13 -o /tmp/crp_probe_file -w 'HTTP %{http_code} content_type=%{content_type} bytes=%{size_download} redirect=%{url_effective}\n' "$url"
+              head -c 110 /tmp/crp_probe_file | tr '\n' ' '; echo
+            done
+          done
+      - name: Install diagnostic browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Capture public browser errors and static screenshots
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          node --input-type=module <<'JS' | tee artifacts/world-stadium-browser-diagnosis.txt
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
+          const hosts=['https://cryptodromo.com','https://race.cryptodromo.com'];
+          const paths=['/stadiums/','/stadiums/fixture/','/estadio/'];
+          for(const host of hosts)for(const path of paths){
+            const page=await browser.newPage({viewport:{width:1360,height:800},deviceScaleFactor:1});
+            const errors=[],failed=[],modules=[];
+            page.on('pageerror',e=>errors.push(e.message));
+            page.on('console',m=>{if(m.type()==='error')errors.push(m.text().slice(0,240))});
+            page.on('requestfailed',req=>failed.push(req.url()+' '+req.failure()?.errorText));
+            page.on('response',res=>{if(/\/(assets\/stadium|estadio\/|race-lab\/source\/src\/stadium\/)/.test(res.url()))modules.push({url:res.url(),status:res.status(),type:res.headers()['content-type']})});
+            try{
+              const response=await page.goto(host+path,{waitUntil:'domcontentloaded',timeout:18000});
+              await page.waitForTimeout(6500);
+              const info=await page.evaluate(()=>({
+                href:location.href,title:document.title,
+                worldContent:document.getElementById('world-app')?.innerText?.slice(0,300),
+                worldResults:document.getElementById('world-results')?.innerText?.slice(0,210),
+                venueCaption:document.getElementById('venue-caption')?.innerText,
+                stadiumNotice:document.getElementById('stadiumNotice')?.innerText,
+                canvas:[document.getElementById('stadiumCanvas')?.width,document.getElementById('stadiumCanvas')?.height],
+                scriptSources:[...document.scripts].map(x=>x.src).filter(Boolean).slice(-8),
+                hasWebGL:!!document.getElementById('stadiumCanvas')?.getContext('webgl2'),
+              }));
+              console.log('BROWSER',JSON.stringify({host,path,status:response?.status(),...info,errors:errors.slice(0,9),failed:failed.slice(0,9),modules:modules.slice(0,10)}));
+              const name=(host.includes('race.')?'race':'www')+'-'+path.replaceAll('/','_').replace(/[^a-zA-Z0-9_]/g,'');
+              await page.screenshot({path:'artifacts/'+name+'.png',timeout:30000}).catch(e=>console.log('SCREENSHOT_ERROR',host,path,e.message));
+            }catch(e){console.log('BROWSER_ERROR',JSON.stringify({host,path,error:e.message,errors:errors.slice(0,9),failed:failed.slice(0,9)}));}
+            await page.close();
+          }
+          await browser.close();
+          JS
+      - name: Save findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-world-stadium-diagnostic
+          path: artifacts/
+          retention-days: 7
+          if-no-files-found: ignore
