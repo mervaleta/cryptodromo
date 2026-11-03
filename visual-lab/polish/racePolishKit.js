@@ -29,9 +29,14 @@ export function createRacePolishKit({THREE,scene,horseCount=12,stadiumId='satosh
   ensure();
   if(!horse||typeof horse.update!=='function')throw Error('Existing horse model required');
   const cue=locomotion.sample(index,{delta,metersPerSecond,reference:referenceSpeed,elapsed,phase});
-  body.beforeUpdate(index,horse);
+  // Alpha20 and Alpha22 own their procedural joints. Do not layer GLB
+  // Neck/Head/Back/Tail corrections over either generated renderer.
+  const legacyRig=horse.procedural!==true&&horse.generated!==true;
+  if(legacyRig)body.beforeUpdate(index,horse);
   horse.update(delta,cue.active?cue.rate:1);
-  body.afterUpdate(index,horse,{phase:horse.hoofPhase,rate:cue.rate,burst:cue.burst,active:cue.active});
+  if(legacyRig)body.afterUpdate(index,horse,{
+   phase:horse.hoofPhase,rate:cue.rate,burst:cue.burst,active:cue.active
+  });
   const hoofEvents=contacts.sample(index,{hoofPhase:horse.hoofPhase,elapsed,active:cue.active});
   const location=position||horse.root?.position;
   if(location&&Number.isFinite(location.x)&&Number.isFinite(location.z)){
