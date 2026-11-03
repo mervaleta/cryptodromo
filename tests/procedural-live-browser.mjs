@@ -23,7 +23,14 @@ try{
  await page.locator('#graphics-quality').selectOption('eco');
  await page.locator('#surface').selectOption('grass');
  await page.locator('#weather').selectOption('noon');
- await page.waitForTimeout(1200);
+ // The default automatic camera can sit inside the starting gates at 00:00.
+ // Advance the fixed manual fixture, then frame horses laterally for visual QA.
+ await page.locator('#start').click();
+ await page.waitForFunction(()=>window.__cryptodromoQA?.state().elapsed>3,{timeout:25000});
+ await page.locator('#camera').evaluate(el=>{
+  el.value='side';el.dispatchEvent(new Event('change',{bubbles:true}));
+ });
+ await page.waitForTimeout(1700);
  await mkdir('artifacts',{recursive:true});
  await page.screenshot({path:'artifacts/procedural-live-daylight.png',timeout:60000,animations:'disabled'});
  assert.deepEqual(errors,[],'Browser or shader errors: '+errors.slice(0,7).join('; '));
