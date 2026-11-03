@@ -30,7 +30,7 @@ try{
  for(let i=1;i<=10;i++){
   const folder=`${root}/iteration-${String(i).padStart(2,'0')}`;
   mkdirSync(folder,{recursive:true});
-  await page.goto(`${base}?lookdev=${i}#BTC`,{
+  await page.goto(`${base}?lookdev=${i}&qaFrame=1#BTC`,{
    waitUntil:'domcontentloaded',timeout:55000
   });
   await page.waitForFunction(expected=>{
@@ -65,7 +65,7 @@ try{
   const notes=[
    `# BTC lookdev iteration ${i}/10`,
    '',
-   'Browser: Chromium/SwiftShader, actual 3D GLB, animated Gallop.',
+   'Browser: Chromium/SwiftShader, actual 3D GLB, original Gallop at fixed 0.4s authored pose.',
    'Images: profile, three-quarter, rear and detail.',
    `Original hair hidden: ${state.heroGroom.oldHairHidden}`,
    `Draw calls (frame): ${state.drawCalls}`,
