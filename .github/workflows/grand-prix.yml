@@ -1,0 +1,26 @@
+name: Grand Prix readiness
+on:
+  push:
+    paths:
+      - 'sports/**'
+      - 'grandes-premios/**'
+      - 'tests/grand-prix.mjs'
+      - 'race-lab/source/src/data/**'
+      - 'alpha15/raceRecords.js'
+  pull_request:
+    paths:
+      - 'sports/**'
+      - 'grandes-premios/**'
+      - 'tests/grand-prix.mjs'
+      - 'race-lab/source/src/data/**'
+      - 'alpha15/raceRecords.js'
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check sports/grandPrix.js && node --check grandes-premios/grandPrixPage.js
+      - run: node --experimental-default-type=module --test tests/grand-prix.mjs tests/official-race.mjs tests/track-splits.mjs tests/zed-sports-lab.mjs
