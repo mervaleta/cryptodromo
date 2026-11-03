@@ -1,0 +1,25 @@
+name: Alpha19 triple fixture QA
+on:
+  push:
+    paths:
+      - 'race-lab/source/src/data/tripleRaceFixture.js'
+      - 'visual-lab/threeCourse*.js'
+      - 'visual-lab/presentationHorse.js'
+      - 'tests/alpha19-triple-fixture.mjs'
+      - '.github/workflows/alpha19-triple.yml'
+  pull_request:
+    paths:
+      - 'race-lab/source/src/data/tripleRaceFixture.js'
+      - 'visual-lab/threeCourse*.js'
+      - 'visual-lab/presentationHorse.js'
+      - 'tests/alpha19-triple-fixture.mjs'
+      - '.github/workflows/alpha19-triple.yml'
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/alpha19-triple-fixture.mjs
