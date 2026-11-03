@@ -299,18 +299,35 @@ for(const button of document.querySelectorAll('[data-move]')){
  button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);
  button.addEventListener('lostpointercapture',release);
 }
-let dragging=false,lastX=0,lastY=0;
+// Mouse layout: left = pan/strafe, right = look; touch = look.
+const mouseScheme={lookButton:2,panButton:0,sensitivity:.0042,invertY:false};
+const mouseDrag={active:false,id:-1,mode:'look',x:0,y:0};
+canvas.addEventListener('contextmenu',event=>event.preventDefault());
 canvas.addEventListener('pointerdown',event=>{
- if(event.button!==0&&event.pointerType!=='touch')return;
- dragging=true;lastX=event.clientX;lastY=event.clientY;
- canvas.setPointerCapture(event.pointerId);
+ const touch=event.pointerType==='touch';
+ if(!touch&&event.button!==mouseScheme.lookButton&&event.button!==mouseScheme.panButton)return;
+ mouseDrag.active=true;mouseDrag.id=event.pointerId;
+ mouseDrag.mode=touch||event.button===mouseScheme.lookButton?'look':'pan';
+ mouseDrag.x=event.clientX;mouseDrag.y=event.clientY;
+ canvas.setPointerCapture?.(event.pointerId);
 });
 canvas.addEventListener('pointermove',event=>{
- if(!dragging)return;
- const dx=event.clientX-lastX,dy=event.clientY-lastY;lastX=event.clientX;lastY=event.clientY;
- drone.nudgeAim(dx*.0042,-dy*.0034);syncControls();
+ if(!mouseDrag.active||event.pointerId!==mouseDrag.id)return;
+ const dx=event.clientX-mouseDrag.x,dy=event.clientY-mouseDrag.y;
+ mouseDrag.x=event.clientX;mouseDrag.y=event.clientY;
+ if(mouseDrag.mode==='look')drone.nudgeAim(dx*mouseScheme.sensitivity,(mouseScheme.invertY?1:-1)*dy*mouseScheme.sensitivity*.81);
+ else {const s=drone.snapshot();drone.setPose({x:s.x-dx*.26*Math.cos(s.yaw),y:s.y+dy*.20,z:s.z-dx*.26*Math.sin(s.yaw)});}
+ syncControls();
 });
-for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,()=>{dragging=false;});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,event=>{
+ if(event.pointerId===mouseDrag.id){mouseDrag.active=false;mouseDrag.id=-1}
+});
+window.crpCameraMouseSettings={
+ setLookButton(button){mouseScheme.lookButton=button===0?0:2;mouseScheme.panButton=mouseScheme.lookButton===0?2:0;},
+ setSensitivity(value){mouseScheme.sensitivity=Math.max(.001,Math.min(.012,Number(value)||.0042));},
+ setInvertY(enabled){mouseScheme.invertY=Boolean(enabled);},
+ get(){return {...mouseScheme}}
+};
 canvas.addEventListener('wheel',event=>{
  event.preventDefault();
  if(event.ctrlKey)drone.zoom(Math.sign(event.deltaY)*2.3);
