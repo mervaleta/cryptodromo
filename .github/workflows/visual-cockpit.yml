@@ -40,6 +40,7 @@ jobs:
           trap 'kill "$SERVER_PID" || true' EXIT
           sleep 3
           node tests/alpha16-parade-browser.mjs
+          node tests/visual-cockpit-browser.mjs
       - name: Keep screenshots
         if: always()
         uses: actions/upload-artifact@v4
