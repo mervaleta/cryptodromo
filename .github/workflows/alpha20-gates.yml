@@ -5,6 +5,7 @@ on:
       - 'visual-lab/broadcastGates.js'
       - 'visual-lab/broadcastGateNumbers.js'
       - 'visual-lab/gateChoreography.js'
+      - 'visual-lab/scene.js'
       - 'tests/alpha20-*.mjs'
       - '.github/workflows/alpha20-gates.yml'
   workflow_dispatch:
@@ -19,7 +20,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test gate contracts and choreography
-        run: node --test tests/alpha20-gates.mjs tests/alpha20-gate-choreography.mjs
+        run: node --test tests/alpha20-gates.mjs tests/alpha20-gate-choreography.mjs tests/alpha20-scene-integration.mjs
       - name: Parse source as modules
         run: |
           cp visual-lab/broadcastGates.js /tmp/crp-broadcast-gates.mjs
@@ -28,3 +29,5 @@ jobs:
           node --check /tmp/crp-broadcast-gates.mjs
           node --check /tmp/crp-broadcast-numbers.mjs
           node --check /tmp/crp-gate-choreography.mjs
+          cp visual-lab/scene.js /tmp/crp-alpha20-scene.mjs
+          node --check /tmp/crp-alpha20-scene.mjs
