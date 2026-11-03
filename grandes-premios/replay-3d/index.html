@@ -40,7 +40,14 @@
 @media(max-width:700px){.gp-result ol{grid-template-columns:repeat(2,1fr)}.podium-card h2{font-size:26px}.gp-controls{gap:8px}.gp-controls button{padding:9px}}
 </style></head>
 <body><header class="sitebar"><div class="sitebar-inner"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO</a><nav class="site-nav" aria-label="Navegación principal"><a href="/">Carrera</a><a href="/racers/">Corredores</a><a href="/fixture/">Fixture</a><a href="/estadisticas/">Estadísticas</a><a href="/grandes-premios/" aria-current="page">Grandes Premios</a><a href="/laboratorio/">Laboratorio</a><a href="/institucional/">Proyecto</a></nav></div></header>
-<main class="replay-shell">
+<script>
+window.addEventListener('error',event=>{
+ if(event.target?.tagName==='SCRIPT'||/Failed to resolve module|Failed to fetch dynamically imported module/i.test(event.message||'')){
+  const s=document.getElementById('gp-status');
+  if(s){s.textContent='No se pudo cargar Three.js. ';const a=document.createElement('a');a.textContent='Abrir reproducción 2D';a.href='/grandes-premios/'+location.search;a.style.color='#f2d9ab';s.append(a);}
+ }
+},true);
+</script><main class="replay-shell">
 <a href="/grandes-premios/" class="small">← Volver a Grandes Premios</a>
 <div class="kicker">CRYPTÓDROMO · REPLAY CINEMATOGRÁFICO</div>
 <h1 id="gp-title">Gran Premio <em>en 3D</em></h1>
