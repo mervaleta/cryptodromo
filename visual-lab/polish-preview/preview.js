@@ -141,7 +141,8 @@ window.__cryptodromoAlpha21QA={
   weather:$('weather').value,gateOpen:gates.openness,
   averageCadence:polish.locomotion.rates.reduce((a,b)=>a+b,0)/12,
   footDustInstances:polish.spray.capacity,followThroughBones:polish.body.channels,
-  stadiumTheme:polish.stadium.theme.title,
+  drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
+  pixelRatio:renderer.getPixelRatio(),stadiumTheme:polish.stadium.theme.title,
   horseRootX:horses[0]?.model.root.position.x||null}),
  seek:(time)=>{const t=Math.max(0,Math.min(59.8,Number(time)||0));
   reset();start();elapsed=t;for(const h of horses)h.distance=t*14.1;
