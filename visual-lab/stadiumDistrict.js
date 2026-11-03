@@ -1,3 +1,4 @@
+import {createStadiumSurfaces} from '../race-lab/source/src/stadium/surfaces.js';
 import {getStadiumPreset} from '../race-lab/source/src/stadium/presets.js';
 
 /**
@@ -15,6 +16,7 @@ export function createLiveStadiumDistrict({THREE,scene,stadiumId='satoshi',quali
   const cube=geo(new THREE.BoxGeometry(1,1,1)),cone=geo(new THREE.ConeGeometry(1,1,7)),
     trunkGeo=geo(new THREE.CylinderGeometry(.56,.72,1,6));
   const surface=(color,extra={})=>mat(new THREE.MeshStandardMaterial({color,roughness:.84,...extra}));
+  const surfaces=createStadiumSurfaces({THREE,seed:preset.seed,resolution:quality==='eco'?64:128});
   const M={
     stone:surface(palette.wall),roof:surface(palette.roof),glass:surface(0x31514c,{roughness:.32,metalness:.12}),
     bronze:surface(palette.metal,{metalness:.25,roughness:.45}),accent:surface(palette.accent),
@@ -51,6 +53,11 @@ export function createLiveStadiumDistrict({THREE,scene,stadiumId='satoshi',quali
       mat(new THREE.MeshBasicMaterial({map:tx,side:THREE.DoubleSide})),staticParts);
     sign.position.set(x,y,z);return sign;
   }
+  // Shared textures are applied once to existing materials, not to new geometry.
+  M.stone.map=surfaces.make('stone',{repeatX:3,repeatY:2});
+  M.roof.map=surfaces.make('roof',{repeatX:4,repeatY:2});
+  M.plaza.map=surfaces.make('paving',{repeatX:5,repeatY:3});
+  M.grass.map=surfaces.make('grass',{repeatX:5,repeatY:5});
   // The original Alpha14 12-lane circuit remains at z=-20..20, its full
   // existing grandstand at z=-33..-80. Our entire district stays off-course.
   // Continuous parkland behind the existing -130m ground edge. Does not cover the
@@ -140,7 +147,7 @@ export function createLiveStadiumDistrict({THREE,scene,stadiumId='satoshi',quali
   function setQuality(next='balanced'){details.visible=next!=='eco'&&next!=='low';}
   function dispose(){
     root.removeFromParent();root.clear();
-    geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());
+    geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());surfaces.dispose();
   }
   return {root,preset,setEnvironment,setQuality,dispose,
     stats:{exteriorOnly:true,addsTrack:false,addsGrandstand:false,addsCrowd:false,addsRain:false,

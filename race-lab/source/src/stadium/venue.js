@@ -1,3 +1,4 @@
+import {createStadiumSurfaces} from './surfaces.js';
 import {getStadiumPreset} from './presets.js';
 
 /**
@@ -17,12 +18,19 @@ export function createStadiumVenue({THREE,scene,stadiumId='satoshi',quality='med
   const cube=ownGeo(new THREE.BoxGeometry(1,1,1)),column=ownGeo(new THREE.CylinderGeometry(1,1,1,10)),
     cone=ownGeo(new THREE.ConeGeometry(1,1,9)),orb=ownGeo(new THREE.IcosahedronGeometry(1,1));
   const material=(color,options={})=>ownMat(new THREE.MeshStandardMaterial({color,roughness:.84,...options}));
+  const surfaces=createStadiumSurfaces({THREE,seed:preset.seed,resolution:level===0?64:128});
   const M={wall:material(P.wall),trim:material(P.trim),roof:material(P.roof),metal:material(P.metal,{metalness:.32,roughness:.46}),
     accent:material(P.accent),grass:material(P.grass),track:material(P.track),trees:material(P.trees),
     paving:material(0x87958b),stone:material(0x53645c),glass:material(0x294950,{metalness:.22,roughness:.30}),
     bark:material(0x655744),lights:material(0xffecc7,{emissive:0xffcb74,emissiveIntensity:0}),
     jersey:material(0xffffff),skin:material(0xc59a79),white:material(0xf4efdf),
     led:material(P.accent,{emissive:P.accent,emissiveIntensity:.25})};
+  // Textures decorate shared materials only, preserving instancing and LOD.
+  M.wall.map=surfaces.make('stone',{repeatX:4,repeatY:2});
+  M.roof.map=surfaces.make('roof',{repeatX:4,repeatY:2});
+  M.track.map=surfaces.make('gravel',{repeatX:8,repeatY:3});
+  M.grass.map=surfaces.make('grass',{repeatX:6,repeatY:6});
+  M.paving.map=surfaces.make('paving',{repeatX:5,repeatY:4});
   const areas={terrain:new THREE.Group(),track:new THREE.Group(),architecture:new THREE.Group(),services:new THREE.Group(),
     vegetation:new THREE.Group(),crowd:new THREE.Group(),weather:new THREE.Group()};
   for(const [name,group] of Object.entries(areas)){group.name=name;root.add(group);}
@@ -285,7 +293,7 @@ export function createStadiumVenue({THREE,scene,stadiumId='satoshi',quality='med
   function dispose(){
     root.removeFromParent();
     root.clear();
-    geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());
+    geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());surfaces.dispose();
   }
   return {root,preset,areas,update,setEnvironment,setScoreboard,getLanePosition,dispose,
     getStats:()=>({stadiumId,quality,crowdCount:people,treeCount:trees,geometryCount:geometry.size,
