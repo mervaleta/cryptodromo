@@ -1132,6 +1132,27 @@ setInterval(()=>{
 },85);
 // Opt-in QA seek for deterministic replay verification. Only present with
 // ?finish-qa=alpha06 and never changes official prices, doses or ranking.
+// Opt-in staging-only diagnostics. Never activates without the query token.
+if(new URLSearchParams(location.search).get('camera-qa')==='alpha17'){
+ window.__cryptodromoCameraQA=Object.freeze({
+  state:()=>({
+   position:camera.position.toArray(),lookAt:cameraFocus.toArray(),
+   stagePresenting:stage.classList.contains('is-presenting'),
+   presentCount:presentCountdown.textContent,
+   presentationVisible:!presentation.hidden,
+   clock:clockEl.textContent,view:camSelect.value
+  }),
+  previewPresentation:(seconds=30)=>{
+   liveFollowing=false;running=false;
+   showPresentation(race,Math.max(0,Math.min(59,Number(seconds)||0)));
+   return this;
+  },
+  resume:()=>{
+   presentation.hidden=true;stage.classList.remove('is-presenting');
+   liveFollowing=true;lastLiveIndex=-1;updateLiveProgram();
+  }
+ });
+}
 if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
  window.__cryptodromoQA={
   jumpNearFinish(){if(!running)throw new Error('Start race before seeking');elapsed=59.7;},
