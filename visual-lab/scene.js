@@ -1,3 +1,4 @@
+import {mountPresentationHorse} from './presentationHorse.js?v=alpha19-preview-1';
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
@@ -467,6 +468,7 @@ const presentation=document.querySelector('#presentation-overlay'),presentRoster
       presentSymbol=document.querySelector('#present-symbol'),presentName=document.querySelector('#present-name'),
       presentBadge=document.querySelector('#present-badge'),presentRecord=document.querySelector('#present-record'),
       presentCountdown=document.querySelector('#present-countdown');
+const presentationHorse=mountPresentationHorse(document.querySelector('#present-horse-3d'));
 const finishCelebration=document.querySelector('#finish-celebration'),finishCrossCount=document.querySelector('#finish-cross-count');
 const qaManual=initialQa;
 let liveFollowing=!qaManual,lastLiveIndex=-1,lastPhase='',lastPresented=-1;
@@ -490,6 +492,7 @@ function showPresentation(nextRace,seconds){
  const token=nextRace.entries[slotIndex],stats=biographyStats.get(token.symbol);
  presentSymbol.textContent=token.symbol;presentSymbol.style.color=token.color;
  presentName.textContent=token.name;
+ presentationHorse.show(token);
  presentBadge.textContent=String(slotIndex+1).padStart(2,'0')+' / 12 · CABALLO '+(slotIndex+1);
  presentRecord.textContent=stats?'Ficha del campeonato · '+stats.starts+' participaciones · '+stats.wins+
    ' victorias · '+stats.podiums+' podios · mejor puesto '+stats.bestPlace:'Corredor del Cryptódromo';
