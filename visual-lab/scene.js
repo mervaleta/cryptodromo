@@ -300,7 +300,7 @@ const liveDistrict=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',
 // Separate scene layers: original race/paddock geometry + compact public venue.
 // The village never creates an alternative track, race horses or a clock.
 const liveVillage=createParadeVillage(scene,{quality:'cinematic'});
-const stadiumDensity=createStadiumDensity({THREE,scene,quality:'cinematic',softwareGPU:false});
+const stadiumDensity=createStadiumDensity({THREE,scene,quality:'high',softwareGPU:false});
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
@@ -745,7 +745,7 @@ function applyQualityPreset(){
  horses.forEach(h=>h.model.setVisualQuality?.('cinematic'));
  liveDistrict.setQuality('cinematic');
  liveVillage.setQuality('cinematic');
- stadiumDensity.setQuality('cinematic');
+ stadiumDensity.setQuality('high');
  graphicsFpsReadout.textContent='CINE · FPS CALCULANDO';
  resize();
 }
