@@ -38,7 +38,7 @@ try{
  const initial=await page.evaluate(()=>window.__cryptodromoCameraQA.state());
  assert.ok(initial.position.every(Number.isFinite));
  assert.equal(initial.view,'low');
- await page.locator('#stage').screenshot({path:'artifacts/alpha17-live-low-shot.png',timeout:40000});
+ await page.screenshot({path:'artifacts/alpha17-live-low-shot.png',timeout:40000});
  await page.selectOption('#camera','overview');
  await page.click('#camera-reset');
  assert.equal(await page.locator('#camera-pitch').inputValue(),'0');
