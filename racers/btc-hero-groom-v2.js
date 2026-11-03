@@ -45,10 +45,12 @@ function buildGroom(source,settings){
   for(let k=0;k<=steps;k++){
    const u=k/steps,peak=Math.sin(Math.PI*u);
    const radius=w*(.34+.86*Math.min(1,u*5))*Math.max(.045,(1-u)**.65);
-   const x=p[0]+Math.sin(u*Math.PI*1.65+r*8)*.0003*u;
+   const x=p[0]+Math.sin(u*Math.PI*.85+r*4)*.00015*u;
    const y=p[1]+(mane?length*u:(.0034+.0065*r)*Math.sin(Math.PI*u*.65)+.002*u);
-   const z=p[2]+(mane?peak*(.0023+.0022*r)-.0007*u-.001*u*u:-length*u+(.0038+.003*r)*Math.sin(Math.PI*u));
-   const joint=pick(mane,y,x,z);
+   const z=p[2]+(mane?peak*(.0017+.0012*r)-.00065*u:-length*u+(.003+.0014*r)*Math.sin(Math.PI*u));
+   // Preserve one root bone binding per lock. Re-sampling moving neck bones along
+   // a strand produces the 'spider legs' artifact in the previous rendering.
+   const joint=anchor;
    for(let side=0;side<sides;side++){
     let a=side/sides*TAU;
     verts.push(x+Math.cos(a)*radius,y+Math.sin(a)*radius*.21,z+Math.sin(a)*radius*.95);
