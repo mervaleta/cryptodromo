@@ -39,7 +39,8 @@ test('visual renderer opt in, fallback and Alpha20 gate contracts preserved',()=
  assert.match(renderer,/createLegacyHorse/);
  assert.match(renderer,/createProceduralRaceHorse/);
  assert.match(scene,/horseEngineMode=selectedHorseRenderer\(location\.search\)/);
- assert.match(scene,/stallNumber:i\+1/);
+ assert.match(scene,/loadHorsesWithRecovery/);
+ assert.match(read('visual-lab/horseLoadRecovery.js'),/stallNumber:index\+1/);
  assert.match(scene,/const world=trackPoint\(layoutMode,pr,i\)/);
  assert.match(scene,/h\.model\.root\.position\.set\(world\.x,0,world\.z\)/);
  assert.match(scene,/applyGateStaging\(\{horses,gate:gateKit/);
