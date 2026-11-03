@@ -121,6 +121,26 @@ export function createBTCAAAHeroGroom(root,options={}){
 
  // Iteration 10: subtle fiber optics without extra rigid geometry.
  if(stage>=10){
+  // Second visual try within iteration 10: halve the round lock thickness.
+  // V3 geometry has 2*(45*30) mane-shell vertices + 45*18 tail-shell
+  // vertices. Every remaining tubular strand is grouped in eight vertices
+  // per cross-section. Keep the full shells, only thin the noodle-like locks.
+  const shellVertices=2*45*30+45*18,ringSides=8;
+  if(position.count===21398){
+   for(let i=shellVertices;i+ringSides<=position.count;i+=ringSides){
+    let cx=0,cz=0;
+    for(let j=0;j<ringSides;j++){cx+=position.getX(i+j);cz+=position.getZ(i+j);}
+    cx/=ringSides;cz/=ringSides;
+    const u=clamp(section.getX(i),0,1);
+    const factor=.57+.11*Math.sin(Math.PI*u);
+    for(let j=0;j<ringSides;j++){
+     const k=i+j;
+     position.setX(k,cx+(position.getX(k)-cx)*factor);
+     position.setZ(k,cz+(position.getZ(k)-cz)*factor);
+    }
+   }
+   passNotes.push('10 · Taper secondary hair locks to avoid cable-like clumps');
+  }
   const hair=mesh.material,previous=hair.onBeforeCompile;
   const previousKey=hair.customProgramCacheKey?.bind(hair);
   hair.onBeforeCompile=function(shader,renderer){
