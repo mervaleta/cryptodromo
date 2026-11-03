@@ -24,6 +24,9 @@ try{
  assert.equal(state.heroGroom?.version,'btc-3d-groom-v2');
  assert.equal(state.heroGroom?.maneLocks,52);
  assert.equal(state.heroGroom?.tailLocks,35);
+ assert.equal(state.heroGroom?.fineManeLocks,24);
+ assert.equal(state.heroGroom?.fineTailLocks,18);
+ assert.equal(state.heroGroom?.locks,129);
  assert.equal(state.heroGroom?.modelPreserved,true);
  assert.equal(state.heroGroom?.jockey,false);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
