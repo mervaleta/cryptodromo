@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createHorse } from '../race-lab/source/src/horse.js?v=alpha09-gait-2';
+import { createHorse } from '../race-lab/source/src/horse.js?v=alpha16-mane-1';
 
 export function createPreview(canvas,onFailure=()=>{}){
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
