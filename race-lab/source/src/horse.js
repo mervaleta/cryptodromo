@@ -3,6 +3,7 @@ import {createGaitRefiner} from './gaitRefiner.js?v=alpha09-1';
 import {createFurIdentity} from './horseLivery.js?v=alpha14-ticker-1';
 import {smoothHorseNormals} from './horseSurface.js?v=alpha08-1';
 import {createWindMane} from './windMane.js?v=alpha18-gaitmane-1';
+import {createHorseSurfaceFinish} from './horseVisualQuality.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -45,6 +46,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   });
   // The token identity is pigment in the model's own fur, never a hovering sign.
   const identity=createFurIdentity(colorBindings);
+  const surfaceFinish=createHorseSurfaceFinish(colorBindings,{quality:'balanced'});
   // Wind animates only the existing Hair vertices before skeletal skinning.
   // The GLB, gait clips, horse silhouette and livery textures stay intact.
   const mane=createWindMane(colorBindings,{seed:phase});
@@ -58,6 +60,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
       material.roughness=.87-currentWetness*.27;
       material.clearcoat&&(material.clearcoat=currentWetness*.15);
     }
+    surfaceFinish.setWetness(currentWetness);
   }
   const mixer=new THREE.AnimationMixer(model),clips=asset.animations.filter(clip=>!clip.name.includes('|'));let action;
   const gait=createGaitRefiner(model,{strength:.40});
@@ -69,6 +72,8 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
     setWind(level=.55){maneWind=Math.max(0,Math.min(2,Number(level)||0));},
     setBank(radians=0){bankGoal=Math.max(-.12,Math.min(.12,Number(radians)||0));},
     setWetness(level){currentWetness=Math.max(0,Math.min(1,Number(level)||0));tintWetness();},
+    setVisualQuality(name){surfaceFinish.setQuality(name);},
+    setCoatFinish(level){surfaceFinish.setFinish(level);},
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
     setAppearance({coat:nextCoat=coat,accent:nextAccent=accent,symbol:nextSymbol=symbol}={}){
       identity.apply({coat:nextCoat,accent:nextAccent,symbol:nextSymbol});
@@ -87,7 +92,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
       }
       mane.update(step,{wind:maneWind,speed:rate,gait:maneGait||action?.getClip().name,motionEnabled:maneMotion,reducedMotion:!!reducedMotion?.matches});
     },
-    dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
+    dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();surfaceFinish.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };
   api.setAppearance({coat,accent,symbol});
   api.play(mode,0);mixer.update(phase);return api;

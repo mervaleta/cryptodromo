@@ -8,6 +8,8 @@ import {createParadeController,PARADE_WAVES,WAVES} from './march.js?v=alpha16-1'
 import {createDroneRig,droneInputs} from './drone.js?v=alpha17-1';
 import {bindCameraPanel} from '../visual-lab/cameraPanel.js?v=alpha17-1';
 import {createParadeVillage} from './scenery.js?v=alpha16-2';
+import {createSoftStadiumLighting} from '../visual-lab/softStadiumLighting.js';
+import {mountVisualCockpit} from '../assets/crp-visual-cockpit.js';
 
 const $=id=>document.getElementById(id),canvas=$('parade-canvas'),stage=$('stage');
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<780;
@@ -90,6 +92,10 @@ function ovalTrack(){
 ovalTrack();
 const village=createParadeVillage(scene,{quality:'balanced'});
 const district=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',quality:'balanced'});
+const softLighting=createSoftStadiumLighting({THREE,scene,quality:mobile||softwareGPU?'low':'balanced'});
+const horseSurfaceSettings={quality:'balanced',wetness:0,finish:.35,wind:null};
+const visualEnvironment={exposure:1,fog:1};
+let baseFogDensity=.00145;
 const parade=createParadeController({pace:3.2});
 const drone=createDroneRig({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32});
 const position=new THREE.Vector3(),target=new THREE.Vector3();
@@ -152,15 +158,19 @@ function lighting(){
  hemi.color.set(night?'#87a3d2':'#c2dce7');
  scene.background.set(night?'#263b50':wet?'#869b9d':sunset?'#b7a18d':'#8db9cb');
  scene.fog.color.set(night?'#334854':wet?'#8e9fa3':sunset?'#b7b2a6':'#a8c8c0');
- scene.fog.density=wet?.0032:.00145;
+ baseFogDensity=wet?.0032:.00145;
+ scene.fog.density=baseFogDensity*visualEnvironment.fog;
  trackMat.color.set(wet?'#685c4e':'#9d7958');
  trackMat.roughness=wet?.47:.91;
- renderer.toneMappingExposure=night?1.31:sunset?1.11:1.04;
+ renderer.toneMappingExposure=(night?1.31:sunset?1.11:1.04)*visualEnvironment.exposure;
  village.setEnvironment({night,wetness:wet?1:0,lightLevel:ambient});
  district.setEnvironment({hour:h,type:wet?'rain':night?'night':'clear',wetness:wet?1:0});
+ softLighting.apply({night,intensity:Math.min(1.25,ambient*.7),glow:night?.8:0});
+ horseSurfaceSettings.wetness=wet?1:0;
+ for(const horse of horseModels)horse.setWetness?.(horseSurfaceSettings.wetness);
  paradeManeWind=wet?1.25:.5;
  clouds.configure({cover:wet?.8:night?.42:.34,night,rain:wet,sunset,wind:paradeManeWind});
- for(const horse of horseModels)horse.setWind?.(paradeManeWind);
+ for(const horse of horseModels){horse.setWind?.(paradeManeWind);if(horseSurfaceSettings.wind!==null)horse.setWind?.(horseSurfaceSettings.wind);}
 }
 for(const key of ['weather','daytime','daytime-auto','lights'])
  $(key).addEventListener('input',()=>{
@@ -176,6 +186,9 @@ function setQuality(name){
  renderer.shadowMap.enabled=name!=='eco'&&!softwareGPU;
  sun.castShadow=renderer.shadowMap.enabled;
  village.setQuality(name);district.setQuality(name);
+ softLighting.apply({quality:name==='eco'?'low':name==='cinematic'?'high':'balanced',glow:name==='eco'?.35:.8});
+ horseSurfaceSettings.quality=name==='eco'?'performance':name==='cinematic'?'cinematic':'balanced';
+ horseModels.forEach(h=>h.setVisualQuality?.(horseSurfaceSettings.quality));
  resize();
 }
 $('quality').value=mobile||softwareGPU?'eco':'balanced';
@@ -299,18 +312,35 @@ for(const button of document.querySelectorAll('[data-move]')){
  button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);
  button.addEventListener('lostpointercapture',release);
 }
-let dragging=false,lastX=0,lastY=0;
+// Mouse layout: left = pan/strafe, right = look; touch = look.
+const mouseScheme={lookButton:2,panButton:0,sensitivity:.0042,invertY:false};
+const mouseDrag={active:false,id:-1,mode:'look',x:0,y:0};
+canvas.addEventListener('contextmenu',event=>event.preventDefault());
 canvas.addEventListener('pointerdown',event=>{
- if(event.button!==0&&event.pointerType!=='touch')return;
- dragging=true;lastX=event.clientX;lastY=event.clientY;
- canvas.setPointerCapture(event.pointerId);
+ const touch=event.pointerType==='touch';
+ if(!touch&&event.button!==mouseScheme.lookButton&&event.button!==mouseScheme.panButton)return;
+ mouseDrag.active=true;mouseDrag.id=event.pointerId;
+ mouseDrag.mode=touch||event.button===mouseScheme.lookButton?'look':'pan';
+ mouseDrag.x=event.clientX;mouseDrag.y=event.clientY;
+ canvas.setPointerCapture?.(event.pointerId);
 });
 canvas.addEventListener('pointermove',event=>{
- if(!dragging)return;
- const dx=event.clientX-lastX,dy=event.clientY-lastY;lastX=event.clientX;lastY=event.clientY;
- drone.nudgeAim(dx*.0042,-dy*.0034);syncControls();
+ if(!mouseDrag.active||event.pointerId!==mouseDrag.id)return;
+ const dx=event.clientX-mouseDrag.x,dy=event.clientY-mouseDrag.y;
+ mouseDrag.x=event.clientX;mouseDrag.y=event.clientY;
+ if(mouseDrag.mode==='look')drone.nudgeAim(dx*mouseScheme.sensitivity,(mouseScheme.invertY?1:-1)*dy*mouseScheme.sensitivity*.81);
+ else {const s=drone.snapshot();if(s.mode==='free')drone.setPose({x:s.x-dx*.26*Math.cos(s.yaw),y:s.y+dy*.20,z:s.z-dx*.26*Math.sin(s.yaw)});else drone.setPose({lateral:s.lateral-dx*.24,y:s.y+dy*.20});}
+ syncControls();
 });
-for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,()=>{dragging=false;});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,event=>{
+ if(event.pointerId===mouseDrag.id){mouseDrag.active=false;mouseDrag.id=-1}
+});
+window.crpCameraMouseSettings={
+ setLookButton(button){mouseScheme.lookButton=button===0?0:2;mouseScheme.panButton=mouseScheme.lookButton===0?2:0;},
+ setSensitivity(value){mouseScheme.sensitivity=Math.max(.001,Math.min(.012,Number(value)||.0042));},
+ setInvertY(enabled){mouseScheme.invertY=Boolean(enabled);},
+ get(){return {...mouseScheme}}
+};
 canvas.addEventListener('wheel',event=>{
  event.preventDefault();
  if(event.ctrlKey)drone.zoom(Math.sign(event.deltaY)*2.3);
@@ -330,6 +360,29 @@ addEventListener('keydown',event=>{
  }
 });
 syncControls();
+const finishControls={
+ get settings(){return {...horseSurfaceSettings,wind:horseSurfaceSettings.wind??paradeManeWind}},
+ setQuality(value){horseSurfaceSettings.quality=value;horseModels.forEach(h=>h.setVisualQuality?.(value));},
+ setWetness(value){horseSurfaceSettings.wetness=value;horseModels.forEach(h=>h.setWetness?.(value));},
+ setFinish(value){horseSurfaceSettings.finish=value;horseModels.forEach(h=>h.setCoatFinish?.(value));},
+ setWind(value){horseSurfaceSettings.wind=value;horseModels.forEach(h=>h.setWind?.(value));}
+};
+const environmentalControls={
+ get settings(){return {...visualEnvironment}},
+ setExposure(value){visualEnvironment.exposure=value;lighting()},
+ setFog(value){visualEnvironment.fog=value;lighting()}
+};
+const performanceControls={
+ getQuality:()=>$('quality').value,
+ setQuality(value){$('quality').value=value;setQuality(value)}
+};
+const cameraControls={
+ ...window.crpCameraMouseSettings,
+ getMode:()=>drone.snapshot().mode,
+ setMode(value){drone.setMode(value);$('camera-mode').value=value;syncControls()}
+};
+const cockpitHost=$('crp-visual-controls');
+if(cockpitHost)mountVisualCockpit({container:cockpitHost,lighting:softLighting,camera:cameraControls,horses:finishControls,environment:environmentalControls,performance:performanceControls});
 function selectFollowTarget(){
  const symbol=$('follow-horse').value;
  const model=horseModels.find(h=>h.userData.paradeSymbol===symbol);
@@ -346,6 +399,10 @@ async function loadModels(){
     symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk',maneGait:'Walk'
    });
    horse.setWind?.(paradeManeWind);
+   if(horseSurfaceSettings.wind!==null)horse.setWind?.(horseSurfaceSettings.wind);
+   horse.setVisualQuality?.(horseSurfaceSettings.quality);
+   horse.setCoatFinish?.(horseSurfaceSettings.finish);
+   horse.setWetness?.(horseSurfaceSettings.wetness);
    horse.userData={paradeSymbol:runner?.symbol||null};
    const clips=horse.clips||[];
    const clip=pickClip(clips);

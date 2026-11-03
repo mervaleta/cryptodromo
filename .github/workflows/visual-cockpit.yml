@@ -1,0 +1,51 @@
+name: Visual cockpit + Parade integration
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'parade/**'
+      - 'race-lab/source/src/horse*'
+      - 'assets/crp-visual-cockpit*'
+      - 'visual-lab/softStadiumLighting.js'
+      - '.github/workflows/visual-cockpit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-and-parade:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          for f in parade/parade.js visual-lab/softStadiumLighting.js race-lab/source/src/horse.js race-lab/source/src/horseVisualQuality.js assets/crp-visual-cockpit.js; do node --check "$f"; done
+      - name: Ensure controls exist
+        run: |
+          grep -q 'crp-visual-controls' parade/index.html
+          grep -q 'setLookButton' parade/parade.js
+          grep -q 'mountVisualCockpit' parade/parade.js
+      - name: Install dependencies
+        run: |
+          npm ci --prefix race-lab/source --no-audit --no-fund
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Preview Parade in browser
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/visual-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 3
+          node tests/alpha16-parade-browser.mjs
+          node tests/visual-cockpit-browser.mjs
+      - name: Keep screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-cockpit-parade
+          path: artifacts/
+          retention-days: 14
+          if-no-files-found: ignore
