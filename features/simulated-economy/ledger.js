@@ -47,7 +47,7 @@ export function buyCredits(s,usd){
  const a=activeAccount(s);if(!a)throw Error('Seleccioná un jugador');
  const cents=Math.round(usd*100);
  requirePositive(cents,'Importe');
- if(cents<100||cents>10000||cents!==usd*100)throw Error('Comprá entre 1 y 100 USD simulados, en centavos exactos');
+ if(cents<100||cents>10000||Math.abs(cents-usd*100)>1e-7)throw Error('Comprá entre 1 y 100 USD simulados, en centavos exactos');
  if(a.usdCents<cents)throw Error('Fondos simulados insuficientes');
  const credits=cents; // 1 cent = 1 CR, sin spread en el modo demo.
  a.usdCents-=cents;a.credits+=credits;
