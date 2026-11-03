@@ -1,0 +1,21 @@
+/* Alpha18 shared navigation. Scoped to the new header to avoid 3D controls. */
+:root{--crp-site-max:1480px}
+.crp-unified.sitebar{width:100%!important;max-width:none!important;position:relative!important;z-index:110!important;overflow:visible!important}
+.crp-unified .sitebar-inner{width:min(var(--crp-site-max),calc(100% - 40px))!important;max-width:var(--crp-site-max)!important;display:flex!important;align-items:center!important;gap:clamp(8px,1.2vw,20px)!important;min-height:76px!important}
+.crp-unified .site-brand{display:flex!important;flex:0 0 clamp(150px,14vw,205px)!important;width:clamp(150px,14vw,205px)!important;min-width:0!important;overflow:visible!important}
+.crp-unified .site-brand img{display:block!important;width:100%!important;max-width:205px!important;height:auto!important;max-height:62px!important;object-fit:contain!important}
+.crp-unified .crp-unified-nav{display:flex!important;align-items:center!important;justify-content:flex-end!important;flex:1 1 auto!important;gap:clamp(3px,.65vw,11px)!important;min-width:0!important;overflow:visible!important}
+.crp-unified .crp-nav-link,.crp-unified .crp-nav-toggle{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:42px!important;gap:6px!important;padding:8px clamp(6px,.7vw,11px)!important;border:1px solid transparent!important;border-radius:5px!important;background:transparent!important;color:#b8c8c0!important;font:700 11px/1.2 'Segoe UI',Arial,sans-serif!important;letter-spacing:.02em!important;text-transform:none!important;text-decoration:none!important;white-space:nowrap!important;cursor:pointer}
+.crp-unified .crp-nav-link:hover,.crp-unified .crp-nav-toggle:hover,.crp-unified .crp-nav-toggle[aria-expanded=true]{color:#fff!important;background:#1b1d1d!important;border-color:#363b3a!important}
+.crp-unified .crp-nav-link[aria-current=page],.crp-unified .crp-nav-active{color:#7ace7a!important}
+.crp-unified .crp-nav-group{position:relative;flex:none}
+.crp-unified .crp-nav-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:120;min-width:225px;max-width:min(330px,calc(100vw - 32px));padding:8px;background:#161a18;border:1px solid #363b3a;border-radius:7px;box-shadow:0 15px 35px #000b}
+.crp-unified .crp-nav-menu[hidden]{display:none!important}
+.crp-unified .crp-nav-menu a{display:block!important;padding:11px 12px!important;color:#e8efea!important;text-decoration:none!important;font:600 12px/1.4 'Segoe UI',Arial,sans-serif!important;border-radius:4px}
+.crp-unified .crp-nav-menu a:hover,.crp-unified .crp-nav-menu a[aria-current=page]{background:#263028!important;color:#7ace7a!important}
+.crp-unified :is(a,button):focus-visible{outline:2px solid #7ace7a!important;outline-offset:3px}
+.crp-unified .site-action{flex:none!important;font-size:10px!important;min-height:40px!important}
+@media(max-width:1280px){.crp-unified .sitebar-inner{flex-wrap:wrap!important;padding:8px 0!important}.crp-unified .crp-unified-nav{order:3!important;flex-basis:100%!important;justify-content:flex-start!important;overflow-x:auto!important;overflow-y:visible!important;padding-bottom:5px!important}.crp-unified .site-action{margin-left:auto!important}.crp-unified .crp-nav-menu{position:fixed;top:auto;right:16px;max-height:55vh;overflow-y:auto}}
+@media(max-width:600px){.crp-unified .sitebar-inner{width:calc(100% - 24px)!important}.crp-unified .site-brand{flex-basis:150px!important}.crp-unified .crp-nav-link,.crp-unified .crp-nav-toggle{font-size:11px!important}.crp-unified .site-action{padding:0 10px!important}}
+/* Shared outer alignment, without changing reading-column widths. */
+body>.shell,body>main.shell,body>main.sports,body>main.comm,body>main.page{max-width:var(--crp-site-max)!important;margin-inline:auto!important}
