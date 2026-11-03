@@ -1,0 +1,75 @@
+name: Capture actual public BTC Hero V4 animation
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/btc-live-webgl.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Test and record REAL public horse animation
+        run: |
+          mkdir -p artifacts
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true,args:[
+            '--use-gl=angle','--use-angle=swiftshader',
+            '--enable-webgl','--enable-unsafe-swiftshader']});
+          const context=await browser.newContext({
+            viewport:{width:1390,height:920},deviceScaleFactor:1,
+            reducedMotion:'no-preference',
+            recordVideo:{dir:'artifacts',size:{width:1390,height:920}}
+          });
+          const page=await context.newPage();
+          const errors=[];
+          page.on('pageerror',e=>errors.push(e.message));
+          try {
+            await page.goto('https://race.cryptodromo.com/racers/#BTC',
+              {waitUntil:'domcontentloaded',timeout:90000});
+            await page.waitForFunction(()=>{
+              const s=window.__cryptodromoBTCAtelierQA?.();
+              return s?.heroGroom?.version==='btc-real-hero-v4-20261103'
+                &&s?.clips.includes('Gallop')&&s?.drawCalls>0;
+            },null,{timeout:90000});
+            let s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
+            assert.equal(s.heroGroom.oldHairHidden,true);
+            assert.equal(s.heroGroom.gallopPreserved,true);
+            await page.locator('[data-btc-camera="profile"]').click();
+            const a=await page.locator('#horse-canvas').screenshot();
+            await page.waitForTimeout(1500);
+            const b=await page.locator('#horse-canvas').screenshot();
+            assert.notDeepEqual(a,b,'Live WebGL horse animation must change pixels over time');
+            await page.locator('#horse-view').screenshot({path:'artifacts/btc-hero-v4-public-profile.png'});
+            await page.waitForTimeout(3000);
+            await page.locator('[data-btc-camera="rear"]').click();
+            await page.waitForTimeout(650);
+            await page.locator('#horse-view').screenshot({path:'artifacts/btc-hero-v4-public-rear.png'});
+            assert.deepEqual(errors,[]);
+            console.log('PUBLIC_BTC_V4_ANIMATION_OK',JSON.stringify(s));
+          } finally {
+            await page.close();
+            await context.close();
+            await browser.close();
+          }
+          JS
+      - name: Save live screenshots and real browser WebM capture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-public-v4-real-animation
+          path: |
+            artifacts/*.png
+            artifacts/*.webm
+          if-no-files-found: warn
