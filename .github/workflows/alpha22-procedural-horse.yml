@@ -25,10 +25,10 @@ jobs:
             node --check "$file"
           done
       - name: Unit contracts for identity, geometry and map-free shader
-        run: node --test tests/alpha22-horse-contract.mjs
+        run: node --test tests/alpha22-horse-contract.mjs tests/procedural-live.mjs tests/alpha20-scene-integration.mjs
   browser:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 23
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,6 +45,7 @@ jobs:
           trap 'kill "$SERVER_PID" || true' EXIT
           sleep 2
           node tests/alpha22-horse-browser.mjs
+          node tests/alpha22-live-browser.mjs
       - name: Keep visual proof and GPU measurements
         if: always()
         uses: actions/upload-artifact@v4
