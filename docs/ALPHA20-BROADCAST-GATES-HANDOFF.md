@@ -1,3 +1,15 @@
+# Alpha20: estado de integración (3 de noviembre de 2026)
+
+**Integrado en PR #42, basado en main `79ba0cab`, sin despliegue todavía.** El contenido previo de este documento describe la preparación original de PR #28 y se conserva como referencia histórica. La versión actual SÍ modifica `visual-lab/scene.js`, sustituyendo las 12 gateras estáticas. No duplica estructuras.
+
+Cambios montados: importaciones de `broadcastGates.js`, `broadcastGateNumbers.js`, `gateChoreography.js`; inicialización después de cargar el fixture, `setEntries` en cada `setRace`, visibilidad limitada al trazado recto en `setLayout` y `applyGateStaging` justo antes del render. Los caballos quedan 3.2 unidades visuales atrás durante preparación; las puertas se abren en 0.72 segundos y el modelo vuelve suavemente a la trayectoria oficial a los 1.2 segundos.
+
+**Verificaciones obligatorias:** CI `alpha20-gates.yml` y `Satoshi Nakamoto Stadium`, prueba de navegador para cámara y escena, captura frontal de 12 dorsales, clipping de cabezas/cola, reinicio y replay manual, inicio en LIVE al sintonizar tardíamente, lluvia/noche, rendimiento móvil. No cambiar el motor de resultados. No presentar el resultado como AAA validado antes del QA visual.
+
+**Compatibilidad:** el sistema nuevo es exclusivo de `layoutMode==='straight'`; el trazado oval oculta gateras. Alpha19 tendrá múltiples pistas con tangentes diferentes y necesitará una instancia adaptada a cada largada física. PRs aún abiertos de estadio y cámaras deben revalidarse contra esta sustitución.
+
+---
+
 # Alpha20 · Broadcast Starting Gates · Integration handoff
 
 Status: **opt-in / staged / NOT deployed**. Created on top of `main` at `4607d6f`. This branch intentionally **does not edit** `visual-lab/scene.js`, `estadio/`, `race-lab/`, `officialRace.js`, layouts, fixture, skins, weather, cameras or pages.
