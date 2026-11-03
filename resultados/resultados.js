@@ -1,3 +1,4 @@
+import {mountPriceTransparency} from './priceTransparency.js';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '../race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {liveSlot,formatCountdown} from '../visual-lab/liveSchedule.js';
@@ -27,10 +28,12 @@ if(entries.length){
 $('last-race').textContent='#'+String(entries[0].slot+1).padStart(3,'0');
 $('winner').textContent=entries[0].ranking[0].entry.symbol;
 $('race-select').innerHTML=entries.map((x,i)=>'<option value="'+i+'">Día '+(x.day+1)+' · '+x.race.time+' · Carrera '+x.race.number+'</option>').join('');
+const transparency = mountPriceTransparency(document.querySelector('#results').closest('section.panel'), () => entries[Number($('race-select').value)||0]);
 function render(){
  const x=entries[Number($('race-select').value)||0];
  $('race-meta').textContent='Jornada '+(x.day+1)+'/7 · Carrera '+x.race.number+'/'+RACES_PER_DAY+' · '+x.race.time+' (hora del estadio) · 12 caballos · método CRP-DOSE-FAIR-V1 · puntaje por cuartos';
  $('results').innerHTML=x.ranking.map((p,i)=>'<tr><td class="score">'+(i+1)+'</td><td><a class="token" href="/racers/#'+encodeURIComponent(p.entry.symbol)+'"><i class="swatch" style="background:'+p.entry.color+'"></i>'+escape(p.entry.symbol)+'</a><span class="muted">'+escape(p.entry.name)+'</span></td><td>'+fmt(p.finishTime)+' s</td><td>'+fmt(p.input1+p.input2)+'%</td><td>'+fmt(p.distanceAt60)+' m</td><td>+'+x.points.get(p.entry.symbol).bonusPoints+'</td><td class="score">'+x.points.get(p.entry.symbol).totalPoints+'</td></tr>').join('');
+ transparency.refresh();
 }
 $('race-select').addEventListener('change',render);
 $('recent').innerHTML=entries.slice(0,8).map((x,i)=>'<button class="control" type="button" data-index="'+i+'">'+x.race.time+' · '+escape(x.ranking[0].entry.symbol)+'</button>').join('');
