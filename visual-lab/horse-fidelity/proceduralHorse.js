@@ -176,7 +176,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
  const groom=createProceduralGroom({THREE,parent:body,quality:gq,seed:options.seed,
   maneStyle:options.maneStyle,tailStyle:options.tailStyle,color:coatDef.mane});
 
- let mode='Idle',time=0,hoofPhase=0,bankGoal=0,wind=.5,wetness=options.wetness,
+ let mode='Idle',time=0,idleClock=0,hoofPhase=0,bankGoal=0,wind=.5,wetness=options.wetness,
   mud=options.mud,blend=0,disposed=false,profileCurrent={...options};
  const reducedMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
  const maxGait=1.75;
@@ -187,7 +187,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   const target=mode==='Gallop'?1:mode==='Walk'?.33:0;
   blend+= (target-blend)*(1-Math.exp(-dt*(target>blend?5:8)));
   const cadence=mode==='Gallop'?rate/.583:mode==='Walk'?.88*rate:0;
-  time+=dt*cadence;
+  time+=dt*cadence;idleClock+=dt;
   hoofPhase=time%1;
   const phase=hoofPhase;
   const swing=Math.sin(TAU*phase);
@@ -203,7 +203,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
    leg.knee.rotation.z=bend;
    leg.fetlock.rotation.z=-shoulder*.55-bend*.24;
   }
-  const walkBreath=mode==='Idle'?.007*Math.sin(time*.09):0;
+  const walkBreath=mode==='Idle'?.007*Math.sin(idleClock*2.0):0;
   bodyPivot.position.y=1.63+amount*(.024*swing+.025*flight)+walkBreath;
   bodyPivot.rotation.z=amount*.016*Math.sin(TAU*(phase+.12));
   bodyPivot.rotation.x+= (bankGoal-bodyPivot.rotation.x)*(1-Math.exp(-dt*4));
@@ -215,7 +215,8 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   maneStyle:nextMane,tailStyle:nextTail,wetness:nextWet,mud:nextMud}={}){
   const coatKey=COAT_PRESETS[nextCoat]?nextCoat:profileCurrent.coat;
   const colors=COAT_PRESETS[coatKey];
-  skin.setLook({color:colors.coat});
+  const customCoat=typeof nextCoat==='string'&&/^#[0-9a-f]{6}$/i.test(nextCoat)?nextCoat:null;
+  skin.setLook({color:customCoat||colors.coat});
   muzzle.color.set(colors.muzzle);hoof.color.set(colors.hoof);
   if(nextAccent)accentMat.color.set(nextAccent);
   groom.setAppearance({maneColor:colors.mane,style:nextMane,tail:nextTail});
@@ -231,8 +232,16 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
  function setWetness(v){wetness=clamp(Number(v),0,1);skin.setLook({wetness});
    muzzle.roughness=.72-wetness*.28;hoof.roughness=.54-wetness*.19;}
  function setMud(v){mud=clamp(Number(v),0,1);skin.setLook({mud});}
- function setVisualQuality(next){groom.setQuality(next);}
- function reset(){time=0;hoofPhase=0;blend=0;bodyPivot.rotation.set(0,0,0);
+ function setVisualQuality(next){
+  const mode=next==='performance'?'eco':next==='cinematic'?'high':next;
+  if(['eco','balanced','high'].includes(mode))groom.setQuality(mode);
+ }
+ function setCoatFinish(level=0){
+  const finish=clamp(Number(level),0,1);
+  skin.material.roughness=.77-finish*.10-wetness*.12;
+  skin.material.clearcoat=.08+finish*.18;
+ }
+ function reset(){time=0;idleClock=0;hoofPhase=0;blend=0;bodyPivot.rotation.set(0,0,0);
   for(const leg of legs){leg.upper.rotation.z=0;leg.knee.rotation.z=0;leg.fetlock.rotation.z=0;}}
  function dispose(){
   if(disposed)return;disposed=true;groom.dispose();
@@ -247,7 +256,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   get shapeStats(){return {...geometryStats(root),hairStrands:groom.strandTotal}},
   get isTextureFree(){return verifyTextureFreeMaterial(root).textureFree},
   play(name='Gallop'){if(!['Idle','Walk','Gallop'].includes(name))return;mode=name;},
-  setAppearance,setWetness,setMud,setVisualQuality,setCoatFinish(){},
+  setAppearance,setWetness,setMud,setVisualQuality,setCoatFinish,
   setWind(value){wind=clamp(Number(value),0,2);},
   setBank(radians){bankGoal=clamp(Number(radians),-.12,.12);},
   update,reset,dispose
