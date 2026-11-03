@@ -9,6 +9,7 @@ import {addLoft,makeOrganicLoft,geometryBudget,geometryStats} from './horseGeome
 import {createAnalyticFurMaterial,makeSurfaceMaterial,verifyTextureFreeMaterial} from './horseShader.js';
 import {createProceduralGroom} from './horseGroom.js';
 import {createGeometricRaceLivery} from './horseRaceLivery.js';
+import {gallopLegPose} from './horseGaitIK.js';
 
 const TAU=Math.PI*2;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,Number.isFinite(x)?x:a));
@@ -170,7 +171,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   sock.visible=options.marking==='blaze'&&index===1;
   // Small original 3D accent around fetlock, no floating crypto sprite.
   const ring=sphere(fetlock,'Runner accent trim',[-.02,-.04,0],[.107,.022,.112],accentMat,12);
-  legs.push({upper:rootJoint,knee,fetlock,offset:[.31,.43,.03,.16][index],
+  legs.push({index,upper:rootJoint,knee,fetlock,offset:[.28,.43,.03,.14][index],
    hind,side,sock,ring});
  }
  // Groom hairs follow the torso (including neck and rump) without mesh images.
@@ -180,7 +181,9 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   number:Math.max(1,Math.min(99,Number(options.number)||1)),accent:options.accent});
 
  let mode='Idle',time=0,idleClock=0,hoofPhase=0,bankGoal=0,wind=.5,wetness=options.wetness,
-  mud=options.mud,blend=0,disposed=false,profileCurrent={...options};
+  mud=options.mud,blend=0,disposed=false,
+  gaitStyle=options.gaitStyle==='swing'?'swing':'ik',
+  profileCurrent={...options,gaitStyle:options.gaitStyle==='swing'?'swing':'ik'};
  const reducedMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
  const maxGait=1.75;
  function update(delta=0,speed=1){
@@ -200,11 +203,18 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   for(const leg of legs){
    const p=TAU*(phase-leg.offset),sin=Math.sin(p);
    const lift=Math.max(0,-Math.cos(p));
-   const shoulder=amount*(leg.hind?.34:.30)*sin;
-   const bend=amount*(leg.hind?-.55:.47)*lift;
-   leg.upper.rotation.z=shoulder;
-   leg.knee.rotation.z=bend;
-   leg.fetlock.rotation.z=-shoulder*.55-bend*.24;
+   let shoulder=(leg.hind?.34:.30)*sin;
+   let bend=(leg.hind?-.55:.47)*lift;
+   if(gaitStyle==='ik'){
+    const pose=gallopLegPose(phase,leg.index,{speed:rate});
+    // Physically planted hoof targets during stance; lifted foot during flight.
+    // The 0..1 gait blend prevents snapping when walking or waiting.
+    shoulder=clamp(pose.shoulder,-.84,.84);
+    bend=clamp(pose.knee,-1.25,1.25);
+   }
+   leg.upper.rotation.z=amount*shoulder;
+   leg.knee.rotation.z=amount*bend;
+   leg.fetlock.rotation.z=-amount*(shoulder*.55+bend*.24);
   }
   const walkBreath=mode==='Idle'?.007*Math.sin(idleClock*2.0):0;
   bodyPivot.position.y=1.63+amount*(.024*swing+.025*flight)+walkBreath;
@@ -242,6 +252,8 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
    groom.setQuality(mode);raceCloth.setQuality(mode);
   }
  }
+ function setGaitStyle(value){gaitStyle=value==='swing'?'swing':'ik';
+  profileCurrent.gaitStyle=gaitStyle;}
  function setCoatFinish(level=0){
   const finish=clamp(Number(level),0,1);
   skin.material.roughness=.77-finish*.10-wetness*.12;
@@ -262,7 +274,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   get shapeStats(){return {...geometryStats(root),hairStrands:groom.strandTotal}},
   get isTextureFree(){return verifyTextureFreeMaterial(root).textureFree},
   play(name='Gallop'){if(!['Idle','Walk','Gallop'].includes(name))return;mode=name;},
-  setAppearance,setWetness,setMud,setVisualQuality,setCoatFinish,
+  setAppearance,setWetness,setMud,setVisualQuality,setCoatFinish,setGaitStyle,
   setWind(value){wind=clamp(Number(value),0,2);},
   setBank(radians){bankGoal=clamp(Number(radians),-.12,.12);},
   update,reset,dispose
