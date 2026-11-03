@@ -44,7 +44,6 @@ export function createBTCAAAHeroGroom(root,options={}){
   }
   passNotes.push('02 · Neck crest: integrated organic volume and silhouette');
  }
- if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  // Iteration 03: full tail volume and softened asymmetrical taper.
  if(stage>=3){
   for(let i=0;i<position.count;i++){
@@ -57,7 +56,6 @@ export function createBTCAAAHeroGroom(root,options={}){
   }
   passNotes.push('03 · Tail: rounded cross-section, sweep and tapered breakup');
  }
- if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  // Iteration 04: tiny strand variations keep a soft silhouette, not cable coils.
  if(stage>=4){
   for(let i=0;i<position.count;i++){
@@ -70,7 +68,6 @@ export function createBTCAAAHeroGroom(root,options={}){
   }
   passNotes.push('04 · Distributed fibers: fine asymmetric separation toward tips');
  }
- if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  // Iteration 05: restrained satin hair; sheen has a longitudinal color gradient.
  if(stage>=5){
   const hair=mesh.material;
@@ -119,6 +116,24 @@ export function createBTCAAAHeroGroom(root,options={}){
   });
   passNotes.push('09 · Anatomical detail: eyes and hooves, no added accessories');
  }
+
+ // Iteration 10: subtle fiber optics without extra rigid geometry.
+ if(stage>=10){
+  const hair=mesh.material,previous=hair.onBeforeCompile;
+  const previousKey=hair.customProgramCacheKey?.bind(hair);
+  hair.onBeforeCompile=function(shader,renderer){
+   previous?.call(this,shader,renderer);
+   const needle='diffuseColor.rgb*=rootShade*tipLight*(.92+.115*fiber);';
+   const silk='float silk=sin(hairData.z*137.0+hairData.x*21.0)*sin(hairData.z*43.0-hairData.x*8.0);'+
+    'diffuseColor.rgb*=1.0+.024*silk*smoothstep(.12,.6,hairData.x);';
+   shader.fragmentShader=shader.fragmentShader.replace(needle,needle+silk);
+  };
+  hair.customProgramCacheKey=()=>String(previousKey?.()||'')+'|btc-aaa-silk-10';
+  hair.roughness=.715;hair.sheenRoughness=.62;
+  hair.needsUpdate=true;
+  passNotes.push('10 · Final silk striation with conservative physically based specular');
+ }
+ if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  const baseline={vertices:position.count,drawCallsAdded:1};
  return {
   ...hero,
