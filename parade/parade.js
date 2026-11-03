@@ -93,7 +93,9 @@ ovalTrack();
 const village=createParadeVillage(scene,{quality:'balanced'});
 const district=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',quality:'balanced'});
 const softLighting=createSoftStadiumLighting({THREE,scene,quality:mobile||softwareGPU?'low':'balanced'});
-const horseSurfaceSettings={quality:'balanced',wetness:0,finish:.35};
+const horseSurfaceSettings={quality:'balanced',wetness:0,finish:.35,wind:.5};
+const visualEnvironment={exposure:1,fog:1};
+let baseFogDensity=.00145;
 const parade=createParadeController({pace:3.2});
 const drone=createDroneRig({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32});
 const position=new THREE.Vector3(),target=new THREE.Vector3();
@@ -156,10 +158,11 @@ function lighting(){
  hemi.color.set(night?'#87a3d2':'#c2dce7');
  scene.background.set(night?'#263b50':wet?'#869b9d':sunset?'#b7a18d':'#8db9cb');
  scene.fog.color.set(night?'#334854':wet?'#8e9fa3':sunset?'#b7b2a6':'#a8c8c0');
- scene.fog.density=wet?.0032:.00145;
+ baseFogDensity=wet?.0032:.00145;
+ scene.fog.density=baseFogDensity*visualEnvironment.fog;
  trackMat.color.set(wet?'#685c4e':'#9d7958');
  trackMat.roughness=wet?.47:.91;
- renderer.toneMappingExposure=night?1.31:sunset?1.11:1.04;
+ renderer.toneMappingExposure=(night?1.31:sunset?1.11:1.04)*visualEnvironment.exposure;
  village.setEnvironment({night,wetness:wet?1:0,lightLevel:ambient});
  district.setEnvironment({hour:h,type:wet?'rain':night?'night':'clear',wetness:wet?1:0});
  softLighting.apply({night,intensity:Math.min(1.25,ambient*.7),glow:night?.8:0});
@@ -167,7 +170,7 @@ function lighting(){
  for(const horse of horseModels)horse.setWetness?.(horseSurfaceSettings.wetness);
  paradeManeWind=wet?1.25:.5;
  clouds.configure({cover:wet?.8:night?.42:.34,night,rain:wet,sunset,wind:paradeManeWind});
- for(const horse of horseModels)horse.setWind?.(paradeManeWind);
+ for(const horse of horseModels)horse.setWind?.(horseSurfaceSettings.wind);
 }
 for(const key of ['weather','daytime','daytime-auto','lights'])
  $(key).addEventListener('input',()=>{
@@ -361,10 +364,25 @@ const finishControls={
  get settings(){return {...horseSurfaceSettings}},
  setQuality(value){horseSurfaceSettings.quality=value;horseModels.forEach(h=>h.setVisualQuality?.(value));},
  setWetness(value){horseSurfaceSettings.wetness=value;horseModels.forEach(h=>h.setWetness?.(value));},
- setFinish(value){horseSurfaceSettings.finish=value;horseModels.forEach(h=>h.setCoatFinish?.(value));}
+ setFinish(value){horseSurfaceSettings.finish=value;horseModels.forEach(h=>h.setCoatFinish?.(value));},
+ setWind(value){horseSurfaceSettings.wind=value;horseModels.forEach(h=>h.setWind?.(value));}
+};
+const environmentalControls={
+ get settings(){return {...visualEnvironment}},
+ setExposure(value){visualEnvironment.exposure=value;lighting()},
+ setFog(value){visualEnvironment.fog=value;lighting()}
+};
+const performanceControls={
+ getQuality:()=>$('quality').value,
+ setQuality(value){$('quality').value=value;setQuality(value)}
+};
+const cameraControls={
+ ...window.crpCameraMouseSettings,
+ getMode:()=>drone.snapshot().mode,
+ setMode(value){drone.setMode(value);$('camera-mode').value=value;syncControls()}
 };
 const cockpitHost=$('crp-visual-controls');
-if(cockpitHost)mountVisualCockpit({container:cockpitHost,lighting:softLighting,camera:window.crpCameraMouseSettings,horses:finishControls});
+if(cockpitHost)mountVisualCockpit({container:cockpitHost,lighting:softLighting,camera:cameraControls,horses:finishControls,environment:environmentalControls,performance:performanceControls});
 function selectFollowTarget(){
  const symbol=$('follow-horse').value;
  const model=horseModels.find(h=>h.userData.paradeSymbol===symbol);
@@ -380,7 +398,7 @@ async function loadModels(){
     coat:runner?.coat||'#996b54',accent:runner?.color||'#e5c68e',
     symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk',maneGait:'Walk'
    });
-   horse.setWind?.(paradeManeWind);
+   horse.setWind?.(horseSurfaceSettings.wind);
    horse.setVisualQuality?.(horseSurfaceSettings.quality);
    horse.setCoatFinish?.(horseSurfaceSettings.finish);
    horse.setWetness?.(horseSurfaceSettings.wetness);
