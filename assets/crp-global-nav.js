@@ -40,3 +40,6 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+
+/* Shared advertising placements: presentation-only. */
+(function(){var s=document.createElement('script');s.src='/assets/ad-inventory.js?v=1';s.defer=true;document.head.appendChild(s)})();
