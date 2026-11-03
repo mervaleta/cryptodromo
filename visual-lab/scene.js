@@ -21,6 +21,8 @@ import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1'
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
 import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha20-procedural-2';
+import {createProceduralRaceHorse} from './proceduralHorse.js?v=alpha20-procedural-2';
+import {loadHorsesWithRecovery} from './horseLoadRecovery.js?v=alpha23-recovery-1';
 import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
@@ -396,25 +398,16 @@ function showOfficialResult(){
 }
 const horseCoats=['#6c4731','#b18053','#342a26','#d3b48f','#a65f36','#5d5d62','#a78c66','#332c2a','#a28467','#c49a74','#5b4134','#d4bda8'];
 async function bootHorses(){
- const entries=race.entries;const results=await Promise.allSettled(entries.map((e,i)=>createHorse({
-   coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,stallNumber:i+1,height:2.85,mode:'Gallop',phase:i*.13
- })));
- for(let i=0;i<12;i++){
-  let model;
-  if(results[i].status==='fulfilled')model=results[i].value;
-  else {
-   // visible fallback, never a silent blank canvas
-   const root=new THREE.Group(),coat=mat(entries[i].coat||horseCoats[i]);
-   const torso=mesh(new THREE.SphereGeometry(.95,12,9),coat,root);torso.scale.set(1.3,.55,.52);torso.position.set(0,1.43,0);
-   box(.53,1.15,.54,.84,1.67,0,coat,root);
-   mesh(new THREE.SphereGeometry(.39,12,10),coat,root).position.set(1.12,2.21,0);
-   for(const x of [-.66,.66])for(const z of [-.28,.28])box(.14,1.08,.18,x,.72,z,coat,root);
-   model={root,update(){},play(){},setAppearance(){}};
-   console.warn('Caballo GLB de respaldo',i,results[i].reason);
-  }
+ const entries=race.entries;
+ const {models,recovered}=await loadHorsesWithRecovery({
+  entries,coats:horseCoats,primary:createHorse,
+  procedural:createProceduralRaceHorse,requestedMode:horseEngineMode
+ });
+ for(let i=0;i<models.length;i++){
+  const model=models[i];
   const initial=trackPoint(layoutMode,0,i);
-  model.root.position.set(initial.x,0,initial.z);model.root.rotation.y=initial.heading;
-  // No floating symbol sprites: the marks are part of the 3D horse skin shader.
+  model.root.position.set(initial.x,0,initial.z);
+  model.root.rotation.y=initial.heading;
   scene.add(model.root);
   model.setWind?.(maneWind);
   model.setVisualQuality?.(softwareGPU||mobile?'performance':'balanced');
@@ -422,7 +415,33 @@ async function bootHorses(){
  }
  setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
- status.textContent='CAMPO PREPARADO · 12 CORREDORES'+(horseEngineMode==='procedural'?' · MODELOS GENERADOS':'');
+ status.textContent='CAMPO PREPARADO · 12 CORREDORES'+
+  (horseEngineMode==='procedural'?' · MODELOS GENERADOS':'');
+ // A degraded renderer is a recoverable incident, never a silent "AAA" scene.
+ if(recovered.length){
+  const warning=document.createElement('div');
+  warning.id='horse-engine-recovery-warning';
+  warning.textContent='AVISO VISUAL: el modelo solicitado no cargó. Se usan caballos procedurales de respaldo.';
+  warning.setAttribute('role','status');
+  Object.assign(warning.style,{
+   position:'absolute',left:'12px',bottom:'96px',zIndex:'9',
+   maxWidth:'min(550px,90%)',background:'#3b2216ef',color:'#ffedd2',
+   padding:'10px 14px',border:'1px solid #eab978',borderRadius:'5px',
+   font:'700 12px/1.5 system-ui,sans-serif',pointerEvents:'none'
+  });
+  stage.append(warning);
+  stage.dataset.horseVisualFallback='procedural';
+  status.textContent='MODO DE RESPALDO: CABALLOS PROCEDURALES ('+recovered.length+'/12)';
+  console.error('[CRP] Full-fidelity model loading failed, using procedural recovery',recovered);
+ }
+ // QA diagnostics are read-only; they do not modify the official race.
+ window.__cryptodromoHorseLoadStatus={
+  requestedEngine:horseEngineMode,
+  recoveredLanes:recovered.map(x=>x.lane),
+  recoveredSymbols:recovered.map(x=>x.symbol),
+  renderedCount:models.length,
+  unapprovedBoxHorses:0
+ };
 }
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
