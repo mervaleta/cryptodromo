@@ -1,0 +1,25 @@
+name: Fixture private admin security
+on:
+  pull_request:
+    paths:
+      - 'admin/fixture/**'
+      - 'tests/fixture-admin-secure.mjs'
+      - '.github/workflows/fixture-admin-secure.yml'
+  push:
+    branches: [feat/fixture-admin-secure-20261103]
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PHP syntax
+        run: |
+          php -l admin/fixture/index.php
+          php -l admin/fixture/api.php
+          php -l admin/fixture/_auth.php
+      - name: Official fixture and private admin API
+        run: node --experimental-default-type=module tests/fixture-admin-secure.mjs
