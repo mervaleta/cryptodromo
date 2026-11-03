@@ -8,6 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHairAtelier} from './btc-hair-v15.js?v=btc-hair-v15-1';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v2.js?v=btc-hero-groom-v2-1';
+import {applyBTCCoatLook} from './btc-coat-look-v2.js?v=btc-coat-look-v2-1';
 
 const CAMERA_POSITIONS={
  profile:[2.25,2.0,4.35],
@@ -35,9 +36,9 @@ export function createPreview(canvas,onFailure=()=>{}){
  scene.add(new THREE.HemisphereLight('#f1f9f0','#304539',1.8));
  const key=new THREE.DirectionalLight('#ffedcb',2.8);key.position.set(-3,7,6);
  key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0003;scene.add(key);
- const fill=new THREE.DirectionalLight('#bad6ff',1.45);fill.position.set(5,5,-6);scene.add(fill);
- const edge=new THREE.DirectionalLight('#f9c37d',1.1);edge.position.set(3,4,5);scene.add(edge);
- const platformMat=new THREE.MeshStandardMaterial({color:'#263d2e',roughness:.87});
+ const fill=new THREE.DirectionalLight('#c0d8ff',1.68);fill.position.set(5,5,-6);scene.add(fill);
+ const edge=new THREE.DirectionalLight('#f9c37d',1.55);edge.position.set(3,4,5);scene.add(edge);
+ const platformMat=new THREE.MeshStandardMaterial({color:'#27332b',roughness:.94});
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,64);
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;platform.receiveShadow=true;scene.add(platform);
 
@@ -78,7 +79,7 @@ export function createPreview(canvas,onFailure=()=>{}){
     throw Error('No se encontró la crin y cola originales del caballo BTC');
    }
    try{
-    if(candidate){nextHero=createBTC3DHeroGroom(next.root,{maneSize,tailSize,color:hairColor});next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);}
+    if(candidate){nextHero=createBTC3DHeroGroom(next.root,{maneSize,tailSize,color:hairColor});next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);applyBTCCoatLook(next.root);}
    }catch(error){nextHair?.dispose();next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHair=hair,prevHero=hero;
