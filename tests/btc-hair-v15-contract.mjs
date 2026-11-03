@@ -23,12 +23,19 @@ test('only the validated original 510-vertex skinned Hair mesh passes',()=>{
   boundingBox:{min:{y:-.2,z:.014485},max:{y:.022233,z:.045763}}
  }}),false);
 });
-test('existing Hair material gets two physical spring inputs and shader-only waves',()=>{
+test('existing Hair material gets distinct pre-baked mane and tail animation channels',()=>{
  const material={name:'Hair',roughness:.86,needsUpdate:false,
   onBeforeCompile(){},customProgramCacheKey(){return 'old';}};
  const mesh={isSkinnedMesh:true,material,geometry:{attributes:{position:{count:510}},
   boundingBox:{min:{y:-.029727,z:.014485},max:{y:.022233,z:.045763}}}};
  const root={traverse(fn){fn(mesh);}};
+ const first=hair.sampleBakedHair(0);
+ const loop=hair.sampleBakedHair(2.65);
+ assert.equal(hair.BAKED_HAIR_FRAMES,96);
+ assert.ok(Math.abs(first.mane-loop.mane)<.00001);
+ assert.ok(Math.abs(first.tail-loop.tail)<.00001);
+ const delayed=hair.sampleBakedHair(.5);
+ assert.notEqual(delayed.mane,delayed.tail);
  const groom=hair.createBTCHairAtelier(root);
  assert.equal(groom.channelCount,1);
  assert.match(material.customProgramCacheKey(),/btc-mane-tail-v15/);
