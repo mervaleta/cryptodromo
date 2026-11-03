@@ -8,6 +8,8 @@ import {createParadeController,PARADE_WAVES,WAVES} from './march.js?v=alpha16-1'
 import {createDroneRig,droneInputs} from './drone.js?v=alpha17-1';
 import {bindCameraPanel} from '../visual-lab/cameraPanel.js?v=alpha17-1';
 import {createParadeVillage} from './scenery.js?v=alpha16-2';
+import {createSoftStadiumLighting} from '../visual-lab/softStadiumLighting.js';
+import {mountVisualCockpit} from '../assets/crp-visual-cockpit.js';
 
 const $=id=>document.getElementById(id),canvas=$('parade-canvas'),stage=$('stage');
 const mobile=matchMedia('(pointer:coarse)').matches||innerWidth<780;
@@ -90,6 +92,8 @@ function ovalTrack(){
 ovalTrack();
 const village=createParadeVillage(scene,{quality:'balanced'});
 const district=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',quality:'balanced'});
+const softLighting=createSoftStadiumLighting({THREE,scene,quality:mobile||softwareGPU?'low':'balanced'});
+const horseSurfaceSettings={quality:'balanced',wetness:0,finish:.35};
 const parade=createParadeController({pace:3.2});
 const drone=createDroneRig({x:55,y:95,z:214,yaw:-.17,pitch:-.61,fov:48,speed:32});
 const position=new THREE.Vector3(),target=new THREE.Vector3();
@@ -158,6 +162,9 @@ function lighting(){
  renderer.toneMappingExposure=night?1.31:sunset?1.11:1.04;
  village.setEnvironment({night,wetness:wet?1:0,lightLevel:ambient});
  district.setEnvironment({hour:h,type:wet?'rain':night?'night':'clear',wetness:wet?1:0});
+ softLighting.apply({night,intensity:Math.min(1.25,ambient*.7),glow:night?.8:0});
+ horseSurfaceSettings.wetness=wet?1:0;
+ for(const horse of horseModels)horse.setWetness?.(horseSurfaceSettings.wetness);
  paradeManeWind=wet?1.25:.5;
  clouds.configure({cover:wet?.8:night?.42:.34,night,rain:wet,sunset,wind:paradeManeWind});
  for(const horse of horseModels)horse.setWind?.(paradeManeWind);
@@ -176,6 +183,9 @@ function setQuality(name){
  renderer.shadowMap.enabled=name!=='eco'&&!softwareGPU;
  sun.castShadow=renderer.shadowMap.enabled;
  village.setQuality(name);district.setQuality(name);
+ softLighting.apply({glow:name==='eco'?.35:.8});
+ horseSurfaceSettings.quality=name==='eco'?'performance':name==='cinematic'?'cinematic':'balanced';
+ horseModels.forEach(h=>h.setVisualQuality?.(horseSurfaceSettings.quality));
  resize();
 }
 $('quality').value=mobile||softwareGPU?'eco':'balanced';
@@ -347,6 +357,14 @@ addEventListener('keydown',event=>{
  }
 });
 syncControls();
+const finishControls={
+ get settings(){return {...horseSurfaceSettings}},
+ setQuality(value){horseSurfaceSettings.quality=value;horseModels.forEach(h=>h.setVisualQuality?.(value));},
+ setWetness(value){horseSurfaceSettings.wetness=value;horseModels.forEach(h=>h.setWetness?.(value));},
+ setFinish(value){horseSurfaceSettings.finish=value;horseModels.forEach(h=>h.setCoatFinish?.(value));}
+};
+const cockpitHost=$('crp-visual-controls');
+if(cockpitHost)mountVisualCockpit({container:cockpitHost,lighting:softLighting,camera:window.crpCameraMouseSettings,horses:finishControls});
 function selectFollowTarget(){
  const symbol=$('follow-horse').value;
  const model=horseModels.find(h=>h.userData.paradeSymbol===symbol);
@@ -363,6 +381,9 @@ async function loadModels(){
     symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk',maneGait:'Walk'
    });
    horse.setWind?.(paradeManeWind);
+   horse.setVisualQuality?.(horseSurfaceSettings.quality);
+   horse.setCoatFinish?.(horseSurfaceSettings.finish);
+   horse.setWetness?.(horseSurfaceSettings.wetness);
    horse.userData={paradeSymbol:runner?.symbol||null};
    const clips=horse.clips||[];
    const clip=pickClip(clips);
