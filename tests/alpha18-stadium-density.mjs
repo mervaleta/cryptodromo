@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {DENSITY_STANDS,DENSITY_PRESETS,HORSE_VISUAL_TUNING,densityPreset,
+import {DENSITY_STANDS,DENSITY_PRESETS,TRACKSIDE_LAYOUT,HORSE_VISUAL_TUNING,densityPreset,
  safeHorseHeight,validateDensityLayout,createStadiumDensity} from '../visual-lab/stadiumDensity.js';
 const source=readFileSync(new URL('../visual-lab/stadiumDensity.js',import.meta.url),'utf8');
 test('stadium density is additive and separate from the race engine',()=>{
@@ -31,4 +31,14 @@ test('horse scale policy keeps existing gate roof clearance',()=>{
 });
 test('invalid THREE injection cannot mutate a scene',()=>{
  assert.throws(()=>createStadiumDensity({}),/THREE and scene/);
+});
+
+test('trackside spectators are close but outside safety setback',()=>{
+ assert.equal(TRACKSIDE_LAYOUT.courseEdge,-20.2);
+ assert.ok(TRACKSIDE_LAYOUT.courseEdge-TRACKSIDE_LAYOUT.safetyRail>=5);
+ assert.ok(TRACKSIDE_LAYOUT.safetyRail-TRACKSIDE_LAYOUT.spectatorRail>=5);
+ assert.ok(TRACKSIDE_LAYOUT.spectatorRail-TRACKSIDE_LAYOUT.frontRow>=4);
+ assert.match(source,/for\(const z of \[-25\.5,-31\.5\]\)/);
+ assert.match(source,/const z=-36\.5-row\*2\.2/);
+ assert.doesNotMatch(source,/z=-91\.5-row/);
 });
