@@ -73,7 +73,7 @@ function previewDeposit(){
  }catch(e){show('depositQuote',e.message)}
 }
 function renderWithdrawals(a){
- $('withdrawIntent').replaceChildren();$('withdrawList').replaceChildren();
+ const priorSelected=$('withdrawIntent').value; $('withdrawIntent').replaceChildren();$('withdrawList').replaceChildren();
  const ws=Array.isArray(a?.withdrawals)?a.withdrawals:[];
  for(const w of [...ws].reverse().slice(0,80)){
   const li=document.createElement('li');
@@ -82,6 +82,7 @@ function renderWithdrawals(a){
   if(['pending','approved','processing'].includes(w.status))$('withdrawIntent').add(new Option(w.id.slice(0,8)+' · '+w.status+' · USD '+money(w.amountCents),w.id));
  }
  if(!ws.length)escapeText($('withdrawList'),'No hay retiros ficticios registrados.','li');
+ if([...$('withdrawIntent').options].some(o=>o.value===priorSelected))$('withdrawIntent').value=priorSelected;
  const selection=ws.find(w=>w.id===$('withdrawIntent').value);
  const actions={pending:[['approve','Aprobar'],['reject','Rechazar y devolver'],['cancel','Cancelar y devolver']],approved:[['process','Enviar a procesamiento'],['reject','Rechazar y devolver'],['cancel','Cancelar y devolver']],processing:[['complete','Completar'],['fail','Falló: devolver saldo']]};
  $('withdrawAction').replaceChildren();
