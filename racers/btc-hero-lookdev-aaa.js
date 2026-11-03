@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js';
-export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-02';
+export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-03';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export function createBTCAAAHeroGroom(root,options={}){
  const stage=Math.floor(clamp(options.lookdevStage??10,1,10));
@@ -43,6 +43,19 @@ export function createBTCAAAHeroGroom(root,options={}){
    position.setZ(i,position.getZ(i)+.00014*body*body*Math.sin(s*15.4+u*3.2));
   }
   passNotes.push('02 · Neck crest: integrated organic volume and silhouette');
+ }
+ if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
+ // Iteration 03: full tail volume and softened asymmetrical taper.
+ if(stage>=3){
+  for(let i=0;i<position.count;i++){
+   if(region.getX(i)<.5)continue;
+   const u=clamp(section.getX(i),0,1),s=stripe.getX(i);
+   const fullness=Math.sin(Math.PI*u);
+   position.setX(i,position.getX(i)*(1+.08+.095*fullness));
+   position.setZ(i,position.getZ(i)+.00017*fullness*Math.sin(s*16.0+u*5.7));
+   position.setY(i,position.getY(i)+.00017*fullness*Math.sin(s*10.2+u*2.3));
+  }
+  passNotes.push('03 · Tail: rounded cross-section, sweep and tapered breakup');
  }
  if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  const baseline={vertices:position.count,drawCallsAdded:1};
