@@ -1,0 +1,19 @@
+/* Importar después de /assets/site-shell.css */
+.crp-album-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.crp-album-heading h2{font:500 clamp(25px,3vw,38px) Georgia,serif;margin:0}
+.crp-album-heading span{color:#b7d0bf;font-size:13px}
+.crp-showcase{padding:20px;border:1px solid #6d6041;border-radius:12px;background:linear-gradient(130deg,#25342a,#101b17);margin:18px 0 24px}
+.crp-showcase h3{margin:0 0 15px;font-size:12px;letter-spacing:.17em;text-transform:uppercase;color:#ddc28d}
+.crp-showcase-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.crp-badge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px}
+.crp-badge{padding:19px 14px;background:#14231d;border:1px solid #395345;border-radius:12px;text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;color:#f3f2e9}
+.crp-badge[data-rarity=uncommon]{border-color:#60a58e}
+.crp-badge[data-rarity=rare]{border-color:#b5a0d8}
+.crp-badge[data-rarity=legendary]{border-color:#e4bb6e;box-shadow:inset 0 0 25px #b58b3720}
+.crp-badge.is-locked{opacity:.58;filter:saturate(.35)}
+.crp-badge-icon{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,#3d725d,#1a3428);border:2px solid #a48c5a;font-size:40px;color:#e7c98d}
+.crp-badge h4{font-size:15px;margin:0}
+.crp-badge p{font-size:12px;line-height:1.45;color:#c4d4c9;margin:0;flex:1}
+.crp-badge small{font-size:10px;color:#d9c18e;letter-spacing:.1em}
+@media(max-width:600px){.crp-showcase-list{grid-template-columns:1fr}.crp-badge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.crp-badge{padding:14px 8px}.crp-badge-icon{width:55px;height:55px;font-size:31px}}
+@media(prefers-reduced-motion:reduce){.crp-badge{animation:none;transition:none}}
