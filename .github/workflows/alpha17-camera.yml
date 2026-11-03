@@ -1,7 +1,7 @@
 name: Alpha17 camera console + countdown preflight
 on:
   push:
-    branches: ['prep/alpha17-camera-director-countdown']
+    branches: ['prep/alpha17-camera-director-countdown', 'integration/alpha17-alpha18-latest-20261102']
     paths:
       - 'visual-lab/**'
       - 'parade/**'
@@ -35,12 +35,12 @@ jobs:
       - name: Parse every touched JavaScript module
         run: |
           for f in visual-lab/scene.js visual-lab/cameraRig.js visual-lab/cameraPanel.js \
-            parade/drone.js parade/parade.js tests/alpha17-camera.mjs tests/alpha17-camera-browser.mjs; do
+            parade/drone.js parade/parade.js visual-lab/stadiumDensity.js tests/alpha18-stadium-density.mjs tests/alpha17-camera.mjs tests/alpha17-camera-browser.mjs; do
             node --check "$f"
           done
       - name: Verify independent axes, 100 horse parade, stadium contracts
         run: |
-          node --test tests/alpha17-camera.mjs tests/alpha16-parade.mjs tests/alpha13-home.mjs tests/stadium-live-integration.mjs
+          node --test tests/alpha17-camera.mjs tests/alpha18-stadium-density.mjs tests/alpha16-parade.mjs tests/alpha13-home.mjs tests/stadium-live-integration.mjs
       - name: Install browser
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
