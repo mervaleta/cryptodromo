@@ -1,0 +1,47 @@
+name: Sports seasons, fan clubs and LIVE ceremony
+on:
+  push:
+    paths:
+      - 'sports/**'
+      - 'scripts/archive-season.mjs'
+      - 'temporadas/**'
+      - 'clubes/**'
+      - 'tests/sports-season-clubs-ceremony.mjs'
+      - 'visual-lab/scene.js'
+      - '.github/workflows/sports-season-clubs.yml'
+  pull_request:
+    paths:
+      - 'sports/**'
+      - 'scripts/archive-season.mjs'
+      - 'temporadas/**'
+      - 'clubes/**'
+      - 'tests/sports-season-clubs-ceremony.mjs'
+      - 'visual-lab/scene.js'
+      - '.github/workflows/sports-season-clubs.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check modules and CLI syntax
+        run: |
+          node --check sports/seasonArchive.js
+          node --check sports/archiveWriter.mjs
+          node --check sports/fanClubs.js
+          node --check sports/grandPrixCeremony.js
+          node --check scripts/archive-season.mjs
+          node --check clubes/clubes.js
+          node --check temporadas/temporadas.js
+          node --check visual-lab/scene.js
+      - name: Official engine, Grand Prix and community regressions
+        run: |
+          node --experimental-default-type=module --test \
+            tests/sports-season-clubs-ceremony.mjs \
+            tests/grand-prix.mjs \
+            tests/grand-prix-3d.mjs \
+            tests/official-race.mjs \
+            tests/track-splits.mjs
