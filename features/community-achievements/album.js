@@ -15,10 +15,10 @@ export function renderBadgeAlbum(root,payload){
  root.replaceChildren();
  const badges=Array.isArray(payload?.badges)?payload.badges:[];
  const heading=document.createElement('div');heading.className='crp-album-heading';
- const title=document.createElement('h2');title.textContent='Mi álbum de insignias';
+ const title=document.createElement('h2');title.textContent='Álbum de insignias';
  const summary=document.createElement('span');
  const owned=badges.filter(b=>b.unlocked).length;
- summary.textContent=owned+' / '+badges.length+' desbloqueadas';
+ summary.textContent=owned+' / '+badges.length+' desbloqueadas en esta vista';
  heading.append(title,summary);root.append(heading);
  const showcase=document.createElement('section');showcase.className='crp-showcase';
  const showcaseTitle=document.createElement('h3');showcaseTitle.textContent='Vitrina';
