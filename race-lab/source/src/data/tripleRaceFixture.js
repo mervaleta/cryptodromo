@@ -21,9 +21,8 @@ export function getTripleRaceFixture(minuteOfDay,day=0){
  const sourceSlot=(slot+track.offsetMinutes*160)%BASE_RACES;
  const source=getRaceFixture(sourceSlot,dayIndex);
  const entries=source.entries.map(entry=>{
-  const p0=getFixturePrice(entry.symbol,dayIndex,minuteOfDay);
-  const p1=getFixturePrice(entry.symbol,dayIndex,minuteOfDay+1);
-  const p2=getFixturePrice(entry.symbol,dayIndex,minuteOfDay+2);
+  const priceAt=offset=>getFixturePrice(entry.symbol,dayIndex+Math.floor((minuteOfDay+offset)/1440),(minuteOfDay+offset)%1440);
+  const p0=priceAt(0),p1=priceAt(1),p2=priceAt(2);
   if(![p0,p1,p2].every(Number.isFinite))throw new Error('Missing synthetic candle for '+entry.symbol);
   return {...entry,priceAtStart:p0,priceAtMid:p1,priceAtFinish:p2,
     input1:100*(p1/p0-1),input2:100*(p2/p1-1)};
@@ -33,13 +32,4 @@ export function getTripleRaceFixture(minuteOfDay,day=0){
   trackId:track.id,trackName:track.name,trackSlot:slot,
   announcementSecond:minuteOfDay*60,startSecond:minuteOfDay*60+30,
   entries,sourceFixture:{day:dayIndex+1,slot:sourceSlot}};
-}
-export function getTripleTrackState(minuteOfDay,second=0,day=0){
- const now=minuteOfDay*60+second;
- return TRACKS.map((track,i)=>{
-  const start=Math.floor((now-i*60)/TRACK_SLOT_SECONDS)*TRACK_SLOT_SECONDS+i*60;
-  const absolute=Math.max(0,start/60);
-  return {trackId:track.id,slotSeconds:((now-i*60)%180+180)%180,
-   fixture:getTripleRaceFixture(Math.floor(absolute)%1440,day)};
- });
 }
