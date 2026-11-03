@@ -7,6 +7,7 @@ const load=async name=>import('data:text/javascript;charset=utf-8,'+encodeURICom
 const motion=await load('motionDirector');
 const hoof=await load('hoofContacts');
 const venue=await load('stadiumFinishing');
+const follow=await load('bodyFollowThrough');
 
 test('bounded gallop cadence follows physical speed without silly 3.15x playback',()=>{
  assert.equal(motion.GALLOP_CLIP_SECONDS,.583);
@@ -57,7 +58,7 @@ test('eight thematic venue identities have strictly off-track placement',()=>{
  assert.equal(venue.getStadiumTheme('unknown').title,'SATOSHI NAKAMOTO');
 });
 test('polish modules never read results, price candles or wagers',()=>{
- for(const name of ['motionDirector','hoofContacts','contactSpray','stadiumFinishing','racePolishKit']){
+ for(const name of ['motionDirector','hoofContacts','contactSpray','stadiumFinishing','bodyFollowThrough','racePolishKit']){
   const source=read(name);
   assert.doesNotMatch(source,/\b(officialRanking|officialRace|PRICE_FIXTURE|payout|betsLedger|getRaceFixture)\b/);
  }
@@ -67,4 +68,29 @@ test('no duplicate geometry in original stadium or horse engine on this staged b
  assert.doesNotMatch(mainScene,/polish\/racePolishKit|createRacePolishKit/);
  const currentHorse=readFileSync(new URL('../race-lab/source/src/horse.js',import.meta.url),'utf8');
  assert.doesNotMatch(currentHorse,/alpha21/i);
+});
+
+test('secondary spine head and tail inertia stays small and quality-bounded',()=>{
+ const a=follow.followAngles({phase:.22,rate:1.5,burst:.4,quality:'high'});
+ assert.deepEqual(Object.keys(a),['Neck1','Head','Back','Tail2']);
+ for(const angle of Object.values(a))assert.ok(Math.abs(angle)<=.038);
+ const eco=follow.followAngles({phase:.22,rate:1.5,quality:'eco'});
+ assert.ok(Object.values(eco).every(a=>a===0));
+});
+test('additive bone corrections are fully reversible across horse mixer updates',()=>{
+ class Q{constructor(){this.v=0;}setFromAxisAngle(_axis,a){this.v=a;return this}
+  multiply(q){this.v+=q.v;return this}copy(q){this.v=q.v;return this}
+  invert(){this.v=-this.v;return this}identity(){this.v=0;return this}
+  normalize(){return this}}
+ class V{constructor(x,y,z){this.x=x;this.y=y;this.z=z}}
+ const bones=Object.fromEntries(follow.FOLLOW_BONES.map(name=>[name,{isBone:true,quaternion:new Q()}]));
+ const horse={root:{getObjectByName:name=>bones[name]}};
+ const director=follow.createBodyFollowThrough({THREE:{Quaternion:Q,Vector3:V},count:1,quality:'high'});
+ director.beforeUpdate(0,horse);director.afterUpdate(0,horse,{phase:.13,rate:1.5,burst:.3});
+ assert.ok(Object.values(bones).some(b=>Math.abs(b.quaternion.v)>.0001));
+ director.beforeUpdate(0,horse);
+ assert.ok(Object.values(bones).every(b=>Math.abs(b.quaternion.v)<.00000001));
+ director.afterUpdate(0,horse,{phase:.13,rate:1.5,burst:.3});director.reset();
+ assert.ok(Object.values(bones).every(b=>Math.abs(b.quaternion.v)<.00000001));
+ director.dispose();
 });
