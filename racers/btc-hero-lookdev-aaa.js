@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js';
-export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-03';
+export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-04';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export function createBTCAAAHeroGroom(root,options={}){
  const stage=Math.floor(clamp(options.lookdevStage??10,1,10));
@@ -56,6 +56,19 @@ export function createBTCAAAHeroGroom(root,options={}){
    position.setY(i,position.getY(i)+.00017*fullness*Math.sin(s*10.2+u*2.3));
   }
   passNotes.push('03 · Tail: rounded cross-section, sweep and tapered breakup');
+ }
+ if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
+ // Iteration 04: tiny strand variations keep a soft silhouette, not cable coils.
+ if(stage>=4){
+  for(let i=0;i<position.count;i++){
+   const u=clamp(section.getX(i),0,1),s=stripe.getX(i);
+   const distal=Math.pow(u,2.5);
+   const wave=Math.sin(s*37.3+u*7.7)*Math.sin(s*13.7-u*3.8);
+   const amp=region.getX(i)>.5?.000085:.000055;
+   position.setX(i,position.getX(i)+amp*distal*wave);
+   position.setZ(i,position.getZ(i)+amp*.58*distal*Math.sin(s*29.8-u*4.6));
+  }
+  passNotes.push('04 · Distributed fibers: fine asymmetric separation toward tips');
  }
  if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
  const baseline={vertices:position.count,drawCallsAdded:1};
