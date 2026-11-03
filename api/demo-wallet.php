@@ -85,9 +85,13 @@ function tickets(PDO $db,string $owner): array {
  $q=$db->prepare('SELECT id,absolute_round,runner,market,stake,odds_milli,payout,result_position,status,created_at,settled_at FROM demo_bet_tickets WHERE owner_id=? ORDER BY created_at DESC LIMIT 80');
  $q->execute([$owner]);return $q->fetchAll();
 }
+function wallet_now(): int {
+ $testing=getenv('STABLES_TEST_UNIX');
+ return PHP_SAPI==='cli-server'&&$testing!==false?(int)$testing:time();
+}
 function absolute_round(): int {
  $anchor=(new DateTimeImmutable('2026-11-02 00:00:00',new DateTimeZone('America/Argentina/Buenos_Aires')))->getTimestamp();
- return (int)floor((time()-$anchor)/180);
+ return (int)floor((wallet_now()-$anchor)/180);
 }
 function fixture_positions(): array {
  static $cache=null;
@@ -101,7 +105,7 @@ function settle(PDO $db): void {
  $round=absolute_round();
  // Results become final only 60s after starting. No future settlements.
  $anchor=(new DateTimeImmutable('2026-11-02 00:00:00',new DateTimeZone('America/Argentina/Buenos_Aires')))->getTimestamp();
- $max=(int)floor((time()-$anchor-60)/180);
+ $max=(int)floor((wallet_now()-$anchor-60)/180);
  $q=$db->prepare("SELECT * FROM demo_bet_tickets WHERE status='open' AND absolute_round<=? ORDER BY absolute_round LIMIT 100");
  $q->execute([$max]);$rows=$q->fetchAll();
  if(!$rows)return;
@@ -198,7 +202,7 @@ try {
        $now=absolute_round();
        if($round<=$now||$round>$now+4)error_out('Carrera no disponible',409);
        $anchor=(new DateTimeImmutable('2026-11-02 00:00:00',new DateTimeZone('America/Argentina/Buenos_Aires')))->getTimestamp();
-       if(time()>=$anchor+$round*180-5)error_out('Taquilla cerrada',409);
+       if(wallet_now()>=$anchor+$round*180-5)error_out('Taquilla cerrada',409);
        $ranking=fixture_positions()[$round%3360];
        $runner=$input['runner']??null;$market=$input['market']??null;
        if(!is_string($runner)||!in_array($runner,$ranking,true))error_out('Corredor fuera del fixture');
