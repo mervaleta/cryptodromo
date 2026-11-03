@@ -39,3 +39,11 @@ Para métricas de entidades distintas usar claves estables (`race:<id>`, `racer:
 
 ## Dependencias pendientes
 **Bloqueadores reales:** identidad/sesiones verificadas, tabla de usuarios definitiva, fuentes de eventos verificables y página de perfil unificada por los otros agentes. Por eso la rama está preparada, pero **no conectada ni desplegada**.
+
+## Integración con la versión más reciente (2026-11-02)
+- Se creó `/comunidad.html` con el catálogo público y una vista simulada **claramente identificada**. No simula logros reales de usuarios.
+- Los componentes se cargan como módulos aislados y conservan `assets/site-shell.css` y `assets/institutional.css` de `main`.
+- La rama parte de `main` después de los cambios del director de cámaras, densidad del estadio y panel de cámara. No se editó el motor 3D.
+- El backend PHP y la migración SQL se incluyen como **módulos de integración**, no se ejecutan ni exponen endpoints de asignación.
+- El endpoint legado `/api/auth.php` NO constituye una sesión segura. Antes de desbloquear logros reales se necesita verificar tokens de proveedor en servidor, emitir sesión HttpOnly/SameSite, CSRF para mutaciones, y confirmar tipo de `users.id`.
+- No ejecutar migraciones automáticamente en producción. La migración requiere una prueba previa en staging con la estructura real.
