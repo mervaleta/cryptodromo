@@ -6,6 +6,7 @@ on:
       - 'estadio/**'
       - 'index.html'
       - 'tests/stadium-world.mjs'
+      - 'tests/stadium-surfaces.mjs'
       - 'tests/stadium-live-integration.mjs'
       - 'visual-lab/scene.js'
       - 'visual-lab/stadiumDistrict.js'
@@ -19,6 +20,7 @@ on:
       - 'estadio/**'
       - 'index.html'
       - 'tests/stadium-world.mjs'
+      - 'tests/stadium-surfaces.mjs'
       - 'tests/stadium-live-integration.mjs'
       - 'visual-lab/**'
       - 'alpha15/**'
@@ -42,6 +44,7 @@ jobs:
           node --check visual-lab/stadiumDistrict.js
           node --check race-lab/source/src/stadium/presets.js
           node --check race-lab/source/src/stadium/venue.js
+          node --check race-lab/source/src/stadium/surfaces.js
       - name: Build race application
         working-directory: race-lab/source
         run: |
@@ -53,3 +56,5 @@ jobs:
         run: node --test tests/stadium-world.mjs
       - name: Validate alpha14 scenic adapter without touching race rules
         run: node --test tests/stadium-live-integration.mjs
+      - name: Validate procedural material generation
+        run: node --test tests/stadium-surfaces.mjs
