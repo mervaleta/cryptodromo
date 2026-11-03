@@ -36,7 +36,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,64);
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;scene.add(platform);
 
- let horse=null,selected=null,selection=0,disposed=false,variant='enhanced';
+ let horse=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile';
  const resize=()=>{
@@ -68,7 +68,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    next.setWind?.(candidate?wind:.55);
    if(candidate){next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.4);}
    scene.add(next.root);
-   const prev=horse;horse=next;prev?.dispose();
+   const prev=horse;horse=next;renderedSymbol=token.symbol;renderedVariant=candidate?'enhanced':'original';prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
   }
@@ -91,7 +91,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  return {
   select,pause,setVariant,setWind,setSpeed,setCamera,
   snapshot:()=>({
-   symbol:selected?.symbol||null,variant,paused,wind,speed,camera:cameraView,
+   symbol:renderedSymbol,variant:renderedVariant,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,camera:cameraView,
    originalAsset:true,jockey:false,maneEnabled:!!horse?.maneWindEnabled,
    maneMotion:horse?.maneMotion||0,clips:horse?.clips||[],
    hoofPhase:horse?.hoofPhase||0,drawCalls:renderer.info.render.calls
