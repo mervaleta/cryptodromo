@@ -6,7 +6,10 @@ const descriptions={star:'Los protagonistas más frecuentes del fixture, mezclad
 const $=s=>document.querySelector(s);
 let tier='all', selected=TOKEN_ROSTER.find(t=>t.symbol===location.hash.slice(1))||TOKEN_ROSTER[0], preview;
 // Explicit opt-in: one BTC experiment only. The normal 100-runner catalogue stays untouched.
-const btcAtelier=new URLSearchParams(location.search).get('atelier')==='btc';
+// BTC shows the approved pilot by default; ?atelier=off keeps an instant rollback.
+// Every other symbol continues to load its historical unmodified preview.
+const atelierMode=new URLSearchParams(location.search).get('atelier');
+const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='BTC');
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
 let atelierVariant='enhanced';
 function updateAtelierState(token){
