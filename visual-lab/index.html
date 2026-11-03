@@ -20,6 +20,7 @@ h1{font-family:Georgia,serif;font-size:clamp(30px,3.9vw,57px);font-weight:500;ma
 .broadcast{position:absolute;left:21px;top:20px;display:flex;gap:12px;align-items:center;z-index:2;font-size:11px;font-weight:900;letter-spacing:.13em;text-shadow:0 2px 6px #000}
 .broadcast span{padding:7px 11px;background:#0b1c17b8;border:1px solid #d6f3d138;border-radius:3px}
 .broadcast b{background:#bd2b2c;color:white;padding:8px 11px;border-radius:3px}
+.stage.is-presenting .dial{display:none!important}
 .dial{position:absolute;right:22px;top:18px;z-index:2;text-align:right;text-shadow:0 2px 5px #000}.dial div{font-size:11px;color:#dce6de;font-weight:800;letter-spacing:.18em}.dial strong{font-size:46px;font-weight:700;letter-spacing:-.07em;font-variant-numeric:tabular-nums}
 .lowerthird{position:absolute;bottom:0;left:0;right:0;padding:28px 21px 19px;z-index:2;background:linear-gradient(transparent,#06100bea 85%);display:flex;justify-content:space-between;align-items:end;gap:20px}
 .lowerthird strong{font-size:21px;letter-spacing:-.02em}.lowerthird p{margin:6px 0 0;color:#cfddcf;font-size:11px}
@@ -114,6 +115,7 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 .controlrow input:focus-visible,.controlrow select:focus-visible,.controlrow button:focus-visible,.top a:focus-visible{outline:2px solid #e0c383;outline-offset:2px}
 @media(max-width:860px){.top{align-items:flex-start;flex-direction:column}.top nav{gap:10px}.top nav a{font-size:10px}}
 </style>
+<link rel="stylesheet" href="/assets/camera-console.css?v=alpha17-1">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 <link rel="stylesheet" href="/visual-lab/trackSplitsPanel.css?v=alpha15-splits-1">
 </head><body>
@@ -148,6 +150,7 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <div class="race-tabs" role="tablist" aria-label="Panel de carrera y luces">
 <button type="button" class="active" role="tab" id="tab-race" aria-selected="true" aria-controls="panel-race">CARRERA / CLIMA</button>
 <button type="button" role="tab" id="tab-light" aria-selected="false" aria-controls="panel-light">✦ ILUMINACIÓN</button>
+<button type="button" role="tab" id="tab-camera" aria-selected="false" aria-controls="panel-camera">◉ CÁMARAS</button>
 </div>
 <div id="panel-race" role="tabpanel" aria-labelledby="tab-race"><div class="controlrow">
 <button class="primary" id="start" disabled hidden>▶ REPLAY MANUAL</button><span id="automatic-label" class="auto-label">● TRANSMISIÓN AUTOMÁTICA</span>
@@ -157,12 +160,12 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <label>VOLUMEN <input type="range" id="audio-volume" min="0" max="100" step="5" value="90" aria-label="Volumen del hipódromo"/></label>
 <label>CALIDAD 3D<select id="graphics-quality" aria-label="Calidad gráfica del estadio"><option value="auto">Automática (FPS)</option><option value="eco">Económica</option><option value="balanced">Equilibrada</option><option value="cinematic">Cinematográfica</option></select></label>
 <span class="auto-label" id="fps-readout" role="status">FPS · calculando</span>
-<label>CÁMARA<select id="camera"><option value="broadcast">Transmisión TV</option><option value="rail">A pie de pista</option><option value="aerial">Aérea fija · vista de carrera</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta</option><option value="leader">Líder · persecución</option><option value="pack">Pelotón · gran angular</option><option value="grandstand">Tribuna · fija</option><option value="orbit">Órbita del estadio</option></select></label>
+
 <label>TRAZADO<select id="layout"><option value="straight">Recta central</option><option value="s-bend">Curva en S</option><option value="oval">Óvalo completo</option></select></label>
 <label>SUPERFICIE<select id="surface"><option value="dirt">Tierra compactada</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
-<label>ZOOM / CAMPO VISUAL <output id="camera-zoom-label">50°</output><input id="camera-zoom" type="range" min="25" max="85" value="50" step="1" aria-label="Zoom campo visual"/></label>
-<label>ROTACIÓN DE CÁMARA <output id="camera-angle-label">0°</output><input id="camera-angle" type="range" min="-180" max="180" value="0" step="1" aria-label="Rotación horizontal de cámara"/></label>
-<label>ALTURA DE CÁMARA <output id="camera-height-label">0 m</output><input id="camera-height" type="range" min="-15" max="80" value="0" step="1" aria-label="Altura adicional de cámara"/></label>
+
+
+
 <label>NUBOSIDAD <output id="cloud-cover-label">52%</output><input id="cloud-cover" type="range" min="0" max="100" value="52" step="5" aria-label="Cobertura de nubes"/></label>
 <label>BRUMA / NIEBLA <output id="fog-intensity-label">100%</output><input id="fog-intensity" type="range" min="0" max="240" value="100" step="5" aria-label="Densidad de niebla ambiental"/></label>
 <label>ATMÓSFERA<select id="weather"><option value="auto">Automática · reloj del estadio</option><option value="golden">Atardecer</option><option value="noon">Pleno día</option><option value="night">Noche</option><option value="rain">Lluvia</option></select></label>
@@ -170,6 +173,31 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <label class="light-switch"><input id="daytime-auto" type="checkbox" checked/> SEGUIR HORA DEL ESTADIO</label>
 <label>LUZ NATURAL <output id="sunlight-label">100%</output><input id="sunlight" type="range" min="0" max="200" value="100" step="5" aria-label="Intensidad de la luz solar"/></label><span id="wet-state" class="auto-label" aria-live="polite">Humedad del estadio 0% · superficie seca</span>
 </div><p class="micro">Alpha 12: emisión automática cada tres minutos, pista de 780 unidades, humedad acumulativa, pisadas en curvas y presentación de doce fichas. Caballos sin jockey ni carteles flotantes, color del pelaje teñido por su marca, huellas y charcos. Pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></div>
+<div id="panel-camera" role="tabpanel" aria-labelledby="tab-camera" hidden>
+<div class="camera-deck" id="camera-deck">
+ <div class="camera-intro"><div><h3>Dirección de cámaras · Alpha 17</h3><p>Un solo panel para todas las vistas. Los ajustes son manuales y no cambian la carrera ni los resultados.</p></div><span class="camera-reading" id="camera-reading">CÁMARA · TV</span></div>
+ <div class="camera-grid">
+  <label>Vista / plano<select id="camera" aria-label="Plano de cámara"><option value="broadcast">Dirección TV automática</option><option value="rail">Railcam · a pie de pista</option><option value="low">Casco · plano bajo</option><option value="aerial">Cenital · óvalo entero</option><option value="overview">Panorámica del estadio</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta · foto finish</option><option value="startline">Puerta de largada</option><option value="side">Lateral · velocidad</option><option value="reverse">Contraplano</option><option value="leader">Líder · persecución</option><option value="pack">Pelotón · gran angular</option><option value="grandstand">Desde tribuna</option><option value="orbit">Órbita del estadio</option><option value="paddock">Paddock y edificios</option></select></label>
+  <label>Giro horizontal <output id="camera-angle-label">0°</output><input id="camera-angle" data-camera-field="yaw" data-unit="°" data-default="0" type="range" min="-180" max="180" value="0" step="1" aria-label="Giro horizontal"/></label>
+  <label>Inclinación vertical <output id="camera-pitch-label">0°</output><input id="camera-pitch" data-camera-field="pitch" data-unit="°" data-default="0" type="range" min="-75" max="75" value="0" step="1" aria-label="Ángulo vertical"/></label>
+  <label>Altura adicional <output id="camera-height-label">0 m</output><input id="camera-height" data-camera-field="height" data-unit=" m" data-default="0" type="range" min="-20" max="140" value="0" step="1" aria-label="Altura de cámara"/></label>
+  <label>Acercamiento / Dolly <output id="camera-distance-label">100%</output><input id="camera-distance" data-camera-field="distance" data-format="percent" data-default="100" type="range" min="30" max="340" step="5" value="100" aria-label="Distancia de cámara; menor es más cerca"/></label>
+  <label>Óptica / Zoom <output id="camera-zoom-label">50°</output><input id="camera-zoom" data-camera-field="fov" data-unit="°" data-default="50" type="range" min="18" max="90" step="1" value="50" aria-label="Campo visual en grados; menor es mayor zoom"/></label>
+  <label>Desplazamiento lateral <output id="camera-lateral-label">0 m</output><input id="camera-lateral" data-camera-field="lateral" data-unit=" m" data-default="0" type="range" min="-90" max="90" step="1" value="0" aria-label="Desplazamiento horizontal sin cambiar el objetivo"/></label>
+ </div>
+ <div class="camera-divider"></div>
+ <div class="camera-heading">Control fino de la toma</div>
+ <div class="camera-nudge" aria-label="Movimiento manual de la cámara">
+  <button type="button" data-camera-nudge="yaw:-12" aria-label="Girar a izquierda">↶</button>
+  <button type="button" data-camera-nudge="yaw:12" aria-label="Girar a derecha">↷</button>
+  <button type="button" data-camera-nudge="pitch:8" aria-label="Elevar ángulo">↑</button>
+  <button type="button" data-camera-nudge="pitch:-8" aria-label="Bajar ángulo">↓</button>
+  <button type="button" data-camera-nudge="distance:-15" aria-label="Acercar cámara">＋</button>
+  <button type="button" data-camera-nudge="distance:15" aria-label="Alejar cámara">−</button>
+ </div>
+ <div class="camera-quick"><button type="button" data-camera-reset id="camera-reset">↺ Restablecer encuadre</button><button type="button" id="camera-view-front">Vista del frente</button><button type="button" id="camera-view-top">Vista cenital</button><button type="button" id="camera-view-ground">A nivel de pista</button></div>
+ <p class="camera-hint">Arrastrá sobre la imagen para girar e inclinar. Rueda: acercamiento real de cámara. Ctrl + rueda: zoom óptico. El control de altura es independiente de ambos.</p>
+</div></div>
 <div id="panel-light" role="tabpanel" aria-labelledby="tab-light" hidden>
 <div class="light-controls"><label class="light-switch"><input type="checkbox" id="light-power" checked/> REFLECTORES ENCENDIDOS</label>
 <label>POTENCIA / DIMMER <span id="light-level" aria-live="polite">84%</span><input id="light-dimmer" type="range" min="0" max="100" value="84" step="1"/></label>
