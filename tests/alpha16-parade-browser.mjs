@@ -38,8 +38,15 @@ try{
  await page.locator('body').click({position:{x:14,y:200}});
  const poseBefore=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
  await page.keyboard.down('ArrowUp');
- await page.waitForTimeout(900);
- await page.keyboard.up('ArrowUp');
+ try{
+  // SwiftShader CI can render < 2 FPS while compiling the wind-mane material.
+  // Check actual world-space motion rather than assuming 900ms always gives
+  // enough animation frames. This still fails if the arrow control is broken.
+  await page.waitForFunction(before=>{
+   const now=window.__cryptodromoParadeQA?.snapshot().drone;
+   return now&&Math.hypot(now.x-before.x,now.z-before.z)>2;
+  },poseBefore,{timeout:12000,polling:150});
+ }finally{await page.keyboard.up('ArrowUp');}
  const poseAfter=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
  assert.ok(Math.hypot(poseAfter.x-poseBefore.x,poseAfter.z-poseBefore.z)>2,'Drone did not advance with arrows');
  await page.locator('#height').evaluate(el=>{el.value='130';el.dispatchEvent(new Event('input',{bubbles:true}));});
