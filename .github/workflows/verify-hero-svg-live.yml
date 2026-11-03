@@ -19,7 +19,7 @@ jobs:
             file=$(mktemp)
             status=$(curl -L -sS --max-time 17 -o "$file" -w '%{http_code}' "https://race.cryptodromo.com/laboratorio/btc-hero-horse.html?preview=7059c6d-$attempt" || true)
             echo "Attempt $attempt HTTP $status"
-            if [ "$status" = 200 ] && grep -q 'BTC . Hero Horse' "$file" && grep -q 'generateGroom()' "$file" && grep -q 'EXPERIMENTAL' "$file"; then
+            if [ "$status" = 200 ] && grep -q 'BTC . Hero Horse' "$file" && grep -q 'generateGroom()' "$file" && grep -q 'PROTOTIPO SVG' "$file"; then
               echo "::notice::BTC Hero SVG experimental preview is deployed"
               ready=1
               rm -f "$file"
