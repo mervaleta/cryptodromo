@@ -1,0 +1,33 @@
+name: Grand Prix 3D browser smoke
+on:
+  pull_request:
+    paths:
+      - 'grandes-premios/replay-3d/**'
+      - 'tests/grand-prix-3d-browser.mjs'
+      - '.github/workflows/grand-prix-3d-browser.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'grandes-premios/replay-3d/**'
+      - 'tests/grand-prix-3d-browser.mjs'
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Start site without changing files
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/gp-server.log 2>&1 &
+          sleep 2
+      - name: Check race director and 3D scene
+        run: |
+          node --check grandes-premios/replay-3d/replay3d.js
+          node tests/grand-prix-3d-browser.mjs
