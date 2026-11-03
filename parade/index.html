@@ -45,6 +45,11 @@
 .notice{margin-top:14px;border-left:3px solid var(--gold);padding:12px 18px;background:#23281e;color:#e3d3ac;font-size:12px;line-height:1.6}
 @media(max-width:1100px){.cockpit{grid-template-columns:1fr}.controls-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){.controls-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.drift{right:8px;bottom:8px;grid-template-columns:repeat(3,40px)}.drift button{min-width:38px;min-height:37px}.headline h1{font-size:41px}.overlay{left:9px;right:9px;top:9px}.hud{padding:8px}.hud small{font-size:9px}}
+
+/* Float pad only on touch screens or by explicit desktop opt-in. */
+.drift{display:none}
+.drift.is-visible{display:grid}
+@media(pointer:coarse){.drift{display:grid}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head>
@@ -64,7 +69,7 @@
 <div class="hud"><small>DESFILE EN EL ÓVALO</small><strong id="wave-label">Cargando caballos…</strong><small id="parade-status">Iniciando escena 3D</small></div>
 <div class="hud" style="text-align:right"><small>DRON / RENDIMIENTO</small><strong id="fps">FPS …</strong><small id="camera-readout">Altura 100 m · 48°</small></div>
 </div>
-<div class="drift" role="group" aria-label="Controles táctiles del dron">
+<div class="drift" id="drone-pad" role="group" aria-label="Controles táctiles del dron">
 <div></div><button type="button" data-move="ArrowUp" aria-label="Avanzar">↑</button><div></div>
 <button type="button" data-move="ArrowLeft" aria-label="Desplazarse a la izquierda">←</button>
 <button type="button" data-move="ArrowDown" aria-label="Retroceder">↓</button>
@@ -123,7 +128,7 @@
 <button type="button" data-camera-nudge="distance:-12" aria-label="Acercar">＋</button>
 <button type="button" data-camera-nudge="distance:12" aria-label="Alejar">−</button>
 </div>
-<div class="camera-quick"><button type="button" data-camera-reset id="reset-drone">↺ Restablecer dron</button><button type="button" id="visit-sight">Visitar lugar elegido</button></div>
+<div class="camera-quick"><button type="button" data-camera-reset id="reset-drone">↺ Restablecer dron</button><button type="button" id="visit-sight">Visitar lugar elegido</button><button type="button" id="toggle-camera-pad" aria-controls="drone-pad" aria-pressed="false">Mostrar mandos táctiles</button></div>
 <p class="camera-hint">Arrastrá sobre el estadio para girar e inclinar. Rueda: acercamiento físico. Ctrl + rueda: zoom óptico. Flechas/WASD: mover. Q/E: giro; R/F: subir/bajar; T/G: inclinación; Shift: acelerar. Los ajustes permanecen disponibles también al seguir un caballo.</p>
 </section>
 </div>
