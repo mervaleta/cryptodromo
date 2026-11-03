@@ -45,7 +45,7 @@ export function makeOrganicLoft(THREE,sections,{rings=16,sides=14,bulge=0}={}){
  }
  for(let i=0;i<R;i++)for(let j=0;j<S;j++){
   const a=i*(S+1)+j,b=(i+1)*(S+1)+j;
-  indices.push(a,b,a+1,b,b+1,a+1);
+  indices.push(a,a+1,b,b,a+1,b+1);
  }
  const geo=new THREE.BufferGeometry();
  geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
