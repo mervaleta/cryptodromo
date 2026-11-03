@@ -22,6 +22,7 @@ jobs:
         run: |
           node --check racers/btc-atelier-preview.js
           node --check racers/btc-hair-v15.js
+          node --check racers/btc-hero-groom-v2.js
           node --check racers/racers.js
           node --test tests/btc-horse-atelier-contract.mjs tests/btc-hair-v15-contract.mjs
       - name: Install browser
@@ -40,5 +41,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: btc-atelier-stage
-          path: artifacts/btc-mane-tail-v15-preview.png
+          path: artifacts/btc-3d-groom-v2-preview.png
           if-no-files-found: ignore
