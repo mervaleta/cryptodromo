@@ -72,7 +72,7 @@ try {
   await fallback.route('**/assets/stadium-network-ui.js*',route=>route.abort());
   await fallback.goto(base+'/stadiums/fixture/',{waitUntil:'domcontentloaded',timeout:30000});
   await fallback.getByText('No se pudo cargar esta sección.').waitFor({timeout:12500});
-  assert.equal(await fallback.locator('a[href="/fixture/"]').count(),1);
+  assert.equal(await fallback.locator('#world-app a[href="/fixture/"]').count(),1);
   console.log('WORLD_FALLBACK_OK');
   await fallback.close();
 }finally{
