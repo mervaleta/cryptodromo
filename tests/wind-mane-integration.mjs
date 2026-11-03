@@ -24,9 +24,9 @@ test('weather changes mane wind only, never the official scoring or race time',(
 });
 test('public entrypoints invalidate cached horse imports across the three modes',()=>{
  const expected=[
-  ['index.html','scene.js?v=alpha16-village-2-mane1'],
-  ['visual-lab/index.html','scene.js?v=alpha16-village-2-mane1'],
-  ['parade/index.html','parade.js?v=alpha16-tour-4-mane1'],
+  ['index.html','scene.js?v=alpha18-camera-density-mane-1'],
+  ['visual-lab/index.html','scene.js?v=alpha18-camera-density-mane-1'],
+  ['parade/index.html','parade.js?v=alpha18-camera-density-mane-1'],
   ['racers/index.html','racers.js?v=alpha16-mane-1'],
   ['racers/racers.js','horse-preview.js?v=alpha16-mane-1']
  ];
