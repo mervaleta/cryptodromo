@@ -53,3 +53,15 @@ The above is a **handoff snippet, not a drop-in copy**: `entries` is not availab
 
 ## Graphics direction
 Metal with roughness/metalness, truss, mechanical outward opening, legible colored bib/number signs, shot-by-shot presentation and optional dust/hit audio via **existing** broadcastFX/audio systems. Keep Photo Finish Live as visual inspiration, not an asset source. For true AAA, still need high-end horse assets, PBR textures, tuned contact shadows, polished FX and camera-grade shots.
+
+
+## Additional Alpha20 staging work (November 2)
+- `visual-lab/gateChoreography.js` now exports `horseStartOffset`, `gateVisualState` and `applyGateStaging`. During presentation, the GLB root shifts -3.2 visual units behind the current start. It eases back onto the **unchanged official trackPoint** during the first 1.2 seconds.
+- Door motion completes by 0.72 seconds. Never stall or mutate the official simulation while the 3D doors animate.
+- Call `applyGateStaging` **AFTER** the existing loop that positions all horses with `trackPoint` inside `animate`, otherwise it will be overwritten by the per-frame race placement. For presentation, call it as a separate visual staging pass after `setRace` places Idle models.
+- At `t>=1.2` the offset equals exactly 0; call the gate update continuously even when offset is zero, to keep doors correctly opened on mid-race tune-in. Rewind/nextRace should reset door timing.
+- Alpha19 may curve the course near the start. The current offset is X-axis only because Alpha18's starting straight is +X. If integrating Alpha19, compute backward offset from the track tangent and place gates at each course's starting heading rather than sharing a single world-X assembly.
+- This does not yet solve per-horse clipping of heads/tails at closed doors; test the actual GLB in every Idle/Gallop phase at the physical stall.
+- `tests/alpha20-gate-choreography.mjs` checks that the pure visual shift never changes stored progress or official velocity. `.github/workflows/alpha20-gates.yml` runs the contract tests and parse checks upon a matching PR event.
+- **Open issue before merge:** current numeric signs are rendered on top of 3D color placards; check contrast and badge text readability at broadcast camera distances.
+- **Unverified:** no browser/WebGL screenshot test, FPS benchmark or real-world clipping check has been performed for Alpha20. Tests have been added to CI but do not imply success until the check runs.
