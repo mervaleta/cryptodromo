@@ -6,6 +6,7 @@ import {reframeCamera,countdownVisibility} from './cameraRig.js?v=alpha17-1';
 import {bindCameraPanel} from './cameraPanel.js?v=alpha17-1';
 import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
+import {mountGrandPrixCeremony} from '../sports/grandPrixCeremony.js?v=gp-ceremony-v1';
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
@@ -336,6 +337,7 @@ let maneWind=.55; // matches stadium cloud wind; never affects the race engine
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
 let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
 const finishController=createFinishOrchestrator({holdAfterLast:2.4,maxVisualSeconds:19});
+const grandPrixCeremony=mountGrandPrixCeremony({container:resultsOverlay});
 const tvDirector=createBroadcastDirector({minDwell:5.5});
 let selectedTvShot='pack',lastDirectorUpdate=-Infinity;
 const biographyStats=buildRosterStats();
@@ -361,6 +363,7 @@ function showOfficialResult(){
  finishCelebration.hidden=true;
  resultMeta.textContent='12 CABALLOS · VENTAJA '+stats.leadGapMeters.toFixed(2)+
    ' m · '+race.day+'ª JORNADA · DATOS SINTÉTICOS';
+ grandPrixCeremony.show(finishController.state); // only after 12 crossed and official overlay was authorized
  resultsOverlay.hidden=false;requestAnimationFrame(()=>resultsOverlay.classList.add('is-visible'));
  if(!liveFollowing)start.textContent='▶ SIGUIENTE CARRERA';
  speakBroadcast(narrateEvent({type:'finish',leader:stats.leader}));
@@ -408,7 +411,8 @@ function setRace(index){
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
  lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
- finishController.reset();tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
+ finishController.reset();grandPrixCeremony.reset({dayIndex:race.day-1,slotIndex:race.number-1});
+ tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
  finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
