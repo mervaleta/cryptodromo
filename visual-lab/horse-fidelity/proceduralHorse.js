@@ -10,6 +10,7 @@ import {createAnalyticFurMaterial,makeSurfaceMaterial,verifyTextureFreeMaterial}
 import {createProceduralGroom} from './horseGroom.js';
 import {createGeometricRaceLivery} from './horseRaceLivery.js';
 import {gallopLegPose} from './horseGaitIK.js';
+import {createProceduralJockey} from './horseJockey.js';
 
 const TAU=Math.PI*2;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,Number.isFinite(x)?x:a));
@@ -179,11 +180,14 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   maneStyle:options.maneStyle,tailStyle:options.tailStyle,color:coatDef.mane});
  const raceCloth=createGeometricRaceLivery({THREE,parent:body,quality:gq,
   number:Math.max(1,Math.min(99,Number(options.number)||1)),accent:options.accent});
+ const jockey=createProceduralJockey({THREE,parent:body,quality:gq,
+  accent:options.accent,visible:options.jockey!==false});
 
  let mode='Idle',time=0,idleClock=0,hoofPhase=0,bankGoal=0,wind=.5,wetness=options.wetness,
   mud=options.mud,blend=0,disposed=false,
   gaitStyle=options.gaitStyle==='swing'?'swing':'ik',
-  profileCurrent={...options,gaitStyle:options.gaitStyle==='swing'?'swing':'ik'};
+  profileCurrent={...options,gaitStyle:options.gaitStyle==='swing'?'swing':'ik',
+   jockey:options.jockey!==false};
  const reducedMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
  const maxGait=1.75;
  function update(delta=0,speed=1){
@@ -223,6 +227,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   headPivot.rotation.z=amount*.024*Math.sin(TAU*(phase-.2));
   const airflow=reduced?0:clamp(wind+.45*rate*amount,0,2);
   groom.update(dt,{phase,speed:amount*rate,windSpeed:airflow,activeMotion:!reduced});
+  jockey.update(phase,amount);
  }
  function setAppearance({coat:nextCoat,accent:nextAccent,marking:nextMark,
   maneStyle:nextMane,tailStyle:nextTail,number:nextNumber,wetness:nextWet,mud:nextMud}={}){
@@ -231,7 +236,8 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   const customCoat=typeof nextCoat==='string'&&/^#[0-9a-f]{6}$/i.test(nextCoat)?nextCoat:null;
   skin.setLook({color:customCoat||colors.coat});
   muzzle.color.set(colors.muzzle);hoof.color.set(colors.hoof);
-  if(nextAccent){accentMat.color.set(nextAccent);raceCloth.setAccent(nextAccent);}
+  if(nextAccent){accentMat.color.set(nextAccent);raceCloth.setAccent(nextAccent);
+   jockey.setAccent(nextAccent);}
   if(nextNumber!==undefined)raceCloth.setNumber(nextNumber);
   groom.setAppearance({maneColor:colors.mane,style:nextMane,tail:nextTail});
   if(nextMark!==undefined)setMarking(nextMark);
@@ -260,6 +266,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
    skin.material.roughness=mode==='high'?.71:mode==='eco'?.86:.77;
   }
  }
+ function setJockeyVisible(value){jockey.setVisible(value);profileCurrent.jockey=!!value;}
  function setGaitStyle(value){gaitStyle=value==='swing'?'swing':'ik';
   profileCurrent.gaitStyle=gaitStyle;}
  function setCoatFinish(level=0){
@@ -270,7 +277,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
  function reset(){time=0;idleClock=0;hoofPhase=0;blend=0;bodyPivot.rotation.set(0,0,0);
   for(const leg of legs){leg.upper.rotation.z=0;leg.knee.rotation.z=0;leg.fetlock.rotation.z=0;}}
  function dispose(){
-  if(disposed)return;disposed=true;groom.dispose();raceCloth.dispose();
+  if(disposed)return;disposed=true;groom.dispose();raceCloth.dispose();jockey.dispose();
   for(const g of geometries)g.dispose();
   skin.dispose();for(const mat of materials)mat.dispose();
   root.removeFromParent();root.clear();
@@ -282,7 +289,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   get shapeStats(){return {...geometryStats(root),hairStrands:groom.strandTotal}},
   get isTextureFree(){return verifyTextureFreeMaterial(root).textureFree},
   play(name='Gallop'){if(!['Idle','Walk','Gallop'].includes(name))return;mode=name;},
-  setAppearance,setWetness,setMud,setVisualQuality,setCoatFinish,setGaitStyle,
+  setAppearance,setWetness,setMud,setVisualQuality,setCoatFinish,setGaitStyle,setJockeyVisible,
   setWind(value){wind=clamp(Number(value),0,2);},
   setBank(radians){bankGoal=clamp(Number(radians),-.12,.12);},
   update,reset,dispose
