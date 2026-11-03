@@ -94,3 +94,14 @@ test('additive bone corrections are fully reversible across horse mixer updates'
  assert.ok(Object.values(bones).every(b=>Math.abs(b.quaternion.v)<.00000001));
  director.dispose();
 });
+
+
+test('GLB-only follow-through does not overwrite Alpha20 or Alpha22 generated skeletons',()=>{
+ const code=read('racePolishKit');
+ assert.match(code,/horse\.procedural!==true&&horse\.generated!==true/);
+ assert.match(code,/if\(legacyRig\)body\.beforeUpdate/);
+ assert.match(code,/if\(legacyRig\)body\.afterUpdate/);
+ assert.equal((code.match(/horse\.update\(delta,/g)||[]).length,1,
+  'exactly one horse animation update for any renderer');
+ assert.doesNotMatch(code,/horse\.root\.position\.(set|x\s*=|z\s*=)/);
+});
