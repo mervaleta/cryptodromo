@@ -45,3 +45,7 @@ CI: .github/workflows/sports-season-clubs.yml. Además realizar QA visual en mó
 - Persistencia real en temporadas con resultados de fuentes NO sintéticas requiere una base de actas efectivamente emitidas, mercado auditable, servidores autenticados y firmas. Esta demo no reemplaza eso.
 - No se verificó la publicación final en Hostinger.
 - Nunca liquidar apuestas monetarias contra fixture precomputado y conocido.
+
+
+### 6. Resultado del preflight Alpha17 de cámaras
+Al abrir la PR #37, el job camera-qa falló en tests/alpha17-camera-browser.mjs línea 67, comprobación de que el dial vuelve a ser visible tras la función previewPresentation().resume(). El método resume() en visual-lab/scene.js conserva exactamente el mismo contenido en main y en esta rama: oculta la presentación, activa liveFollowing y llama updateLiveProgram(). Si el reloj del estadio se encuentra en la ventana de presentación, updateLiveProgram() vuelve a mostrarla inmediatamente, de modo que el test puede ser dependiente de la hora. No cambiar ese comportamiento al integrar esta entrega sin coordinar con el dueño de cámaras. Las verificaciones deportivas y el smoke de clubes/temporadas sí pasaron. Revalidar la suite Alpha17 en la base definitiva y evitar relajar su aserción sin corregir la sincronización del test.
