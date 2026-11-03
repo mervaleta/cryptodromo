@@ -52,7 +52,7 @@
 /* Touch visibility is initialized from pointer capabilities in parade.js. */
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
-<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script></head>
+<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script><link rel="stylesheet" href="/assets/crp-visual-cockpit.css?v=visual2"></head>
 <body>
 <header class="sitebar"><div class="sitebar-inner">
 <a class="brand-link" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO</a>
@@ -105,7 +105,7 @@
 <div class="bar" role="progressbar" aria-label="Progreso del grupo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><span id="progress-inner"></span></div>
 <div class="pills" id="runner-list" aria-label="Caballos en el desfile"></div>
 </section>
-<section class="camera-deck" id="parade-camera-deck" aria-label="Consola unificada de cámaras">
+<div id="crp-visual-controls" aria-label="Ajustes visuales avanzados" style="margin:18px 0"></div><section class="camera-deck" id="parade-camera-deck" aria-label="Consola unificada de cámaras">
 <div class="camera-intro"><div><h3>Dirección de cámaras · Parade</h3><p>Mismos ejes que en LIVE: desplazamiento, encuadre, perspectiva y lente se ajustan por separado.</p></div><span class="camera-reading" id="camera-readout-panel">VISTA · LIBRE</span></div>
 <div class="camera-grid">
 <label>Modo de cámara<select id="camera-mode"><option value="free">Dron · vuelo libre</option><option value="orbit">Órbita arquitectónica</option><option value="follow">Seguir caballo</option><option value="crane">Grúa aérea · óvalo</option></select></label>
