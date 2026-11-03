@@ -19,6 +19,8 @@ session_set_cookie_params([
     'samesite' => 'Lax'
 ]);
 ini_set('session.use_strict_mode', '1');
+// Intentar conservar la identidad demo durante la vida de la cookie (30 días).
+ini_set('session.gc_maxlifetime', (string)(60 * 60 * 24 * 30));
 session_start();
 if (!isset($_SESSION['stable_guest'])) $_SESSION['stable_guest'] = bin2hex(random_bytes(16));
 if (!isset($_SESSION['stable_csrf'])) $_SESSION['stable_csrf'] = bin2hex(random_bytes(24));
