@@ -93,7 +93,7 @@ ovalTrack();
 const village=createParadeVillage(scene,{quality:'balanced'});
 const district=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',quality:'balanced'});
 const softLighting=createSoftStadiumLighting({THREE,scene,quality:mobile||softwareGPU?'low':'balanced'});
-const horseSurfaceSettings={quality:'balanced',wetness:0,finish:.35,wind:.5};
+const horseSurfaceSettings={quality:'balanced',wetness:0,finish:.35,wind:null};
 const visualEnvironment={exposure:1,fog:1};
 let baseFogDensity=.00145;
 const parade=createParadeController({pace:3.2});
@@ -170,7 +170,7 @@ function lighting(){
  for(const horse of horseModels)horse.setWetness?.(horseSurfaceSettings.wetness);
  paradeManeWind=wet?1.25:.5;
  clouds.configure({cover:wet?.8:night?.42:.34,night,rain:wet,sunset,wind:paradeManeWind});
- for(const horse of horseModels)horse.setWind?.(horseSurfaceSettings.wind);
+ for(const horse of horseModels){horse.setWind?.(paradeManeWind);if(horseSurfaceSettings.wind!==null)horse.setWind?.(horseSurfaceSettings.wind);}
 }
 for(const key of ['weather','daytime','daytime-auto','lights'])
  $(key).addEventListener('input',()=>{
@@ -361,7 +361,7 @@ addEventListener('keydown',event=>{
 });
 syncControls();
 const finishControls={
- get settings(){return {...horseSurfaceSettings}},
+ get settings(){return {...horseSurfaceSettings,wind:horseSurfaceSettings.wind??paradeManeWind}},
  setQuality(value){horseSurfaceSettings.quality=value;horseModels.forEach(h=>h.setVisualQuality?.(value));},
  setWetness(value){horseSurfaceSettings.wetness=value;horseModels.forEach(h=>h.setWetness?.(value));},
  setFinish(value){horseSurfaceSettings.finish=value;horseModels.forEach(h=>h.setCoatFinish?.(value));},
@@ -398,7 +398,8 @@ async function loadModels(){
     coat:runner?.coat||'#996b54',accent:runner?.color||'#e5c68e',
     symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk',maneGait:'Walk'
    });
-   horse.setWind?.(horseSurfaceSettings.wind);
+   horse.setWind?.(paradeManeWind);
+   if(horseSurfaceSettings.wind!==null)horse.setWind?.(horseSurfaceSettings.wind);
    horse.setVisualQuality?.(horseSurfaceSettings.quality);
    horse.setCoatFinish?.(horseSurfaceSettings.finish);
    horse.setWetness?.(horseSurfaceSettings.wetness);
