@@ -50,9 +50,15 @@ test('all Alpha22 horse files are procedural and no external meshes',()=>{
   assert.doesNotMatch(source,/\b(fetch\s*\(|GLTFLoader|OBJLoader|TextureLoader|\.png['"]|\.jpe?g['"])\b/);
  }
 });
-test('LIVE integration stays untouched in this staging branch',()=>{
+test('Alpha22 attaches through the existing LIVE horse facade without a duplicate race loop',()=>{
  const scene=readFileSync(new URL('../visual-lab/scene.js',import.meta.url),'utf8');
+ const bridge=readFileSync(new URL('../visual-lab/horseRenderer.js',import.meta.url),'utf8');
  assert.ok(!scene.includes('horse-fidelity/proceduralHorse.js'));
+ assert.match(scene,/import \{createHorse,selectedHorseRenderer\}/);
+ assert.match(bridge,/createAlpha22RaceHorse/);
+ assert.match(bridge,/createProceduralRaceHorse/);
+ assert.equal((scene.match(/applyGateStaging\(\{horses,gate:gateKit/g)||[]).length,1);
+ assert.equal((scene.match(/for\(const h of horses\)h\.model\.update\(/g)||[]).length,1);
 });
 
 test('generated horse race numbers are deterministic geometry, never painted bitmap',()=>{
