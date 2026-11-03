@@ -160,7 +160,7 @@ export function createBTC3DHeroGroom(root,options={}){
  mesh.bindMatrixInverse.copy(original.bindMatrixInverse);
  let disposed=false;
  return {
-  get snapshot(){return {version:HERO_GROOM_VERSION,locks:settings.maneLocks+settings.tailLocks,
+  get snapshot(){return {version:HERO_GROOM_VERSION,locks:settings.maneLocks+settings.tailLocks+42,
     maneLocks:settings.maneLocks,tailLocks:settings.tailLocks,fineManeLocks:24,fineTailLocks:18,
     vertices:geometry.attributes.position.count,
     modelPreserved:true,jockey:false,disposed};},
