@@ -34,21 +34,19 @@ test('horses, jerseys, numbered saddlecloths and gait are generated without exte
  assert.match(horse,/setVisualQuality/);
  assert.match(horse,/h\.mesh\.rotation\.z=h\.base\+/);
 });
-test('visual renderer opt in, fallback and Alpha20 gate contracts preserved',()=>{
- assert.match(renderer,/selectedHorseRenderer/);
- assert.match(renderer,/createLegacyHorse/);
- assert.match(renderer,/createProceduralRaceHorse/);
+test('official homepage always uses Fidelity and preserves race choreography',()=>{
+ assert.match(renderer,/return 'fidelity'/);
+ assert.match(renderer,/createAlpha22RaceHorse/);
+ assert.doesNotMatch(renderer,/return createLegacyHorse|return createProceduralRaceHorse/);
  assert.match(scene,/horseEngineMode=selectedHorseRenderer\(location\.search\)/);
- assert.match(scene,/stallNumber:i\+1/);
+ assert.match(scene,/createCinematicLineup\(\{entries,coats:horseCoats,createHorse\}\)/);
+ assert.match(read('visual-lab/cinematicLineup.js'),/stallNumber:index\+1/);
  assert.match(scene,/const world=trackPoint\(layoutMode,pr,i\)/);
  assert.match(scene,/h\.model\.root\.position\.set\(world\.x,0,world\.z\)/);
  assert.match(scene,/applyGateStaging\(\{horses,gate:gateKit/);
- for(const file of ['index.html','visual-lab/index.html']) {
-  const html=read(file);
-  assert.match(html,/id="horse-engine"/);
-  assert.match(html,/value="legacy"/);
-  assert.match(html,/value="procedural"/);
- }
+ assert.match(read('index.html'),/id="horse-engine" hidden/);
+ assert.match(read('index.html'),/value="fidelity" selected/);
+ assert.doesNotMatch(read('assets/crp-global-nav.js'),/Visual Lab|Modo Parade|Laboratorio/);
 });
 test('GPU turf, soil and rain do not need texture files or change race results',()=>{
  assert.match(ground,/onBeforeCompile/);
@@ -61,26 +59,17 @@ test('GPU turf, soil and rain do not need texture files or change race results',
  assert.doesNotMatch(horse,/createOfficialRace|officialRanking|PRICE_FIXTURE|broadcastPosition/);
 });
 
-test('Alpha22 fidelity builds on top of Alpha20 without removing legacy modes',()=>{
+test('Alpha22 remains canonical and all presentation quality is cinematic',()=>{
  const adapter=read('visual-lab/horse-fidelity/horseAdapter.js');
  const fidelity=read('visual-lab/horse-fidelity/proceduralHorse.js');
- assert.match(renderer,/requested==='fidelity'/);
- assert.match(renderer,/requested==='procedural'/);
- assert.match(renderer,/createAlpha22RaceHorse/);
- assert.match(renderer,/return createLegacyHorse\(options\)/);
  assert.match(adapter,/createAlpha22RaceHorse/);
- assert.match(fidelity,/setVisualQuality/);
- assert.match(fidelity,/setWetness/);
- assert.match(fidelity,/setBank/);
- assert.match(fidelity,/hoofPhase/);
+ for(const key of ['setVisualQuality','setWetness','setBank','hoofPhase'])
+  assert.ok(fidelity.includes(key));
  assert.match(scene,/horseEngineMode!=='legacy'\?installProceduralGround/);
- assert.match(scene,/stallNumber:i\+1/);
- assert.match(scene,/number:i\+1/);
- for(const page of ['index.html','visual-lab/index.html']){
-  const html=read(page);
-  assert.match(html,/value="legacy"/);
-  assert.match(html,/value="procedural"/);
-  assert.match(html,/value="fidelity"/);
- }
+ assert.match(scene,/graphicsModeSelect.value='cinematic'/);
+ assert.match(scene,/new THREE.WebGLRenderer\(\{canvas,antialias:true/);
+ assert.match(scene,/renderer.shadowMap.enabled=true/);
+ assert.doesNotMatch(scene,/new THREE.SphereGeometry\(\.95,12,9\)/);
+ assert.match(read('index.html'),/id="graphics-quality" hidden/);
  assert.doesNotMatch(fidelity,/createOfficialRace|PRICE_FIXTURE|officialRanking|broadcastPosition/);
 });

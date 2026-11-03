@@ -6,7 +6,7 @@ import {reframeCamera,countdownVisibility} from './cameraRig.js?v=alpha17-1';
 import {bindCameraPanel} from './cameraPanel.js?v=alpha17-1';
 import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
-import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
+import {rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=alpha18-1';
@@ -21,6 +21,7 @@ import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1'
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
 import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha22-fidelity-1';
+import {createCinematicLineup} from './cinematicLineup.js?v=home-cine-1';
 import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
@@ -37,17 +38,9 @@ const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL
 // Visual effects and frame rate are deliberately isolated from the finance engine.
 const canvas=document.getElementById('raceCanvas'), stage=document.getElementById('stage');
 const horseEngineMode=selectedHorseRenderer(location.search);
+// One public renderer, no UI or query-string backend switching.
 const horseEngineControl=document.querySelector('#horse-engine');
-if(horseEngineControl){
- horseEngineControl.value=horseEngineMode;
- horseEngineControl.addEventListener('change',()=>{
-  const next=new URL(location.href);
-  const selected=horseEngineControl.value;
-  if(selected==='procedural'||selected==='fidelity')next.searchParams.set('horse-engine',selected);
-  else next.searchParams.delete('horse-engine');
-  location.assign(next.href);
- });
-}
+if(horseEngineControl)horseEngineControl.value='fidelity';
 const clockEl=document.getElementById('clock'),status=document.getElementById('status'),leaderEl=document.getElementById('leader');
 const start=document.getElementById('start'),resetButton=document.getElementById('reset');
 const nextButton=document.getElementById('next'),camSelect=document.getElementById('camera'),weatherSelect=document.getElementById('weather');
@@ -76,19 +69,13 @@ soundButton.addEventListener('click',()=>{
  soundButton.setAttribute('aria-pressed',String(soundtrack.enabled));
 });
 document.querySelector('#result-close').addEventListener('click',()=>{resultsOverlay.classList.remove('is-visible');resultsOverlay.hidden=true;});
-const mobile=matchMedia('(max-width:700px)').matches;
 let renderer;
-try {renderer=new THREE.WebGLRenderer({canvas,antialias:!mobile,powerPreference:'high-performance'});}
+try {renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}
 catch(e){status.textContent='NECESITÁS WEBGL PARA ESTA VISTA';msg.textContent=String(e);throw e;}
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-// Preserve high quality on dedicated GPUs, but make headless/CPU and entry-level
-// renderers viable. The engine clock is independent of graphics quality.
-const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');
-const gpuName=String(ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER));
-const softwareGPU=/swiftshader|llvmpipe|software|lavapipe/i.test(gpuName);
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,softwareGPU?.78:mobile?1.10:1.42));
-renderer.shadowMap.enabled=!softwareGPU;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
+renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#a5bbc3');
@@ -99,14 +86,14 @@ sky.material.uniforms.turbidity.value=5.5;
 sky.material.uniforms.rayleigh.value=2.1;
 sky.material.uniforms.mieCoefficient.value=.005;
 sky.material.uniforms.mieDirectionalG.value=.81;
-const cloudLayer=createCloudLayer(scene,{mobile,softwareGPU});
+const cloudLayer=createCloudLayer(scene,{mobile:false,softwareGPU:false});
 const camera=new THREE.PerspectiveCamera(50,1,.1,700);
 camera.position.set(-256,4.4,21);camera.lookAt(-236,2,0);
 const hemi=new THREE.HemisphereLight(0xc1e2ff,0x39412e,2.0);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe0aa,3.6);
 const sunDirection=new THREE.Vector3(-.46,.83,.30).normalize();
 sun.position.set(-75,125,62);sun.castShadow=true;
-sun.shadow.mapSize.set(softwareGPU?512:mobile?768:1536,softwareGPU?512:mobile?768:1536);
+sun.shadow.mapSize.set(1536,1536);
 Object.assign(sun.shadow.camera,{left:-102,right:102,top:98,bottom:-98,near:1,far:320});
 sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.bias=-.00014;sun.shadow.normalBias=.018;scene.add(sun);scene.add(sun.target);
@@ -171,9 +158,9 @@ const straightChildren=scene.children.slice(straightSceneIndex);scene.add(straig
 straightChildren.forEach(child=>straightCourse.add(child));
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
-createStadiumBackdrop(scene,{softwareGPU,mobile});
+createStadiumBackdrop(scene,{softwareGPU:false,mobile:false});
 const treeGroup=new THREE.Group();scene.add(treeGroup);
-const treeN=softwareGPU?55:mobile?90:155;
+const treeN=155;
 for(let i=0;i<treeN;i++){
  const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-74-r()*34:75+r()*25;
  const h=5+r()*9;
@@ -225,7 +212,7 @@ function sign(text,x,y,z,w=24,h=3,fg='#f3ecd7',bg='#0e3028'){
 sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7);
 sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0);
 // Spectators: shared-instanced bodies and heads, individual colors, multi-tier seating.
-const crowdN=softwareGPU?260:mobile?440:980,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
+const crowdN=980,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
 const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.InstancedMesh(headG,mat('#dbb78b'),crowdN)];
 const dummy=new THREE.Object3D(),palette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
 const rnd=seeded(641903);
@@ -240,7 +227,7 @@ for(let i=0;i<crowdN;i++){
 }
 for(const inst of crowds){inst.castShadow=false;inst.receiveShadow=false;inst.instanceMatrix.needsUpdate=true;venue.add(inst);}
 // The stands erupt at the finish: 128 tiny waving pennants in one draw call.
-const flagsN=softwareGPU?48:128;
+const flagsN=128;
 const flagGeom=new THREE.PlaneGeometry(.82,.55),flagMat=new THREE.MeshBasicMaterial({color:'#f1cf86',side:THREE.DoubleSide,transparent:true,opacity:.92});
 const cheerFlags=new THREE.InstancedMesh(flagGeom,flagMat,flagsN),flagMatrix=new THREE.Object3D();
 cheerFlags.frustumCulled=false;cheerFlags.visible=false;cheerFlags.name='Crowd · photo finish cheering';
@@ -267,7 +254,7 @@ box(.7,1.6,42,VISUAL_FINISH_X,12.9,0,C.roof);
 const finishSign=sign('META · FINISH',VISUAL_FINISH_X,13.0,-3,18,2.5);
 // Light-weight golden photo-finish flare: one GPU points draw, 96 sparkles.
 // No billboards around horse brands and no particle system per animal.
-const burstN=softwareGPU?52:96,burstPos=new Float32Array(burstN*3),burstGeo=new THREE.BufferGeometry();
+const burstN=96,burstPos=new Float32Array(burstN*3),burstGeo=new THREE.BufferGeometry();
 burstGeo.setAttribute('position',new THREE.BufferAttribute(burstPos,3));
 const finishBurst=new THREE.Points(burstGeo,new THREE.PointsMaterial({
  color:'#ffe3a0',size:.65,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending
@@ -303,22 +290,22 @@ function updateFinishBurst(){
 // Independent exterior for the Satoshi alpha14 race, using three-venue shared presets.
 // Does not recreate course, crowd, sky, horse assets, rain, spotlights or cameras.
 const liveDistrict=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',
-  quality:softwareGPU||mobile?'eco':'balanced'});
+  quality:'cinematic'});
 // Separate scene layers: original race/paddock geometry + compact public venue.
 // The village never creates an alternative track, race horses or a clock.
-const liveVillage=createParadeVillage(scene,{quality:softwareGPU||mobile?'eco':'balanced'});
-const stadiumDensity=createStadiumDensity({THREE,scene,quality:softwareGPU||mobile?'eco':'balanced',softwareGPU});
+const liveVillage=createParadeVillage(scene,{quality:'cinematic'});
+const stadiumDensity=createStadiumDensity({THREE,scene,quality:'high',softwareGPU:false});
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode='straight';
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
 // Dust particles when running; no effect on outcomes.
-const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
+const dustN=450,dustData=new Float32Array(dustN*3);
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false}));
 dust.visible=false;scene.add(dust);
-const rainN=softwareGPU?260:mobile?450:1050,rainPos=new Float32Array(rainN*3),rr=seeded(624);
+const rainN=1050,rainPos=new Float32Array(rainN*3),rr=seeded(624);
 for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*820;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
@@ -332,7 +319,7 @@ const initialRaceIndex=initialQa?0:
 let raceIndex=initialRaceIndex,race=getRaceFixture(initialRaceIndex%RACES_PER_DAY,Math.floor(initialRaceIndex/RACES_PER_DAY)),
     profiles=createOfficialRace(race.entries);
 let broadcastProfiles=buildBroadcastProfiles(profiles);
-const gateKit=createBroadcastGates({THREE,entries:race.entries,startX:VISUAL_START_X,quality:softwareGPU?'eco':mobile?'balanced':'high'});
+const gateKit=createBroadcastGates({THREE,entries:race.entries,startX:VISUAL_START_X,quality:'high'});
 scene.add(gateKit.root);
 const gateLabels=attachGateNumbers({THREE,root:gateKit.root,entries:race.entries,startX:VISUAL_START_X});
 const splitModeSelect=document.querySelector('#split-mode');
@@ -397,33 +384,22 @@ function showOfficialResult(){
 }
 const horseCoats=['#6c4731','#b18053','#342a26','#d3b48f','#a65f36','#5d5d62','#a78c66','#332c2a','#a28467','#c49a74','#5b4134','#d4bda8'];
 async function bootHorses(){
- const entries=race.entries;const results=await Promise.allSettled(entries.map((e,i)=>createHorse({
-   coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,stallNumber:i+1,height:2.85,mode:'Gallop',phase:i*.13
- })));
- for(let i=0;i<12;i++){
-  let model;
-  if(results[i].status==='fulfilled')model=results[i].value;
-  else {
-   // visible fallback, never a silent blank canvas
-   const root=new THREE.Group(),coat=mat(entries[i].coat||horseCoats[i]);
-   const torso=mesh(new THREE.SphereGeometry(.95,12,9),coat,root);torso.scale.set(1.3,.55,.52);torso.position.set(0,1.43,0);
-   box(.53,1.15,.54,.84,1.67,0,coat,root);
-   mesh(new THREE.SphereGeometry(.39,12,10),coat,root).position.set(1.12,2.21,0);
-   for(const x of [-.66,.66])for(const z of [-.28,.28])box(.14,1.08,.18,x,.72,z,coat,root);
-   model={root,update(){},play(){},setAppearance(){}};
-   console.warn('Caballo GLB de respaldo',i,results[i].reason);
-  }
-  const initial=trackPoint(layoutMode,0,i);
-  model.root.position.set(initial.x,0,initial.z);model.root.rotation.y=initial.heading;
-  // No floating symbol sprites: the marks are part of the 3D horse skin shader.
+ const entries=race.entries;
+ const models=await createCinematicLineup({entries,coats:horseCoats,createHorse});
+ for(let i=0;i<models.length;i++){
+  const model=models[i],initial=trackPoint(layoutMode,0,i);
+  model.root.position.set(initial.x,0,initial.z);
+  model.root.rotation.y=initial.heading;
   scene.add(model.root);
   model.setWind?.(maneWind);
-  model.setVisualQuality?.(activeQuality==='eco'?'performance':activeQuality==='cinematic'?'cinematic':'balanced');
+  model.setVisualQuality?.('cinematic');
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
  setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
- status.textContent='CAMPO PREPARADO · 12 CORREDORES'+(horseEngineMode!=='legacy'?' · MODELOS GENERADOS':'');
+ status.textContent='CAMPO PREPARADO · 12 CORREDORES · FIDELITY CINE';
+ window.__cryptodromoCinematicReady={engine:'fidelity',quality:'cinematic',
+  count:models.length,usesPlaceholders:false};
 }
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
@@ -682,7 +658,7 @@ function setWeather(mode){
  fogIntensityLabel.textContent=fogIntensity.value+'%';
  cloudCoverLabel.textContent=cloudCover.value+'%';
  scene.fog.density=Math.max(.0004,(wet?.0075:.0036)*mistScale);
- sun.castShadow=!night&&!softwareGPU;
+ sun.castShadow=!night;
  maneWind=wet?1.6:.55;
  cloudLayer.configure({cover:Math.max(wet?.8:0,Number(cloudCover.value)/100),
    night,rain:wet,sunset:illumination<.38,wind:maneWind});
@@ -743,50 +719,31 @@ setTrackType(trackType.value);
 // remain bound to the stadium wall clock and immutable price fixture.
 const graphicsModeSelect=document.querySelector('#graphics-quality');
 const graphicsFpsReadout=document.querySelector('#fps-readout');
-const detectedQuality=recommendQuality({
- softwareGPU,mobile,deviceMemory:navigator.deviceMemory||4,
- hardwareConcurrency:navigator.hardwareConcurrency||4,
- saveData:Boolean(navigator.connection?.saveData),
- reducedMotion:window.matchMedia('(prefers-reduced-motion: reduce)').matches
-});
-const qualityGovernor=createQualityGovernor({initial:detectedQuality,minSamples:50,cooldownMs:18000});
+// Fixed cinematic mode: FPS is diagnostic only, not a downgrade trigger.
+graphicsModeSelect.value='cinematic';
+const qualityGovernor=createQualityGovernor({initial:'cinematic',minSamples:50,cooldownMs:18000});
 let activeQuality='',lastFpsReadout=-Infinity;
-function applyQualityPreset(next){
- if(next===activeQuality)return;
- const p=rendererSettings(next,{devicePixelRatio:window.devicePixelRatio||1});
- renderer.setPixelRatio(Math.min(p.pixelRatio,softwareGPU?.78:mobile?1.1:1.6));
- const audienceCount=Math.max(120,Math.min(crowdN,Math.floor(crowdN*p.crowdFactor)));
- for(const inst of crowds)inst.count=audienceCount;
- dustGeo.setDrawRange(0,Math.max(20,Math.floor(dustN*p.particleFactor)));
- rainGeo.setDrawRange(0,Math.max(70,Math.floor(rainN*p.particleFactor)));
- if(!softwareGPU){
-  const shadowSize=p.shadowResolution;
-  if(sun.shadow.mapSize.x!==shadowSize){
-   sun.shadow.mapSize.set(shadowSize,shadowSize);
-   if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}
-   sun.shadow.needsUpdate=true;
-  }
+function applyQualityPreset(){
+ if(activeQuality==='cinematic')return;
+ const p=rendererSettings('cinematic',{devicePixelRatio:window.devicePixelRatio||1});
+ renderer.setPixelRatio(p.pixelRatio);
+ for(const inst of crowds)inst.count=crowdN;
+ dustGeo.setDrawRange(0,dustN);
+ rainGeo.setDrawRange(0,rainN);
+ if(sun.shadow.mapSize.x!==p.shadowResolution){
+  sun.shadow.mapSize.set(p.shadowResolution,p.shadowResolution);
+  if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}
+  sun.shadow.needsUpdate=true;
  }
- activeQuality=next;
- horses.forEach(h=>h.model.setVisualQuality?.(next==='eco'?'performance':next==='cinematic'?'cinematic':'balanced'));
- liveDistrict.setQuality(next);
- liveVillage.setQuality(next);
- stadiumDensity.setQuality(next);
- graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
-  (graphicsModeSelect.value==='auto'?' · AUTO':'');
+ activeQuality='cinematic';
+ horses.forEach(h=>h.model.setVisualQuality?.('cinematic'));
+ liveDistrict.setQuality('cinematic');
+ liveVillage.setQuality('cinematic');
+ stadiumDensity.setQuality('high');
+ graphicsFpsReadout.textContent='CINE · FPS CALCULANDO';
  resize();
 }
-graphicsModeSelect.addEventListener('change',()=>{
- const mode=graphicsModeSelect.value;
- if(mode==='auto'){
-  qualityGovernor.reset(detectedQuality);
-  applyQualityPreset(detectedQuality);
- }else{
-  qualityGovernor.reset(mode);
-  applyQualityPreset(mode);
- }
-});
-applyQualityPreset(detectedQuality);
+applyQualityPreset();
 // Shared camera deck: the input IDs survive for existing browser tests.
 const cameraPanel=bindCameraPanel(document.querySelector('#camera-deck'),{
  onChange:(key)=>{
@@ -991,9 +948,17 @@ function adjustCamera(dt){
  });
  goal.set(composed.position.x,composed.position.y,composed.position.z);
  target.set(composed.focus.x,composed.focus.y,composed.focus.z);
- camera.position.lerp(goal,blend);
- if(!cameraFocusReady){cameraFocus.copy(target);cameraFocusReady=true;}
- else cameraFocus.lerp(target,cameraBlend(dt,3.8));
+ // On a throttled renderer or a director cut, catching up gradually can
+ // leave the camera showing an empty stretch of track while the pack is far
+ // away. Treat large displacements as a TV cut, not a long camera drift.
+ if(!cameraFocusReady||camera.position.distanceToSquared(goal)>85*85){
+  camera.position.copy(goal);
+  cameraFocus.copy(target);
+  cameraFocusReady=true;
+ }else{
+  camera.position.lerp(goal,blend);
+  cameraFocus.lerp(target,cameraBlend(dt,3.8));
+ }
  camera.lookAt(cameraFocus);
 }
 function particles(dt){
@@ -1149,14 +1114,12 @@ function animate(now,draw=true){
   updateFinishBurst();particles(dt);adjustCamera(Math.min(.45,realSeconds));renderer.render(scene,camera);
   const feedback=qualityGovernor.sample(Math.max(1,now-lastRenderedAt),now);
   lastRenderedAt=now;
-  if(graphicsModeSelect.value==='auto'&&feedback.changed){
-   applyQualityPreset(softwareGPU?'eco':feedback.level);
-  }
+  // Cinematic quality is locked; no adaptive visual downgrade.
   if(now-lastFpsReadout>900){
    lastFpsReadout=now;
    const fps=Number.isFinite(feedback.fps)?Math.round(feedback.fps):'…';
    graphicsFpsReadout.textContent=fps+' FPS · '+activeQuality.toUpperCase()+
-     (graphicsModeSelect.value==='auto'?' · AUTO':'');
+     ' · CINE';
   }
  }
  // Rendering is throttled by the panel to 2Hz, and finish results remain gated.
@@ -1203,6 +1166,42 @@ if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
     lastCrossedAt,winners:officialSnapshot?.entries?.map(x=>x.symbol)};}
  };
 }
+// Explicit opt-in artistic inspection only. Never used during the actual
+// automatic broadcast. The official race fixture/result functions remain pure.
+if(new URLSearchParams(location.search).get('home-qa')==='cinema'){
+ window.__cryptodromoHomeQA=Object.freeze({
+  captureAt(seconds=14,shot='low'){
+   if(horses.length!==12)throw Error('Fidelity lineup not ready');
+   liveFollowing=false;running=false;finished=false;finishShown=false;
+   elapsed=Math.max(3,Math.min(48,Number(seconds)||14));
+   presentation.hidden=true;finishCelebration.hidden=true;
+   resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');
+   stage.classList.remove('is-presenting');
+   const finishMeters=officialRanking(profiles)[0].distanceAt60;
+   for(const h of horses){
+    const p=broadcastProfiles[h.index];
+    const dist=broadcastPosition(p,elapsed);
+    h.progress=dist/finishMeters;h.visualMeters=dist;
+    const world=trackPoint(layoutMode,h.progress,h.index);
+    h.model.root.position.set(world.x,0,world.z);
+    h.model.root.rotation.y=world.heading;
+    h.model.play('Gallop');h.model.update(.04,1.25);
+   }
+   camSelect.value=['side','low','rail','pack'].includes(shot)?shot:'low';
+   adjustCamera(20);updateStandings();
+   clockEl.textContent='00:'+String(Math.floor(elapsed)).padStart(2,'0');
+   status.textContent='CARRERA · INSPECCIÓN VISUAL CINE';
+   renderer.render(scene,camera);
+   return {engine:horseEngineMode,horseCount:horses.length,
+    minProgress:Math.min(...horses.map(h=>h.progress)),
+    maxProgress:Math.max(...horses.map(h=>h.progress)),
+    cameraPosition:camera.position.toArray(),
+    firstHorsePosition:horses[0].model.root.position.toArray(),
+    drawCalls:renderer.info.render.calls,quality:activeQuality,
+    resultOverlayHidden:resultsOverlay.hidden};
+  }
+ });
+}
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
-bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
+bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA FIDELITY';msg.textContent=String(e);window.__cryptodromoCinematicReady={engine:'fidelity',quality:'cinematic',count:0,usesPlaceholders:false,error:String(e)};});
