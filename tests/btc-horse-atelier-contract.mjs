@@ -25,7 +25,7 @@ test('V4 visibly alters REAL 3D geometry and streams motion while retaining Gall
  assert.match(v4,/skinIndex/);
  assert.match(v4,/skinWeight/);
  assert.match(v4,/mesh\.bind\(hair\.skeleton/);
- assert.match(v4,/copy\.computeVertexNormals/);
+ assert.doesNotMatch(v4,/copy\.computeVertexNormals/); // GLB normals remain smooth
  assert.match(v4,/sculptedBodyParts/);
  assert.match(v4,/oldHairHidden/);
  assert.match(v4,/hair\.visible=previouslyVisible/);
