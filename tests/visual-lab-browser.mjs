@@ -133,7 +133,9 @@ try{
  await mkdir('artifacts',{recursive:true});
  if(captureScreenshots)await page.screenshot({path:'artifacts/alpha3-stadium.png',fullPage:false,timeout:25000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  // The full-length aerial camera must be stationary so forward movement is obvious.
+ await page.click('#tab-camera');
  await page.selectOption('#camera','aerial');
+ await page.click('#tab-race');
  if(captureScreenshots)await page.screenshot({path:'artifacts/alpha15-oval-atmosphere.png',fullPage:false,timeout:30000}).catch(e=>console.log('SCREENSHOT_WARNING',e.message));
  await page.click('#tab-light');
  assert.equal(await page.locator('#panel-light').isVisible(),true);
