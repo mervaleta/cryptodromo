@@ -22,7 +22,7 @@ jobs:
         run: |
           node --check racers/btc-atelier-preview.js
           node --check racers/btc-hair-v15.js
-          node --check racers/btc-hero-groom-v2.js
+          node --check racers/btc-hero-groom-v3.js
           node --check racers/btc-coat-look-v2.js
           node --check racers/racers.js
           node --test tests/btc-horse-atelier-contract.mjs tests/btc-hair-v15-contract.mjs
@@ -43,7 +43,7 @@ jobs:
         with:
           name: btc-atelier-stage
           path: |
-            artifacts/btc-3d-groom-v2-preview.png
+            artifacts/btc-groom-v3-iteration1.png
             artifacts/btc-original-before.png
             artifacts/btc-hero-after-profile.png
             artifacts/btc-hero-after-rear.png

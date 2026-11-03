@@ -19,16 +19,16 @@ try{
  assert.equal(state.jockey,false);
  assert.equal(state.variant,'enhanced');
  assert.ok(state.clips.includes('Gallop'));
- assert.equal(state.hairSystem?.version,'btc-mane-tail-v15');
- assert.equal(state.hairSystem?.channels,1,'Mane and tail must be driven by the original skinned Hair primitive');
- assert.equal(state.heroGroom?.version,'btc-3d-groom-v2');
- assert.equal(state.heroGroom?.maneLocks,52);
- assert.equal(state.heroGroom?.tailLocks,35);
- assert.equal(state.heroGroom?.fineManeLocks,24);
- assert.equal(state.heroGroom?.fineTailLocks,18);
- assert.equal(state.heroGroom?.locks,145);
- assert.equal(state.heroGroom?.coreManeLocks,6);
- assert.equal(state.heroGroom?.coreTailLocks,10);
+ assert.equal(state.hairSystem,null);
+ assert.equal(state.heroGroom?.oldHairHidden,true,'Must hide original Hair and exposed tail');
+ assert.equal(state.heroGroom?.version,'btc-groom-v3-shading-4');
+ assert.equal(state.heroGroom?.maneBodies,1);
+ assert.equal(state.heroGroom?.tailBodies,1);
+ assert.equal(state.heroGroom?.mode,'continuous-volume');
+ assert.equal(state.heroGroom?.maneHighlightStrands,24);
+ assert.equal(state.heroGroom?.tailHighlightStrands,8);
+ assert.equal(state.heroGroom?.maneFlyaways,38);
+ assert.equal(state.heroGroom?.tailFlyaways,16);
  assert.equal(state.heroGroom?.modelPreserved,true);
  assert.equal(new URL(page.url()).searchParams.has('atelier'),false,'BTC hero groom must run on the normal profile');
  assert.equal(state.heroGroom?.jockey,false);
@@ -42,7 +42,7 @@ try{
  assert.equal(state.camera,'detail');
  await page.waitForFunction(()=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
-  return s?.hairSystem?.air>0&&Math.abs(s?.tailMotion)>0.0001&&Math.abs(s?.maneMotion)>0.0001;
+  return s?.heroGroom?.oldHairHidden===true&&s?.drawCalls>0;
  },null,{timeout:20000});
  await page.locator('[data-btc-variant="original"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.variant==='original');
@@ -66,7 +66,7 @@ try{
  await page.locator('#horse-view').screenshot({path:'artifacts/btc-hero-after-rear.png',timeout:60000});
  mkdirSync('artifacts',{recursive:true});
  try{
-  await page.locator('.feature').screenshot({path:'artifacts/btc-3d-groom-v2-preview.png',timeout:60000,animations:'disabled'});
+  await page.locator('.feature').screenshot({path:'artifacts/btc-groom-v3-iteration1.png',timeout:60000,animations:'disabled'});
  }catch(error){console.warn('Screenshot skipped due to software GPU:',error.message);}
  assert.deepEqual(pageErrors,[],pageErrors.join('; '));
  console.log('BTC_ATELIER_OK',JSON.stringify(await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())));
