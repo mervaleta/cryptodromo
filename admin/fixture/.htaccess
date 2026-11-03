@@ -1,0 +1,10 @@
+# PRIVATE ADMIN: default DENY. Do not remove until authenticated server-level access is configured.
+# Apache / LiteSpeed hosts: replace with verified Basic Auth or SSO reverse proxy rules.
+# For Nginx / static hosts this file is ignored; block /admin/fixture/ in hosting configuration.
+Options -Indexes
+<IfModule mod_authz_core.c>
+Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+Deny from all
+</IfModule>
