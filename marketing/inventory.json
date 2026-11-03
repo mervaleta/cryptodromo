@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "updated": "2026-11-03",
+  "mode": "demo-direct",
+  "currency": null,
+  "notes": "Disponibilidad indicativa. No representa anuncios vendidos, impresiones verificadas ni una plataforma automatizada de venta.",
+  "placements": [
+    {
+      "id": "home-top",
+      "name": "Cabecera de transmisión",
+      "section": "Carrera",
+      "size": "970 × 90",
+      "mobile": "320 × 100",
+      "status": "available",
+      "tier": "Premium",
+      "description": "Primer espacio visible debajo de la navegación, antes de la transmisión."
+    },
+    {
+      "id": "race-post",
+      "name": "Post carrera",
+      "section": "Carrera",
+      "size": "970 × 90",
+      "mobile": "320 × 100",
+      "status": "available",
+      "tier": "Premium",
+      "description": "Formato horizontal inmediatamente debajo del estadio 3D, fuera del render."
+    },
+    {
+      "id": "race-footer",
+      "name": "Cierre de transmisión",
+      "section": "Carrera",
+      "size": "970 × 90",
+      "mobile": "320 × 100",
+      "status": "available",
+      "tier": "Display",
+      "description": "Contacto de marca en el tramo final de la página principal."
+    },
+    {
+      "id": "interior-top",
+      "name": "Cabecera de sección",
+      "section": "Secciones",
+      "size": "728 × 90",
+      "mobile": "320 × 100",
+      "status": "available",
+      "tier": "Display",
+      "description": "Presencia adaptable en ficha de corredores, fixture, estadísticas y contenidos."
+    },
+    {
+      "id": "interior-content",
+      "name": "Entre contenidos",
+      "section": "Secciones",
+      "size": "728 × 90",
+      "mobile": "320 × 100",
+      "status": "available",
+      "tier": "Display",
+      "description": "Impacto integrado entre bloques editoriales, sin cubrir información."
+    },
+    {
+      "id": "interior-footer",
+      "name": "Cierre de sección",
+      "section": "Secciones",
+      "size": "970 × 90",
+      "mobile": "320 × 100",
+      "status": "available",
+      "tier": "Display",
+      "description": "Último formato antes del pie de página."
+    },
+    {
+      "id": "stadium-fence",
+      "name": "Cartelería de pista 3D",
+      "section": "Estadio",
+      "size": "Material 3D",
+      "mobile": "Por definir",
+      "status": "planned",
+      "tier": "Experiencial",
+      "description": "Integración nativa en vallas y tribunas, sujeta a revisión de rendimiento."
+    },
+    {
+      "id": "broadcast-title",
+      "name": "Presentación de carrera",
+      "section": "Transmisión",
+      "size": "Integración de marca",
+      "mobile": "Por definir",
+      "status": "planned",
+      "tier": "Experiencial",
+      "description": "Mención de patrocinio en placas de presentación, fuera del resultado."
+    },
+    {
+      "id": "grand-prix",
+      "name": "Gran Premio patrocinado",
+      "section": "Eventos",
+      "size": "A medida",
+      "mobile": "A medida",
+      "status": "planned",
+      "tier": "Experiencial",
+      "description": "Naming y gráfica de eventos especiales, sin incidencia en el motor de carrera."
+    }
+  ]
+}
