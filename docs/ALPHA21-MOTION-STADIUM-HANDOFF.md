@@ -9,7 +9,7 @@ Base confirmada: `main` en `dae4dfab3b13c0d9f6a0ae414a1f72964b8bd7e0` (Alpha20).
 | Archivo | Función | Restricción |
 | --- | --- | --- |
 | `visual-lab/polish/motionDirector.js` | Cadencia suave .86–1.74x del clip nativo .583 s; aceleración rápida y deceleración controlada | No cambia distancia/tiempo oficial |
-| `visual-lab/polish/hoofContacts.js` | Interpreta la fase real `model.hoofPhase` y emite 4 contactos por ciclo | No inventa velocidad ni modifica esqueleto |
+| `visual-lab/polish/bodyFollowThrough.js` | Cuello, cabeza, columna y cola con inercia aditiva sutil y reversible; usa el rig existente | Se deshace antes de llamar al mixer y nunca desplaza el cuerpo completo |\n| `visual-lab/polish/hoofContacts.js` | Interpreta la fase real `model.hoofPhase` y emite 4 contactos por ciclo | No inventa velocidad ni modifica esqueleto |
 | `visual-lab/polish/contactSpray.js` | Spray de tierra/césped/agua desde contactos; pool de 224 instancias, 1 draw call, presets eco/balanced/high | Complementa huellas/sombras actuales, no las reemplaza |
 | `visual-lab/polish/stadiumFinishing.js` | 4 grupos instanciados, 3 carteles temáticos, 8 identidades de estadio, control de noche/humedad | Geometría alejada de la pista (z>=57), sin espectadores adicionales |
 | `visual-lab/polish/racePolishKit.js` | Fachada opt-in con `updateHorse`, `updateFrame`, `beginRace`, `setQuality`, `setLayout`, `dispose` | Nunca ejecutar `model.update` dos veces |
@@ -20,7 +20,7 @@ Base confirmada: `main` en `dae4dfab3b13c0d9f6a0ae414a1f72964b8bd7e0` (Alpha20).
 
 ## Principios para el galope
 
-La fuente GLB ya posee `Gallop` y un refiner de 8 posturas que corrige cuello, lomo y articulaciones; también hay crines con shaders y marcas de cascos. La versión actual usa un multiplicador visual que puede alcanzar 3.15x. Alpha21 propone medir la cadencia como respuesta suave a la velocidad derivada de `broadcastSpeed`, y acotar el clip a .86–1.74x. A velocidad nominal, la meta está alrededor de 2.26 ciclos de galope por segundo. No se propone agregar una segunda interpolación esquelética; eso rompería las correcciones existentes.
+La fuente GLB ya posee `Gallop` y un refiner de 8 posturas que corrige cuello, lomo y articulaciones; también hay crines con shaders y marcas de cascos. La versión actual usa un multiplicador visual que puede alcanzar 3.15x. Alpha21 propone medir la cadencia como respuesta suave a la velocidad derivada de `broadcastSpeed`, y acotar el clip a .86–1.74x. A velocidad nominal, la meta está alrededor de 2.26 ciclos de galope por segundo. La corrección adicional de cuerpo usa `body.beforeUpdate` ANTES del mixer y `body.afterUpdate` DESPUÉS de `gaitRefiner`, deshaciendo exactamente su propio quaternion del frame anterior; no sustituye la interpolación esquelética nativa. Intensidad eco=0, balanced=.65, high=1, con amplitud menor a 2.2 grados.
 
 El polvo nace sólo cuando `hoofPhase` cruza un contacto del ciclo, no por cada metro recorrido. El sonido de galope actual se conserva. Una siguiente mejora opcional es pasar los eventos de contacto al sintetizador existente, sin crear otro AudioContext.
 
@@ -64,14 +64,14 @@ racePolish.updateFrame({delta:dt,weather:weatherSelect.value,
 // En desmontaje: racePolish.dispose()
 ```
 
-**REGLAS CRÍTICAS:** no cambiar `createOfficialRace`, `getRaceFixture`, `broadcastPosition`, `broadcastSpeed`, `trackPoint`, `horse.js` ni el estado de apuestas. El movimiento lineal continúa gobernado por la variación porcentual de mercado; el módulo únicamente controla la velocidad de reproducción de las patas y partículas de presentación. Conservar `h.model.setBank` existente. No llamar `racePolish.updateHorse` además de `h.model.update`: exactamente una actualización de la mezcladora por caballo y frame.
+**REGLAS CRÍTICAS:** no cambiar `createOfficialRace`, `getRaceFixture`, `broadcastPosition`, `broadcastSpeed`, `trackPoint`, `horse.js` ni el estado de apuestas. El movimiento lineal continúa gobernado por la variación porcentual de mercado; el módulo únicamente controla la cadencia de animación, una pequeña inercia de huesos existentes y partículas de presentación. Conservar `h.model.setBank` existente. No llamar `racePolish.updateHorse` además de `h.model.update`: exactamente una actualización de la mezcladora por caballo y frame.
 
 **ALPHA19:** una pista curva o con largada rotada requiere adaptar el kit de escena al sistema local de cada trazado, no asumir que la señalética exterior en z=57 sirve para todas las pistas. Mantener la decoración fuera del campo de carrera de cada hipódromo. Esta entrega modela físicamente únicamente Satoshi recto; los otros siete estilos son presets listos para utilizar en sus futuras escenas 3D.
 
 ## Criterios de aceptación
 
 1. Ejecutar `node --test tests/alpha21-motion-contract.mjs` y QA Chromium; revisar capturas de gateras y cámara baja.
-2. Comparar antes/después a igual carrera (misma clasificación oficial), medir FPS y draw calls desktop/móvil.
+2. Confirmar que `bodyFollowThrough` no acumule rotaciones al pausar/reiniciar y que los huesos estén presentes en GLB. Comparar antes/después a igual carrera (misma clasificación oficial), medir FPS y draw calls desktop/móvil.
 3. Comprobar exactamente 12 caballos, gateras sin intersecciones, aristas de cabeza/crines sin vibración, lluvia y niebla sin desbordes.
 4. Inspeccionar cascos: no polvo en pausa, en superficies sintéticas o en estadios sin tierra; contacto sincronizado al gait actual.
 5. Validar animaciones en arranque, t=5, 45, 55, meta, runout y replay; verificar transición entre Idle/Gallop.
