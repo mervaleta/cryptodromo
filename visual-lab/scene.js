@@ -69,17 +69,11 @@ soundButton.addEventListener('click',()=>{
  soundButton.setAttribute('aria-pressed',String(soundtrack.enabled));
 });
 document.querySelector('#result-close').addEventListener('click',()=>{resultsOverlay.classList.remove('is-visible');resultsOverlay.hidden=true;});
-const mobile=matchMedia('(max-width:700px)').matches;
 let renderer;
 try {renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}
 catch(e){status.textContent='NECESITÁS WEBGL PARA ESTA VISTA';msg.textContent=String(e);throw e;}
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-// Preserve high quality on dedicated GPUs, but make headless/CPU and entry-level
-// renderers viable. The engine clock is independent of graphics quality.
-const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');
-const gpuName=String(ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER));
-const softwareGPU=/swiftshader|llvmpipe|software|lavapipe/i.test(gpuName);
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -260,7 +254,7 @@ box(.7,1.6,42,VISUAL_FINISH_X,12.9,0,C.roof);
 const finishSign=sign('META · FINISH',VISUAL_FINISH_X,13.0,-3,18,2.5);
 // Light-weight golden photo-finish flare: one GPU points draw, 96 sparkles.
 // No billboards around horse brands and no particle system per animal.
-const burstN=softwareGPU?52:96,burstPos=new Float32Array(burstN*3),burstGeo=new THREE.BufferGeometry();
+const burstN=96,burstPos=new Float32Array(burstN*3),burstGeo=new THREE.BufferGeometry();
 burstGeo.setAttribute('position',new THREE.BufferAttribute(burstPos,3));
 const finishBurst=new THREE.Points(burstGeo,new THREE.PointsMaterial({
  color:'#ffe3a0',size:.65,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending
