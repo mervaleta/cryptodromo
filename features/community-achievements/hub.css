@@ -1,0 +1,15 @@
+/* Ajustes aislados del álbum dentro del hub comunitario Alpha18. */
+.community #logros .crp-album-heading{margin:14px 0}
+.community #logros .crp-album-heading h2{font:400 clamp(23px,3vw,32px) Georgia,serif;margin:0}
+.community #logros .badge-filters{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 14px}
+.community #logros .badge-filters button{width:auto;border:1px solid #496a54;border-radius:30px;background:#10251b;color:#c9e1d0;padding:8px 13px;font-size:12px}
+.community #logros .badge-filters button[aria-pressed="true"]{background:#d1b87d;color:#112016;border-color:#d1b87d}
+.community #logros .badge-demo-button{display:inline-flex;width:auto;margin:0 0 8px}
+.community #logros .album-note{margin:8px 0 18px;color:#c3d6c7}
+.community #logros .crp-badge-grid{grid-template-columns:repeat(auto-fit,minmax(175px,1fr))}
+.community #logros .crp-showcase-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+.community #logros .crp-badge h4{font:700 15px/1.25 system-ui,sans-serif}
+.community #logros .crp-badge p{margin:0;color:#c4d4c9;font-size:12px}
+.community #logros .crp-badge small{font-size:10px;color:#d9c18e}
+.community #logros .crp-showcase h3{font-size:12px;margin:0 0 15px}
+@media(max-width:700px){.community #logros .crp-showcase-list{grid-template-columns:1fr}.community #logros .crp-badge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
