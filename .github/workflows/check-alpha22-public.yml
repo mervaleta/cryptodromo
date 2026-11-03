@@ -1,0 +1,49 @@
+name: Check Alpha22 Fidelity public deployment
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/check-alpha22-public.yml'
+      - 'index.html'
+      - 'racers/**'
+      - 'visual-lab/horseRenderer.js'
+      - 'visual-lab/horse-fidelity/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Probe canonical domain and racing subdomain for Alpha22
+        shell: bash
+        run: |
+          set -uo pipefail
+          root_ready=0
+          race_ready=0
+          for attempt in $(seq 1 12); do
+            echo "Attempt ${attempt}: checking deployed static JavaScript"
+            for domain in cryptodromo.com race.cryptodromo.com; do
+              url="https://${domain}"
+              headers_file=$(mktemp)
+              horse_file=$(mktemp)
+              card_file=$(mktemp)
+              status_horse=$(curl -L -sS --max-time 18 -o "$horse_file" -w '%{http_code}' "${url}/visual-lab/horseRenderer.js?alpha22=20261103" || true)
+              status_card=$(curl -L -sS --max-time 18 -o "$card_file" -w '%{http_code}' "${url}/racers/horse-preview.js?alpha22=20261103" || true)
+              echo "${domain}: LIVE engine HTTP=${status_horse}, profile HTTP=${status_card}"
+              if grep -q 'createAlpha22RaceHorse' "$horse_file" && grep -q 'createAlpha22RaceHorse' "$card_file"; then
+                echo "::notice::Alpha22 Fidelity found in LIVE and Racers on ${domain}"
+                if [ "$domain" = "cryptodromo.com" ]; then root_ready=1; else race_ready=1; fi
+              fi
+              rm -f "$headers_file" "$horse_file" "$card_file"
+            done
+            if [ "$root_ready" = "1" ] && [ "$race_ready" = "1" ]; then break; fi
+            if [ "$attempt" != "12" ]; then sleep 12; fi
+          done
+          echo "canonical_domain_ready=${root_ready}"
+          echo "race_subdomain_ready=${race_ready}"
+          if [ "$root_ready" != "1" ]; then
+            echo "::error::No se pudo confirmar la versión Alpha22 en cryptodromo.com. Revisar conexión Hostinger/GitHub y DocumentRoot."
+            exit 1
+          fi
