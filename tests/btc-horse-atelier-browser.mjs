@@ -21,10 +21,12 @@ try{
  assert.ok(state.clips.includes('Gallop'));
  assert.equal(state.hairSystem,null);
  assert.equal(state.heroGroom?.oldHairHidden,true,'Must hide original Hair and exposed tail');
- assert.equal(state.heroGroom?.version,'btc-groom-v3-shell-2');
+ assert.equal(state.heroGroom?.version,'btc-groom-v3-clumps-2');
  assert.equal(state.heroGroom?.maneBodies,1);
  assert.equal(state.heroGroom?.tailBodies,1);
  assert.equal(state.heroGroom?.mode,'continuous-volume');
+ assert.equal(state.heroGroom?.maneHighlightStrands,24);
+ assert.equal(state.heroGroom?.tailHighlightStrands,8);
  assert.equal(state.heroGroom?.modelPreserved,true);
  assert.equal(new URL(page.url()).searchParams.has('atelier'),false,'BTC hero groom must run on the normal profile');
  assert.equal(state.heroGroom?.jockey,false);
