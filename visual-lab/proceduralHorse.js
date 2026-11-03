@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {hashHorseSeed,solveLegIK} from './proceduralMath.js?v=alpha20-procedural-2';
 
 /* CRP Alpha20: fully generated visual horse. No GLB, sprites, PNG, FBX or clip assets.
  * +X forward, +Y up, ground y=0. The authoritative race engine moves root.
@@ -14,19 +15,6 @@ const SEGMENTS=[
 const STROKES=[[-.005,.104,.119,.025],[.06,.055,.022,.091],
  [.06,-.055,.022,.091],[-.005,-.106,.119,.025],[-.067,-.055,.022,.091],
  [-.067,.055,.022,.091],[-.005,0,.119,.023]];
-export function hashHorseSeed(symbol){
- let h=2166136261;
- for(const ch of String(symbol)){h=Math.imul(h^ch.charCodeAt(0),16777619);}
- return h>>>0;
-}
-export function solveLegIK(hip,foot,upper=.70,lower=.73,bend=1){
- const dx=foot.x-hip.x,dy=foot.y-hip.y;
- const raw=Math.hypot(dx,dy)||1,d=clamp(raw,.001,upper+lower-.001);
- const along=(upper*upper+d*d-lower*lower)/(2*d);
- const high=Math.sqrt(Math.max(0,upper*upper-along*along));
- return {x:hip.x+dx/raw*along-dy/raw*high*bend,
-         y:hip.y+dy/raw*along+dx/raw*high*bend,z:hip.z};
-}
 function loft(points,sides=18){
  const verts=[],uv=[],tri=[];
  const control=points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
