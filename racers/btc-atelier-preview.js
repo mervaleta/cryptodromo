@@ -13,6 +13,7 @@ import {applyBTCCoatLook as applyBTCCoatLookV3} from './btc-coat-look-v3.js?v=bt
 const lookdevStage=Math.max(1,Math.min(10,Math.floor(Number(new URLSearchParams(location.search).get('lookdev')||10))||10));
 const CAMERA_POSITIONS={
  profile:[2.25,2.0,4.35],
+ 'three-quarter':[3.10,2.23,3.65],
  front:[3.85,2.12,.13],
  rear:[-3.85,2.12,.13],
  detail:[1.65,2.20,3.20]
