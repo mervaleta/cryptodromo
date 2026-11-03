@@ -38,7 +38,7 @@ export function createDroneRig({x=-25,y=58,z=185,yaw=0,pitch=-.42,fov=48,
     y:Number(target.y)||0,
     z:(Number(target.z)||0)+Math.sin(state.yaw)*state.lateral
    };
-   const view=droneOrbitView(t,state);
+   const view=droneOrbitView(t,{yaw:state.yaw,pitch:state.pitch,height:state.y,distance:state.distance});
    return {...view,fov:state.fov,mode:state.mode};
   }
   const v=lookVector();
