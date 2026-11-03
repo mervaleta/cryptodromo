@@ -79,7 +79,7 @@ try{
    'Captured for direct human comparison. Do not infer visual improvement solely from passing tests.',
    ''
   ];
-  writeFileSync(`${folder}/notes.md`,notes.join('\\n'));
+  writeFileSync(`${folder}/notes.md`,notes.join('\n'));
   observations.push({iteration:i,notes:phaseNotes,drawCalls:state.drawCalls,
    hairHidden:state.heroGroom.oldHairHidden});
   console.log('LOOKDEV_ITERATION_OK',i,'views',views.length,'drawCalls',state.drawCalls);
