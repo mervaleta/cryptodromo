@@ -45,8 +45,9 @@ export function isSupportedManeGeometry(mesh){
  if(!mesh?.isSkinnedMesh||!position||position.count<100||position.count>3000)return false;
  if(!geometry.boundingBox)geometry.computeBoundingBox?.();
  const box=geometry.boundingBox;
- return !!box&&box.min.y<-.025&&box.max.y>.015&&
-   box.min.z<.020&&box.max.z>.043&&box.min.x<-.001&&box.max.x>.001;
+ return !!box&&Math.abs(box.min.y+.0297)<.008&&Math.abs(box.max.y-.0222)<.008&&
+   Math.abs(box.min.z-.0145)<.008&&Math.abs(box.max.z-.0458)<.008&&
+   box.min.x<-.001&&box.max.x>.001;
 }
 
 /**
