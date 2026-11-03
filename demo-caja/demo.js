@@ -1,3 +1,4 @@
+import {WITHDRAWAL_METHODS,quoteWithdrawal,requestWithdrawal,advanceWithdrawal} from '../features/simulated-economy/withdrawals.js';
 import {FIAT_METHODS,CRYPTO_RATES,quoteDeposit,createDepositIntent,resolveDepositIntent} from '../features/simulated-economy/deposits.js';
 import {getRaceFixture,RACES_PER_DAY} from '../race-lab/source/src/data/raceFixture.js';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js';
@@ -29,8 +30,8 @@ function render(){
  else for(const acc of s.accounts){const o=new Option(acc.alias,acc.id);$('player').add(o)}
  $('player').value=a?.id||'';
  show('usd',a?money(a.usdCents):'0,00');show('credits',number(a?.credits||0));
- for(const id of ['fund','buy','sell','place','confirmDeposit','cancelDeposit'])$(id).disabled=!a;
- $('ticketList').replaceChildren();$('ledgerList').replaceChildren();$('leaders').replaceChildren();renderDeposits(a);
+ for(const id of ['fund','buy','sell','place','confirmDeposit','cancelDeposit','requestWithdraw','advanceWithdraw'])$(id).disabled=!a;
+ $('ticketList').replaceChildren();$('ledgerList').replaceChildren();$('leaders').replaceChildren();renderDeposits(a);renderWithdrawals(a);
  if(a){
   for(const t of [...a.tickets].reverse().slice(0,100)){const li=document.createElement('li');
    escapeText(li,'#'+t.raceId+' · '+t.runner+' · '+t.kind+' · '+number(t.stake)+' CR · '+t.status+' · '+number(t.payout)+' CR');
@@ -70,6 +71,27 @@ function previewDeposit(){
   const q=quoteDeposit({channel:$('depositChannel').value,method:$('depositMethod').value,packageUsd:Number($('pack').value)});
   show('depositQuote','Importe ficticio a enviar: '+q.amount+' '+q.currency+' · Acreditación: USD demo '+money(q.creditedCents)+' · Comisión: '+money(q.feeCents)+' USD demo'+(q.rateUsd?' · tasa fija 1 '+q.method+' = '+q.rateUsd+' USD demo':''));
  }catch(e){show('depositQuote',e.message)}
+}
+function renderWithdrawals(a){
+ $('withdrawIntent').replaceChildren();$('withdrawList').replaceChildren();
+ const ws=Array.isArray(a?.withdrawals)?a.withdrawals:[];
+ for(const w of [...ws].reverse().slice(0,80)){
+  const li=document.createElement('li');
+  escapeText(li,w.method+' · USD demo '+money(w.amountCents)+' · tarifa '+money(w.feeCents)+' · neto '+money(w.netCents)+' · '+w.status);
+  $('withdrawList').append(li);
+  if(['pending','approved','processing'].includes(w.status))$('withdrawIntent').add(new Option(w.id.slice(0,8)+' · '+w.status+' · USD '+money(w.amountCents),w.id));
+ }
+ if(!ws.length)escapeText($('withdrawList'),'No hay retiros ficticios registrados.','li');
+ const selection=ws.find(w=>w.id===$('withdrawIntent').value);
+ const actions={pending:[['approve','Aprobar'],['reject','Rechazar y devolver'],['cancel','Cancelar y devolver']],approved:[['process','Enviar a procesamiento'],['reject','Rechazar y devolver'],['cancel','Cancelar y devolver']],processing:[['complete','Completar'],['fail','Falló: devolver saldo']]};
+ $('withdrawAction').replaceChildren();
+ for(const [code,label] of actions[selection?.status]||[])$('withdrawAction').add(new Option(label,code));
+ $('advanceWithdraw').disabled=!selection;
+}
+function previewWithdraw(){
+ try{const q=quoteWithdrawal({method:$('withdrawMethod').value,amountCents:Math.round(Number($('withdrawAmount').value)*100)});
+ show('withdrawQuote','Débito total: USD demo '+money(q.amountCents)+' · comisión: USD demo '+money(q.feeCents)+' · neto estimado: USD demo '+money(q.netCents)+' · ninguna transferencia externa.');
+ }catch(e){show('withdrawQuote',e.message)}
 }
 function getChoices(){
  const now=liveSlot(),time=Date.now(),out=[];
@@ -129,6 +151,10 @@ $('depositMethod').addEventListener('change',previewDeposit);
 $('pack').addEventListener('change',previewDeposit);
 $('buy').onclick=()=>run(()=>buyCredits(s,Number($('buyAmount').value)),'changeStatus');
 $('sell').onclick=()=>run(()=>sellCredits(s,Number($('sellAmount').value)),'changeStatus');
+$('requestWithdraw').onclick=()=>run(()=>requestWithdrawal(s,{method:$('withdrawMethod').value,amountCents:Math.round(Number($('withdrawAmount').value)*100)}),'withdrawStatus');
+$('advanceWithdraw').onclick=()=>run(()=>advanceWithdrawal(s,$('withdrawIntent').value,$('withdrawAction').value),'withdrawAdvanceStatus');
+$('withdrawIntent').addEventListener('change',()=>renderWithdrawals(activeAccount(s)));
+for(const id of ['withdrawMethod','withdrawAmount'])$(id).addEventListener('input',previewWithdraw);
 $('place').onclick=()=>run(()=>{
  // Compare the requested race to live fixture again, never trust a frozen UI selection.
  const c=choices.find(x=>x.raceId===activeQuote?.raceId);
@@ -140,7 +166,7 @@ $('place').onclick=()=>run(()=>{
 },'ticketStatus');
 $('race').onchange=runners;
 for(const id of ['runner','betKind','stake','buyAmount','sellAmount'])$(id).addEventListener('input',preview);
-updateDepositMethods();races();render();settle();
+updateDepositMethods();races();render();previewWithdraw();settle();
 let prevRace='';
 setInterval(()=>{
  const now=liveSlot(),key=now.dayIndex+':'+now.slot;
