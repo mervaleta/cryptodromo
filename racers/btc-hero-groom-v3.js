@@ -4,7 +4,7 @@
  * The horse GLB, original bones and Gallop animation are not changed.
  */
 import * as THREE from 'three';
-export const GROOM_VERSION='btc-groom-v3-flyaways-3';
+export const GROOM_VERSION='btc-groom-v3-shading-4';
 const PI=Math.PI, TAU=Math.PI*2;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
 function findHair(root){
@@ -47,7 +47,7 @@ function buildGeometry(source,options){
  for(let side=0;side<2;side++){
   for(let i=0;i<=N;i++){
    const s=i/N,rootY=-.0293+.0179*s;
-   const rootZ=.0431-.0060*s+.00035*Math.sin(PI*s);
+   const rootZ=.0407-.00495*s+.00030*Math.sin(PI*s);
    const skin=nearest(rootY),row=[];
    for(let k=0;k<=M;k++){
     const u=k/M,bulge=Math.sin(PI*u),late=Math.pow(u,3);
@@ -96,7 +96,8 @@ function buildGeometry(source,options){
   for(let j=0;j<S;j++){
    const a=TAU*j/S,scallop=1+.075*Math.sin(a*5+u*6)+.05*Math.sin(a*9-u*8);
    const x=rx*Math.cos(a)*scallop+.00017*Math.sin(u*TAU);
-   const y=cy+.00030*Math.sin(a*3+u*6)*mid;
+   const y=cy+.00030*Math.sin(a*3+u*6)*mid+
+     .0012*Math.pow(u,3)*Math.sin(a*6.0+u*1.8);
    const z=cz+rz*Math.sin(a)*scallop;
    row.push(vertex(x,y,z,bones,ws,u,1,j/S,.86+.15*Math.max(0,Math.sin(a))));
   }
@@ -190,8 +191,8 @@ export function createBTC3DHeroGroom(root,options={}){
    tailSize:clamp(options.tailSize??1.1,.65,1.85)};
  const geometry=buildGeometry(source,settings);
  const material=new THREE.MeshPhysicalMaterial({
-  color:options.color||'#392824',vertexColors:true,roughness:.84,
-  sheen:.40,sheenColor:new THREE.Color('#72584a'),sheenRoughness:.79,
+  color:options.color||'#392824',vertexColors:true,roughness:.77,
+  sheen:.62,sheenColor:new THREE.Color('#896553'),sheenRoughness:.72,
   metalness:0,clearcoat:0,side:THREE.DoubleSide,shadowSide:THREE.DoubleSide
  });
  const anim={clock:{value:0},amount:{value:.62}};
@@ -204,7 +205,9 @@ export function createBTC3DHeroGroom(root,options={}){
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
     '#include <common>\nvarying vec3 hairData;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-    '#include <color_fragment>\nfloat fibers=.5+.5*sin(hairData.z*165.0+hairData.x*33.0);\nfloat rootD=1.0-.22*(1.0-smoothstep(0.0,.25,hairData.x));\ndiffuseColor.rgb*=rootD*(.91+.08*fibers+.05*smoothstep(.7,1.0,hairData.x));');
+    '#include <color_fragment>\nfloat fiber=(.5+.5*sin(hairData.z*520.0+hairData.x*13.0))*(.5+.5*sin(hairData.z*180.0-hairData.x*27.0));\nfloat rootShade=.72+.28*smoothstep(0.0,.28,hairData.x);\nfloat tipLight=1.0+.085*smoothstep(.7,1.0,hairData.x);\ndiffuseColor.rgb*=rootShade*tipLight*(.92+.115*fiber);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
+    '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.09*(.5+.5*sin(hairData.z*98.0))-.04,.55,.98);');
  };
  material.customProgramCacheKey=()=>GROOM_VERSION;
  const mesh=new THREE.SkinnedMesh(geometry,material);
