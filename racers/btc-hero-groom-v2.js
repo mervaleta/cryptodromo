@@ -18,6 +18,9 @@ function sourceHair(root){
  return result;
 }
 function buildGroom(source,settings){
+ // The imported Hair primitive has 126 neck vertices and 384 tail vertices.
+ // Positions are model rest-space: positive Y points towards the rump,
+ // and positive Z is upward. Each lock keeps the bone weights of its root.
  const pos=source.geometry.attributes.position;
  const bones=source.geometry.attributes.skinIndex;
  const weights=source.geometry.attributes.skinWeight;
@@ -25,69 +28,94 @@ function buildGroom(source,settings){
  const src=[];
  for(let i=0;i<pos.count;i++)src.push([pos.getX(i),pos.getY(i),pos.getZ(i)]);
  const verts=[],idx=[],skIndices=[],skWeights=[],colors=[],tips=[],lockIds=[],regions=[];
- const steps=15,sides=8;
+ const STEPS=18,SIDES=8;
  const pick=(mane,y,x,z)=>{
-  let nearest=0,best=1e8;
+  let nearest=0,best=1e7;
   for(let i=0;i<src.length;i++){
-   let p=src[i];if(mane?p[1]>-.009:p[1]<.013)continue;
-   let d=(p[0]-x)**2+(p[1]-y)**2+(p[2]-z)**2;
-   if(d<best){best=d;nearest=i;}
+   const p=src[i];if(mane?p[1]>-.0105:p[1]<.014)continue;
+   const score=(p[0]-x)**2*1.25+(p[1]-y)**2*2.5+(p[2]-z)**2;
+   if(score<best){best=score;nearest=i;}
   }
   return nearest;
  };
- const addLock=(mane,j,n)=>{
-  let t=j/(n-1),r=RNG(j*17+(mane?7:173)),lane=(j%5-2)*.00048;
-  const anchor=pick(mane,mane?(-.028+t*.015):(.0163+(j%7)*.00025),lane,mane?(.0423-t*.0043):.033);
-  const p=src[anchor],size=mane?settings.maneSize:settings.tailSize;
-  const length=(mane?.0058+.0054*r:.0096+.0075*r)*size;
-  const w=(mane?.00118:.00138)*(.78+.45*RNG(j+123));
-  const first=verts.length/3;
-  for(let k=0;k<=steps;k++){
-   const u=k/steps,peak=Math.sin(Math.PI*u);
-   const radius=w*(.32+.77*Math.min(1,u*5))*Math.max(.045,(1-u)**.54);
-   const x=p[0]+Math.sin(u*Math.PI*.85+r*4)*.00015*u;
-   const y=p[1]+length*u;
-   const z=p[2]+(mane?peak*(.0015+.0011*r)-.0006*u:(.0014+.0013*r)*Math.sin(Math.PI*u)-.0018*u);
-   // Preserve one root bone binding per lock. Re-sampling moving neck bones along
-   // a strand produces the 'spider legs' artifact in the previous rendering.
-   const joint=anchor;
-   for(let side=0;side<sides;side++){
-    let a=side/sides*TAU;
-    verts.push(x+Math.cos(a)*radius,y+Math.sin(a)*radius*.21,z+Math.sin(a)*radius*.95);
-    for(let c=0;c<4;c++){skIndices.push(bones.getComponent(joint,c));skWeights.push(weights.getComponent(joint,c));}
-    const light=.83+.12*RNG(j*13+side)+((side===0||side===1)?.14:0);
-    colors.push(light,light*.94,light*.88);
+ const add=(mane,j,n)=>{
+  // Layered base/root layout, avoiding the solid row of identical tubes.
+  const layers=mane?4:5;
+  const slot=Math.floor(j/layers),layer=j%layers;
+  const slotCount=Math.ceil(n/layers);
+  const along=slot/(slotCount-1);
+  const phase=RNG(j*19.13+(mane?23:41));
+  const secondary=RNG(j*7.31+233);
+  const lateral=(layer-(layers-1)*.5)*(mane?.00085:.00061)+
+    (phase-.5)*.00020;
+  const yRoot=mane?(-.0287+.0164*along+(.5-phase)*.00045):
+    (.0196+.0009*(secondary-.5));
+  const zRoot=mane?(.0437-.007*along):(.0316+.0013*(secondary-.5));
+  const anchor=pick(mane,yRoot,lateral,zRoot);
+  const p=src[anchor];
+  // The width grows from a thin root to a sculpted belly then pinches
+  // to a fine, curved tip. The cross section is an elliptical lens.
+  const length=(mane?.0083+.0067*phase:.0113+.0085*phase)*
+     (mane?settings.maneSize:settings.tailSize)*(0.88+layer*.056);
+  const width=(mane?.00098:.00115)*(.81+.27*secondary);
+  const root=verts.length/3;
+  const rootTilt=(phase-.5)*.00055;
+  const bend=(mane?.0021:.0028)*(.7+phase*.6);
+  for(let k=0;k<=STEPS;k++){
+   const u=k/STEPS;
+   const swell=Math.sin(Math.PI*u);
+   const envelope=Math.max(.01,Math.sin(Math.PI*Math.pow(u,.62)))*(.85+.18*Math.sin(Math.PI*u));
+   const w=width*(.20+.90*Math.min(1,u*9))*envelope;
+   const x=p[0]+rootTilt*u+.00018*Math.sin(u*Math.PI*1.5+phase*8)*u;
+   const y=p[1]+length*(u+.045*Math.sin(Math.PI*u))+
+      .00014*Math.sin(Math.PI*u*1.6+phase*4);
+   const z=p[2]+bend*swell+
+     (mane?(-.00105*u*u):(-.0018*u*u))+
+     .00028*Math.sin(u*TAU+secondary*6)*u;
+   for(let side=0;side<SIDES;side++){
+    const a=side/SIDES*TAU;
+    verts.push(x+Math.cos(a)*w*.65,y+Math.sin(a)*w*.15,
+      z+Math.sin(a)*w*1.18);
+    for(let c=0;c<4;c++){
+     skIndices.push(bones.getComponent(anchor,c));
+     skWeights.push(weights.getComponent(anchor,c));
+    }
+    const ridge=(side===1||side===2)?.21:(side===5||side===6?-.08:.04);
+    const tint=.76+.12*phase+.05*Math.sin(j*1.7)+
+      ridge+.075*swell;
+    colors.push(tint*1.08,tint*.96,tint*.89);
     tips.push(u);lockIds.push(j+(mane?0:100));regions.push(mane?0:1);
    }
   }
-  for(let k=0;k<steps;k++)for(let side=0;side<sides;side++){
-   let a=first+k*sides+side,b=first+k*sides+(side+1)%sides;
-   let c=first+(k+1)*sides+side,d=first+(k+1)*sides+(side+1)%sides;
-   idx.push(a,c,b,b,c,d);
+  for(let k=0;k<STEPS;k++)for(let a=0;a<SIDES;a++){
+   const v0=root+k*SIDES+a,v1=root+k*SIDES+(a+1)%SIDES;
+   const v2=root+(k+1)*SIDES+a,v3=root+(k+1)*SIDES+(a+1)%SIDES;
+   idx.push(v0,v2,v1,v1,v2,v3);
   }
  };
- for(let i=0;i<settings.maneLocks;i++)addLock(true,i,settings.maneLocks);
- for(let i=0;i<settings.tailLocks;i++)addLock(false,i,settings.tailLocks);
- const g=new THREE.BufferGeometry();g.setIndex(idx);
- g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
- g.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(skIndices,4));
- g.setAttribute('skinWeight',new THREE.Float32BufferAttribute(skWeights,4));
- g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
- g.setAttribute('groomTip',new THREE.Float32BufferAttribute(tips,1));
- g.setAttribute('groomLock',new THREE.Float32BufferAttribute(lockIds,1));
- g.setAttribute('groomTail',new THREE.Float32BufferAttribute(regions,1));
- g.computeVertexNormals();g.computeBoundingSphere();
- return g;
+ for(let j=0;j<settings.maneLocks;j++)add(true,j,settings.maneLocks);
+ for(let j=0;j<settings.tailLocks;j++)add(false,j,settings.tailLocks);
+ const geometry=new THREE.BufferGeometry();
+ geometry.setIndex(idx);
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+ geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(skIndices,4));
+ geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(skWeights,4));
+ geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+ geometry.setAttribute('groomTip',new THREE.Float32BufferAttribute(tips,1));
+ geometry.setAttribute('groomLock',new THREE.Float32BufferAttribute(lockIds,1));
+ geometry.setAttribute('groomTail',new THREE.Float32BufferAttribute(regions,1));
+ geometry.computeVertexNormals();geometry.computeBoundingSphere();
+ return geometry;
 }
 export function createBTC3DHeroGroom(root,options={}){
- const settings={maneLocks:30,tailLocks:20,maneSize:1.15,tailSize:1.10,color:'#4b2e25',...options};
+ const settings={maneLocks:52,tailLocks:35,maneSize:1.18,tailSize:1.16,color:'#50352b',...options};
  settings.maneLocks=Math.round(clamp(settings.maneLocks,16,80));
  settings.tailLocks=Math.round(clamp(settings.tailLocks,12,60));
  settings.maneSize=clamp(settings.maneSize,.7,1.9);
  settings.tailSize=clamp(settings.tailSize,.7,1.9);
  const original=sourceHair(root),geometry=buildGroom(original,settings);
  const material=new THREE.MeshStandardMaterial({color:settings.color,vertexColors:true,
-   side:THREE.DoubleSide,roughness:.53,metalness:0});
+   side:THREE.DoubleSide,roughness:.62,metalness:0});
  const uniforms={time:{value:0},intensity:{value:.8}};
  const declarations=[
   'attribute float groomTip;',
