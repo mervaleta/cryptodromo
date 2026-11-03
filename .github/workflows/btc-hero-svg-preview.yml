@@ -1,0 +1,35 @@
+name: BTC Hero SVG prototype browser check
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'laboratorio/btc-hero-horse.html'
+      - 'tests/btc-hero-svg-browser.mjs'
+      - '.github/workflows/btc-hero-svg-preview.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Test SVG preview and custom controls
+        run: |
+          python3 -m http.server 8912 --bind 127.0.0.1 > /tmp/crp-hero.txt 2>&1 &
+          SERVER=$!
+          trap 'kill "$SERVER" || true' EXIT
+          sleep 2
+          node tests/btc-hero-svg-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: btc-hero-svg-preview
+          path: artifacts/btc-hero-svg-preview.png
+          if-no-files-found: ignore
