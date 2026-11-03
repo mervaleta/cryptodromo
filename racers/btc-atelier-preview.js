@@ -11,6 +11,8 @@ import {applyBTCCoatLook} from './btc-coat-look-v2.js?v=btc-coat-look-v2-1';
 import {applyBTCCoatLook as applyBTCCoatLookV3} from './btc-coat-look-v3.js?v=btc-studio-satin-coat-v3';
 
 const lookdevStage=Math.max(1,Math.min(10,Math.floor(Number(new URLSearchParams(location.search).get('lookdev')||10))||10));
+// CI-only repeatable Gallop pose for pixel-comparable screenshots.
+const qaFixedGallopFrame=new URLSearchParams(location.search).get('qaFrame')==='1';
 const CAMERA_POSITIONS={
  profile:[2.25,2.0,4.35],
  'three-quarter':[3.10,2.23,3.65],
@@ -45,6 +47,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;platform.receiveShadow=true;scene.add(platform);
 
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
+ let qaFrameApplied=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#45312c';
  const resize=()=>{
@@ -81,7 +84,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHero=hero;
-   horse=next;hero=nextHero;
+   horse=next;hero=nextHero;qaFrameApplied=false;
    renderedSymbol=token.symbol;renderedVariant=candidate?'enhanced':'original';
    prevHero?.dispose();prev?.dispose();
   }catch(error){
@@ -104,8 +107,18 @@ export function createPreview(canvas,onFailure=()=>{}){
   if(disposed)return;
   const dt=Math.min(clock.getDelta(),.05);
   if(!document.hidden){
-   horse?.update(dt,speed);
-   hero?.update(dt,{wind,speed,running:!paused});
+   if(qaFixedGallopFrame){
+    if(horse&&!qaFrameApplied){
+     // The original horse update clamps delta to 0.1. Four steps advance
+     // exactly 0.4 authored Gallop seconds, then hold that sculpted pose.
+     for(let i=0;i<4;i++)horse.update(.1,1);
+     hero?.update(.033,{wind,speed,running:true});
+     qaFrameApplied=true;
+    }
+   }else{
+    horse?.update(dt,speed);
+    hero?.update(dt,{wind,speed,running:!paused});
+   }
   }
   controls.update();renderer.render(scene,camera);
  });
