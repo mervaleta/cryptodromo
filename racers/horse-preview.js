@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createHorse } from '../race-lab/source/src/horse.js?v=alpha16-mane-1';
+import { createHorse } from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 
 export function createPreview(canvas,onFailure=()=>{}){
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -14,7 +14,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   async function select(token){
     const request=++selection;
     try{
-      const next=await createHorse({coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,mode:paused?'Idle':'Gallop'});
+      const next=await createHorse({coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,mode:paused?'Idle':'Gallop',maneMotion:false});
       if(request!==selection){next.dispose();return;}
       next.root.scale.setScalar(.78);scene.add(next.root);next.play(paused?'Idle':'Gallop',0);
       const previous=horse;horse=next;if(previous){scene.remove(previous.root);previous.dispose();}
