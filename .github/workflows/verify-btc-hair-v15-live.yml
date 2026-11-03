@@ -1,0 +1,36 @@
+name: Verify baked BTC mane-tail pilot on Hostinger
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-btc-hair-v15-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm new baked hair module on race.cryptodromo.com
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 1 2 3 4 5 6 7 8; do
+            hair=$(mktemp); preview=$(mktemp); page=$(mktemp)
+            a=$(curl -L --max-time 15 -sS -o "$hair" -w '%{http_code}' "https://race.cryptodromo.com/racers/btc-hair-v15.js?deploycheck=$i" || true)
+            b=$(curl -L --max-time 15 -sS -o "$preview" -w '%{http_code}' "https://race.cryptodromo.com/racers/btc-atelier-preview.js?deploycheck=$i" || true)
+            c=$(curl -L --max-time 15 -sS -o "$page" -w '%{http_code}' "https://race.cryptodromo.com/racers/?atelier=btc&deploycheck=$i" || true)
+            echo "Attempt $i: hair=$a preview=$b page=$c"
+            if grep -q 'BAKED_HAIR_FRAMES' "$hair" &&
+               grep -q 'createBTCHairAtelier' "$preview" &&
+               grep -q 'Crin + cola animadas' "$page"; then
+              echo "::notice::BTC baked mane and tail v1.5 is served by Hostinger"
+              rm -f "$hair" "$preview" "$page"
+              exit 0
+            fi
+            rm -f "$hair" "$preview" "$page"
+            sleep 12
+          done
+          echo "::error::Hostinger is not serving the latest BTC hair pilot; recheck deploy sync"
+          exit 1
