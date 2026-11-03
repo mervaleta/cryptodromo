@@ -5,6 +5,7 @@ on:
     paths:
       - 'racers/**'
       - 'tests/btc-horse-atelier-*.mjs'
+      - 'tests/btc-hair-v15-contract.mjs'
       - '.github/workflows/btc-horse-atelier.yml'
   workflow_dispatch:
 permissions:
@@ -20,8 +21,9 @@ jobs:
       - name: Verify BTC-only safety contract
         run: |
           node --check racers/btc-atelier-preview.js
+          node --check racers/btc-hair-v15.js
           node --check racers/racers.js
-          node --test tests/btc-horse-atelier-contract.mjs
+          node --test tests/btc-horse-atelier-contract.mjs tests/btc-hair-v15-contract.mjs
       - name: Install browser
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
@@ -38,5 +40,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: btc-atelier-stage
-          path: artifacts/btc-atelier-preview.png
+          path: artifacts/btc-mane-tail-v15-preview.png
           if-no-files-found: ignore
