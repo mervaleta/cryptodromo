@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alpha22 · Horse Fidelity Studio | Cryptódromo</title>
+<meta name="description" content="Laboratorio 3D de caballos originales generados por geometría paramétrica.">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+<style>
+:root{color-scheme:dark;background:#0c1110;color:#ecece2;font-family:Inter,system-ui,Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 55% 0,#182a21,#0b110f 62%);min-height:100vh}
+header{padding:20px clamp(14px,3.5vw,65px);display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #355044}
+h1{font-family:Georgia,serif;font-size:clamp(24px,2.8vw,40px);font-weight:500;letter-spacing:-.045em;margin:0}
+h1 span{color:#d9bd86}header p{font-size:11px;letter-spacing:.12em;color:#8aa797;text-transform:uppercase;margin:6px 0 0}
+a{color:#d0bd90;text-decoration:none;font-size:12px}
+main{max-width:1720px;margin:auto;padding:22px clamp(12px,3vw,46px) 60px}
+.view{display:grid;grid-template-columns:minmax(0,1fr) 315px;gap:16px}
+#stage{height:clamp(420px,67vh,780px);position:relative;background:#343e39;border:1px solid #486053;overflow:hidden;border-radius:7px}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.top{position:absolute;left:19px;top:16px;background:#0b1814cf;border:1px solid #476353;padding:12px 14px;border-radius:3px;pointer-events:none}
+.top b{font-size:11px;letter-spacing:.18em;color:#e7c992;display:block}.top strong{font-size:24px;letter-spacing:-.02em;display:block;margin:3px 0}
+.top span{font-size:11px;color:#a7bbaf}
+.corner{position:absolute;right:15px;bottom:14px;color:#d4e6d9;background:#0b1712c9;padding:8px 12px;font-size:10px;letter-spacing:.1em}
+aside{padding:19px;background:#132019;border:1px solid #385044;border-radius:7px;max-height:780px;overflow:auto}
+aside h2{font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:#d2bb88;margin:0 0 18px}
+section.settings{display:grid;gap:14px}label{display:grid;gap:6px;font-size:11px;color:#b9ccbb}
+select,input[type=range],button{width:100%;accent-color:#c0a86d}
+select,button{background:#173126;color:#ecf3df;border:1px solid #476957;padding:10px;border-radius:3px;font:600 12px system-ui;cursor:pointer}
+select:hover,button:hover{background:#244934}
+button.strong{background:#c2a571;color:#151d16;border:0}
+.tabs{display:flex;gap:7px;margin-bottom:14px}.tabs button{flex:1;min-width:0;padding:10px 5px}
+.tabs button.active{border-color:#c9af78;background:#425139}
+.metrics{font:11px/1.75 ui-monospace,Consolas,monospace;color:#c7d6c5;margin-top:16px;padding:12px;background:#0b1811;white-space:pre-wrap;word-break:break-word}
+.status{margin-top:15px;color:#bdd1c3;font-size:12px;line-height:1.65}
+#error{color:#f2ac98;white-space:pre-wrap}
+.note{margin-top:15px;border-left:2px solid #bba36e;padding:11px 14px;background:#132018;font-size:12px;line-height:1.8;color:#b1c0b5}
+@media(max-width:970px){.view{grid-template-columns:1fr}aside{max-height:none}section.settings{grid-template-columns:repeat(2,minmax(0,1fr))}#stage{height:520px}}
+@media(max-width:540px){section.settings{grid-template-columns:1fr}#stage{height:440px}header{flex-wrap:wrap}.top strong{font-size:18px}}
+</style></head>
+<body><header><div><h1>CRYPTÓDROMO <span>HORSE FIDELITY · ALPHA22</span></h1>
+<p>Caballos 3D originales y parametrizados · Sin GLB · Sin PNG · Sin sprites</p></div>
+<a href="/visual-lab/">← Volver a la pista LIVE</a></header>
+<main><div class="view"><div id="stage"><canvas id="viewport"></canvas>
+<div class="top"><b>HORSE FIDELITY STUDIO</b><strong id="modeTitle">Retrato de corredor</strong><span id="state">Preparando geometría paramétrica…</span></div>
+<div class="corner">RENDER PROCEDURAL · DEMO AISLADA</div></div>
+<aside><h2>Dirección de arte del caballo</h2>
+<div class="tabs"><button data-view="portrait" class="active">Retrato</button><button data-view="grid">12 corredores</button><button data-view="gallop">Galope</button></div>
+<section class="settings">
+<label>Conformación anatómica<select id="archetype"><option value="thoroughbred">Sangre pura</option><option value="sprinter">Potencia</option><option value="elegant">Elegante</option><option value="endurance">Resistencia</option></select></label>
+<label>Pelaje<select id="coat"><option value="bay">Zaino / bay</option><option value="chestnut">Alazán</option><option value="black">Negro</option><option value="palomino">Palomino</option><option value="grey">Tordillo</option><option value="cream">Crema</option><option value="seal">Marrón oscuro</option><option value="dun">Bayo</option></select></label>
+<label>Crin<select id="mane"><option value="sport">Deportiva</option><option value="flowing">Larga</option><option value="cropped">Corta</option></select></label>
+<label>Cola<select id="tail"><option value="natural">Natural</option><option value="full">Abundante</option><option value="sport">Deportiva</option></select></label>
+<label>Apoyo de cascos<select id="gait"><option value="ik">Cuatro tiempos · IK (nuevo)</option><option value="swing">Oscilación anterior</option></select></label>
+<label>Jockey 3D<select id="jockey"><option value="yes">Con jockey procedural</option><option value="no" selected>Solo anatomía del caballo</option></select></label>
+<label>Marca facial<select id="marking"><option value="star">Lucero</option><option value="blaze">Lista blanca</option><option value="snip">Mancha hocico</option><option value="none">Sin marca</option></select></label>
+<label>Iluminación<select id="weather"><option value="golden">Golden hour</option><option value="day">Día</option><option value="night">Noche</option><option value="rain">Lluvia</option></select></label>
+<label>Detalle de geometría<select id="quality"><option value="balanced">Balanceado</option><option value="high">Alta fidelidad</option><option value="eco">Económico</option></select></label>
+<label>Humedad del pelaje <output id="wetLabel">0%</output><input id="wet" type="range" min="0" max="100" value="0"></label>
+<label>Barro del pelaje <output id="mudLabel">0%</output><input id="mud" type="range" min="0" max="100" value="0"></label>
+<label>Velocidad del ciclo <output id="rateLabel">1,00×</output><input id="rate" type="range" min="40" max="170" value="100"></label>
+<button id="animate" class="strong">▶ Activar galope</button>
+<button id="compare">⇄ Comparar Alpha20 actual con Alpha22</button>
+<button id="reset">↺ Restablecer apariencia</button>
+</section><div class="metrics" id="metrics">Esperando escena...</div>
+<p class="status" id="notes">Ninguna textura de imagen, licencia externa de geometría ni motor de cotizaciones se usa en el caballo.</p>
+<p id="error" role="alert"></p></aside></div>
+<div class="note">La referencia NONECG guía los objetivos anatómicos, pero no se importa ninguno de sus archivos. El cuerpo se construye mediante secciones orgánicas, la piel con ruido matemático 3D y el pelo mediante mallas geométricas. Esta demostración todavía no equivale a una aprobación artística AAA de producción.</div>
+</main><script type="module" src="./studio.js"></script></body></html>
