@@ -37,7 +37,7 @@ test('render-only staging never changes official progress or visual speed',()=>{
  const prior=horses.map(h=>({progress:h.progress,visualSpeed:h.visualSpeed}));
  applyGateStaging({horses,gate,phase:'presentation',elapsed:-1,layoutMode:'straight',trackPoint});
  assert.equal(horses[0].model.root.position.x,-393.2);
- assert.equal(horses[11].model.root.position.z,14.025);
+ assert.ok(Math.abs(horses[11].model.root.position.z-14.025)<1e-8);
  assert.deepEqual(horses.map(h=>({progress:h.progress,visualSpeed:h.visualSpeed})),prior);
  assert.equal(gate.value.secondsSinceStart,-1);
  applyGateStaging({horses,gate,phase:'race',elapsed:1.2,layoutMode:'straight',trackPoint});
