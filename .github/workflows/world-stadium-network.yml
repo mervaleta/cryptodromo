@@ -1,0 +1,31 @@
+name: Cryptódromo World static network
+on:
+  push:
+    paths:
+      - 'stadiums/**'
+      - 'assets/stadium-network-*'
+      - 'assets/crp-global-nav.js'
+      - 'tests/world-stadium-network.mjs'
+      - '.github/workflows/world-stadium-network.yml'
+  pull_request:
+    paths:
+      - 'stadiums/**'
+      - 'assets/stadium-network-*'
+      - 'assets/crp-global-nav.js'
+      - 'tests/world-stadium-network.mjs'
+      - '.github/workflows/world-stadium-network.yml'
+jobs:
+  network:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and fixture integrity
+        run: |
+          node --check assets/stadium-network-engine.mjs
+          node --check assets/stadium-network-ui.mjs
+          node --check assets/crp-global-nav.js
+          node tests/world-stadium-network.mjs
