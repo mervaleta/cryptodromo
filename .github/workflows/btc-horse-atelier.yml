@@ -22,7 +22,8 @@ jobs:
         run: |
           node --check racers/btc-atelier-preview.js
           node --check racers/btc-hair-v15.js
-          node --check racers/btc-hero-groom-v2.js
+          node --check racers/btc-hero-groom-v4.js
+          node --check racers/btc-hero-v4.js
           node --check racers/btc-coat-look-v2.js
           node --check racers/racers.js
           node --test tests/btc-horse-atelier-contract.mjs tests/btc-hair-v15-contract.mjs
@@ -41,9 +42,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-atelier-stage
+          name: btc-real-hero-v4-browser-evidence
           path: |
-            artifacts/btc-3d-groom-v2-preview.png
+            artifacts/btc-real-hero-v4-preview.png
             artifacts/btc-original-before.png
             artifacts/btc-hero-after-profile.png
             artifacts/btc-hero-after-rear.png
