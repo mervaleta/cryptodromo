@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createProceduralHorse} from '../horse-fidelity/proceduralHorse.js';
-import {randomHorseProfile,normalizeHorseProfile} from '../horse-fidelity/horseProfiles.js';
+import {randomHorseProfile,normalizeHorseProfile,COAT_PRESETS} from '../horse-fidelity/horseProfiles.js';
 import {verifyTextureFreeMaterial} from '../horse-fidelity/horseShader.js';
 
 const $=id=>document.getElementById(id);
@@ -36,7 +36,7 @@ for(let i=0;i<12;i++){
  shadows.add(sh);
 }
 const symbols=['BTC','ETH','SOL','BNB','XRP','ADA','DOGE','AVAX','LINK','DOT','LTC','UNI'];
-let horses=[],mode='portrait',moving=false,time=0,frame=performance.now(),lastMetrics=0;
+let horses=[],baseline=null,mode='portrait',moving=false,time=0,frame=performance.now(),lastMetrics=0;
 const newProfile=i=>{
  const p=randomHorseProfile(symbols[i],i);
  if(i===0)return normalizeHorseProfile({...p,
@@ -58,19 +58,22 @@ for(let i=0;i<12;i++)horses.push(addHorse(i));
 function layout(){
  for(let i=0;i<horses.length;i++){
   const h=horses[i],shadow=shadows.children[i];
-  h.root.visible=mode!=='portrait'||i===0;shadow.visible=h.root.visible;
-  if(mode==='portrait')h.root.position.set(0,0,0);
+  h.root.visible=!(mode==='portrait'||mode==='compare')||i===0;shadow.visible=h.root.visible;
+  if(mode==='portrait'||mode==='compare')h.root.position.set(mode==='compare'?1.9:0,0,0);
   if(mode==='grid')h.root.position.set((i%4-1.5)*4.8,0,(Math.floor(i/4)-1)*4.0);
   if(mode==='gallop')h.root.position.set(-1.5-(i%3)*.55,0,(i-5.5)*1.75);
   shadow.position.x=h.root.position.x;shadow.position.z=h.root.position.z;
   h.play(mode==='gallop'?'Gallop':moving?'Gallop':'Idle');
  }
+ if(baseline){baseline.root.visible=mode==='compare';baseline.root.position.set(-1.9,0,0);}
  controls.target.set(0,mode==='grid'?0:1.45,0);
  if(mode==='portrait')camera.position.set(5.8,3.45,7.9);
  if(mode==='grid')camera.position.set(15.5,22.5,23.5);
  if(mode==='gallop')camera.position.set(8.0,6.2,23.5);
+ if(mode==='compare')camera.position.set(7.5,4.0,11.8);
  controls.update();
- $('modeTitle').textContent=mode==='portrait'?'Retrato de corredor':mode==='grid'?'Doce corredores':'Galope cinematográfico';
+ $('modeTitle').textContent=mode==='portrait'?'Retrato de corredor':mode==='grid'?'Doce corredores':
+  mode==='compare'?'Alpha20 actual · Alpha22 Fidelity':'Galope cinematográfico';
  document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===mode));
 }
 function replaceAll(){
@@ -85,6 +88,7 @@ function replaceHero(){
 function updateLook(){
  horses[0].setAppearance({coat:$('coat').value,maneStyle:$('mane').value,
   tailStyle:$('tail').value,marking:$('marking').value});
+ if(baseline)baseline.setAppearance({coat:COAT_PRESETS[$('coat').value].coat});
  applyWeather();
  updateMetrics();
 }
@@ -113,12 +117,30 @@ function updateMetrics(){
   'Texturas PNG / JPG / Canvas: '+(hero?.imageTextures||0),
   'Sin mapas de imagen: '+(textureChecks?'SÍ':'NO'),
   'Draw calls GPU: '+renderer.info.render.calls,
-  'Visor: '+mode
+  'Visor: '+mode,
+  'Comparación Alpha20: '+(baseline?'cargada':'no cargada')
  ].join('\n');
 }
 for(const button of document.querySelectorAll('[data-view]')){
  button.addEventListener('click',()=>{mode=button.dataset.view;time=0;layout();updateMetrics();});
 }
+$('compare').addEventListener('click',async()=>{
+ if(mode==='compare'){mode='portrait';layout();updateMetrics();return;}
+ if(!baseline){
+  try{
+   // Optional: available once Alpha20 main is reconciled with this branch.
+   const {createProceduralRaceHorse}=await import('../proceduralHorse.js');
+   baseline=createProceduralRaceHorse({symbol:'BTC',stallNumber:1,mode:'Idle',
+    quality:'balanced',coat:COAT_PRESETS[$('coat').value].coat,accent:'#e5bf79'});
+   scene.add(baseline.root);
+  }catch(error){
+   $('notes').textContent='La comparación estará disponible con Alpha20 integrado: '+String(error.message);
+   console.warn('Comparador Alpha20 aún no disponible en la rama aislada');
+   return;
+  }
+ }
+ mode='compare';layout();updateMetrics();
+});
 for(const id of ['archetype','quality'])$(id).addEventListener('change',()=>{
  if(id==='quality')replaceAll();else replaceHero();
 });
@@ -165,6 +187,10 @@ function animate(now){
   if(shadows.children[i]){shadows.children[i].position.x=h.root.position.x;
    shadows.children[i].position.z=h.root.position.z;}
  }
+ if(baseline&&mode==='compare'){
+  baseline.play(moving?'Gallop':'Idle');
+  baseline.update(dt,moving?Number($('rate').value)/100:1);
+ }
  controls.update();
  const width=Math.max(1,stage.clientWidth),height=Math.max(1,stage.clientHeight);
  if(canvas.width!==Math.floor(width*renderer.getPixelRatio())||
@@ -183,12 +209,12 @@ window.__cryptodromoAlpha22QA={
   textures:horses.reduce((sum,h)=>sum+h.shapeStats.imageTextures,0),
   allTextureFree:horses.every(h=>h.isTextureFree),
   selectedProfile:horses[0]?.profile,
-  mode,moving,hoofPhases:horses.map(h=>h.hoofPhase),
+  mode,moving,baselineMounted:!!baseline,hoofPhases:horses.map(h=>h.hoofPhase),
   drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
   heroStats:horses[0]?.shapeStats
  }),
  setView:value=>{if(['portrait','grid','gallop'].includes(value)){mode=value;layout();}},
- dispose:()=>{horses.forEach(h=>h.dispose());horses=[];}
+ dispose:()=>{horses.forEach(h=>h.dispose());horses=[];baseline?.dispose();baseline=null;}
 };
 layout();applyWeather();
 $('state').textContent='12 caballos generados por código · listos para inspección';
