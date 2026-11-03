@@ -8,7 +8,7 @@ const TABS=[
  {id:'performance',label:'⚙ Rendimiento'}
 ];
 const $=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
-export function mountVisualCockpit({container,lighting,camera,horses}={}){
+export function mountVisualCockpit({container,lighting,camera,horses,environment,performance}={}){
  if(!container)throw Error('Cockpit container is required');
  const root=$('section','crp-cockpit');root.setAttribute('aria-label','Configuración visual');
  const tabs=$('div','crp-cockpit__tabs');tabs.setAttribute('role','tablist');
@@ -35,10 +35,12 @@ export function mountVisualCockpit({container,lighting,camera,horses}={}){
    makeRange('Difuminado / halo',0,2,.05,s.glow,v=>lighting.apply({glow:v}));
    makeRange('Dispersión',.4,2.5,.05,s.spread,v=>lighting.apply({spread:v}));
    makeRange('Temperatura (K)',2400,7500,100,s.temperature,v=>lighting.apply({temperature:v}));
+   if(environment){makeRange('Exposición',.6,1.6,.05,environment.settings.exposure,v=>environment.setExposure(v));makeRange('Niebla',.2,2.5,.1,environment.settings.fog,v=>environment.setFog(v));}
    button(s.night?'☀ Modo día':'☾ Modo noche',()=>{lighting.apply({night:!lighting.settings.night});change('light')});
   }else if(id==='camera'){
    if(!camera){panel.append($('p','','Conectá el módulo de cámara para activar estos ajustes.'));return}
    const s=camera.get();
+   if(camera.getMode&&camera.setMode)makeSelect('Modo de cámara',[['free','Vuelo libre'],['orbit','Órbita'],['follow','Seguir caballo'],['crane','Grúa']],camera.getMode(),v=>camera.setMode(v));
    makeSelect('Botón para orientar',[[2,'Derecho'],[0,'Izquierdo']].map(([a,b])=>[String(a),b]),String(s.lookButton),v=>camera.setLookButton(Number(v)));
    makeRange('Sensibilidad',.001,.012,.0005,s.sensitivity,v=>camera.setSensitivity(v));
    button(s.invertY?'Invertir Y: activado':'Invertir Y: desactivado',()=>{camera.setInvertY(!camera.get().invertY);change('camera')});
@@ -47,9 +49,11 @@ export function mountVisualCockpit({container,lighting,camera,horses}={}){
    makeSelect('Calidad', [['performance','Rendimiento'],['balanced','Equilibrada'],['cinematic','Cinematográfica']],horses.settings.quality,v=>horses.setQuality(v));
    makeRange('Acabado del pelaje',0,1,.05,horses.settings.finish,v=>horses.setFinish(v));
    makeRange('Humedad',0,1,.05,horses.settings.wetness,v=>horses.setWetness(v));
+   if(horses.setWind)makeRange('Viento en crines',0,2,.1,horses.settings.wind,v=>horses.setWind(v));
   }else{
-   panel.append($('p','','La calidad limita la cantidad de halos; evita luces con sombras por cada farol.'));
-   if(lighting)panel.append($('p','','Halos activos: '+lighting.fixtureCount));
+   panel.append($('p','','La calidad reduce sombras y halos. Los cambios se aplican a la escena.'));
+   if(performance)makeSelect('Perfil de rendimiento',[['eco','Económica'],['balanced','Equilibrada'],['cinematic','Cinematográfica']],performance.getQuality(),v=>performance.setQuality(v));
+   if(lighting)panel.append($('p','','Halos disponibles: '+lighting.fixtureCount));
   }
  }
  for(const t of TABS){
