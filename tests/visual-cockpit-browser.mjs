@@ -9,7 +9,7 @@ try{
  const tabs=page.locator('.crp-cockpit__tab');
  assert.equal(await tabs.count(),4);
  await tabs.filter({hasText:'Cámara'}).click();
- const look=page.locator('.crp-cockpit select').first();
+ const look=page.locator('.crp-cockpit__field').filter({hasText:'Botón para orientar'}).locator('select');
  assert.equal(await look.inputValue(),'2','Right button should look by default');
  const before=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
  const rect=await page.locator('#parade-canvas').boundingBox();
