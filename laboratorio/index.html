@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08110f"><meta name="description" content="Laboratorio deportivo del Cryptódromo: duelos, archivo de 3.360 carreras sintéticas y actas auditables.">
+<title>Laboratorio deportivo · Cryptódromo</title><link rel="icon" href="/assets/cryptodromo-logo.png">
+<link rel="stylesheet" href="/assets/race-site-hub.css?v=a14">
+<style>
+:root{color-scheme:dark}body{background:radial-gradient(ellipse at top,#17372c,#08110f 65%)}
+.lab-shell{max-width:1480px;margin:0 auto;padding:30px clamp(14px,3vw,52px) 70px}
+.lab-head{max-width:840px}.lab-head h1{font:400 clamp(36px,5vw,65px)/1.08 Georgia,serif;margin:8px 0 14px}.lab-head h1 em{color:#cfbb85}
+.lab-head p{line-height:1.65;color:#bcd1c3}.lab-badge{letter-spacing:.2em;color:#66daa7;font-weight:800;font-size:11px}
+.lab-warning{border:1px solid #937d48;background:#26251c;border-radius:8px;padding:14px 18px;margin:24px 0;color:#f3d9a2;line-height:1.6}
+.lab-panel{border:1px solid #355849;background:#0e211a;border-radius:12px;padding:clamp(15px,2vw,25px);margin:20px 0}
+.lab-panel h2{font:400 27px Georgia,serif;margin:0 0 18px}
+.lab-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:16px}
+.lab-controls label{display:grid;gap:6px;min-width:140px;flex:1;font-size:12px;color:#aac7b8}
+.lab-controls select{width:100%;background:#071610;color:#edf6ee;border:1px solid #47745d;border-radius:6px;min-height:44px;padding:10px;font:inherit}
+.lab-profiles{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.lab-profile{background:#152c22;border:1px solid #41614f;border-radius:10px;padding:18px}
+.identity{display:flex;align-items:center;gap:12px}.identity i{width:18px;height:45px;border-radius:5px;flex-shrink:0}.identity div{flex:1;min-width:0}.identity strong,.identity span{display:block}.identity strong{font-size:19px}.identity span,.muted{color:#a8c0b1;font-size:12px}.identity a{white-space:nowrap;font-size:12px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:19px 0}.metrics div{background:#081b14;border:1px solid #234438;border-radius:7px;padding:12px}.metrics span{display:block;font-size:11px;color:#a7c9b1}.metrics b{display:block;font-size:22px;margin-top:7px}
+.lab-profile h3,.lab-panel h3{font-size:15px}.form{display:flex;flex-wrap:wrap;gap:7px}.place{padding:7px 9px;border-radius:5px;background:#294333;font-weight:700}.place.first{background:#645327;color:#ffe39e}
+.duel-score{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}.duel-score>div{text-align:center;background:#0a1b14;border:1px solid #305544;padding:18px 8px;border-radius:8px}.duel-score b,.duel-score span{display:block}.duel-score b{font-size:32px}.duel-score span{font-size:11px;color:#bcd2c2}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:520px}th,td{padding:11px 10px;text-align:left;border-bottom:1px solid #2b4738}th{font-size:11px;letter-spacing:.06em;color:#afd7bb;text-transform:uppercase}td{font-size:13px}
+#audit{scroll-margin-top:22px}#audit pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:480px;overflow:auto;background:#05120d;border:1px solid #274e36;padding:16px;border-radius:8px;color:#cce3d0;font-size:12px}
+.lab-buttons{display:flex;gap:10px;flex-wrap:wrap}.lab-buttons button{background:#284739;color:#fff;border:1px solid #66876d;padding:10px 15px;cursor:pointer;border-radius:6px}
+.lab-foot{color:#96afa3;font-size:12px;line-height:1.6;padding-top:20px}
+@media(max-width:760px){.lab-profiles{grid-template-columns:1fr}.lab-controls{display:grid;grid-template-columns:1fr 1fr}.metrics{grid-template-columns:repeat(3,1fr)}.identity{flex-wrap:wrap}}
+@media(max-width:460px){.lab-controls{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+</style></head>
+<body><a href="#main" class="skip">Saltar al contenido</a>
+<header class="sitebar"><div class="sitebar-inner"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO</a>
+<nav class="site-nav" aria-label="Menú principal"><a href="/">Carrera LIVE</a><a href="/racers/">Corredores</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/laboratorio/" aria-current="page">Laboratorio</a><a href="/cronicas/">Crónicas</a><a href="/estadio/">Estadio</a><a href="/institucional/">Proyecto</a></nav></div></header>
+<main class="lab-shell" id="main"><section class="lab-head"><div class="lab-badge">SPORTS INTELLIGENCE · CRYPTÓDROMO</div><h1>Laboratorio <em>deportivo</em></h1><p>Enfrentá criptomonedas, explorá su forma reciente y abrí las actas de cualquier carrera de la semana reproducible. Todos los datos se calculan desde el fixture y el motor oficial existentes.</p></section>
+<div class="lab-warning"><strong>DEMO · PRECIOS SINTÉTICOS.</strong> Las 3.360 carreras están predeterminadas y sus resultados se repiten cada semana. No son cotizaciones reales ni transmisiones históricas acreditadas. No se aceptan apuestas.</div>
+<section class="lab-panel" aria-labelledby="compare"><h2 id="compare">Cara a cara</h2>
+<div class="lab-controls"><label>Corredor A<select id="token-a"></select></label><label>Corredor B<select id="token-b"></select></label><label>Período de análisis<select id="scope"><option value="observed">Hasta el último turno terminado</option><option value="cycle">Todo el ciclo sintético</option></select></label></div>
+<p id="scope-label" class="muted"></p><div class="lab-profiles"><article id="profile-a" class="lab-profile"></article><article id="profile-b" class="lab-profile"></article></div><div id="duel" aria-live="polite"></div></section>
+<section class="lab-panel" aria-labelledby="archive-heading"><h2 id="archive-heading">Archivo completo de carreras</h2>
+<p class="muted">Podés consultar cualquier carrera del fixture, incluso las futuras: su resultado pertenece a una simulación conocida, no a una carrera ya emitida.</p>
+<div class="lab-controls"><label>Jornada<select id="archive-day"></select></label><label>Bloque de 24 carreras<select id="archive-page"></select></label><label>Corredor presente<select id="archive-symbol"></select></label></div>
+<p id="archive-count" class="muted"></p><div class="scroll"><table><thead><tr><th>Carrera / acta</th><th>Hora AR</th><th>Ganador</th><th>Segundo</th><th>Margen</th></tr></thead><tbody id="archive-rows"></tbody></table></div></section>
+<section id="audit" class="lab-panel" hidden aria-labelledby="audit-title"><h2 id="audit-title">Acta sintética</h2><p class="muted">Clasificación y coeficientes calculados desde synthetic-v1 / CRP-DOSE-FAIR-V1. La publicación del registro no implica certificación externa ni demuestra que la carrera haya sido transmitida.</p><div class="lab-buttons"><button id="audit-copy" type="button">Copiar JSON</button><button id="audit-close" type="button">Cerrar acta</button></div><pre id="audit-body"></pre></section>
+<div class="lab-foot">Se conservan intactos el motor financiero, el galope, las dosis, el clima, el calendario y el sistema de campeonato. <a href="/metodologia.html">Metodología</a> · <a href="/juego-responsable.html">Uso responsable</a> · <a href="/estadisticas/">Volver a estadísticas</a>.</div>
+</main><script type="module" src="./lab.js?v=zed-sports-v1"></script></body></html>
