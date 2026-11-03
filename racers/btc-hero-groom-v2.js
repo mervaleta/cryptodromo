@@ -39,15 +39,15 @@ function buildGroom(source,settings){
   let t=j/(n-1),r=RNG(j*17+(mane?7:173)),lane=(j%5-2)*.00048;
   const anchor=pick(mane,mane?(-.028+t*.015):(.0163+(j%7)*.00025),lane,mane?(.0423-t*.0043):.033);
   const p=src[anchor],size=mane?settings.maneSize:settings.tailSize;
-  const length=(mane?.0044+.0048*r:.0108+.0092*r)*size;
+  const length=(mane?.0058+.0054*r:.0096+.0075*r)*size;
   const w=(mane?.00118:.00138)*(.78+.45*RNG(j+123));
   const first=verts.length/3;
   for(let k=0;k<=steps;k++){
    const u=k/steps,peak=Math.sin(Math.PI*u);
-   const radius=w*(.34+.86*Math.min(1,u*5))*Math.max(.045,(1-u)**.65);
+   const radius=w*(.32+.77*Math.min(1,u*5))*Math.max(.045,(1-u)**.54);
    const x=p[0]+Math.sin(u*Math.PI*.85+r*4)*.00015*u;
-   const y=p[1]+(mane?length*u:(.0034+.0065*r)*Math.sin(Math.PI*u*.65)+.002*u);
-   const z=p[2]+(mane?peak*(.0017+.0012*r)-.00065*u:-length*u+(.003+.0014*r)*Math.sin(Math.PI*u));
+   const y=p[1]+length*u;
+   const z=p[2]+(mane?peak*(.0015+.0011*r)-.0006*u:(.0014+.0013*r)*Math.sin(Math.PI*u)-.0018*u);
    // Preserve one root bone binding per lock. Re-sampling moving neck bones along
    // a strand produces the 'spider legs' artifact in the previous rendering.
    const joint=anchor;
