@@ -10,10 +10,10 @@ import {createBTCHairAtelier} from './btc-hair-v15.js?v=btc-hair-v15-1';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v2.js?v=btc-hero-groom-v2-1';
 
 const CAMERA_POSITIONS={
- profile:[2.85,2.25,5.15],
- front:[4.85,2.28,.15],
- rear:[-4.85,2.28,.15],
- detail:[1.95,2.30,3.60]
+ profile:[2.25,2.0,4.35],
+ front:[3.85,2.12,.13],
+ rear:[-3.85,2.12,.13],
+ detail:[1.65,2.20,3.20]
 };
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number(x)||0));
 export function createPreview(canvas,onFailure=()=>{}){
@@ -21,10 +21,10 @@ export function createPreview(canvas,onFailure=()=>{}){
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.2;
+ renderer.toneMappingExposure=1.13;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();
- const camera=new THREE.PerspectiveCamera(35,1,.1,55);
+ const camera=new THREE.PerspectiveCamera(33,1,.1,55);
  camera.position.set(...CAMERA_POSITIONS.profile);
  const controls=new OrbitControls(camera,canvas);
  controls.target.set(0,1.05,0);
@@ -32,10 +32,11 @@ export function createPreview(canvas,onFailure=()=>{}){
  controls.minDistance=2.7;
  controls.maxDistance=11;
  controls.enablePan=false;
- scene.add(new THREE.HemisphereLight('#ecfff3','#354331',2.25));
+ scene.add(new THREE.HemisphereLight('#f1f9f0','#304539',1.8));
  const key=new THREE.DirectionalLight('#ffedcb',2.8);key.position.set(-3,7,6);
- key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0003;scene.add(key);
- const fill=new THREE.DirectionalLight('#bad6ff',1.6);fill.position.set(5,5,-6);scene.add(fill);
+ key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0003;scene.add(key);
+ const fill=new THREE.DirectionalLight('#bad6ff',1.45);fill.position.set(5,5,-6);scene.add(fill);
+ const edge=new THREE.DirectionalLight('#f9c37d',1.1);edge.position.set(3,4,5);scene.add(edge);
  const platformMat=new THREE.MeshStandardMaterial({color:'#263d2e',roughness:.87});
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,64);
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;platform.receiveShadow=true;scene.add(platform);
