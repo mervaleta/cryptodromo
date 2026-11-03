@@ -1,0 +1,39 @@
+name: Sports Week Audit (isolated)
+on:
+  push:
+    branches:
+      - 'audit/sports-week-*'
+  pull_request:
+    paths:
+      - 'scripts/audit-sports-week.mjs'
+      - 'tests/sports-week-audit.mjs'
+      - 'docs/SPORTS-WEEK-AUDIT-20261103.md'
+      - '.github/workflows/sports-week-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Weekly sports regression and cross-screen contracts
+        run: node --experimental-default-type=module --test tests/sports-week-audit.mjs
+      - name: Emit complete machine-readable report
+        run: node --experimental-default-type=module scripts/audit-sports-week.mjs --json > sports-week-audit.json
+      - name: Emit per-runner CSV
+        run: node --experimental-default-type=module scripts/audit-sports-week.mjs --csv > sports-week-runners.csv
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: sports-week-audit
+          path: |
+            sports-week-audit.json
+            sports-week-runners.csv
+          retention-days: 30
