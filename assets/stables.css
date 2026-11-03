@@ -1,0 +1,81 @@
+/* Escuderías Alpha18. Visual module only: never touches 3D engine. */
+.stable-shell{width:min(1480px,calc(100% - 42px));margin:0 auto;padding:36px 0 75px}
+.stable-shell *{box-sizing:border-box}
+.stable-shell .eyebrow{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.19em;color:#63e3b0;font-weight:850}
+.stable-hero{padding:18px 0 12px;max-width:980px}
+.stable-hero h1{font:400 clamp(42px,5.8vw,75px)/1.05 Georgia,serif;letter-spacing:-.046em;margin:9px 0 20px;color:#f1f3e9}
+.stable-hero h1 em,.stable-panel h2 em{color:#e6c58b;font-weight:400}
+.stable-hero p{font-size:clamp(15px,1.5vw,18px);color:#bfd1c6;max-width:900px;line-height:1.7;margin:0}
+.stable-links{display:flex;gap:20px;flex-wrap:wrap;margin:24px 0}
+.stable-links a{font-size:12px;text-decoration:none;color:#95edc4;border-bottom:1px solid #549a78;padding-bottom:4px}
+.stable-links a:hover{text-decoration:underline}
+.stable-notice{padding:15px 19px;border:1px solid #695737;border-left:4px solid #e4c27c;background:#241e13;color:#e7d6b4;border-radius:6px;font-size:13px;line-height:1.65;margin:16px 0 22px}
+.stable-error{background:#3b1d1c;border:1px solid #c46b60;color:#ffdad0;padding:16px 20px;margin:20px 0;border-radius:7px}
+.stable-panel{background:linear-gradient(145deg,#142920,#0b1913 75%);border:1px solid #315444;border-radius:12px;padding:clamp(18px,2.2vw,30px);min-width:0}
+.stable-panel h2{font:400 29px/1.23 Georgia,serif;margin:5px 0 17px;color:#f0f2e8}
+.stable-panel h3{font-size:16px;margin:12px 0 8px}
+.stable-panel p{color:#b4c8b9;line-height:1.65}
+.stable-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:22px 0 20px}
+.stable-stat{border:1px solid #345543;background:#10221a;border-radius:9px;padding:17px 19px;min-width:0}
+.stable-stat span,.ranking-kpis span{display:block;color:#9bbdaa;font-weight:800;font-size:10px;letter-spacing:.15em}
+.stable-stat strong{display:block;font-size:clamp(19px,2.5vw,30px);font-weight:750;line-height:1.35;overflow-wrap:anywhere;margin:5px 0;color:#f0d49b}
+.stable-stat small{font-size:11px;color:#a0bbae}
+.stable-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(290px,1fr);align-items:start;gap:18px}
+.stable-side{display:grid;gap:18px}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.tag{font-size:10px;letter-spacing:.11em;border:1px solid #3c7054;color:#a4ebc0;padding:8px 10px;border-radius:4px;font-weight:800}
+.stable-shell label{display:block;font-size:12px;color:#c9e5d5;font-weight:750;margin:14px 0 11px}
+.stable-shell input:not([type=color]),.stable-shell select{display:block;width:100%;margin-top:7px;background:#06150f;border:1px solid #41634e;border-radius:6px;min-height:44px;color:#f1f6ec;padding:10px 12px;font:inherit}
+.stable-shell input[type=color]{display:block;width:90px;height:44px;margin-top:7px;padding:3px;background:#0c2719;border:1px solid #41634e;border-radius:6px;cursor:pointer}
+.stable-shell input:focus-visible,.stable-shell select:focus-visible,.stable-shell button:focus-visible,.stable-shell a:focus-visible{outline:2px solid #e4c486;outline-offset:3px}
+.stable-shell button{font:inherit}
+.stable-fields{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:18px}
+.stable-token-head{display:flex;align-items:end;gap:15px;justify-content:space-between;flex-wrap:wrap;border-top:1px solid #264d3c;margin-top:20px;padding-top:17px}
+.stable-token-head h3{margin:0}
+.stable-token-head label{min-width:min(100%,255px);margin:0}
+.subtext{font-size:12px!important;color:#a1b6a8!important;line-height:1.55!important}
+.stable-filters{display:flex;gap:7px;flex-wrap:wrap;margin:13px 0}
+.stable-filters button,.champ-tabs button,.stable-panel button:not(.primary){color:#c7dccc;border:1px solid #406650;border-radius:6px;background:#12291d;padding:9px 12px;cursor:pointer}
+.stable-filters button[aria-pressed=true],.champ-tabs button[aria-pressed=true]{background:#23895f!important;color:#fff!important;border-color:#4ec796!important}
+.stable-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;max-height:375px;overflow:auto;padding:5px 5px 9px}
+.stable-token{display:flex;align-items:center;justify-content:flex-start;gap:7px;min-width:0;border:1px solid #3a5646!important;background:#0d1f17!important;color:#d9e7dc!important;border-radius:6px!important;padding:9px 8px!important;text-align:left!important;cursor:pointer}
+.stable-token .token-dot{flex:0 0 11px;height:11px;width:11px;border-radius:50%;border:1px solid #ffffff7a}
+.stable-token span:last-child{font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis}
+.stable-token[aria-pressed=true]{border-color:#54d9a2!important;background:#1c593f!important;box-shadow:inset 0 0 0 1px #54d9a26b}
+.stable-token:disabled{opacity:.42;cursor:not-allowed}
+.stable-selected{border:1px solid #305b43;padding:12px 15px;border-radius:8px;background:#0a1d12;margin-top:20px}
+.stable-selected h3{margin:0 0 8px}
+.stable-selected b{color:#e5cf9d;margin-right:8px}
+.stable-actions{display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin:24px 0 0}
+.stable-shell .primary,.stable-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid #25d493;background:#21d595;border-radius:6px;min-height:46px;padding:11px 17px;color:#042015;font-size:13px;font-weight:850;cursor:pointer}
+.stable-shell .primary:disabled{opacity:.5;cursor:not-allowed}
+.stable-button.subtle{color:#bcebd0;background:#123225;border-color:#45765c;font-size:12px}
+.stable-cup{display:flex;gap:12px;border-top:1px solid #2a4738;padding:17px 0}
+.stable-cup >span{font-size:26px}
+.stable-cup strong{color:#f2d7a6;font-size:15px}
+.stable-cup p{font-size:13px;margin:5px 0 0}
+.xp-table{width:100%;border-collapse:collapse;color:#e4eee6;font-variant-numeric:tabular-nums}
+.xp-table th,.xp-table td{border-bottom:1px solid #2c483a;padding:10px 6px;text-align:left}
+.xp-table th:last-child,.xp-table td:last-child{text-align:right;font-weight:800;color:#eed4a3}
+.recent-results{font-variant-numeric:tabular-nums;font-size:13px}
+.recent-results p{border-bottom:1px solid #2b4738;padding:8px 0;margin:0}
+.recent-results b{color:#f0d59a}
+.stable-footer{border-top:1px solid #2a4a38;display:flex;justify-content:space-between;flex-wrap:wrap;gap:13px;margin-top:40px;padding-top:17px;font-size:11px;color:#8eb6a1;letter-spacing:.07em}
+.championship-panel{margin:25px 0 19px}
+.champ-controls{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;padding:13px 0 20px}
+.champ-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.champ-controls label{min-width:200px;margin:0}
+.ranking-kpis{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #345647;border-bottom:1px solid #345647;gap:10px;padding:16px 0}
+.ranking-kpis strong{font-size:23px;color:#f0d4a1;display:block;margin-top:4px}
+.table-scroller{overflow:auto}
+.ranking-table{width:100%;border-collapse:collapse;min-width:720px;font-variant-numeric:tabular-nums}
+.ranking-table th,.ranking-table td{border-bottom:1px solid #2d4d3c;padding:15px 9px;text-align:left;font-size:13px}
+.ranking-table th{color:#a5c9af;font-size:10px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.ranking-table .rank{font-size:18px;color:#e9cf92;font-weight:850}
+.ranking-table .stable-title{font-weight:850}
+.ranking-table .stable-owner{color:#99b6a5;font-size:11px}
+.ranking-table a{text-decoration:none;color:#ebf8ed}
+.ranking-table .provisional{font-size:11px;color:#d4b878}
+.below-ranking .stable-panel{min-height:260px}
+@media(max-width:980px){.stable-layout{grid-template-columns:1fr}.stable-side{grid-template-columns:repeat(2,minmax(0,1fr))}.stable-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.stable-shell{width:min(100% - 28px,1480px);padding-top:21px}.stable-side{grid-template-columns:1fr}.stable-fields{grid-template-columns:1fr 110px}.stable-token-head{align-items:start}.stable-stats{gap:8px}.stable-stat{padding:11px}.stable-stat strong{font-size:20px}.champ-controls label{min-width:100%}.ranking-kpis{grid-template-columns:1fr 1fr}.ranking-kpis div:last-child{grid-column:span 2}}

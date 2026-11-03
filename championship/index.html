@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08110f"><meta name="description" content="Copa de Constructores y Copa de Eficiencia del Cryptódromo, con clasificaciones verificadas de carreras sintéticas.">
+<title>Campeonato de Escuderías · Cryptódromo</title><link rel="icon" href="/assets/cryptodromo-logo.png">
+<link rel="stylesheet" href="/assets/site-shell.css"><link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1">
+<link rel="stylesheet" href="/assets/stables.css?v=stable1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script>
+<script type="module" defer src="/assets/stables.js?v=stable1"></script></head>
+<body data-stables-page="championship">
+<a class="site-skip" href="#main">Saltar al contenido</a>
+<header class="sitebar"><div class="sitebar-inner"><a class="site-brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a><nav class="site-nav"><a href="/">Carrera</a><a href="/stables/">Escuderías</a><a href="/comunidad/">Comunidad</a></nav></div></header>
+<main id="main" class="stable-shell"><section class="stable-hero"><span class="eyebrow">CAMPEONATO OFICIAL · SIMULACIÓN</span><h1>Dos copas.<br><em>Dos caminos al podio.</em></h1>
+<p>Las escuderías suman puntos en las mismas carreras que se ven en la pista. La Copa de Constructores premia el XP total; la Copa de Eficiencia premia el rendimiento de cada participación, para que los equipos pequeños también puedan disputar el título.</p>
+<div class="stable-links"><a href="/stables/">Fundar mi escudería ↗</a><a href="/resultados/">Consultar llegadas ↗</a></div></section>
+<aside class="stable-notice"><strong>CAMPEONATO DEMOSTRATIVO.</strong> Los entrenadores son identidades de sesión no verificadas. Los puntos provienen exclusivamente del fixture sintético de siete días; no hay apuestas ni premios monetarios. Al no existir un registro de usuarios definitivo, estas clasificaciones son experimentales.</aside>
+<div id="service-error" class="stable-error" role="alert" hidden></div>
+<section class="stable-panel championship-panel">
+ <div class="panel-head"><div><span class="eyebrow">TABLAS DE POSICIONES</span><h2>Campeonato de Escuderías</h2></div><a class="stable-button subtle" href="/stables/">Mi escudería</a></div>
+ <div class="champ-controls"><div class="champ-tabs" role="group" aria-label="Criterio del campeonato"><button type="button" data-mode="total" aria-pressed="true">🏆 Total de XP</button><button type="button" data-mode="efficiency" aria-pressed="false">🎯 Eficiencia</button></div><label>Período<select id="period"><option value="daily">Hoy</option><option value="weekly">Semana</option><option value="season" selected>Temporada · 28 días</option><option value="all">Histórico</option></select></label></div>
+ <div class="ranking-kpis"><div><span>ESCUDERÍAS</span><strong id="stable-count">—</strong></div><div><span>MÍNIMO DE PARTICIPACIONES</span><strong id="minimum">—</strong></div><div><span>ÚLTIMA ACTUALIZACIÓN</span><strong id="as-of">—</strong></div></div>
+ <p id="ranking-explanation" class="subtext">Calculando resultados…</p><p id="ranking-status" class="subtext" role="status" aria-live="polite"></p>
+ <div class="table-scroller"><table class="ranking-table"><thead><tr><th>Pos.</th><th>Escudería / propietario</th><th>Caballos</th><th>XP total</th><th>Participaciones</th><th>XP / carrera-caballo</th><th>Podios</th></tr></thead><tbody id="ranking-rows"><tr><td colspan="7">Cargando tabla…</td></tr></tbody></table></div>
+</section>
+<div class="stable-layout below-ranking"><section class="stable-panel"><span class="eyebrow">LA LETRA CHICA</span><h2>Reglas claras, carreras transparentes</h2><p>Un caballo puede pertenecer a distintas escuderías: cada una recibe su XP cuando el caballo compite. Ninguna compra de licencia aumenta su velocidad, cambia cuotas ni modifica posiciones. Una ampliación sólo suma plazas de plantilla.</p><p>Cada participación válida registra una entrada independiente. El ranking de eficiencia exige un mínimo de 5 participaciones hoy, 10 semanales, 30 por temporada y 100 históricas. Las escuderías sin mínimo se muestran como <strong>provisionales</strong>, sin puesto oficial de eficiencia.</p><p>Las inscripciones y cambios valen desde la próxima largada, nunca hacia atrás. Se permiten dos cambios de caballos por semana. El capitán no tiene multiplicador.</p></section>
+<section class="stable-panel"><span class="eyebrow">FUENTE DE PUNTOS</span><h2>Un fixture reproducible</h2><p>Las 480 carreras diarias se repiten en un ciclo de siete jornadas. Los resultados se calculan mediante el método <code>CRP-DOSE-FAIR-V1</code>, el mismo utilizado para la clasificación del estadio.</p><p>La Copa de Constructores y la Copa de Eficiencia son rankings de <strong>escuderías</strong>. No sustituyen el ranking histórico de usuarios del antiguo Cryptódromo.</p><a class="stable-button subtle" href="/estadisticas/">Ver estadísticas de los corredores</a></section></div>
+<footer class="stable-footer"><span>CRYPTÓDROMO · DATOS FINANCIEROS SINTÉTICOS · SIN DINERO REAL</span><a href="/juego-responsable.html">Uso responsable</a></footer></main>
+</body></html>

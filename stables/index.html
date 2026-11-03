@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08110f"><meta name="description" content="Creá tu escudería y competí por XP total o por eficiencia con las carreras sintéticas del Cryptódromo.">
+<title>Escuderías · Cryptódromo</title><link rel="icon" href="/assets/cryptodromo-logo.png">
+<link rel="stylesheet" href="/assets/site-shell.css">
+<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1">
+<link rel="stylesheet" href="/assets/stables.css?v=stable1">
+<script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script>
+<script type="module" defer src="/assets/stables.js?v=stable1"></script></head>
+<body data-stables-page="manager">
+<a class="site-skip" href="#main">Saltar al contenido</a>
+<header class="sitebar"><div class="sitebar-inner"><a class="site-brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a><nav class="site-nav"><a href="/">Carrera</a><a href="/racers/">Corredores</a><a href="/comunidad/">Comunidad</a><a href="/championship/">Campeonatos</a></nav></div></header>
+<main id="main" class="stable-shell">
+ <section class="stable-hero"><span class="eyebrow">LA VIDA DESPUÉS DE LA META · TEMPORADA DEMO</span><h1>Tu propia <em>escudería.</em></h1>
+ <p>Elegí los caballos que seguirán tu bandera. Cada llegada suma experiencia a tu equipo, participes o no de la carrera. Un campeonato premia el volumen; el otro, la eficiencia.</p>
+ <div class="stable-links"><a href="/championship/">Ver las dos copas ↗</a><a href="/racers/">Conocer los 100 caballos ↗</a></div></section>
+ <aside class="stable-notice"><strong>DEMO SIN DINERO.</strong> Los créditos son ficticios, no se compran ni se retiran. Las identidades son temporales, asociadas a la sesión del navegador, no cuentas verificadas. Los resultados se repiten desde un fixture sintético de siete jornadas.</aside>
+ <div id="service-error" class="stable-error" role="alert" hidden></div>
+ <div id="loading" class="stable-panel">Cargando la secretaría deportiva…</div>
+ <div id="application" hidden>
+ <section class="stable-stats" aria-label="Cuenta de demostración">
+  <div class="stable-stat"><span>ENTRENADOR</span><strong id="owner-alias">—</strong><small>Identidad de sesión · no verificada</small></div>
+  <div class="stable-stat"><span>CRÉDITOS DEMO</span><strong id="wallet-balance">—</strong><small>No convertibles</small></div>
+  <div class="stable-stat"><span>MI ESCUDERÍA</span><strong id="team-current">Sin fundar</strong><small id="team-level">Elegí tu licencia</small></div>
+  <div class="stable-stat"><span>XP VITALICIO</span><strong id="my-xp">0</strong><small id="my-rate">0 participaciones</small></div>
+ </section>
+ <div class="stable-layout">
+  <section class="stable-panel" id="crear"><div class="panel-head"><div><span class="eyebrow">SECRETARÍA DE ESCUDERÍAS</span><h2 id="form-title">Fundá tu equipo</h2></div><span class="tag">CARRERAS SINTÉTICAS</span></div>
+   <form id="stable-form" novalidate>
+    <div class="stable-fields">
+     <label>Nombre de escudería<input id="stable-name" required minlength="3" maxlength="49" placeholder="Ej. Satoshi Racing" autocomplete="off"></label>
+     <label>Color de competición<input type="color" id="stable-color" value="#13d69a"></label>
+    </div>
+    <label>Licencia y capacidad<select id="plan" aria-label="Tamaño de escudería"></select></label>
+    <p id="plan-hint" class="subtext">Se paga una sola vez. Las ampliaciones cuestan la diferencia.</p>
+    <div class="stable-token-head"><div><h3>Seleccioná tus corredores</h3><p id="selection-count" class="subtext">0 seleccionados</p></div><label>Buscar token<input type="search" id="token-search" placeholder="BTC, Solana, Ethereum…" autocomplete="off"></label></div>
+    <div class="stable-filters" role="group" aria-label="Categorías de caballos">
+      <button type="button" data-tier="all" aria-pressed="true">Todos</button>
+      <button type="button" data-tier="star" aria-pressed="false">Estrellas</button>
+      <button type="button" data-tier="core" aria-pressed="false">Principales</button>
+      <button type="button" data-tier="challenger" aria-pressed="false">Desafiantes</button>
+    </div>
+    <div id="tokens" class="stable-tokens" aria-label="Caballos disponibles"></div>
+    <div class="stable-selected"><h3>Plantilla titular</h3><p id="selected" class="subtext">Elegí un caballo para comenzar.</p></div>
+    <label>Capitán (identidad visual, no multiplica XP)<select id="captain"></select></label>
+    <div class="stable-actions"><button class="primary" id="save-stable" type="submit" disabled>Crear escudería</button><span id="save-status" role="status" aria-live="polite"></span></div>
+   </form>
+  </section>
+  <aside class="stable-side">
+   <section class="stable-panel"><span class="eyebrow">DOS TÍTULOS OFICIALES</span><h2>Un mismo equipo.<br>Dos formas de ganar.</h2>
+    <div class="stable-cup"><span>🏆</span><div><strong>Copa de Constructores</strong><p>XP total de todas las participaciones de la escudería.</p></div></div>
+    <div class="stable-cup"><span>🎯</span><div><strong>Copa de Eficiencia</strong><p>XP dividido por participaciones; mínimo 30 en la temporada.</p></div></div>
+    <a class="stable-button" href="/championship/">Consultar clasificaciones</a>
+   </section>
+   <section class="stable-panel"><span class="eyebrow">PUNTOS POR LLEGADA</span><h2>Tabla de XP</h2>
+    <table class="xp-table"><thead><tr><th>Posición</th><th>XP</th></tr></thead><tbody><tr><td>🥇 1.º</td><td>27</td></tr><tr><td>🥈 2.º</td><td>17</td></tr><tr><td>🥉 3.º</td><td>12</td></tr><tr><td>4.º al 6.º</td><td>7</td></tr><tr><td>7.º al 12.º</td><td>2</td></tr></tbody></table>
+    <p class="subtext">Cada posición incluye 2 XP por participar. Sólo puntúan resultados finalizados y caballos inscriptos antes de la largada.</p>
+   </section>
+   <section class="stable-panel"><span class="eyebrow">HISTORIA DEL EQUIPO</span><h2>Últimas actuaciones</h2><div id="recent-results" class="recent-results"><p class="subtext">Aparecerán después de tus primeras llegadas.</p></div></section>
+   <section class="stable-panel"><span class="eyebrow">IDENTIDAD DE TRIBUNA</span><h2>Alias público de demo</h2><form id="alias-form"><label>Tu nombre de entrenador<input id="alias-input" maxlength="49" placeholder="Alias"></label><button type="submit">Actualizar alias</button></form></section>
+  </aside>
+ </div>
+ </div>
+ <footer class="stable-footer"><span>CRYPTÓDROMO · SISTEMA DE ESCUDERÍAS · DATOS SINTÉTICOS</span><span><a href="/juego-responsable.html">Uso responsable</a> · <a href="/como-funciona.html">Cómo funciona</a></span></footer>
+</main>
+</body></html>

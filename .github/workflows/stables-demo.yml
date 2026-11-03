@@ -1,0 +1,44 @@
+name: "Escuderías demo: contract and transactions"
+
+on:
+  push:
+    paths:
+      - "api/stables.php"
+      - "stables/**"
+      - "championship/**"
+      - "assets/stables.*"
+      - "tests/stables-*.mjs"
+      - ".github/workflows/stables-demo.yml"
+  pull_request:
+    paths:
+      - "api/stables.php"
+      - "stables/**"
+      - "championship/**"
+      - "assets/stables.*"
+      - "tests/stables-*.mjs"
+      - ".github/workflows/stables-demo.yml"
+
+jobs:
+  stables:
+    name: Official fixture parity and guest transaction smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, sqlite3
+          tools: none
+          coverage: none
+      - name: Static syntax
+        run: |
+          php -l api/stables.php
+          node --check assets/stables.js
+      - name: Verify official fixtures
+        run: node --test tests/stables-demo.mjs
+      - name: Verify stable transactions
+        run: node --test tests/stables-api.mjs
