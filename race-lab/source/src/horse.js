@@ -26,7 +26,7 @@ async function loadHorseAsset(){
   return assetPromise;
 }
 
-export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop',maneMotion=true}={}){
+export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop',maneMotion=true,maneGait=null}={}){
   const asset=await loadHorseAsset(),model=clone(asset.scene);model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model,true),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
   const visual=new THREE.Group();model.position.set(-center.x,-bounds.min.y,-center.z);visual.add(model);visual.scale.setScalar(height/size.y);visual.rotation.y=Math.PI/2;
@@ -85,7 +85,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
         // The native Gallop clip is 0.583s; lock corrective keys to its clock.
         gait.refine(step,rate,action.time/action.getClip().duration);
       }
-      mane.update(step,{wind:maneWind,speed:rate,gait:action?.getClip().name,motionEnabled:maneMotion,reducedMotion:!!reducedMotion?.matches});
+      mane.update(step,{wind:maneWind,speed:rate,gait:maneGait||action?.getClip().name,motionEnabled:maneMotion,reducedMotion:!!reducedMotion?.matches});
     },
     dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };
