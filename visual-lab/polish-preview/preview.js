@@ -105,10 +105,11 @@ function animate(now){
      elapsed,phase:'race',heading:0,position:h.model.root.position});
   }
   clock.textContent='00:'+String(Math.floor(elapsed)).padStart(2,'0');
-  if(elapsed>=60){playing=false;finished=true;setStatus('Fin de demostración visual');
+  if(elapsed>=60){playing=false;finished=true;for(const h of horses)h.model.play('Idle',.25);setStatus('Fin de demostración visual');
    $('start').textContent='↺ VOLVER A LARGAR';}
  }else{
-  for(const h of horses)h.model.update(dt,1);
+  for(let i=0;i<horses.length;i++)polish.updateHorse(i,{horse:horses[i].model,
+    delta:dt,metersPerSecond:0,elapsed,phase:'presentation',position:horses[i].model.root.position});
   if(!finished)gates.update({secondsSinceStart:-1,phase:'presentation'});
  }
  polish.updateFrame({delta:dt,weather:$('weather').value,surface:$('surface').value,
@@ -139,7 +140,8 @@ window.__cryptodromoAlpha21QA={
   camera:$('camera').value,quality:$('quality').value,surface:$('surface').value,
   weather:$('weather').value,gateOpen:gates.openness,
   averageCadence:polish.locomotion.rates.reduce((a,b)=>a+b,0)/12,
-  footDustInstances:polish.spray.capacity,stadiumTheme:polish.stadium.theme.title,
+  footDustInstances:polish.spray.capacity,followThroughBones:polish.body.channels,
+  stadiumTheme:polish.stadium.theme.title,
   horseRootX:horses[0]?.model.root.position.x||null}),
  seek:(time)=>{const t=Math.max(0,Math.min(59.8,Number(time)||0));
   reset();start();elapsed=t;for(const h of horses)h.distance=t*14.1;
