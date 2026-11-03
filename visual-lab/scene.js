@@ -20,7 +20,8 @@ import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
-import {createHorse} from '/race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
+import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha20-procedural-2';
+import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
 import {applyGateStaging} from './gateChoreography.js?v=alpha20-1';
@@ -35,6 +36,17 @@ const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL
 // Alpha 03: a real XZ-plane, Y-up stadium, not a vertical XY theater.
 // Visual effects and frame rate are deliberately isolated from the finance engine.
 const canvas=document.getElementById('raceCanvas'), stage=document.getElementById('stage');
+const horseEngineMode=selectedHorseRenderer(location.search);
+const horseEngineControl=document.querySelector('#horse-engine');
+if(horseEngineControl){
+ horseEngineControl.value=horseEngineMode;
+ horseEngineControl.addEventListener('change',()=>{
+  const next=new URL(location.href);
+  if(horseEngineControl.value==='procedural')next.searchParams.set('horse-engine','procedural');
+  else next.searchParams.delete('horse-engine');
+  location.assign(next.href);
+ });
+}
 const clockEl=document.getElementById('clock'),status=document.getElementById('status'),leaderEl=document.getElementById('leader');
 const start=document.getElementById('start'),resetButton=document.getElementById('reset');
 const nextButton=document.getElementById('next'),camSelect=document.getElementById('camera'),weatherSelect=document.getElementById('weather');
@@ -127,8 +139,10 @@ function makeTexture(kind){
 const grassTexture=makeTexture('grass'),earthTexture=makeTexture('earth');
 const grass=mat('#e0eed6',1);grass.map=grassTexture;
 const earth=mat('#f0e2d4',.93);earth.map=earthTexture;
+// Procedural mode uses analytic GPU materials, preserving the old look for comparison.
 // Reuse the existing tile as a subtle height detail map: no extra network asset.
 earth.bumpMap=earthTexture;earth.bumpScale=.047;
+const proceduralGround=horseEngineMode==='procedural'?installProceduralGround({grass,track:earth}):null;
 box(850,.35,260,0,-.33,0,grass);
 const straightSceneIndex=scene.children.length;
 box(812,.13,38,0,-.06,0,earth);
@@ -330,6 +344,18 @@ splitModeSelect.addEventListener('change',()=>{
 });
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
+// Read-only diagnostics opt in, for repeatable browser comparisons, never for scoring.
+if(horseEngineMode==='procedural'&&new URLSearchParams(location.search).get('procedural-qa')==='alpha20'){
+ window.__cryptodromoProceduralQA=Object.freeze({
+  snapshot:()=>Object.freeze({
+   ready:horses.length===12,generated:horses.filter(h=>h.model.generated).length,
+   horses:horses.length,seeded:horses.map(h=>h.model.seed),
+   symbols:race.entries.map(e=>e.symbol),
+   officialRanking:officialRanking(profiles).map(e=>e.symbol),gateCount:gateKit.entries?.length??12,
+   renderer:horseEngineMode,drawCalls:renderer.info.render.calls
+  })
+ });
+}
 let maneWind=.55; // matches stadium cloud wind; never affects the race engine
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
 let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
@@ -371,7 +397,7 @@ function showOfficialResult(){
 const horseCoats=['#6c4731','#b18053','#342a26','#d3b48f','#a65f36','#5d5d62','#a78c66','#332c2a','#a28467','#c49a74','#5b4134','#d4bda8'];
 async function bootHorses(){
  const entries=race.entries;const results=await Promise.allSettled(entries.map((e,i)=>createHorse({
-   coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,height:2.85,mode:'Gallop',phase:i*.13
+   coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,stallNumber:i+1,height:2.85,mode:'Gallop',phase:i*.13
  })));
  for(let i=0;i<12;i++){
   let model;
@@ -391,11 +417,12 @@ async function bootHorses(){
   // No floating symbol sprites: the marks are part of the 3D horse skin shader.
   scene.add(model.root);
   model.setWind?.(maneWind);
+  model.setVisualQuality?.(softwareGPU||mobile?'performance':'balanced');
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
  setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
- status.textContent='CAMPO PREPARADO · 12 CORREDORES';
+ status.textContent='CAMPO PREPARADO · 12 CORREDORES'+(horseEngineMode==='procedural'?' · MODELOS GENERADOS':'');
 }
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
@@ -705,6 +732,7 @@ function setTrackType(type){
   earth.map=earthTexture;earth.bumpMap=earthTexture;earth.bumpScale=.047;earth.color.set('#f0e2d4');earth.roughness=.96;
   trackFX.marks.material.color.set('#493526');
  }
+ proceduralGround?.setSurface(type);
  earthBaseColor=earth.color.clone();earthBaseRough=earth.roughness;
  earth.needsUpdate=true;
 }
@@ -739,6 +767,7 @@ function applyQualityPreset(next){
   }
  }
  activeQuality=next;
+ horses.forEach(h=>h.model.setVisualQuality?.(next==='eco'?'performance':next==='cinematic'?'cinematic':'balanced'));
  liveDistrict.setQuality(next);
  liveVillage.setQuality(next);
  stadiumDensity.setQuality(next);
@@ -1006,6 +1035,7 @@ function updateEnvironment(){
     night:isSolarNight()||weatherSelect.value==='night',wetness:wet,
     lightLevel:lightPower.checked?Number(lightDimmer.value)/100:0
    });
+   proceduralGround?.setWetness(wet);
    for(const horse of horses)horse.model.setWetness?.(wet);
    wetState.textContent='Humedad del estadio '+Math.round(wet*100)+'% · '+
      (weatherSelect.value==='rain'?'acumulando agua':wet>.03?'secándose gradualmente':'superficie seca');

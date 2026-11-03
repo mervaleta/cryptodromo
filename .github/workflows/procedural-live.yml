@@ -1,0 +1,61 @@
+name: Procedural LIVE Alpha20
+on:
+  pull_request:
+    paths:
+      - 'visual-lab/procedural*.js'
+      - 'visual-lab/horseRenderer.js'
+      - 'visual-lab/scene.js'
+      - 'index.html'
+      - 'visual-lab/index.html'
+      - 'tests/procedural-live.mjs'
+      - 'tests/procedural-live-browser.mjs'
+      - '.github/workflows/procedural-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse procedural and active LIVE JavaScript
+        run: |
+          node --check visual-lab/proceduralMath.js
+          node --check visual-lab/proceduralHorse.js
+          node --check visual-lab/proceduralGround.js
+          node --check visual-lab/horseRenderer.js
+          node --check visual-lab/scene.js
+      - name: Regression contracts including Alpha20 gates and market engine
+        run: node --test tests/procedural-live.mjs tests/alpha20-gates.mjs tests/alpha20-gate-choreography.mjs tests/alpha20-scene-integration.mjs tests/official-race.mjs
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    needs: contracts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright with Chrome
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Run local LIVE procedural smoke and screenshot
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/crp-procedural-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 3
+          node tests/procedural-live-browser.mjs
+      - name: Keep screenshot and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: procedural-alpha20-live
+          path: artifacts/procedural-live*
+          retention-days: 14
+          if-no-files-found: ignore
