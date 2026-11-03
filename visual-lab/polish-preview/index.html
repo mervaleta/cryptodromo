@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08150f"><title>Alpha21 · Motion Studio · Cryptódromo</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+<style>
+:root{color-scheme:dark;background:#07120e;color:#e3eee9;font-family:Inter,system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0}header{display:flex;justify-content:space-between;align-items:center;padding:18px clamp(18px,3vw,48px);border-bottom:1px solid #274737;gap:22px;flex-wrap:wrap}
+h1{font-size:clamp(20px,2.4vw,32px);letter-spacing:.015em;margin:0}h1 span{color:#b9a86d}
+p{margin:.35em 0;color:#9db1a6;font-size:13px}
+main{max-width:1500px;margin:0 auto;padding:24px}
+#stage{position:relative;min-height:clamp(360px,64vh,770px);border:1px solid #2a4637;overflow:hidden;background:#6d867b;border-radius:12px}
+canvas{display:block;width:100%;height:100%;position:absolute;inset:0}
+#hud{position:absolute;left:18px;top:17px;background:#0b1b15dd;backdrop-filter:blur(14px);border:1px solid #315345;border-radius:8px;padding:14px 16px;pointer-events:none;font-size:12px}
+#hud strong{display:block;color:#dfc886;font-size:23px;letter-spacing:.08em}
+#progress{position:absolute;right:17px;bottom:16px;background:#07150edc;padding:9px 12px;border-radius:6px;font-size:11px;color:#e3eee9}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:11px;padding:16px 0}
+button,select{background:#123126;border:1px solid #3b6c51;color:#e6f5ec;padding:10px 14px;border-radius:7px;font:600 13px system-ui;cursor:pointer}
+button:hover,select:hover{background:#1b4d39}button:disabled{opacity:.45;cursor:wait}
+label{display:flex;gap:8px;align-items:center;color:#b8c8be;font-size:12px}
+.note{line-height:1.6;padding:14px;border-left:3px solid #998852;background:#112218;color:#aec9ba;font-size:12px}
+#error{white-space:pre-wrap;color:#ffb5a6}
+</style></head>
+<body><header><div><h1>CRYPTÓDROMO <span>ALPHA21 · MOTION STUDIO</span></h1>
+<p>Laboratorio aislado de galope, impactos y ambientación 3D. Sin alterar resultados ni fixture.</p></div>
+<a href="/" style="color:#d8c38a">Volver al LIVE</a></header>
+<main><section id="stage" aria-label="Simulación visual con doce caballos"><canvas id="preview" aria-label="Vista tridimensional de caballos en movimiento"></canvas>
+<div id="hud">MOTOR VISUAL · ALPHA21<strong id="clock">00:00</strong><span id="state">Cargando modelos…</span></div>
+<div id="progress">SIMULACIÓN VISUAL, NO CARRERA OFICIAL</div></section>
+<div class="controls">
+<button id="start" disabled>▶ LARGADA DEMO</button><button id="reset" disabled>↺ REINICIAR</button>
+<label>Cámara <select id="camera"><option value="start">Gateras</option><option value="pack">Seguimiento</option><option value="low">A ras de pista</option><option value="aerial">Panorámica</option></select></label>
+<label>Ambiente <select id="weather"><option value="clear">Sol</option><option value="rain">Lluvia</option><option value="night">Noche</option></select></label>
+<label>Terreno <select id="surface"><option value="dirt">Tierra</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
+<label>Calidad <select id="quality"><option value="high">Alta</option><option value="balanced" selected>Balanceada</option><option value="eco">Eco</option></select></label>
+</div><div class="note">Este visor permite inspeccionar la cadencia del clip existente, las correcciones de articulaciones y el polvo sincronizado con los cascos. La velocidad de avance es ficticia y no hay clasificación ni apuestas. Los cambios se preparan en esta rama; no se aplican automáticamente al LIVE.</div>
+<p id="error" role="alert"></p></main>
+<script type="module" src="./preview.js"></script></body></html>
