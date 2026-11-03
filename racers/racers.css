@@ -43,3 +43,11 @@
 .feature .stage-bottom #stage-toggle {border-color:#6c6274;background:rgba(20,18,29,.84);}
 .feature .stage-bottom #stage-toggle[aria-pressed="true"] {color:#ffda9d;border-color:#b89766;}
 @media(max-width:480px){.feature .stage-top,.feature .stage-bottom{left:12px;right:12px}.feature .stage-bottom{bottom:12px}.feature .stage-bottom button{padding:7px 9px;font-size:9px}}
+/* CRP interface skin: cards and controls only, horse coat/accent values remain untouched. */
+body{background:#080909;color:#f5f7f6;font-family:'Segoe UI',Arial,sans-serif}
+.feature,.profile,.horse-stat-grid span{border-color:#363b3a}
+.feature{background:#1b1d1d;border-radius:5px}
+.profile{background:#1b1d1d}
+.eyebrow{color:#7ace7a}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline-color:#7ace7a}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
