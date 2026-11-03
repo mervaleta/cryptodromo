@@ -23,7 +23,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.13;
+ renderer.toneMappingExposure=lookdevStage>=8?1.08:1.13;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();
  const camera=new THREE.PerspectiveCamera(33,1,.1,55);
@@ -34,11 +34,11 @@ export function createPreview(canvas,onFailure=()=>{}){
  controls.minDistance=2.7;
  controls.maxDistance=11;
  controls.enablePan=false;
- scene.add(new THREE.HemisphereLight('#f1f9f0','#304539',1.8));
+ scene.add(new THREE.HemisphereLight('#f1f9f0','#304539',lookdevStage>=8?1.65:1.8));
  const key=new THREE.DirectionalLight('#ffedcb',2.8);key.position.set(-3,7,6);
- key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0003;scene.add(key);
+ key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0003;if(lookdevStage>=8){key.shadow.radius=2.5;key.shadow.normalBias=.014;}scene.add(key);
  const fill=new THREE.DirectionalLight('#c0d8ff',1.68);fill.position.set(5,5,-6);scene.add(fill);
- const edge=new THREE.DirectionalLight('#f9c37d',1.55);edge.position.set(3,4,5);scene.add(edge);
+ const edge=new THREE.DirectionalLight('#f9c37d',lookdevStage>=8?1.83:1.55);edge.position.set(3,4,5);scene.add(edge);
  const platformMat=new THREE.MeshStandardMaterial({color:'#27332b',roughness:.94});
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,64);
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;platform.receiveShadow=true;scene.add(platform);
