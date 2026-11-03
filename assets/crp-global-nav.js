@@ -2,7 +2,7 @@
 (()=>{'use strict';
 const groups=[
  {label:'Explorar',icon:'◈',items:[['/estadio/','Estadio'],['/parade/','Modo Parade'],['/visual-lab/','Visual Lab'],['/laboratorio/','Laboratorio'],['/estadisticas/','Estadísticas']]},
- {label:'Comunidad',icon:'♧',items:[['/comunidad/','Jugadores e insignias'],['/stables/','Escuderías'],['/championship/','Campeonatos'],['/cronicas/','Crónicas'],['/apuestas/','Favoritos · demo'],['/eventos.html','Eventos']]},
+ {label:'Comunidad',icon:'♧',items:[['/comunidad/','Jugadores e insignias'],['/stables/','Escuderías'],['/championship/','Campeonatos'],['/cronicas/','Crónicas'],['/apuestas/','Favoritos · demo'],['/demo-caja/','Caja y apuestas · demo'],['/eventos.html','Eventos']]},
  {label:'Proyecto',icon:'▤',items:[['/institucional/','Presentación'],['/como-funciona.html','Cómo funciona'],['/contacto.html','Contacto'],['/preguntas.html','Ayuda']]}
 ];
 const main=[['/','Carrera'],['/racers/','Corredores'],['/fixture/','Fixture'],['/resultados/','Resultados'],['/grandes-premios/','Grandes Premios']];
