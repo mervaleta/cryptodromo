@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {createGaitRefiner} from './gaitRefiner.js?v=alpha09-1';
 import {createFurIdentity} from './horseLivery.js?v=alpha14-ticker-1';
 import {smoothHorseNormals} from './horseSurface.js?v=alpha08-1';
+import {createWindMane} from './windMane.js?v=alpha16-mane-1';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -44,6 +45,11 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   });
   // The token identity is pigment in the model's own fur, never a hovering sign.
   const identity=createFurIdentity(colorBindings);
+  // Wind animates only the existing Hair vertices before skeletal skinning.
+  // The GLB, gait clips, horse silhouette and livery textures stay intact.
+  const mane=createWindMane(colorBindings,{seed:phase});
+  const reducedMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
+  let maneWind=.55;
   const originalTones=new Map();let currentWetness=0;
   function tintWetness(){
     for(const {material} of colorBindings){
@@ -58,6 +64,8 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   const api={
     root,clips:clips.map(clip=>clip.name),
     get hoofPhase(){return gait.phase;},
+    get maneWindEnabled(){return mane.enabled;},
+    setWind(level=.55){maneWind=Math.max(0,Math.min(2,Number(level)||0));},
     setBank(radians=0){bankGoal=Math.max(-.12,Math.min(.12,Number(radians)||0));},
     setWetness(level){currentWetness=Math.max(0,Math.min(1,Number(level)||0));tintWetness();},
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
@@ -76,8 +84,9 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
         // The native Gallop clip is 0.583s; lock corrective keys to its clock.
         gait.refine(step,rate,action.time/action.getClip().duration);
       }
+      mane.update(step,{wind:maneWind,speed:rate,reducedMotion:!!reducedMotion?.matches});
     },
-    dispose(){bankGoal=0;bankPivot.rotation.x=0;gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
+    dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };
   api.setAppearance({coat,accent,symbol});
   api.play(mode,0);mixer.update(phase);return api;
