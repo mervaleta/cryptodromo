@@ -23,6 +23,7 @@ jobs:
           node --check racers/btc-atelier-preview.js
           node --check racers/btc-hair-v15.js
           node --check racers/btc-hero-groom-v2.js
+          node --check racers/btc-coat-look-v2.js
           node --check racers/racers.js
           node --test tests/btc-horse-atelier-contract.mjs tests/btc-hair-v15-contract.mjs
       - name: Install browser
