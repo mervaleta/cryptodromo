@@ -6,9 +6,10 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
-import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js?v=btc-groom-v3-shading-4';
+import {createBTCAAAHeroGroom as createBTC3DHeroGroom} from './btc-hero-lookdev-aaa.js?v=btc-aaa-lookdev-stage-01';
 import {applyBTCCoatLook} from './btc-coat-look-v2.js?v=btc-coat-look-v2-1';
 
+const lookdevStage=Math.max(1,Math.min(10,Math.floor(Number(new URLSearchParams(location.search).get('lookdev')||10))||10));
 const CAMERA_POSITIONS={
  profile:[2.25,2.0,4.35],
  front:[3.85,2.12,.13],
@@ -74,7 +75,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    const nextHair=null;
    let nextHero=null;
    try{
-    if(candidate){nextHero=createBTC3DHeroGroom(next.root,{maneSize,tailSize,color:hairColor});next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);applyBTCCoatLook(next.root);}
+    if(candidate){nextHero=createBTC3DHeroGroom(next.root,{maneSize,tailSize,color:hairColor,lookdevStage});next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.38);applyBTCCoatLook(next.root);}
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHero=hero;
