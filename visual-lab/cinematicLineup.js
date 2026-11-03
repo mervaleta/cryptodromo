@@ -23,8 +23,11 @@ export async function createCinematicLineup({entries,coats,createHorse}={}){
   {lane:index+1,reason:String(result.reason)}:null).filter(Boolean);
  const invalid=results.map((result,index)=>result.status==='fulfilled'&&
   (!result.value?.root||typeof result.value.update!=='function'||
-   typeof result.value.setAppearance!=='function')?
-  {lane:index+1,reason:'Invalid horse API returned'}:null).filter(Boolean);
+   typeof result.value.setAppearance!=='function'||
+   result.value.procedural!==true||result.value.isTextureFree!==true||
+   !(result.value.shapeStats?.vertices>1000)||
+   !(result.value.shapeStats?.hairStrands>=25))?
+  {lane:index+1,reason:'Horse failed Fidelity geometry / texture-free quality contract'}:null).filter(Boolean);
  if(failures.length||invalid.length){
   for(const result of results)if(result.status==='fulfilled')
    try{result.value?.dispose?.();}catch{}
