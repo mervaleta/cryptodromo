@@ -62,5 +62,9 @@ test('one session and ledger across stable, crypto, exchange, bet and withdrawal
   assert.equal(repeats.length,1);
   r=await call('withdraw_action',{intent:wkey,transition:'fail'});assert.equal(r.status,409);
   r=await call('bootstrap');assert.equal(Number(r.data.wallet.credits),4300);
+  await stop();tick=anchor+102*180+65;await start();
+  r=await call('bootstrap');assert.equal(Number(r.data.wallet.credits),5100,'one payout of 800 CR');
+  assert.equal(r.data.tickets[0].status,'won');
+  r=await call('bootstrap');assert.equal(Number(r.data.wallet.credits),5100,'no second settlement');
  }finally{await stop();rmSync(directory,{force:true,recursive:true})}
 });
