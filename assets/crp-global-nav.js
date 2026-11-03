@@ -1,7 +1,7 @@
 /* Alpha18 CRP universal navigation: DOM enhancement, does not touch race logic. */
 (()=>{'use strict';
 const groups=[
- {label:'Explorar',icon:'◈',items:[['/estadio/','Estadio'],['/parade/','Modo Parade'],['/visual-lab/','Visual Lab'],['/laboratorio/','Laboratorio'],['/estadisticas/','Estadísticas']]},
+ {label:'Explorar',icon:'◈',items:[['/stadiums/','Estadios del mundo'],['/stadiums/fixture/','Fixture mundial'],['/estadio/','Estadio 3D'],['/parade/','Modo Parade'],['/visual-lab/','Visual Lab'],['/laboratorio/','Laboratorio'],['/estadisticas/','Estadísticas']]},
  {label:'Comunidad',icon:'♧',items:[['/comunidad/','Jugadores e insignias'],['/stables/','Escuderías'],['/championship/','Campeonatos'],['/cronicas/','Crónicas'],['/apuestas/','Favoritos · demo'],['/eventos.html','Eventos']]},
  {label:'Proyecto',icon:'▤',items:[['/institucional/','Presentación'],['/como-funciona.html','Cómo funciona'],['/contacto.html','Contacto'],['/preguntas.html','Ayuda']]}
 ];
