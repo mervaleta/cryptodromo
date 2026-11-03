@@ -20,7 +20,8 @@ try{
  assert.equal(new Set(shot.symbols).size,12);
  assert.equal(shot.officialRanking.length,12);
  assert.equal(await page.locator('#horse-engine').inputValue(),'fidelity');
- await page.locator('#graphics-quality').selectOption('eco');
+ assert.equal(await page.locator('#graphics-quality').inputValue(),'cinematic');
+ assert.equal(await page.locator('#graphics-quality').isHidden(),true);
  await page.locator('#surface').selectOption('grass');
  await page.locator('#weather').selectOption('noon');
  // The default automatic camera can sit inside the starting gates at 00:00.
