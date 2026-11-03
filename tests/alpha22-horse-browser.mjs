@@ -44,6 +44,10 @@ try{
  assert.equal(s.allTextureFree,true);
  assert.ok(s.heroStats.vertices>1000);
  await page.locator('#stage').screenshot({path:'artifacts/alpha22-hi-fidelity-wet-palomino.png',animations:'disabled'});
+ await page.locator('#gait').selectOption('swing');
+ assert.equal((await page.evaluate(()=>window.__cryptodromoAlpha22QA.snapshot())).selectedProfile.gaitStyle,'swing');
+ await page.locator('#gait').selectOption('ik');
+ assert.equal((await page.evaluate(()=>window.__cryptodromoAlpha22QA.snapshot())).selectedProfile.gaitStyle,'ik');
  await page.locator('[data-view=gallop]').click();
  await page.waitForFunction(()=>window.__cryptodromoAlpha22QA.snapshot().mode==='gallop');
  const before=await page.evaluate(()=>window.__cryptodromoAlpha22QA.snapshot().hoofPhases[0]);
