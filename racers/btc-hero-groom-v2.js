@@ -55,7 +55,7 @@ function buildGroom(source,settings){
   const p=src[anchor];
   // The width grows from a thin root to a sculpted belly then pinches
   // to a fine, curved tip. The cross section is an elliptical lens.
-  const length=(mane?.0083+.0067*phase:.0175+.0085*phase)*
+  const length=(mane?.0083+.0067*phase:.0125+.0065*phase)*
      (mane?settings.maneSize:settings.tailSize)*(0.88+layer*.056);
   const width=(mane?.00098:.00115)*(.81+.27*secondary);
   const root=verts.length/3;
@@ -65,11 +65,11 @@ function buildGroom(source,settings){
    const u=k/STEPS;
    const swell=Math.sin(Math.PI*u);
    const envelope=Math.max(.01,Math.sin(Math.PI*Math.pow(u,.62)))*(.85+.18*Math.sin(Math.PI*u));
-   const w=width*(.20+.90*Math.min(1,u*9))*envelope;
+   const w=width*(.22+.93*Math.min(1,u*9))*envelope;
    const x=p[0]+rootTilt*u+.00018*Math.sin(u*Math.PI*1.5+phase*8)*u;
    const y=p[1]+length*(u+.045*Math.sin(Math.PI*u))+
       .00014*Math.sin(Math.PI*u*1.6+phase*4);
-   const z=p[2]+(mane?bend*swell:(.0018+.0012*phase)*swell)+
+   const z=p[2]+(mane?bend*swell+(layer-1.5)*.00048:(.0014+.001*phase)*swell)+
      (mane?(-.00105*u*u):(-.0050*u*u))+
      .00028*Math.sin(u*TAU+secondary*6)*u;
    for(let side=0;side<SIDES;side++){
@@ -116,8 +116,10 @@ export function createBTC3DHeroGroom(root,options={}){
  settings.maneSize=clamp(settings.maneSize,.7,1.9);
  settings.tailSize=clamp(settings.tailSize,.7,1.9);
  const original=sourceHair(root),geometry=buildGroom(original,settings);
- const material=new THREE.MeshStandardMaterial({color:settings.color,vertexColors:true,
-   side:THREE.DoubleSide,roughness:.62,metalness:0});
+ const material=new THREE.MeshPhysicalMaterial({color:settings.color,vertexColors:true,
+   side:THREE.DoubleSide,roughness:.57,metalness:0,
+   sheen:.75,sheenRoughness:.56,sheenColor:new THREE.Color('#996c51'),
+   clearcoat:.12,clearcoatRoughness:.34});
  const uniforms={time:{value:0},intensity:{value:.8}};
  const declarations=[
   'attribute float groomTip;',
