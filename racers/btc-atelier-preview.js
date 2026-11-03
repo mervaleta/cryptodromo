@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
-import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js?v=btc-groom-v3-flyaways-3';
+import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js?v=btc-groom-v3-shading-4';
 import {applyBTCCoatLook} from './btc-coat-look-v2.js?v=btc-coat-look-v2-1';
 
 const CAMERA_POSITIONS={
