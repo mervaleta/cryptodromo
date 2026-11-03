@@ -60,3 +60,27 @@ test('GPU turf, soil and rain do not need texture files or change race results',
  assert.doesNotMatch(ground,/createOfficialRace|officialRanking|PRICE_FIXTURE|broadcastPosition|fetch\(/);
  assert.doesNotMatch(horse,/createOfficialRace|officialRanking|PRICE_FIXTURE|broadcastPosition/);
 });
+
+test('Alpha22 fidelity builds on top of Alpha20 without removing legacy modes',()=>{
+ const adapter=read('visual-lab/horse-fidelity/horseAdapter.js');
+ const fidelity=read('visual-lab/horse-fidelity/proceduralHorse.js');
+ assert.match(renderer,/requested==='fidelity'/);
+ assert.match(renderer,/requested==='procedural'/);
+ assert.match(renderer,/createAlpha22RaceHorse/);
+ assert.match(renderer,/return createLegacyHorse\(options\)/);
+ assert.match(adapter,/createAlpha22RaceHorse/);
+ assert.match(fidelity,/setVisualQuality/);
+ assert.match(fidelity,/setWetness/);
+ assert.match(fidelity,/setBank/);
+ assert.match(fidelity,/hoofPhase/);
+ assert.match(scene,/horseEngineMode!=='legacy'\?installProceduralGround/);
+ assert.match(scene,/stallNumber:i\+1/);
+ assert.match(scene,/number:i\+1/);
+ for(const page of ['index.html','visual-lab/index.html']){
+  const html=read(page);
+  assert.match(html,/value="legacy"/);
+  assert.match(html,/value="procedural"/);
+  assert.match(html,/value="fidelity"/);
+ }
+ assert.doesNotMatch(fidelity,/createOfficialRace|PRICE_FIXTURE|officialRanking|broadcastPosition/);
+});
