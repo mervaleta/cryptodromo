@@ -14,6 +14,7 @@ El manual adjunto `Horses_Manual.pdf` describe un caballo realista animado para 
 - `visual-lab/horse-fidelity/horseShader.js`: material físico analítico con grano 3D, pigmentación, roughness, humedad y barro. Ningún mapa de imagen.
 - `visual-lab/horse-fidelity/horseGroom.js`: crin, flequillo y cola como tiras geométricas volumétricas entrecruzadas; estilos cortos/deportivos/largos, movimiento de viento.
 - `visual-lab/horse-fidelity/horseRaceLivery.js`: mantilla geométrica curvada, colores del corredor y números 1-99 mediante segmentos 3D. Sin fuentes, sprites ni atlas.
+- `visual-lab/horse-fidelity/horseGaitIK.js`: trayectoria analítica de cascos con apoyo/recuperación y resolución inversa de dos huesos por pata; conserva opción de movimiento anterior para comparar.
 - `visual-lab/horse-fidelity/proceduralHorse.js`: ensamblador con rig original de articulaciones para galope en cuatro tiempos; ojos, orejas, hocico, cascos, marcas y APIs de carrera.
 - `visual-lab/horse-fidelity/horseAdapter.js`: selector opt-in procedural/legacy con compatibilidad Alpha18 y recuperación del modo anterior.
 - `visual-lab/horse-fidelity-preview/index.html` + `studio.js`: estudio 3D con 12 caballos, retrato y galope, cambio de look, iluminación de día/lluvia/noche.
@@ -55,6 +56,10 @@ Protocolos existentes: `root, play, update, setAppearance, setWind, setWetness, 
 
 ### Limitaciones artísticas explícitas
 
-El ciclo paramétrico es un galope jerárquico de cuatro apoyos con amortiguación, no una simulación biomecánica validada por captura de movimiento. Las transiciones Idle/Walk/Gallop, contacto de suelo y vuelos requieren comparación cuadro a cuadro con referencias anatómicas antes de reemplazar el GLB en producción. El shader PBR analítico evita mapas, pero los rasgos más finos de pelo corto, musculatura bajo la piel y expresión de ojos requieren iteración de dirección de arte. El objetivo AAA es iterativo, no un sello automático.
+El ciclo paramétrico incluye cuatro apoyos, fase de vuelo, trayectorias de casco con contacto y un solver IK plano de dos eslabones, pero NO es una simulación biomecánica validada por captura de movimiento. El visor permite alternar `IK` y `oscilación anterior` para evaluar artísticamente. Las transiciones Idle/Walk/Gallop, contacto de suelo y vuelos requieren comparación cuadro a cuadro con referencias anatómicas antes de reemplazar el GLB en producción. El shader PBR analítico evita mapas, pero los rasgos más finos de pelo corto, musculatura bajo la piel y expresión de ojos requieren iteración de dirección de arte. El objetivo AAA es iterativo, no un sello automático.
 
 La escena de prueba usa Three.js 0.187.0 del import map CDN sólo como motor 3D. **No descarga ningún modelo, icono ni textura para construir los caballos.**
+
+### Compatibilidad al cierre de implementación
+
+Mientras se preparaba Alpha22, `main` avanzó a `8621153d` incorporando la consola privada de fixture. La rama Alpha22 sólo agrega archivos nuevos y no pisa esa consola. El PR #47 debe seguir en borrador hasta que los otros agentes terminen sus ramas y se haga un diff actualizado. El inspector WebGL documenta draw calls/triángulos pero esas métricas de SwiftShader **no sustituyen perfiles GPU reales**.
