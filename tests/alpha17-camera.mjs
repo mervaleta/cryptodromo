@@ -91,5 +91,7 @@ test('Parade and LIVE share real camera console component and leave scores untou
   assert.ok(ui.includes('id="'+id+'"'),'Parade missing '+id);
  assert.match(ui,/assets\/camera-console\.css/);
  assert.match(read('index.html'),/assets\/camera-console\.css/);
+ assert.match(ui,/id="toggle-camera-pad"/);
+ assert.match(ui,/\.drift\.is-visible\{display:grid\}/);
  assert.doesNotMatch(read('visual-lab/cameraRig.js'),/createOfficialRace|officialRanking|PRICE_FIXTURE|RACES_PER_DAY/);
 });
