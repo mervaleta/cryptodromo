@@ -1,0 +1,8 @@
+.crp-gp-ceremony{width:min(760px,98%);padding:12px 17px;margin:0 0 11px;border:1px solid #b89b62;border-radius:9px;background:linear-gradient(125deg,#193728f4,#332819ef);box-shadow:0 0 22px #d7a94b22;text-align:center}
+.crp-gp-ceremony[hidden]{display:none!important}
+.crp-gp-ceremony__title{display:block;font:800 12px/1.4 system-ui,sans-serif;color:#f5dba5;letter-spacing:.1em}
+.crp-gp-ceremony__podium{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin:9px auto}
+.crp-gp-ceremony__medal{display:inline-flex;align-items:center;border-left:4px solid var(--gp-runner-color,#d8b879);background:#e9e3cb12;border-radius:3px;padding:7px 11px;color:#fff4d8;font:800 13px/1.2 system-ui,sans-serif}
+.crp-gp-ceremony__links{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;font:700 11px/1.5 system-ui,sans-serif}
+.crp-gp-ceremony__links a{color:#e6d39b;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:650px){.crp-gp-ceremony{padding:8px 10px}.crp-gp-ceremony__title{font-size:10px}.crp-gp-ceremony__medal{padding:5px 8px;font-size:11px}}
