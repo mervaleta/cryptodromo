@@ -8,6 +8,7 @@ import {COAT_PRESETS,normalizeHorseProfile,horseAnatomy} from './horseProfiles.j
 import {addLoft,makeOrganicLoft,geometryBudget,geometryStats} from './horseGeometry.js';
 import {createAnalyticFurMaterial,makeSurfaceMaterial,verifyTextureFreeMaterial} from './horseShader.js';
 import {createProceduralGroom} from './horseGroom.js';
+import {createGeometricRaceLivery} from './horseRaceLivery.js';
 
 const TAU=Math.PI*2;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,Number.isFinite(x)?x:a));
@@ -175,6 +176,8 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
  // Groom hairs follow the torso (including neck and rump) without mesh images.
  const groom=createProceduralGroom({THREE,parent:body,quality:gq,seed:options.seed,
   maneStyle:options.maneStyle,tailStyle:options.tailStyle,color:coatDef.mane});
+ const raceCloth=createGeometricRaceLivery({THREE,parent:body,quality:gq,
+  number:Math.max(1,Math.min(99,Number(options.number)||1)),accent:options.accent});
 
  let mode='Idle',time=0,idleClock=0,hoofPhase=0,bankGoal=0,wind=.5,wetness=options.wetness,
   mud=options.mud,blend=0,disposed=false,profileCurrent={...options};
@@ -212,13 +215,14 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   groom.update(dt,{phase,speed:amount*rate,windSpeed:airflow,activeMotion:!reduced});
  }
  function setAppearance({coat:nextCoat,accent:nextAccent,marking:nextMark,
-  maneStyle:nextMane,tailStyle:nextTail,wetness:nextWet,mud:nextMud}={}){
+  maneStyle:nextMane,tailStyle:nextTail,number:nextNumber,wetness:nextWet,mud:nextMud}={}){
   const coatKey=COAT_PRESETS[nextCoat]?nextCoat:profileCurrent.coat;
   const colors=COAT_PRESETS[coatKey];
   const customCoat=typeof nextCoat==='string'&&/^#[0-9a-f]{6}$/i.test(nextCoat)?nextCoat:null;
   skin.setLook({color:customCoat||colors.coat});
   muzzle.color.set(colors.muzzle);hoof.color.set(colors.hoof);
-  if(nextAccent)accentMat.color.set(nextAccent);
+  if(nextAccent){accentMat.color.set(nextAccent);raceCloth.setAccent(nextAccent);}
+  if(nextNumber!==undefined)raceCloth.setNumber(nextNumber);
   groom.setAppearance({maneColor:colors.mane,style:nextMane,tail:nextTail});
   if(nextMark!==undefined)setMarking(nextMark);
   profileCurrent={...profileCurrent,coat:coatKey,
@@ -234,7 +238,9 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
  function setMud(v){mud=clamp(Number(v),0,1);skin.setLook({mud});}
  function setVisualQuality(next){
   const mode=next==='performance'?'eco':next==='cinematic'?'high':next;
-  if(['eco','balanced','high'].includes(mode))groom.setQuality(mode);
+  if(['eco','balanced','high'].includes(mode)){
+   groom.setQuality(mode);raceCloth.setQuality(mode);
+  }
  }
  function setCoatFinish(level=0){
   const finish=clamp(Number(level),0,1);
@@ -244,7 +250,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
  function reset(){time=0;idleClock=0;hoofPhase=0;blend=0;bodyPivot.rotation.set(0,0,0);
   for(const leg of legs){leg.upper.rotation.z=0;leg.knee.rotation.z=0;leg.fetlock.rotation.z=0;}}
  function dispose(){
-  if(disposed)return;disposed=true;groom.dispose();
+  if(disposed)return;disposed=true;groom.dispose();raceCloth.dispose();
   for(const g of geometries)g.dispose();
   skin.dispose();for(const mat of materials)mat.dispose();
   root.removeFromParent();root.clear();
