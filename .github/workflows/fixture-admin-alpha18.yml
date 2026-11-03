@@ -1,0 +1,21 @@
+name: Fixture Admin Alpha18
+on:
+  pull_request:
+    paths:
+      - 'admin/fixture/**'
+      - 'race-lab/source/src/data/**'
+      - 'tests/fixture-admin-alpha18.mjs'
+      - '.github/workflows/fixture-admin-alpha18.yml'
+  push:
+    branches: [feat/fixture-admin-alpha18]
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate all seven synthetic fixture days
+        run: node --experimental-default-type=module tests/fixture-admin-alpha18.mjs
