@@ -1,0 +1,41 @@
+name: Verify BTC atelier public availability
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/verify-btc-atelier-live.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Probe served BTC pilot without affecting production
+        shell: bash
+        run: |
+          set -uo pipefail
+          for site in race.cryptodromo.com cryptodromo.com; do
+            echo "::group::Public $site"
+            verified=0
+            for i in 1 2 3 4 5; do
+              at=$(mktemp); js=$(mktemp)
+              statusA=$(curl -sS -L --max-time 15 -w '%{http_code}' -o "$at" "https://$site/racers/btc-atelier-preview.js?verify=btc-atelier-20261103-$i" || true)
+              statusB=$(curl -sS -L --max-time 15 -w '%{http_code}' -o "$js" "https://$site/racers/racers.js?verify=btc-atelier-20261103-$i" || true)
+              echo "attempt $i: module=$statusA, catalog=$statusB"
+              if grep -q 'BTC horse atelier' "$at" && grep -q 'btc-atelier-preview.js' "$js"; then
+                verified=1
+                echo "::notice::BTC pilot is available on $site"
+                rm -f "$at" "$js"
+                break
+              fi
+              rm -f "$at" "$js"
+              sleep 10
+            done
+            echo "verified_$site=$verified"
+            echo "::endgroup::"
+            if [ "$site" = "race.cryptodromo.com" ] && [ "$verified" != 1 ]; then
+              echo "::error::Race subdomain has not received the BTC pilot yet; check Hostinger deployment sync."
+              exit 1
+            fi
+          done
