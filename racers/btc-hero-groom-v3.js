@@ -4,7 +4,7 @@
  * The horse GLB, original bones and Gallop animation are not changed.
  */
 import * as THREE from 'three';
-export const GROOM_VERSION='btc-groom-v3-shell-2';
+export const GROOM_VERSION='btc-groom-v3-clumps-2';
 const PI=Math.PI, TAU=Math.PI*2;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
 function findHair(root){
@@ -111,6 +111,60 @@ function buildGeometry(source,options){
   ix.push(rows[0][0],rows[0][j+1],rows[0][j]);
   ix.push(rows[R][0],rows[R][j],rows[R][j+1]);
  }
+ // ITERATION 2: a sparse set of curved highlight locks integrated into the
+ // SAME BufferGeometry. The full, continuous shell remains dominant.
+ // These are slim tapered strands, not dozens of rigid plastic wedges.
+ function strand(mane,id,count,flank=1){
+  const SEG=19,CIRCLE=7,begin=p.length/3,phase=id*2.399963;
+  const s=(id+.38)/count;
+  const rootY=-.0293+.0179*s;
+  const rootZ=.0444-.0068*s+.0004*Math.sin(PI*s);
+  const skin=mane?nearest(rootY):{bones:[1,0,0,0],ws:[1,0,0,0]};
+  const angle=TAU*id/count;
+  for(let k=0;k<=SEG;k++){
+   const u=k/SEG,bulge=Math.sin(PI*u),tip=Math.pow(u,4);
+   let cx,cy,cz,width,depth;
+   if(mane){
+    const len=(.0067+.0015*Math.sin(s*PI))*
+      options.maneSize*(.83+.22*Math.sin(phase));
+    cy=rootY+len*u;
+    cz=rootZ+.0031*bulge-.0009*u*u+.00018*Math.sin(phase+u*5);
+    cx=flank*(.0013+.0027*bulge)*options.maneSize;
+    width=(.00011+.00054*Math.pow(bulge,.70))*Math.pow(1-u,.23);
+    depth=(.00017+.00029*bulge)*Math.pow(1-u,.28);
+   }else{
+    cy=.0194+.0226*options.tailSize*u+tip*.0017*Math.sin(phase);
+    const centerZ=.0319+.0029*Math.sin(PI*.93*u)-.0046*u;
+    const rx=(.0011+.0033*Math.pow(bulge,.72))*Math.max(.055,Math.pow(1-u,.36))*options.tailSize;
+    const rz=(.0013+.0024*Math.pow(bulge,.78))*Math.max(.055,Math.pow(1-u,.36))*options.tailSize;
+    cx=Math.cos(angle)*(rx+.00022);
+    cz=centerZ+Math.sin(angle)*(rz+.00019);
+    width=(.00011+.00052*bulge)*Math.pow(1-u,.32);
+    depth=(.00012+.00032*bulge)*Math.pow(1-u,.35);
+   }
+   const narrow=Math.max(.025,Math.pow(1-u,.60));
+   for(let a=0;a<CIRCLE;a++){
+    const theta=TAU*a/CIRCLE;
+    const dx=Math.cos(theta)*width*narrow;
+    const dz=Math.sin(theta)*depth*narrow;
+    const light=(.91+.11*Math.max(0,Math.sin(theta))+
+      .035*Math.sin(phase))*(mane?1:.97);
+    vertex(cx+dx,cy,cz+dz,skin.bones,skin.ws,u,mane?0:1,
+      mane?s+id*.031:id/count+id*.011,light);
+   }
+  }
+  for(let k=0;k<SEG;k++)for(let a=0;a<CIRCLE;a++){
+   const v0=begin+k*CIRCLE+a,v1=begin+k*CIRCLE+(a+1)%CIRCLE,
+     v2=begin+(k+1)*CIRCLE+a,v3=begin+(k+1)*CIRCLE+(a+1)%CIRCLE;
+   ix.push(v0,v2,v1,v1,v2,v3);
+  }
+ }
+ const maneHighlights=12,tailHighlights=8;
+ for(let i=0;i<maneHighlights;i++){
+  strand(true,i,maneHighlights,1);
+  strand(true,i,maneHighlights,-1);
+ }
+ for(let i=0;i<tailHighlights;i++)strand(false,i,tailHighlights);
  const g=new THREE.BufferGeometry();
  g.setIndex(ix);
  g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
@@ -157,7 +211,7 @@ export function createBTC3DHeroGroom(root,options={}){
  let disposed=false;
  return {
   get snapshot(){return {version:GROOM_VERSION,mode:'continuous-volume',
-    maneBodies:1,tailBodies:1,oldHairHidden:!source.visible,
+    maneBodies:1,tailBodies:1,maneHighlightStrands:24,tailHighlightStrands:8,oldHairHidden:!source.visible,
     vertices:geometry.attributes.position.count,modelPreserved:true,
     jockey:false,disposed};},
   update(dt,{wind=1,speed=1,running=true}={}){
