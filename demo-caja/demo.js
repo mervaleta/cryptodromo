@@ -1,3 +1,4 @@
+import {FIAT_METHODS,CRYPTO_RATES,quoteDeposit,createDepositIntent,resolveDepositIntent} from '../features/simulated-economy/deposits.js';
 import {getRaceFixture,RACES_PER_DAY} from '../race-lab/source/src/data/raceFixture.js';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js';
 import {liveSlot,formatCountdown} from '../visual-lab/liveSchedule.js';
@@ -28,8 +29,8 @@ function render(){
  else for(const acc of s.accounts){const o=new Option(acc.alias,acc.id);$('player').add(o)}
  $('player').value=a?.id||'';
  show('usd',a?money(a.usdCents):'0,00');show('credits',number(a?.credits||0));
- for(const id of ['fund','buy','sell','place'])$(id).disabled=!a;
- $('ticketList').replaceChildren();$('ledgerList').replaceChildren();$('leaders').replaceChildren();
+ for(const id of ['fund','buy','sell','place','confirmDeposit','cancelDeposit'])$(id).disabled=!a;
+ $('ticketList').replaceChildren();$('ledgerList').replaceChildren();$('leaders').replaceChildren();renderDeposits(a);
  if(a){
   for(const t of [...a.tickets].reverse().slice(0,100)){const li=document.createElement('li');
    escapeText(li,'#'+t.raceId+' · '+t.runner+' · '+t.kind+' · '+number(t.stake)+' CR · '+t.status+' · '+number(t.payout)+' CR');
@@ -43,6 +44,32 @@ function render(){
  if(!a?.ledger.length)escapeText($('ledgerList'),'Todavía no hay movimientos.','li');
  for(const row of rankAccounts(s)){const tr=document.createElement('tr');for(const v of [row.alias,row.settled,row.wins,row.accuracy.toFixed(1)+'%',row.net])escapeText(tr,v,'td');$('leaders').append(tr)}
  preview();
+}
+function renderDeposits(a){
+ $('depositList').replaceChildren();$('depositIntent').replaceChildren();
+ const deposits=Array.isArray(a?.deposits)?a.deposits:[];
+ for(const d of [...deposits].reverse().slice(0,60)){
+  const li=document.createElement('li');
+  escapeText(li,d.channel+' '+d.method+' · '+d.amount+' '+d.currency+' → USD demo '+money(d.creditedCents)+' · '+d.status);
+  escapeText(li,' · '+d.id.slice(0,8),'small');$('depositList').append(li);
+  if(d.status==='pending')$('depositIntent').add(new Option(d.method+' · '+money(d.creditedCents)+' USD demo · '+d.id.slice(0,8),d.id));
+ }
+ if(!deposits.length)escapeText($('depositList'),'No hay solicitudes todavía.','li');
+ const pending=$('depositIntent').options.length>0;
+ $('confirmDeposit').disabled=!pending;$('cancelDeposit').disabled=!pending;
+}
+function updateDepositMethods(){
+ const channel=$('depositChannel').value;
+ $('depositMethod').replaceChildren();
+ const methods=channel==='fiat'?FIAT_METHODS:CRYPTO_RATES;
+ for(const [symbol,desc] of Object.entries(methods))$('depositMethod').add(new Option(typeof desc==='string'?desc:desc.name+' · cotización fija de prueba',symbol));
+ previewDeposit();
+}
+function previewDeposit(){
+ try{
+  const q=quoteDeposit({channel:$('depositChannel').value,method:$('depositMethod').value,packageUsd:Number($('pack').value)});
+  show('depositQuote','Importe ficticio a enviar: '+q.amount+' '+q.currency+' · Acreditación: USD demo '+money(q.creditedCents)+' · Comisión: '+money(q.feeCents)+' USD demo'+(q.rateUsd?' · tasa fija 1 '+q.method+' = '+q.rateUsd+' USD demo':''));
+ }catch(e){show('depositQuote',e.message)}
 }
 function getChoices(){
  const now=liveSlot(),time=Date.now(),out=[];
@@ -94,7 +121,12 @@ for(const b of document.querySelectorAll('[data-view]'))b.addEventListener('clic
 });
 $('create').onclick=()=>run(()=>addAccount(s,$('newAlias').value),'accountStatus');
 $('player').onchange=()=>run(()=>switchAccount(s,$('player').value),'accountStatus');
-$('fund').onclick=()=>run(()=>topUp(s,Number($('pack').value)),'fundStatus');
+$('fund').onclick=()=>run(()=>createDepositIntent(s,{channel:$('depositChannel').value,method:$('depositMethod').value,packageUsd:Number($('pack').value)}),'fundStatus');
+$('confirmDeposit').onclick=()=>run(()=>resolveDepositIntent(s,$('depositIntent').value,'confirmed'),'depositStatus');
+$('cancelDeposit').onclick=()=>run(()=>resolveDepositIntent(s,$('depositIntent').value,'cancelled'),'depositStatus');
+$('depositChannel').addEventListener('change',updateDepositMethods);
+$('depositMethod').addEventListener('change',previewDeposit);
+$('pack').addEventListener('change',previewDeposit);
 $('buy').onclick=()=>run(()=>buyCredits(s,Number($('buyAmount').value)),'changeStatus');
 $('sell').onclick=()=>run(()=>sellCredits(s,Number($('sellAmount').value)),'changeStatus');
 $('place').onclick=()=>run(()=>{
@@ -108,7 +140,7 @@ $('place').onclick=()=>run(()=>{
 },'ticketStatus');
 $('race').onchange=runners;
 for(const id of ['runner','betKind','stake','buyAmount','sellAmount'])$(id).addEventListener('input',preview);
-races();render();settle();
+updateDepositMethods();races();render();settle();
 let prevRace='';
 setInterval(()=>{
  const now=liveSlot(),key=now.dayIndex+':'+now.slot;
