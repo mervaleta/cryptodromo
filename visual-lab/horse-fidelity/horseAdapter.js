@@ -38,3 +38,23 @@ export async function createRaceHorseVisual({THREE,entry,index=0,quality='balanc
  }
  throw RangeError('Unknown horse visual mode');
 }
+
+/**
+ * Exact bridge for Alpha20 LIVE horseRenderer.js, whose current args are
+ * {coat,accent,symbol,stallNumber,height,phase,mode,quality}.
+ * Does not edit that renderer: during integration it becomes a third
+ * opt-in 'horse-engine=fidelity' branch, leaving 'procedural' Alpha20 intact.
+ */
+export function createAlpha22RaceHorse({
+ THREE,coat='#784b35',accent='#e5b568',symbol='BTC',
+ stallNumber=1,height=2.85,phase=0,mode='Gallop',
+ quality='balanced',jockey=true
+}={}){
+ const q=quality==='cinematic'?'high':quality==='performance'?'eco':quality;
+ const p=visualHorseProfile({coat,color:accent,symbol},Math.max(0,stallNumber-1),q);
+ const profile={...p,height,phase,number:stallNumber,jockey,gaitStyle:'ik'};
+ const horse=createProceduralHorse({THREE,profile});
+ horse.setAppearance({coat,accent,number:stallNumber});
+ horse.play(mode);
+ return horse;
+}
