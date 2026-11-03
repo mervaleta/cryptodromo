@@ -1,0 +1,16 @@
+<!-- CRP shared navigation component. Mount via the integration script, never duplicate per page. -->
+<header class="crp-global-header" data-crp-header>
+  <div class="crp-global-header__inner">
+    <a class="crp-global-header__logo" href="/" aria-label="Cryptódromo, inicio"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a>
+    <nav class="crp-global-header__nav" aria-label="Navegación principal">
+      <a class="crp-global-header__link" href="/" data-crp-route="/">Carrera</a>
+      <a class="crp-global-header__link" href="/racers/" data-crp-route="/racers/">Corredores</a>
+      <a class="crp-global-header__link" href="/fixture/" data-crp-route="/fixture/">Fixture</a>
+      <a class="crp-global-header__link" href="/resultados/" data-crp-route="/resultados/">Resultados</a>
+      <div class="crp-shortcut"><button type="button" class="crp-shortcut__toggle" data-crp-shortcut aria-controls="crp-explorar" aria-expanded="false"><span aria-hidden="true">⌂</span> Explorar <span aria-hidden="true">⌄</span></button><div class="crp-shortcut__menu" id="crp-explorar" hidden><a href="/estadio/">🏟️ Estadio</a><a href="/parade/">🐎 Parade</a><a href="/visual-lab/">◈ Visual Lab</a><a href="/estadisticas/">▥ Estadísticas</a></div></div>
+      <div class="crp-shortcut"><button type="button" class="crp-shortcut__toggle" data-crp-shortcut aria-controls="crp-comunidad" aria-expanded="false"><span aria-hidden="true">▤</span> Comunidad <span aria-hidden="true">⌄</span></button><div class="crp-shortcut__menu" id="crp-comunidad" hidden><a href="/cronicas/">📰 Crónicas</a><a href="/comunidad.html">♧ Comunidad</a><a href="/eventos.html">◷ Eventos</a></div></div>
+      <div class="crp-shortcut"><button type="button" class="crp-shortcut__toggle" data-crp-shortcut aria-controls="crp-proyecto" aria-expanded="false"><span aria-hidden="true">◈</span> Proyecto <span aria-hidden="true">⌄</span></button><div class="crp-shortcut__menu" id="crp-proyecto" hidden><a href="/institucional/">◈ Institucional</a><a href="/como-funciona.html">? Cómo funciona</a><a href="/contacto.html">✉ Contacto</a></div></div>
+    </nav>
+    <a class="crp-global-header__link" href="/#raceCanvas">Ver carrera ↗</a>
+  </div>
+</header>
