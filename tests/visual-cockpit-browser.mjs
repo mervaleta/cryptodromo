@@ -12,6 +12,7 @@ try{
  const look=page.locator('.crp-cockpit__field').filter({hasText:'Botón para orientar'}).locator('select');
  assert.equal(await look.inputValue(),'2','Right button should look by default');
  const before=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone);
+ await page.locator('#parade-canvas').scrollIntoViewIfNeeded();
  const rect=await page.locator('#parade-canvas').boundingBox();
  assert.ok(rect&&rect.width>300);
  const start={x:rect.x+rect.width*.5,y:rect.y+rect.height*.5};
