@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-test('only BTC explicitly opts into the atelier',()=>{
+test('only BTC uses the new groom by default; legacy mode is reversible',()=>{
  const racers=read('racers/racers.js'),html=read('racers/index.html');
- assert.match(racers,/get\('atelier'\)==='btc'/);
+ assert.match(racers,/atelierMode==='btc'/);
+ assert.match(racers,/atelierMode!=='off'&&selected\.symbol==='BTC'/);
  assert.match(racers,/token\.symbol==='BTC'/);
  assert.match(racers,/previewModule=btcAtelier\?/);
  assert.match(racers,/horse-preview\.js\?v=alpha18-gaitmane-1/);
@@ -15,6 +16,8 @@ test('pilot uses the established authored GLB Gallop, without jockeys',()=>{
  const pilot=read('racers/btc-atelier-preview.js');
  assert.match(pilot,/import \{createHorse\} from '\.\.\/race-lab\/source\/src\/horse\.js/);
  assert.match(pilot,/createBTCHairAtelier/);
+ assert.match(pilot,/createBTC3DHeroGroom/);
+ assert.match(pilot,/applyBTCCoatLook/);
  assert.match(pilot,/maneMotion:false/);
  assert.match(pilot,/mode:paused\?'Idle':'Gallop'/);
  assert.match(pilot,/setWind/);
