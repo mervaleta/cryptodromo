@@ -98,6 +98,7 @@ let waveIndex=-1,horseModels=[],isReady=false,selectedWalkClips=[];
 Object.defineProperty(window,'__cryptodromoParadeQA',{configurable:false,value:Object.freeze({
  snapshot:()=>({parade:parade.snapshot(),drone:drone.snapshot(),ready:isReady,
   models:horseModels.length,walkClips:[...selectedWalkClips],village:village.stats,
+  cameraPosition:camera.position.toArray(),cameraFov:camera.fov,
   stage:{w:renderer.domElement.width,h:renderer.domElement.height}})
 })});
 let cameraInterest={id:'pista',name:'Óvalo y caballos',x:0,y:1,z:72};
