@@ -26,7 +26,9 @@ try{
  assert.equal(state.heroGroom?.tailLocks,35);
  assert.equal(state.heroGroom?.fineManeLocks,24);
  assert.equal(state.heroGroom?.fineTailLocks,18);
- assert.equal(state.heroGroom?.locks,129);
+ assert.equal(state.heroGroom?.locks,145);
+ assert.equal(state.heroGroom?.coreManeLocks,6);
+ assert.equal(state.heroGroom?.coreTailLocks,10);
  assert.equal(state.heroGroom?.modelPreserved,true);
  assert.equal(state.heroGroom?.jockey,false);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
