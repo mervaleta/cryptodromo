@@ -119,4 +119,5 @@ $('gp-restart').addEventListener('click',()=>{playing=false;setElapsed(0);$('gp-
 $('gp-seek').addEventListener('input',e=>{playing=false;setElapsed(e.target.value);$('gp-play').textContent='▶ Reproducir';});
 $('gp-podium-dismiss').addEventListener('click',()=>{$('gp-podium').hidden=true;});
 window.addEventListener('resize',resize);window.addEventListener('pagehide',cleanup);
+window.__cryptodromoGPReplayQA={snapshot:()=>({ready,horseCount:actors.length,elapsed,playing,hasVenue:!!venue,hasRenderer:!!renderer,eventId:event?.id||null,synthetic:true,camera:$('gp-camera').value})};
 init();
