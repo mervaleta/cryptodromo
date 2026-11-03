@@ -7,6 +7,7 @@ const $=s=>document.querySelector(s);
 let tier='all', selected=TOKEN_ROSTER.find(t=>t.symbol===location.hash.slice(1))||TOKEN_ROSTER[0], preview;
 // Explicit opt-in: one BTC experiment only. The normal 100-runner catalogue stays untouched.
 const btcAtelier=new URLSearchParams(location.search).get('atelier')==='btc';
+document.body.classList.toggle('btc-hair-preview',btcAtelier);
 let atelierVariant='enhanced';
 function updateAtelierState(token){
  const btc=token.symbol==='BTC';
