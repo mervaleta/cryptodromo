@@ -343,7 +343,7 @@ async function loadModels(){
    const runner=WAVES[0].runners[i];
    const horse=await createHorse({
     coat:runner?.coat||'#996b54',accent:runner?.color||'#e5c68e',
-    symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk'
+    symbol:runner?.symbol||'BTC',height:2.7,phase:i*.09,mode:'Walk',maneGait:'Walk'
    });
    horse.setWind?.(paradeManeWind);
    horse.userData={paradeSymbol:runner?.symbol||null};
