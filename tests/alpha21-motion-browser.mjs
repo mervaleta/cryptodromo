@@ -38,7 +38,7 @@ try{
  await page.evaluate(()=>window.__cryptodromoAlpha21QA.seek(12));
  await page.waitForTimeout(200);
  state=await page.evaluate(()=>window.__cryptodromoAlpha21QA.snapshot());
- assert.ok(state.elapsed>12);assert.equal(state.gateOpen,1);
+ assert.ok(state.elapsed>=12&&state.elapsed<60,'Seek should show the requested time');assert.equal(state.gateOpen,1);
  assert.deepEqual(errors,[],'No page exceptions: '+errors.join('; '));
  assert.ok(state.drawCalls>0,'Renderer must draw the horses and venue');
  assert.ok(state.triangles>0,'Renderer must contain real geometry');
