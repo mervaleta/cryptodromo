@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+const browser=await chromium.launch({headless:true});
+try{
+ const page=await browser.newPage({viewport:{width:1360,height:900}});
+ const errors=[];
+ page.on('pageerror',error=>errors.push(error.message));
+ const origin='http://127.0.0.1:8799';
+ await page.goto(origin+'/clubes/',{waitUntil:'domcontentloaded',timeout:30000});
+ await page.waitForFunction(()=>document.querySelectorAll('.club-card').length===100,{timeout:40000});
+ assert.equal(await page.locator('.club-card').count(),100);
+ await page.locator('button[data-symbol="ETH"]').click();
+ assert.match(await page.locator('#club-identity').innerText(),/ETH/);
+ await page.locator('#make-primary').click();
+ assert.match(await page.locator('#my-club').innerText(),/ETH/);
+ await page.locator('#pin-club').click();
+ assert.match(await page.locator('#pinned-list').innerText(),/ETH/);
+ await page.reload({waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>document.querySelectorAll('.club-card').length===100,{timeout:30000});
+ assert.match(await page.locator('#my-club').innerText(),/ETH/,'local club preference survives reload');
+ await page.locator('#club-search').fill('solana');
+ assert.equal(await page.locator('.club-card').count(),1);
+ await page.goto(origin+'/temporadas/',{waitUntil:'domcontentloaded',timeout:30000});
+ await page.waitForFunction(()=>document.querySelector('#season-status')?.textContent.includes('0 temporadas verificadas')||document.querySelector('#season-status')?.textContent.includes('sin verificar'),{timeout:30000});
+ assert.match(await page.locator('#season-status').innerText(),/0 temporadas verificadas/);
+ assert.equal(await page.locator('#season-count').innerText(),'0');
+ assert.match(await page.locator('.warning').innerText(),/no de transmisiones observadas/i);
+ await page.goto(origin+'/comunidad/',{waitUntil:'domcontentloaded',timeout:30000});
+ assert.equal(await page.locator('a[href="/clubes/"]').count(),1);
+ await page.goto(origin+'/grandes-premios/',{waitUntil:'domcontentloaded',timeout:30000});
+ assert.ok(await page.locator('a[href="/temporadas/"]').count()>=1);
+ assert.ok(await page.locator('a[href="/clubes/"]').count()>=1);
+ assert.deepEqual(errors,[],'No uncaught page errors: '+errors.join('; '));
+ console.log('SPORTS_PHASE3_BROWSER_OK',JSON.stringify({clubs:100,localPreference:'ETH',archiveCount:0,communityLink:true}));
+}finally{await browser.close();}
