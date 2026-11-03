@@ -25,7 +25,7 @@ function buildGroom(source,settings){
  const src=[];
  for(let i=0;i<pos.count;i++)src.push([pos.getX(i),pos.getY(i),pos.getZ(i)]);
  const verts=[],idx=[],skIndices=[],skWeights=[],colors=[],tips=[],lockIds=[],regions=[];
- const steps=12,sides=6;
+ const steps=15,sides=8;
  const pick=(mane,y,x,z)=>{
   let nearest=0,best=1e8;
   for(let i=0;i<src.length;i++){
@@ -39,21 +39,21 @@ function buildGroom(source,settings){
   let t=j/(n-1),r=RNG(j*17+(mane?7:173)),lane=(j%5-2)*.00048;
   const anchor=pick(mane,mane?(-.028+t*.015):(.0163+(j%7)*.00025),lane,mane?(.0423-t*.0043):.033);
   const p=src[anchor],size=mane?settings.maneSize:settings.tailSize;
-  const length=(mane?.0066+.0059*r:.019+.011*r)*size;
-  const w=(mane?.00057:.00075)*(.75+.45*RNG(j+123));
+  const length=(mane?.0044+.0048*r:.0108+.0092*r)*size;
+  const w=(mane?.00118:.00138)*(.78+.45*RNG(j+123));
   const first=verts.length/3;
   for(let k=0;k<=steps;k++){
    const u=k/steps,peak=Math.sin(Math.PI*u);
    const radius=w*(.34+.86*Math.min(1,u*5))*Math.max(.045,(1-u)**.65);
-   const x=p[0]+Math.sin(u*Math.PI*1.7+r*8)*.00042*u;
-   const y=p[1]+(mane?length*u:(.005+.004*r)*u);
-   const z=p[2]+(mane?peak*(.0025+.0015*r)-.0014*u:-length*u+.0019*peak);
+   const x=p[0]+Math.sin(u*Math.PI*1.65+r*8)*.0003*u;
+   const y=p[1]+(mane?length*u:(.0034+.0065*r)*Math.sin(Math.PI*u*.65)+.002*u);
+   const z=p[2]+(mane?peak*(.0023+.0022*r)-.0007*u-.001*u*u:-length*u+(.0038+.003*r)*Math.sin(Math.PI*u));
    const joint=pick(mane,y,x,z);
    for(let side=0;side<sides;side++){
     let a=side/sides*TAU;
-    verts.push(x+Math.cos(a)*radius,y+Math.sin(a)*radius*.17,z+Math.sin(a)*radius*.55);
+    verts.push(x+Math.cos(a)*radius,y+Math.sin(a)*radius*.21,z+Math.sin(a)*radius*.95);
     for(let c=0;c<4;c++){skIndices.push(bones.getComponent(joint,c));skWeights.push(weights.getComponent(joint,c));}
-    const light=.72+.1*RNG(j*13+side)+((side===0||side===1)?.22:0);
+    const light=.83+.12*RNG(j*13+side)+((side===0||side===1)?.14:0);
     colors.push(light,light*.94,light*.88);
     tips.push(u);lockIds.push(j+(mane?0:100));regions.push(mane?0:1);
    }
@@ -78,14 +78,14 @@ function buildGroom(source,settings){
  return g;
 }
 export function createBTC3DHeroGroom(root,options={}){
- const settings={maneLocks:38,tailLocks:27,maneSize:1.3,tailSize:1.25,color:'#39231d',...options};
+ const settings={maneLocks:30,tailLocks:20,maneSize:1.15,tailSize:1.10,color:'#4b2e25',...options};
  settings.maneLocks=Math.round(clamp(settings.maneLocks,16,80));
  settings.tailLocks=Math.round(clamp(settings.tailLocks,12,60));
  settings.maneSize=clamp(settings.maneSize,.7,1.9);
  settings.tailSize=clamp(settings.tailSize,.7,1.9);
  const original=sourceHair(root),geometry=buildGroom(original,settings);
  const material=new THREE.MeshStandardMaterial({color:settings.color,vertexColors:true,
-   side:THREE.DoubleSide,roughness:.48,metalness:0});
+   side:THREE.DoubleSide,roughness:.53,metalness:0});
  const uniforms={time:{value:0},intensity:{value:.8}};
  const declarations=[
   'attribute float groomTip;',
@@ -100,9 +100,9 @@ export function createBTC3DHeroGroom(root,options={}){
   'float maneWave=sin(phase+groomTip*2.5)*.66+sin(phase*.71-groomTip*3.4)*.34;',
   'float tailWave=sin(groomTime*4.7+groomLock*1.13+groomTip*3.3);',
   'float drag=rootWeight*groomIntensity;',
-  'transformed.x+=drag*mix(maneWave*.00065,tailWave*.00096,groomTail);',
-  'transformed.y+=drag*mix(-maneWave*.00043,tailWave*.00037,groomTail);',
-  'transformed.z+=drag*mix(maneWave*.00035,tailWave*.00043,groomTail);'
+  'transformed.x+=drag*mix(maneWave*.00050,tailWave*.00057,groomTail);',
+  'transformed.y+=drag*mix(-maneWave*.00029,tailWave*.00026,groomTail);',
+  'transformed.z+=drag*mix(maneWave*.00028,tailWave*.00030,groomTail);'
  ].join('\n');
  material.onBeforeCompile=shader=>{
   shader.uniforms.groomTime=uniforms.time;
