@@ -326,7 +326,7 @@ canvas.addEventListener('pointermove',event=>{
  const dx=event.clientX-mouseDrag.x,dy=event.clientY-mouseDrag.y;
  mouseDrag.x=event.clientX;mouseDrag.y=event.clientY;
  if(mouseDrag.mode==='look')drone.nudgeAim(dx*mouseScheme.sensitivity,(mouseScheme.invertY?1:-1)*dy*mouseScheme.sensitivity*.81);
- else {const s=drone.snapshot();drone.setPose({x:s.x-dx*.26*Math.cos(s.yaw),y:s.y+dy*.20,z:s.z-dx*.26*Math.sin(s.yaw)});}
+ else {const s=drone.snapshot();if(s.mode==='free')drone.setPose({x:s.x-dx*.26*Math.cos(s.yaw),y:s.y+dy*.20,z:s.z-dx*.26*Math.sin(s.yaw)});else drone.setPose({lateral:s.lateral-dx*.24,y:s.y+dy*.20});}
  syncControls();
 });
 for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,event=>{
