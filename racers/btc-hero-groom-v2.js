@@ -38,14 +38,14 @@ function buildGroom(source,settings){
   }
   return nearest;
  };
- const add=(mane,j,n)=>{
+ const add=(mane,j,n,fine=false)=>{
   // Layered base/root layout, avoiding the solid row of identical tubes.
   const layers=mane?4:5;
   const slot=Math.floor(j/layers),layer=j%layers;
   const slotCount=Math.ceil(n/layers);
   const along=slot/(slotCount-1);
-  const phase=RNG(j*19.13+(mane?23:41));
-  const secondary=RNG(j*7.31+233);
+  const phase=RNG(j*19.13+(mane?23:41)+(fine?517:0));
+  const secondary=RNG(j*7.31+233+(fine?19:0));
   const lateral=(layer-(layers-1)*.5)*(mane?.00085:.00061)+
     (phase-.5)*.00020;
   const yRoot=mane?(-.0287+.0164*along+(.5-phase)*.00045):
@@ -56,10 +56,10 @@ function buildGroom(source,settings){
   // The width grows from a thin root to a sculpted belly then pinches
   // to a fine, curved tip. The cross section is an elliptical lens.
   const length=(mane?.0083+.0067*phase:.0125+.0065*phase)*
-     (mane?settings.maneSize:settings.tailSize)*(0.88+layer*.056);
-  const width=(mane?.00098:.00115)*(.81+.27*secondary);
+     (mane?settings.maneSize:settings.tailSize)*(0.88+layer*.056)*(fine?(.83+.45*secondary):1);
+  const width=(mane?.00098:.00115)*(.81+.27*secondary)*(fine?.26:1);
   const root=verts.length/3;
-  const rootTilt=(phase-.5)*.00055;
+  const rootTilt=(phase-.5)*.00055+(fine?(secondary-.5)*.00070:0);
   const bend=(mane?.0021:.0028)*(.7+phase*.6);
   for(let k=0;k<=STEPS;k++){
    const u=k/STEPS;
@@ -84,9 +84,9 @@ function buildGroom(source,settings){
     }
     const ridge=(side===1||side===2)?.21:(side===5||side===6?-.08:.04);
     const tint=.76+.12*phase+.05*Math.sin(j*1.7)+
-      ridge+.075*swell;
+      ridge+.075*swell+(fine?.18:0);
     colors.push(tint*1.08,tint*.96,tint*.89);
-    tips.push(u);lockIds.push(j+(mane?0:100));regions.push(mane?0:1);
+    tips.push(u);lockIds.push(j+(mane?0:100)+(fine?300:0));regions.push(mane?0:1);
    }
   }
   for(let k=0;k<STEPS;k++)for(let a=0;a<SIDES;a++){
@@ -97,6 +97,10 @@ function buildGroom(source,settings){
  };
  for(let j=0;j<settings.maneLocks;j++)add(true,j,settings.maneLocks);
  for(let j=0;j<settings.tailLocks;j++)add(false,j,settings.tailLocks);
+ // Fine tapered filaments stay in the SAME skinned mesh and draw call.
+ const fineMane=24,fineTail=18;
+ for(let j=0;j<fineMane;j++)add(true,j,fineMane,true);
+ for(let j=0;j<fineTail;j++)add(false,j,fineTail,true);
  const geometry=new THREE.BufferGeometry();
  geometry.setIndex(idx);
  geometry.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
@@ -110,7 +114,7 @@ function buildGroom(source,settings){
  return geometry;
 }
 export function createBTC3DHeroGroom(root,options={}){
- const settings={maneLocks:52,tailLocks:35,maneSize:1.18,tailSize:1.16,color:'#50352b',...options};
+ const settings={maneLocks:52,tailLocks:35,maneSize:1.22,tailSize:1.16,color:'#45312c',...options};
  settings.maneLocks=Math.round(clamp(settings.maneLocks,16,80));
  settings.tailLocks=Math.round(clamp(settings.tailLocks,12,60));
  settings.maneSize=clamp(settings.maneSize,.7,1.9);
@@ -157,7 +161,8 @@ export function createBTC3DHeroGroom(root,options={}){
  let disposed=false;
  return {
   get snapshot(){return {version:HERO_GROOM_VERSION,locks:settings.maneLocks+settings.tailLocks,
-    maneLocks:settings.maneLocks,tailLocks:settings.tailLocks,vertices:geometry.attributes.position.count,
+    maneLocks:settings.maneLocks,tailLocks:settings.tailLocks,fineManeLocks:24,fineTailLocks:18,
+    vertices:geometry.attributes.position.count,
     modelPreserved:true,jockey:false,disposed};},
   update(dt,{wind=1,speed=1,running=true}={}){
    if(disposed)return;
