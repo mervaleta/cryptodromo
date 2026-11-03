@@ -4,14 +4,15 @@
  * Keyboard: arrows or WASD translate, Q/E yaw, R/F altitude, +/- zoom.
  * Pointer drag changes yaw/pitch; wheel changes FOV, independently from altitude.
  */
+import {droneOrbitView} from '../visual-lab/cameraRig.js?v=alpha17-1';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const finite=(v,fallback)=>Number.isFinite(Number(v))?Number(v):fallback;
 const wrapAngle=a=>Math.atan2(Math.sin(a),Math.cos(a));
 export const DRONE_BOUNDS=Object.freeze({x:[-690,690],y:[4,190],z:[-420,420]});
-export const DRONE_MODES=Object.freeze(['free','orbit','follow']);
+export const DRONE_MODES=Object.freeze(['free','orbit','follow','crane']);
 export function createDroneRig({x=-25,y=58,z=185,yaw=0,pitch=-.42,fov=48,
- speed=32,distance=95,mode='free'}={}){
- let state={x,y,z,yaw,pitch,fov,speed,distance,mode};
+ speed=32,distance=95,lateral=0,mode='free'}={}){
+ let state={x,y,z,yaw,pitch,fov,speed,distance,lateral,mode};
  const sanitize=()=>{
   state.x=clamp(finite(state.x,0),...DRONE_BOUNDS.x);
   state.y=clamp(finite(state.y,55),...DRONE_BOUNDS.y);
@@ -21,6 +22,7 @@ export function createDroneRig({x=-25,y=58,z=185,yaw=0,pitch=-.42,fov=48,
   state.fov=clamp(finite(state.fov,48),19,89);
   state.speed=clamp(finite(state.speed,30),4,130);
   state.distance=clamp(finite(state.distance,95),14,390);
+  state.lateral=clamp(finite(state.lateral,0),-90,90);
   if(!DRONE_MODES.includes(state.mode))state.mode='free';
  };
  sanitize();
@@ -30,20 +32,21 @@ export function createDroneRig({x=-25,y=58,z=185,yaw=0,pitch=-.42,fov=48,
   z:-Math.cos(state.pitch)*Math.cos(state.yaw)
  });
  function view(target={x:0,y:2,z:0}){
-  if(state.mode==='orbit'){
-   const c=Math.cos(state.pitch),v=lookVector();
-   const pos={
-    x:clamp(target.x-v.x*state.distance,...DRONE_BOUNDS.x),
-    y:clamp(target.y-v.y*state.distance,...DRONE_BOUNDS.y),
-    z:clamp(target.z-v.z*state.distance,...DRONE_BOUNDS.z)
+  if(state.mode==='orbit'||state.mode==='follow'||state.mode==='crane'){
+   const t={
+    x:(Number(target.x)||0)+Math.cos(state.yaw)*state.lateral,
+    y:Number(target.y)||0,
+    z:(Number(target.z)||0)+Math.sin(state.yaw)*state.lateral
    };
-   return {position:pos,lookAt:{...target},fov:state.fov,mode:state.mode};
+   const view=droneOrbitView(t,state);
+   return {...view,fov:state.fov,mode:state.mode};
   }
   const v=lookVector();
+  const shiftX=Math.cos(state.yaw)*state.lateral,shiftZ=Math.sin(state.yaw)*state.lateral;
   return {
-   position:{x:state.x,y:state.y,z:state.z},
-   lookAt:state.mode==='follow'?{x:finite(target.x,0),y:finite(target.y,2),z:finite(target.z,0)}:
-    {x:state.x+v.x*100,y:state.y+v.y*100,z:state.z+v.z*100},
+   position:{x:state.x+shiftX,y:state.y,z:state.z+shiftZ},
+   lookAt:{x:state.x+shiftX+v.x*100,
+    y:state.y+v.y*100,z:state.z+shiftZ+v.z*100},
    fov:state.fov,mode:state.mode
   };
  }
@@ -57,6 +60,14 @@ export function createDroneRig({x=-25,y=58,z=185,yaw=0,pitch=-.42,fov=48,
    sanitize();return this.snapshot();
   },
   zoom(delta){state.fov=clamp(state.fov+finite(delta,0),19,89);return state.fov;},
+  dolly(delta){
+   const meters=clamp(finite(delta,0),-80,80);
+   if(state.mode==='free'){
+    const v=lookVector();
+    state.x+=v.x*meters;state.y+=v.y*meters;state.z+=v.z*meters;
+   }else state.distance-=meters;
+   sanitize();return this.snapshot();
+  },
   update(delta,inputs={},target=null){
    const dt=clamp(finite(delta,0),0,.2);
    const rotate=.9*dt;
@@ -72,17 +83,11 @@ export function createDroneRig({x=-25,y=58,z=185,yaw=0,pitch=-.42,fov=48,
     state.x+=pace*(forward*sy+strafe*cy);
     state.z+=pace*(-forward*cy+strafe*sy);
     state.y+=pace*finite(inputs.rise,0);
-   }else if(state.mode==='orbit'){
+   }else if(state.mode==='orbit'||state.mode==='follow'||state.mode==='crane'){
+    // FOLLOW and CRANE use the same independent 6-axis orbital rig.
+    // Do not overwrite the operator's height or yaw every frame.
     state.distance=clamp(state.distance-pace*forward,14,390);
-    if(target){
-     state.x=finite(target.x,0);state.z=finite(target.z,0);
-    }
-   }else if(state.mode==='follow'&&target){
-    const alpha=1-Math.exp(-dt*2.6);
-    // Follow without taking away manual pan/height controls.
-    state.x+=(finite(target.x,state.x)-state.x)*alpha;
-    state.z+=(finite(target.z,state.z)+32-state.z)*alpha;
-    state.y+=(finite(target.y,0)+24-state.y)*alpha;
+    state.lateral+=pace*strafe;
     state.y+=pace*finite(inputs.rise,0);
    }
    sanitize();return this.snapshot();
