@@ -15,6 +15,7 @@ try{
  assert.equal(state.ready,true,'Twelve animation rigs should load in WebGL');
  assert.equal(state.horseCount,12);
  assert.equal(state.stadiumTheme,'SATOSHI NAKAMOTO');
+ assert.ok(state.followThroughBones>=36,'Neck/head/back/tail add-on should attach to the GLB rig');
  mkdirSync('artifacts',{recursive:true});
  await page.locator('#stage').screenshot({path:'artifacts/alpha21-ready-gates.png',animations:'disabled',timeout:30000});
  await page.locator('#start').click();
