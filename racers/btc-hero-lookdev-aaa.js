@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js';
-export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-04';
+export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-05';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export function createBTCAAAHeroGroom(root,options={}){
  const stage=Math.floor(clamp(options.lookdevStage??10,1,10));
@@ -71,6 +71,18 @@ export function createBTCAAAHeroGroom(root,options={}){
   passNotes.push('04 · Distributed fibers: fine asymmetric separation toward tips');
  }
  if(stage>=2){position.needsUpdate=true;geometry.computeVertexNormals();geometry.computeBoundingSphere();}
+ // Iteration 05: restrained satin hair; sheen has a longitudinal color gradient.
+ if(stage>=5){
+  const hair=mesh.material;
+  hair.roughness=.695;
+  hair.sheen=.82;
+  hair.sheenColor.set('#986a56');
+  hair.sheenRoughness=.57;
+  hair.clearcoat=.014;
+  hair.clearcoatRoughness=.76;
+  hair.needsUpdate=true;
+  passNotes.push('05 · Hair shader: root depth, copper sheen, nonmetallic satin');
+ }
  const baseline={vertices:position.count,drawCallsAdded:1};
  return {
   ...hero,
