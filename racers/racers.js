@@ -6,7 +6,10 @@ const descriptions={star:'Los protagonistas más frecuentes del fixture, mezclad
 const $=s=>document.querySelector(s);
 let tier='all', selected=TOKEN_ROSTER.find(t=>t.symbol===location.hash.slice(1))||TOKEN_ROSTER[0], preview;
 // Explicit opt-in: one BTC experiment only. The normal 100-runner catalogue stays untouched.
-const btcAtelier=new URLSearchParams(location.search).get('atelier')==='btc';
+// BTC shows the approved pilot by default; ?atelier=off keeps an instant rollback.
+// Every other symbol continues to load its historical unmodified preview.
+const atelierMode=new URLSearchParams(location.search).get('atelier');
+const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='BTC');
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
 let atelierVariant='enhanced';
 function updateAtelierState(token){
@@ -75,7 +78,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-mane-tail-v15-1':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-3d-groom-v2-1':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -96,6 +99,14 @@ if(btcAtelier){
   $('#btc-speed-value').textContent=v.toFixed(2)+'×';
   preview?.setSpeed?.(v);
  });
+ for(const [id,method,output] of [['btc-mane-size','setManeSize','btc-mane-size-value'],['btc-tail-size','setTailSize','btc-tail-size-value']]){
+  $('#'+id).addEventListener('change',event=>{
+   const n=Number(event.target.value);
+   $('#'+output).textContent=n.toFixed(2)+'×';
+   preview?.[method]?.(n);
+  });
+ }
+ $('#btc-hair-color').addEventListener('input',event=>preview?.setHairColor?.(event.target.value));
  document.querySelectorAll('[data-btc-camera]').forEach(button=>
   button.addEventListener('click',()=>preview?.setCamera?.(button.dataset.btcCamera)));
  changeVariant('enhanced');
@@ -107,9 +118,10 @@ import(previewModule).then(({createPreview})=>{
   preview.setVariant(selected.symbol==='BTC'?atelierVariant:'original');
   preview.setWind(Number($('#btc-wind').value));
   preview.setSpeed(Number($('#btc-speed').value));
+  preview.setHairColor($('#btc-hair-color').value);
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
  }
- $('#preview-state').textContent=btcAtelier?'BTC · CRIN Y COLA AL VIENTO V1.5 · SIN JOCKEY':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · HERO GROOM 3D · ORIGINAL GALLOP · SIN JOCKEY':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;
