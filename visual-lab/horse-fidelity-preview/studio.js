@@ -140,6 +140,7 @@ $('compare').addEventListener('click',async()=>{
    return;
   }
  }
+ $('jockey').value='yes';horses[0].setJockeyVisible(true);
  mode='compare';layout();updateMetrics();
 });
 for(const id of ['archetype','quality'])$(id).addEventListener('change',()=>{
