@@ -231,7 +231,7 @@ function records(PDO $db, string $period, string $mode): array {
         'as_of'=>gmdate('c'),'entries'=>array_slice($all,0,100)];
 }
 function begin(PDO $db): void { $db->exec('BEGIN IMMEDIATE'); }
-function end(PDO $db): void { $db->exec('COMMIT'); }
+function commit_tx(PDO $db): void { $db->exec('COMMIT'); }
 function stop(PDO $db): void { if($db->inTransaction()) $db->exec('ROLLBACK'); }
 function already(PDO $db, string $key, string $owner, string $action): bool {
     $q=$db->prepare('SELECT owner_id,action FROM demo_wallet_ops WHERE op_key=?');$q->execute([$key]);
@@ -299,7 +299,7 @@ try {
     begin($db);
     try {
         if($key!==null && already($db,$key,$owner,$action)) {
-            end($db);answer(['ok'=>true,'replayed'=>true,'state'=>state($db,$owner)]);
+            commit_tx($db);answer(['ok'=>true,'replayed'=>true,'state'=>state($db,$owner)]);
         }
         $s=my_stable($db,$owner);
         $effective=now_round()+1; // no se inscribe durante una carrera iniciada
@@ -349,7 +349,7 @@ try {
             $q=$db->prepare('UPDATE demo_stables SET color=?,captain=? WHERE id=?');
             $q->execute([$color,$captain,$id]);
         }
-        end($db);
+        commit_tx($db);
         answer(['ok'=>true,'state'=>state($db,$owner)]);
     }catch(Throwable $e){stop($db);throw $e;}
 } catch (PDOException $e) {
