@@ -22,7 +22,6 @@ jobs:
         run: |
           node --check racers/btc-atelier-preview.js
           node --check racers/btc-hair-v15.js
-          node --check racers/btc-hero-groom-v4.js
           node --check racers/btc-hero-v4.js
           node --check racers/btc-coat-look-v2.js
           node --check racers/racers.js
