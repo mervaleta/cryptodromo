@@ -19,6 +19,8 @@ try{
  assert.equal(state.jockey,false);
  assert.equal(state.variant,'enhanced');
  assert.ok(state.clips.includes('Gallop'));
+ assert.equal(state.hairSystem?.version,'btc-mane-tail-v15');
+ assert.equal(state.hairSystem?.channels,1,'Mane and tail must be driven by the original skinned Hair primitive');
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
  await page.locator('#btc-wind').evaluate(el=>{el.value='1.7';el.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.locator('#btc-speed').evaluate(el=>{el.value='.8';el.dispatchEvent(new Event('input',{bubbles:true}));});
@@ -27,6 +29,10 @@ try{
  assert.equal(state.wind,1.7);
  assert.equal(state.speed,.8);
  assert.equal(state.camera,'detail');
+ await page.waitForFunction(()=>{
+  const s=window.__cryptodromoBTCAtelierQA?.();
+  return s?.hairSystem?.air>0&&Math.abs(s?.tailMotion)>0.0001&&Math.abs(s?.maneMotion)>0.0001;
+ },null,{timeout:20000});
  await page.locator('[data-btc-variant="original"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.variant==='original');
  await page.locator('[data-btc-variant="enhanced"]').click();
@@ -34,13 +40,14 @@ try{
  await page.locator('button.runner[data-symbol="ETH"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='ETH',null,{timeout:60000});
  assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())).variant,'original');
+ assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())).hairSystem,null);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),false);
  await page.locator('button.runner[data-symbol="BTC"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:60000});
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
  mkdirSync('artifacts',{recursive:true});
  try{
-  await page.locator('.feature').screenshot({path:'artifacts/btc-atelier-preview.png',timeout:60000,animations:'disabled'});
+  await page.locator('.feature').screenshot({path:'artifacts/btc-mane-tail-v15-preview.png',timeout:60000,animations:'disabled'});
  }catch(error){console.warn('Screenshot skipped due to software GPU:',error.message);}
  assert.deepEqual(pageErrors,[],pageErrors.join('; '));
  console.log('BTC_ATELIER_OK',JSON.stringify(await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())));

@@ -14,12 +14,20 @@ test('only BTC explicitly opts into the atelier',()=>{
 test('pilot uses the established authored GLB Gallop, without jockeys',()=>{
  const pilot=read('racers/btc-atelier-preview.js');
  assert.match(pilot,/import \{createHorse\} from '\.\.\/race-lab\/source\/src\/horse\.js/);
- assert.match(pilot,/maneMotion:candidate/);
+ assert.match(pilot,/createBTCHairAtelier/);
+ assert.match(pilot,/maneMotion:false/);
  assert.match(pilot,/mode:paused\?'Idle':'Gallop'/);
  assert.match(pilot,/setWind/);
- assert.match(pilot,/setVisualQuality/);
+ assert.match(pilot,/hair\?\.update/);
  assert.match(pilot,/setSpeed/);
  assert.doesNotMatch(pilot,/Alpha22|createAlpha22RaceHorse|horse-fidelity|jockey:true/);
+ const groom=read('racers/btc-hair-v15.js');
+ assert.match(groom,/crpHair15ManeWeight/);
+ assert.match(groom,/crpHair15TailWeight/);
+ assert.match(groom,/crpHair15TailBend/);
+ assert.match(groom,/sampleBakedHair/);
+ assert.match(groom,/isCompatibleHair/);
+ assert.doesNotMatch(groom,/GLTFLoader|TextureLoader|\.png|\.jpg|CanvasTexture|PlaneGeometry/);
 });
 test('neither LIVE race nor token identities are edited by atelier',()=>{
  const pilot=read('racers/btc-atelier-preview.js');

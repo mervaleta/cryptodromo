@@ -6,12 +6,13 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
+import {createBTCHairAtelier} from './btc-hair-v15.js?v=btc-hair-v15-1';
 
 const CAMERA_POSITIONS={
- profile:[3.7,2.6,6.5],
- front:[6.4,2.45,.15],
- rear:[-6.4,2.45,.15],
- detail:[3.0,2.65,4.1]
+ profile:[2.85,2.25,5.15],
+ front:[4.85,2.28,.15],
+ rear:[-4.85,2.28,.15],
+ detail:[1.95,2.30,3.60]
 };
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number(x)||0));
 export function createPreview(canvas,onFailure=()=>{}){
@@ -36,7 +37,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,64);
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;scene.add(platform);
 
- let horse=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
+ let horse=null,hair=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile';
  const resize=()=>{
@@ -61,14 +62,21 @@ export function createPreview(canvas,onFailure=()=>{}){
   try{
    const next=await createHorse({
     coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
-    mode:paused?'Idle':'Gallop',maneMotion:candidate
+    mode:paused?'Idle':'Gallop',maneMotion:false
    });
    if(disposed||request!==selection){next.dispose();return;}
    next.root.scale.setScalar(.78);
-   next.setWind?.(candidate?wind:.55);
-   if(candidate){next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.4);}
+   // Hair is an isolated preview-layer upgrade: original body, gait, pigmentation.
+   const nextHair=candidate?createBTCHairAtelier(next.root):null;
+   if(candidate&&nextHair?.channelCount!==1){
+    nextHair?.dispose();next.dispose();
+    throw Error('No se encontró la crin y cola originales del caballo BTC');
+   }
    scene.add(next.root);
-   const prev=horse;horse=next;renderedSymbol=token.symbol;renderedVariant=candidate?'enhanced':'original';prev?.dispose();
+   const prev=horse,prevHair=hair;
+   horse=next;hair=nextHair;
+   renderedSymbol=token.symbol;renderedVariant=candidate?'enhanced':'original';
+   prevHair?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
   }
@@ -78,28 +86,32 @@ export function createPreview(canvas,onFailure=()=>{}){
   if(next!=='original'&&next!=='enhanced')return;
   if(variant!==next){variant=next;rebuild();}
  }
- function setWind(value){wind=clamp(value,0,2);if(variant==='enhanced'&&selected?.symbol==='BTC')horse?.setWind?.(wind);}
+ function setWind(value){wind=clamp(value,0,2);}
  function setSpeed(value){speed=clamp(value,.5,1.6);}
  function pause(value){paused=!!value;horse?.play(paused?'Idle':'Gallop',.2);}
  const clock=new THREE.Clock();
  renderer.setAnimationLoop(()=>{
   if(disposed)return;
   const dt=Math.min(clock.getDelta(),.05);
-  if(!document.hidden)horse?.update(dt,speed);
+  if(!document.hidden){
+   horse?.update(dt,speed);
+   hair?.update(dt,{wind,speed,phase:horse?.hoofPhase||0,running:!paused});
+  }
   controls.update();renderer.render(scene,camera);
  });
  return {
   select,pause,setVariant,setWind,setSpeed,setCamera,
   snapshot:()=>({
    symbol:renderedSymbol,variant:renderedVariant,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,camera:cameraView,
-   originalAsset:true,jockey:false,maneEnabled:!!horse?.maneWindEnabled,
-   maneMotion:horse?.maneMotion||0,clips:horse?.clips||[],
+   originalAsset:true,jockey:false,maneEnabled:!!hair?.channelCount,
+   maneMotion:hair?.snapshot?.mane||0,tailMotion:hair?.snapshot?.tail||0,
+   hairSystem:hair?.snapshot||null,clips:horse?.clips||[],
    hoofPhase:horse?.hoofPhase||0,drawCalls:renderer.info.render.calls
   }),
   dispose(){
    if(disposed)return;disposed=true;selection++;
    renderer.setAnimationLoop(null);observer.disconnect();controls.dispose();
-   horse?.dispose();scene.remove(platform);
+   hair?.dispose();horse?.dispose();scene.remove(platform);
    platformGeo.dispose();platformMat.dispose();renderer.dispose();
   }
  };
