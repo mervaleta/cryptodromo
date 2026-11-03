@@ -17,7 +17,7 @@ import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
-import {createHorse} from '/race-lab/source/src/horse.js?v=alpha14-banking-1';
+import {createHorse} from '/race-lab/source/src/horse.js?v=alpha16-mane-1';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -328,6 +328,7 @@ splitModeSelect.addEventListener('change',()=>{
 });
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
+let maneWind=.55; // matches stadium cloud wind; never affects the race engine
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
 let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
 const finishController=createFinishOrchestrator({holdAfterLast:2.4,maxVisualSeconds:19});
@@ -387,6 +388,7 @@ async function bootHorses(){
   model.root.position.set(initial.x,0,initial.z);model.root.rotation.y=initial.heading;
   // No floating symbol sprites: the marks are part of the 3D horse skin shader.
   scene.add(model.root);
+  model.setWind?.(maneWind);
   horses.push({model,index:i,entry:entries[i],progress:0,visualSpeed:1});
  }
  setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
@@ -644,8 +646,10 @@ function setWeather(mode){
  cloudCoverLabel.textContent=cloudCover.value+'%';
  scene.fog.density=Math.max(.0004,(wet?.0075:.0036)*mistScale);
  sun.castShadow=!night&&!softwareGPU;
+ maneWind=wet?1.6:.55;
  cloudLayer.configure({cover:Math.max(wet?.8:0,Number(cloudCover.value)/100),
-   night,rain:wet,sunset:illumination<.38,wind:wet?1.6:.55});
+   night,rain:wet,sunset:illumination<.38,wind:maneWind});
+ for(const horse of horses)horse.model.setWind?.(maneWind);
  rain.visible=wet;
  for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?85:0;}
  nightLights.configure({night});

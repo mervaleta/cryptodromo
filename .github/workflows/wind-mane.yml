@@ -1,0 +1,45 @@
+name: Cryptodromo Alpha16 Wind Mane QA
+on:
+  push:
+    branches: [main, feature/alpha16-wind-mane-integration-20261102]
+    paths:
+      - 'race-lab/source/src/horse.js'
+      - 'race-lab/source/src/windMane.js'
+      - 'visual-lab/scene.js'
+      - 'parade/parade.js'
+      - 'racers/horse-preview.js'
+      - 'tests/wind-mane.mjs'
+      - 'tests/wind-mane-integration.mjs'
+      - 'tests/wind-mane-browser.mjs'
+      - '.github/workflows/wind-mane.yml'
+  pull_request:
+    branches: [main]
+    paths: ['race-lab/source/src/horse.js','race-lab/source/src/windMane.js','parade/parade.js','tests/wind-mane*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  shader-and-rig:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse affected modules
+        run: |
+          for f in race-lab/source/src/{horse,windMane}.js visual-lab/scene.js parade/parade.js racers/{racers,horse-preview}.js tests/wind-mane*.mjs; do node --check "$f"; done
+      - name: Unit, integration, and official racing contracts
+        run: node --experimental-default-type=module --test tests/wind-mane.mjs tests/wind-mane-integration.mjs tests/alpha16-parade.mjs tests/official-race.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Compile actual 3D horse shader and validate weather in Parade
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/wind-mane-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          node tests/wind-mane-browser.mjs
