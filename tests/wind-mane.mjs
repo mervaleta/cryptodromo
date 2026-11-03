@@ -38,7 +38,7 @@ test('shader animates rest-space hair before skinning, preserving original shade
  const shader={uniforms:{},vertexShader:'#include <common>\n#include <begin_vertex>\n#include <skinning_vertex>',fragmentShader:'unchanged'};
  mat.onBeforeCompile(shader);
  assert.ok(shader.vertexShader.indexOf('crpManeTip')<shader.vertexShader.indexOf('#include <skinning_vertex>'));
- assert.match(shader.vertexShader,/transformed\\.z\\+=crpManeTip/);
+ assert.match(shader.vertexShader,/transformed\.z\+=crpManeTip/);
  assert.match(shader.vertexShader,/positive Y is the TAIL/);
  assert.equal(shader.fragmentShader,'unchanged');
  assert.equal(shader.uniforms.crpManeTime.value,0);
