@@ -74,3 +74,13 @@ test('fake cheap 3D mesh cannot masquerade as a cinematic Fidelity horse',async(
  }),/Fidelity.*quality contract/);
  assert.equal(disposed,12);
 });
+
+test('broadcast camera catches up to the pack; QA-only close-up never touches scoring',()=>{
+ const scene=read('visual-lab/scene.js');
+ assert.match(scene,/camera\.position\.distanceToSquared\(goal\)>85\*85/);
+ assert.match(scene,/camera\.position\.copy\(goal\)/);
+ assert.match(scene,/get\('home-qa'\)==='cinema'/);
+ assert.match(scene,/__cryptodromoHomeQA/);
+ assert.match(scene,/broadcastPosition\(p,elapsed\)/);
+ assert.match(scene,/renderer\.render\(scene,camera\)/);
+});
