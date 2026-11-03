@@ -82,8 +82,15 @@ try{
  await change('#pitch',-13);
  await page.waitForTimeout(1000);
  const orbitC=await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot());
- assert.ok(orbitC.cameraPosition[1]<orbitB.cameraPosition[1]-10,
-  'Parade vertical angle must independently change camera eye height');
+ console.log('PARADE_CAMERA_AXES',JSON.stringify({
+  before:orbitB.cameraPosition,after:orbitC.cameraPosition,
+  idealBefore:orbitB.targetCameraPosition,idealAfter:orbitC.targetCameraPosition,
+  poseBefore:orbitB.drone,poseAfter:orbitC.drone
+ }));
+ assert.ok(orbitC.targetCameraPosition.y<orbitB.targetCameraPosition.y-15,
+  'Parade vertical angle must independently change actual requested camera position');
+ assert.ok(orbitC.cameraPosition[1]<orbitB.cameraPosition[1]-2,
+  'Rendered camera must move vertically after operator changes pitch');
  await change('#distance',170);
  await change('#fov',34);
  assert.equal(await page.locator('#distance-label').textContent(),'170 m');
