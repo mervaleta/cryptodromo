@@ -75,18 +75,18 @@ test('manual drone: arrows, WASD, orbit, follow, altitude, yaw and FOV have inde
  drone.update(.2,{}, {x:50,y:1,z:20});
  assert.deepEqual(drone.view({x:50,y:1,z:20}).lookAt,{x:50,y:1,z:20});
  assert.throws(()=>drone.setMode('third-person'),RangeError);
- assert.deepEqual(DRONE_MODES,['free','orbit','follow']);
+ assert.deepEqual(DRONE_MODES,['free','orbit','follow','crane']);
 });
 test('Parade is isolated from finance, scene has real horse walk and accessible sightseeing controls',()=>{
  const module=read('parade/parade.js');
  const html=read('parade/index.html');
  const props=read('parade/scenery.js');
- for(const id of ['camera-mode','yaw','pitch','height','fov','camera-speed','distance',
+ for(const id of ['camera-mode','yaw','pitch','height','fov','lateral','camera-speed','distance',
    'wave','pause','next-wave','weather','quality','daytime','daytime-auto','lights',
    'sight','follow-horse','parade-canvas','fps']){
   assert.ok(html.includes('id="'+id+'"'),'missing '+id);
  }
- assert.match(html,/parade\.js\?v=alpha16-tour-4/);
+ assert.match(html,/parade\.js\?v=alpha17-camera-1/);
  assert.match(module,/createHorse/);
  assert.match(module,/pickClip/);
  assert.match(module,/\bWalk\b/);
