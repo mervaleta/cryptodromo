@@ -44,8 +44,8 @@ test('cinematic horse options preserve official seed identity, lane and height',
 test('entire 12-horse Fidelity roster renders without fallback downgrade',async()=>{
  let count=0;
  const models=await createCinematicLineup({entries,coats,createHorse:async options=>{
-  count++;return {root:{type:'Object3D',number:options.stallNumber},
-   update(){},setAppearance(){},dispose(){}};
+  count++;return {root:{type:'Object3D',number:options.stallNumber},procedural:true,isTextureFree:true,
+   shapeStats:{vertices:8000,hairStrands:120},update(){},setAppearance(){},dispose(){}};
  }});
  assert.equal(models.length,12);assert.equal(count,12);
 });
@@ -54,7 +54,8 @@ test('any horse failure aborts misleading scene and disposes successful rigs',as
  await assert.rejects(createCinematicLineup({
   entries,coats,createHorse:async options=>options.stallNumber===4?
    Promise.reject(Error('shader unavailable')):{
-    root:{},update(){},setAppearance(){},dispose(){disposed++;}
+    root:{},procedural:true,isTextureFree:true,shapeStats:{vertices:8000,hairStrands:120},
+    update(){},setAppearance(){},dispose(){disposed++;}
    }
  }),/Fidelity.*Gatera 4/);
  assert.equal(disposed,11);
@@ -63,4 +64,13 @@ test('no malformed roster, even without running WebGL',async()=>{
  await assert.rejects(createCinematicLineup({
   entries:entries.slice(0,11),coats,createHorse:()=>{}
  }),/twelve/);
+});
+
+test('fake cheap 3D mesh cannot masquerade as a cinematic Fidelity horse',async()=>{
+ let disposed=0;
+ await assert.rejects(createCinematicLineup({
+  entries,coats,createHorse:async()=>({root:{},update(){},setAppearance(){},
+   dispose(){disposed++},procedural:false,shapeStats:{vertices:42,hairStrands:0}})
+ }),/Fidelity.*quality contract/);
+ assert.equal(disposed,12);
 });
