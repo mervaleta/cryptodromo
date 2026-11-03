@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import {createBTC3DHeroGroom} from './btc-hero-groom-v3.js';
-export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-9';
+export const BTC_AAA_LOOKDEV_VERSION='btc-aaa-lookdev-stage-10';
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||0));
 export function createBTCAAAHeroGroom(root,options={}){
  const stage=Math.floor(clamp(options.lookdevStage??10,1,10));
@@ -98,6 +98,8 @@ export function createBTCAAAHeroGroom(root,options={}){
   passNotes.push('06 · Secondary wind: delayed tips and stable skinned roots');
  }
 
+ if(stage>=7)passNotes.push('07 · Microscopic body pigment and fiber shaders on BTC coat');
+ if(stage>=8)passNotes.push('08 · Cinematic key, fill, rim and softened contact shadows');
  // Iteration 09: small anatomical material details without changing topology.
  if(stage>=9){
   const refined=new Set();
