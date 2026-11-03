@@ -1,0 +1,28 @@
+name: Sports laboratory regression
+on:
+  push:
+    paths:
+      - 'laboratorio/**'
+      - 'tests/zed-sports-lab.mjs'
+      - 'estadisticas/index.html'
+      - 'alpha15/**'
+      - 'race-lab/source/src/data/**'
+  pull_request:
+    paths:
+      - 'laboratorio/**'
+      - 'tests/zed-sports-lab.mjs'
+      - 'estadisticas/index.html'
+      - 'alpha15/**'
+      - 'race-lab/source/src/data/**'
+jobs:
+  sports-laboratory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check browser module syntax
+        run: node --check laboratorio/lab.js
+      - name: Check official motor and sports layer
+        run: node --experimental-default-type=module --test tests/zed-sports-lab.mjs tests/official-race.mjs tests/track-splits.mjs
