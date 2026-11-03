@@ -1104,7 +1104,7 @@ function animate(now,draw=true){
   nightLights.update(now/1000);
   cloudLayer.update(now/1000);
   liveVillage.update(now/1000);
-  updateFinishBurst();particles(dt);adjustCamera(dt);renderer.render(scene,camera);
+  updateFinishBurst();particles(dt);adjustCamera(Math.min(.45,realSeconds));renderer.render(scene,camera);
   const feedback=qualityGovernor.sample(Math.max(1,now-lastRenderedAt),now);
   lastRenderedAt=now;
   if(graphicsModeSelect.value==='auto'&&feedback.changed){
