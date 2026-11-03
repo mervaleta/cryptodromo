@@ -21,6 +21,9 @@ import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1'
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
 import {createHorse} from '/race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
+import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
+import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
+import {applyGateStaging} from './gateChoreography.js?v=alpha20-1';
 import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -240,16 +243,8 @@ for(const x of [-285,285]){
  const bank=box(11,.8,2.1,x,30,-33,C.ivory,venue);
  const lamp=new THREE.PointLight(0xffe5b5,0,70,2);lamp.position.set(x,30,-31);venue.add(lamp);bank.userData.lamp=lamp;
 }
-// Starting gates: 12 open, clearly separated stalls. Decorative, no collisions.
-const gateFrames=new THREE.Group();gateFrames.name='12 starting gates';scene.add(gateFrames);
-const gatesSteel=mat('#b3c9be',.5,.33),gateAccent=mat('#e6c17c',.56,.22);
-for(let lane=0;lane<12;lane++){
- const z=(lane-5.5)*2.55,x=VISUAL_START_X-3.6;
- for(const offset of [-1.18,1.18])box(3.9,2.95,.12,x,1.48,z+offset,gatesSteel,gateFrames);
- box(4.25,.15,2.4,x,3.02,z,gatesSteel,gateFrames);
- box(.16,2.8,2.4,x-2.08,1.44,z,gatesSteel,gateFrames);
- box(.14,.42,1.4,x+2.11,2.65,z,gateAccent,gateFrames);
-}
+// Alpha20: former decorative gateFrames replaced by a fixture-bound, time-synced gate kit.
+// It is constructed after the official fixture, and never changes prices or scoring.
 // Finish area: race arches, camera bridge and official marker.
 box(.24,.07,40,VISUAL_FINISH_X,.07,0,C.ivory);
 for(const z of [-21,21])box(.55,12,.55,VISUAL_FINISH_X,6,z,C.steel);
@@ -322,6 +317,9 @@ const initialRaceIndex=initialQa?0:
 let raceIndex=initialRaceIndex,race=getRaceFixture(initialRaceIndex%RACES_PER_DAY,Math.floor(initialRaceIndex/RACES_PER_DAY)),
     profiles=createOfficialRace(race.entries);
 let broadcastProfiles=buildBroadcastProfiles(profiles);
+const gateKit=createBroadcastGates({THREE,entries:race.entries,startX:VISUAL_START_X,quality:softwareGPU?'eco':mobile?'balanced':'high'});
+scene.add(gateKit.root);
+const gateLabels=attachGateNumbers({THREE,root:gateKit.root,entries:race.entries,startX:VISUAL_START_X});
 const splitModeSelect=document.querySelector('#split-mode');
 const splitPanel=mountTrackSplitsPanel(document.querySelector('#race-splits'),{mode:splitModeSelect.value});
 splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
@@ -402,6 +400,7 @@ async function bootHorses(){
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
  race=getRaceFixture(raceIndex%RACES_PER_DAY,Math.floor(raceIndex/RACES_PER_DAY));
+ gateKit.setEntries(race.entries);gateLabels.setEntries(race.entries);
  profiles=createOfficialRace(race.entries);
  broadcastProfiles=buildBroadcastProfiles(profiles);
  splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
@@ -688,7 +687,7 @@ function setLayout(mode){
  trackSplitMarkers.update({layout:mode,splitMode:splitModeSelect.value});
  straightCourse.visible=mode==='straight';
  alternateTracks.select(mode);
- gateFrames.visible=mode!=='oval';
+ gateKit.root.visible=mode==='straight';
  finishSign.visible=mode==='straight';
  treeGroup.visible=mode!=='oval';
  trackFX.setLayout(mode);
@@ -1106,6 +1105,11 @@ function animate(now,draw=true){
    }
   }
  }
+ // Keep cinematic staging separate from the official distance engine.
+ // In presentation/manual-ready, horses wait behind closed doors. During the
+ // first 1.2s of a race they rejoin their already-calculated official path.
+ if(layoutMode==='straight')applyGateStaging({horses,gate:gateKit,
+   phase:running||elapsed>0?'race':'presentation',elapsed,layoutMode,trackPoint,live:running});
  for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
  if(draw){
   nightLights.update(now/1000);
