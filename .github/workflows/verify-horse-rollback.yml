@@ -1,0 +1,46 @@
+name: Verify stable horses published on Cryptodromo
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-horse-rollback.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-public-site:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check both public hostnames for legacy gallop and token coats
+        shell: bash
+        run: |
+          set -uo pipefail
+          for site in race.cryptodromo.com cryptodromo.com; do
+            echo "::group::Checking $site"
+            is_ready=0
+            for attempt in 1 2 3 4 5 6 7 8; do
+              url="https://$site"
+              live=$(mktemp); card=$(mktemp)
+              rc1=$(curl -sS -L --max-time 15 -o "$live" -w "%{http_code}" "$url/visual-lab/horseRenderer.js?rollback=fc4ce081-$attempt" || true)
+              rc2=$(curl -sS -L --max-time 15 -o "$card" -w "%{http_code}" "$url/racers/horse-preview.js?rollback=fc4ce081-$attempt" || true)
+              echo "Check $attempt HTTP: $rc1 (LIVE), $rc2 (card)"
+              if grep -q 'createLegacyHorse' "$live" && ! grep -q 'createAlpha22RaceHorse' "$live" && grep -q '/src/horse.js' "$card" && ! grep -q 'createAlpha22RaceHorse' "$card"; then
+                echo "::notice::RESTORED: old gallop and original racer models on $site"
+                is_ready=1
+                rm -f "$live" "$card"
+                break
+              fi
+              if grep -q 'createAlpha22RaceHorse' "$live"; then
+                echo "::warning::Alpha22 still served on $site; deploying main or flushing site cache may be required."
+              fi
+              rm -f "$live" "$card"
+              sleep 12
+            done
+            echo "RESULT $site: $is_ready"
+            echo "::endgroup::"
+            if [ "$site" = "race.cryptodromo.com" ] && [ "$is_ready" != 1 ]; then
+              echo "::error::Production race subdomain is not serving the stable renderer."
+              exit 1
+            fi
+          done
