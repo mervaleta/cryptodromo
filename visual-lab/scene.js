@@ -7,6 +7,7 @@ import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
+import {createStadiumDensity} from './stadiumDensity.js?v=alpha18-1';
 import {createParadeVillage} from '../parade/scenery.js?v=alpha16-live-2';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
@@ -294,6 +295,7 @@ const liveDistrict=createLiveStadiumDistrict({THREE,scene,stadiumId:'satoshi',
 // Separate scene layers: original race/paddock geometry + compact public venue.
 // The village never creates an alternative track, race horses or a clock.
 const liveVillage=createParadeVillage(scene,{quality:softwareGPU||mobile?'eco':'balanced'});
+const stadiumDensity=createStadiumDensity({THREE,scene,quality:softwareGPU||mobile?'eco':'balanced',softwareGPU});
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
@@ -732,6 +734,7 @@ function applyQualityPreset(next){
  activeQuality=next;
  liveDistrict.setQuality(next);
  liveVillage.setQuality(next);
+ stadiumDensity.setQuality(next);
  graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
   (graphicsModeSelect.value==='auto'?' · AUTO':'');
  resize();
