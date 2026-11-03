@@ -183,7 +183,8 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
  const jockey=createProceduralJockey({THREE,parent:body,quality:gq,
   accent:options.accent,visible:options.jockey!==false});
 
- let mode='Idle',time=0,idleClock=0,hoofPhase=0,bankGoal=0,wind=.5,wetness=options.wetness,
+ const initialPhase=clamp(Number(options.phase)||0,0,1);
+ let mode='Idle',time=initialPhase,idleClock=0,hoofPhase=initialPhase,bankGoal=0,wind=.5,wetness=options.wetness,
   mud=options.mud,blend=0,disposed=false,
   gaitStyle=options.gaitStyle==='swing'?'swing':'ik',
   profileCurrent={...options,gaitStyle:options.gaitStyle==='swing'?'swing':'ik',
@@ -274,7 +275,7 @@ export function createProceduralHorse({THREE,profile={},coat,accent,quality}={})
   skin.material.roughness=.77-finish*.10-wetness*.12;
   skin.material.clearcoat=.08+finish*.18;
  }
- function reset(){time=0;idleClock=0;hoofPhase=0;blend=0;bodyPivot.rotation.set(0,0,0);
+ function reset(){time=initialPhase;idleClock=0;hoofPhase=initialPhase;blend=0;bodyPivot.rotation.set(0,0,0);
   for(const leg of legs){leg.upper.rotation.z=0;leg.knee.rotation.z=0;leg.fetlock.rotation.z=0;}}
  function dispose(){
   if(disposed)return;disposed=true;groom.dispose();raceCloth.dispose();jockey.dispose();
