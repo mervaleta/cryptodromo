@@ -1,0 +1,24 @@
+/* Camera console Alpha17: same broadcast-grade language in LIVE and Parade. */
+.camera-deck{background:linear-gradient(160deg,#11271e,#071710);border:1px solid #456a55;border-radius:10px;padding:clamp(12px,2vw,20px);color:#deeadf}
+.camera-deck .camera-intro{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.camera-deck .camera-intro h3{margin:0;font:700 15px/1.3 system-ui;color:#e9c98a;letter-spacing:.08em;text-transform:uppercase}
+.camera-deck .camera-intro p{margin:5px 0 0;font:12px/1.55 system-ui;color:#a6cbb2}
+.camera-deck .camera-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.camera-deck .camera-grid label{display:grid;gap:7px;min-width:0;color:#bdd7c5;text-transform:uppercase;letter-spacing:.06em;font:700 11px/1.45 system-ui}
+.camera-deck .camera-grid label>output{display:inline;color:#efcb87;font-variant-numeric:tabular-nums;font-weight:800}
+.camera-deck .camera-grid input[type=range]{padding:0;width:100%;accent-color:#d9be83;height:31px;background:transparent;cursor:pointer}
+.camera-deck .camera-grid select{width:100%;background:#091a15;color:#f3e6ce;border:1px solid #4c725e;border-radius:7px;min-height:40px;padding:8px;font:12px system-ui}
+.camera-deck button{cursor:pointer;background:#1c3d2c;color:#f5e3bd;border:1px solid #688b70;border-radius:7px;min-height:37px;padding:7px 11px;font:700 12px system-ui}
+.camera-deck button:hover{background:#2c563d}
+.camera-deck button:focus-visible,.camera-deck input:focus-visible,.camera-deck select:focus-visible{outline:2px solid #f0d49a;outline-offset:2px}
+.camera-deck .camera-divider{height:1px;background:#55745c70;margin:16px 0}
+.camera-deck .camera-heading{font:700 10px system-ui;letter-spacing:.18em;text-transform:uppercase;color:#98c0a4;margin:15px 0 9px}
+.camera-deck .camera-quick{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.camera-deck .camera-quick button{flex:1 1 auto}
+.camera-deck .camera-nudge{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.camera-deck .camera-nudge button{font-size:16px;min-height:39px}
+.camera-deck .camera-hint{font:11px/1.6 system-ui;color:#9ec6ae;margin:12px 0 0}
+.camera-deck .camera-reading{font:700 11px system-ui;color:#f0d49a;letter-spacing:.07em}
+.camera-deck [hidden]{display:none!important}
+@media(max-width:900px){.camera-deck .camera-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.camera-deck .camera-grid{grid-template-columns:1fr 1fr}.camera-deck .camera-nudge{grid-template-columns:repeat(3,minmax(0,1fr))}}
