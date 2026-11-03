@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
 
 const browser=await chromium.launch({headless:true,args:[
@@ -40,5 +40,10 @@ try{
  state=await page.evaluate(()=>window.__cryptodromoAlpha21QA.snapshot());
  assert.ok(state.elapsed>12);assert.equal(state.gateOpen,1);
  assert.deepEqual(errors,[],'No page exceptions: '+errors.join('; '));
+ assert.ok(state.drawCalls>0,'Renderer must draw the horses and venue');
+ assert.ok(state.triangles>0,'Renderer must contain real geometry');
+ writeFileSync('artifacts/alpha21-qa-metrics.json',JSON.stringify({
+  observedAt:new Date().toISOString(),browser:'Chromium SwiftShader',snapshot:state,pageErrors:errors
+ },null,2)+'\n');
  console.log('ALPHA21_MOTION_STUDIO_BROWSER_OK',JSON.stringify(state));
 }finally{await browser.close();}
