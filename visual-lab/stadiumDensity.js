@@ -4,7 +4,7 @@
  * Uses instancing for crowd/rails/seats/flags and explicit off-track geometry.
  *
  * LIVE straight course: running envelope |z| <= 20.2. Decorative layer begins
- * at z <= -25.5; 3 compact stands are centered at x=-210,-5,207.
+ * at z <= -25.5; trackside modular stands are centered at x=-210,-5,207.
  */
 export const DENSITY_STANDS=Object.freeze([
  Object.freeze({x:-210,width:101}),Object.freeze({x:-5,width:122}),
@@ -72,30 +72,30 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
   root.add(mesh);objects.push(mesh);return mesh;
  }
  const rails=[],goldRails=[],railPosts=[],steps=[],seats=[],bodies=[],heads=[],flags=[],planters=[];
- // Safety rail outside track: first rail at -25.5, a full 5.3 m away from
- // the outer boundary; front spectator barrier at -87.5.
- for(const z of [-25.5,-87.5]){
+ // Safety rail remains 5.3 m outside the course. Trackside spectator barrier
+ // sits at -31.5, leaving a safe 6 m gap behind the rail.
+ for(const z of [-25.5,-31.5]){
   rails.push([0,1.25,z,810,.12,.12]);
   rails.push([0,.65,z,810,.09,.09]);
   for(let x=-402;x<=402;x+=preset.railSpacing)railPosts.push([x,.73,z,.11,1.46,.11]);
  }
- // Three separate tribunes: bring the visible FRONT closer, but never translate
- // existing grandstand or audience meshes. This adds a stepped apron and rails.
+ // Three trackside modular fronts. Preserve existing rear grandstands, district,
+ // paddock and paths; only this additive scenery moves towards the course.
  for(const stand of DENSITY_STANDS){
   const {x,width}=stand;
-  steps.push([x,1.45,-94.8,width+3,2.8,14.8]);
-  steps.push([x,2.55,-103.5,width+3,4.5,2.1]);
+  steps.push([x,1.45,-39.8,width+3,2.8,14.8]);
+  steps.push([x,2.55,-48.5,width+3,4.5,2.1]);
   for(let row=0;row<preset.seatRows;row++){
-   const z=-91.5-row*2.2,y=3.04+row*.57;
+   const z=-36.5-row*2.2,y=3.04+row*.57;
    seats.push([x,y-.24,z,width-2,.28,1.8]);
    for(let sx=x-width/2+4;sx<x+width/2-3;sx+=2.7){
     if((Math.round(sx*3)+row)%13===0)continue; // aisles
     seats.push([sx,y,z,1.9,.35,1.18]);
    }
   }
-  goldRails.push([x,4.05,-88.5,width+3,.12,.13]);
+  goldRails.push([x,4.05,-33.5,width+3,.12,.13]);
   for(let sx=x-width/2;sx<=x+width/2;sx+=preset.railSpacing){
-   railPosts.push([sx,2.35,-88.5,.13,3.4,.13]);
+   railPosts.push([sx,2.35,-33.5,.13,3.4,.13]);
   }
   // Banner line makes empty concourse legible without introducing logos.
   for(let j=0;j<preset.flagsPerStand;j++){
@@ -107,7 +107,7 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
    const seed=(i*16807+Math.floor((x+250)*97))>>>0;
    const row=seed%preset.seatRows;
    const u=((Math.imul(seed,1664525)+1013904223)>>>0)/4294967296;
-   const sx=x+(u-.5)*(width-7),sz=-91.5-row*2.2;
+   const sx=x+(u-.5)*(width-7),sz=-36.5-row*2.2;
    const sy=3.65+row*.57;
    bodies.push([sx,sy,sz,1,1,1]);
    heads.push([sx,sy+.49,sz,1,1,1]);
