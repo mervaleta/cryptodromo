@@ -64,8 +64,8 @@ export function createGeometricRaceLivery({THREE,parent,number=1,accent='#ddbd70
    const shift=(digit-(glyphs.length-1)/2)*.23;
    for(const code of glyphs[digit]){
     const [px,py,w,h]=positions[code];
-    d.position.set(-.10+shift+px,1.793+py,side*.449);
-    d.scale.set(w,h,.016);d.rotation.set(0,0,0);d.updateMatrix();
+    d.position.set(-.10+shift+px,1.787+py,side*.385);
+    d.scale.set(w,h,.016);d.rotation.set(-side*.47,0,0);d.updateMatrix();
     numerals.setMatrixAt(slot++,d.matrix);
    }
   }
