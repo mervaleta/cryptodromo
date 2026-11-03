@@ -8,7 +8,7 @@ Objetivo: demostrar un flujo completo sin utilizar tarjetas, wallets externas, p
 
 - Hasta seis **identidades ficticias locales**, con alias y selector. No es registro auténtico.
 - Caja virtual en **centavos de USD demo**, saldo inicial de USD demo 100.
-- Paquetes de **USD demo 5, 10, 25, 50 o 100** sin transacción de pago.
+- Depósitos hardcodeados de **USD demo 5, 10, 25, 50 o 100**, por tarjeta ficticia, transferencia ficticia, BTC, ETH, USDT o SOL de demostración.\n- Cotizaciones de cripto **fijas, no de mercado**: BTC 70.000, ETH 3.500, USDT 1, SOL 150 USD demo por unidad. Sin red, QR ni dirección real.\n- Solicitud de depósito pendiente, confirmación simulada o cancelación; acreditación del saldo **solamente al confirmar**, con comprobante local e idempotencia por ID.
 - **Canje bidireccional**: 100 CR por 1 USD demo, sin comisión. Esto NO es conversión de tokens on-chain. CR son puntos internos de simulación.
 - Billetera CR, historial de movimientos con IDs y dos apuntes enlazados por ID de transferencia al canjear.
 - Selección de las próximas cuatro carreras reales del fixture sintético de 480 carreras/día y doce corredores/carrera.
@@ -27,15 +27,15 @@ Esta rama **no modifica** el estadio, `/apuestas/` ni `/comunidad/` existentes. 
 - `/race-lab/source/src/data/raceFixture.js`
 - `/race-lab/source/src/data/officialRace.js`
 - `/visual-lab/liveSchedule.js`
-- `/features/simulated-economy/ledger.js`
+- `/features/simulated-economy/ledger.js`\n- `/features/simulated-economy/deposits.js` (interfaz de proveedor mock, extensible)
 
 Estos caminos se verificaron en el repositorio Alpha18 del que partió la rama. Antes de fusionar, actualizar con `main` si los agentes siguen modificándolo.
 
 ## Pruebas
 
-`node --test features/simulated-economy/ledger.test.mjs` desde una copia del repositorio, usando Node compatible con módulos ES. Si el repositorio no declara `type: module`, usar una configuración ESM del proyecto o cambiar la extensión a `.mjs` de ambos archivos y corregir la importación del módulo de tests. La suite cubre ingresos, canjes, límites, tickets duplicados, cierre temporal, victorias, derrotas e idempotencia. **Las pruebas están escritas; su ejecución automatizada aún no está verificada.**
+`cd features/simulated-economy && npm test` desde una copia del repositorio con Node compatible con módulos ES. Hay un `package.json` propio que declara `type: module`. Las suites cubren depósitos fiat y cripto, cancelaciones, doble confirmación, aislamiento de cuentas, ingresos, canjes, límites, tickets, cierre, victorias, derrotas e idempotencia. **Las pruebas están escritas; su ejecución automatizada aún no está verificada.**
 
-Checklist manual: abrir `/demo-caja/`, crear jugador, cargar USD demo 5, convertir 5 a 500 CR, emitir ticket de 100 CR, verificar débito, esperar más de 60 segundos desde la largada de la carrera escogida, verificar resultado y que actualizar la página no repita el premio, convertir los créditos restantes a USD demo, cambiar de jugador y comprobar aislamiento local. Abrir en teléfono y comprobar menú y formularios.
+Checklist manual: abrir `/demo-caja/`, crear jugador, elegir ingreso fiat, solicitar USD demo 5, confirmar acreditación, repetir con BTC o USDT ficticios, verificar el comprobante, convertir 5 a 500 CR, emitir ticket de 100 CR, verificar débito, esperar más de 60 segundos desde la largada de la carrera escogida, verificar resultado y que actualizar la página no repita el premio, convertir los créditos restantes a USD demo, cambiar de jugador y comprobar aislamiento local. Abrir en teléfono y comprobar menú y formularios.
 
 ## Límites y seguridad que NO resuelve este MVP
 
@@ -65,3 +65,9 @@ El despliegue con dinero real exige revisión legal/regulatoria por jurisdicció
 - Vincular navegación de /apuestas/ y /comunidad/ cuando se apruebe la fusión.
 - Conectar un backend sandbox antes de abrir cuentas compartidas o rankings públicos; mantener siempre modo demo separado y claramente identificado.
 - Ejecutar pruebas automatizadas y una prueba visual en servidor real antes de publicar.
+
+## Interfaz para un proveedor futuro de ingreso fiat/crypto
+
+La implementación conserva tres operaciones separadas: `quoteDeposit({channel,method,packageUsd})` cotiza; `createDepositIntent(state,request)` genera una solicitud pendiente; `resolveDepositIntent(state,id,decision)` simula el callback que confirma o cancela. Un proveedor real reemplazará estas operaciones **solo en servidor**, con firma del webhook, importe confirmado, tipo de moneda/red, caducidad, protección de replays, límites, control antifraude y conciliación. Nunca confiar en ID de pago, cantidad, estado ni tasa enviada desde navegador. Para cripto se deberá verificar red, confirmaciones y montos recibidos y gestionar pagos incompletos; para fiat, cancelaciones, reembolsos y contracargos.
+
+Las tasas de pantalla son un **fixture didáctico, no cotizaciones fiables ni negociación financiera**. Los USD demo no tienen respaldo, no hay token en la cadena y las equivalencias no implican promesa de convertibilidad externa.
