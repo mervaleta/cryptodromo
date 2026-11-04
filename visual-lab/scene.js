@@ -180,7 +180,7 @@ function rail(z){
 }
 rail(-20.2);rail(20.2);
 // Outer track lawn, sculpted hedges and paddock fencing.
-for(let x=-399;x<=399;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
+// Turf beside the safety rail stays flush: no raised hedge blocks.
 for(let x=-399;x<=399;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
 box(812,.12,.13,0,1.25,53,C.steel);
 const straightCourse=new THREE.Group();straightCourse.name='Straight track assets';
@@ -192,7 +192,7 @@ createStadiumBackdrop(scene,{softwareGPU,mobile});
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=softwareGPU?55:mobile?90:155;
 for(let i=0;i<treeN;i++){
- const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-74-r()*34:75+r()*25;
+ const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-153-r()*16:132+r()*22;
  const h=5+r()*9;
  cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
  cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
@@ -249,7 +249,7 @@ const rnd=seeded(641903);
 for(let i=0;i<crowdN;i++){
  const section=i%3,row=Math.floor(rnd()*7);
  const x=standCenters[section]+(rnd()-.5)*(standWidths[section]-8);
- const z=-107-row*2.6,y=4.62+row*.93;
+ const z=-107-row*2.6+(section===2?9:0),y=4.62+row*.93;
  dummy.position.set(x,y,z);dummy.rotation.y=(rnd()-.5)*.6;dummy.updateMatrix();crowds[0].setMatrixAt(i,dummy.matrix);
  dummy.position.y+=.52;dummy.updateMatrix();crowds[1].setMatrixAt(i,dummy.matrix);
  crowds[0].setColorAt(i,new THREE.Color(palette[Math.floor(rnd()*palette.length)]));
@@ -265,7 +265,7 @@ const flagPositions=[];
 for(let i=0;i<flagsN;i++){
  const section=i%3,row=(Math.floor(i/3)%7);
  const x=standCenters[section]+((i*71%101)/101-.5)*(standWidths[section]-10);
- const z=-107-row*2.6,y=5.1+row*.93;
+ const z=-107-row*2.6+(section===2?9:0),y=5.1+row*.93;
  flagPositions.push({x,z,y,phase:i*.64});
  flagMatrix.position.set(x,y,z);flagMatrix.updateMatrix();cheerFlags.setMatrixAt(i,flagMatrix.matrix);
 }
@@ -783,7 +783,8 @@ function setLayout(mode){
  alternateTracks.select(mode);
  gateKit.root.visible=mode==='straight';
  finishSign.visible=mode==='straight';
- treeGroup.visible=mode!=='oval';
+ treeGroup.visible=true;
+  stadiumDensity.setLayout(mode);
  trackFX.setLayout(mode);hoofFX.setLayout(mode);
  if(horses.length){setRace(raceIndex);if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}}
 }
