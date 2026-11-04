@@ -23,7 +23,7 @@ export function readTvReplay(query,trackId){
 export function buildTvPlayerUrl(source,trackId,replay=null){
  if(!RACE_PLAYER_SOURCES.includes(source))throw new RangeError('Invalid first-party player route');
  if(!Object.hasOwn(TV_TRACKS,trackId))throw new RangeError('Invalid track');
- const q=new URLSearchParams({track:trackId,embed:'tv',build:'satoshi-cachefix-20261104-v3'});
+ const q=new URLSearchParams({track:trackId,embed:'tv',build:'satoshi-tv-director-v1-20261104'});
  if(replay){
   if(replay.trackId!==trackId||!Number.isInteger(replay.day)||replay.day<0||replay.day>6||
    !Number.isInteger(replay.minute)||replay.minute<0||replay.minute>=1440||
