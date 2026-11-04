@@ -47,6 +47,8 @@ function createHairMass(source,skinAt,{
  const ROWS=16,WIDTH=2,RIBBONS=2;
  const total=majorCount+fineCount;
  let strandCount=0;
+ const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
+ if(!tail&&headJoint<0)throw Error('BTC Maya mane needs original Head joint');
  // Reuse the native animated Tail1..Tail7 skeleton: every hair root remains
  // attached to the croup, with an increasingly light secondary tail chain
  // influence toward the ends. Never overwrite Gallop bone rotations.
@@ -67,18 +69,20 @@ function createHairMass(source,skinAt,{
  function guide(n,major,side,forelock=false){
   const seed=noise(n*13.7+(tail?141:27)+(side+3)*53.5+(major?3:17));
   const crossSeed=noise(n*7.03+(tail?47:3)+(side+1)*33.4);
-  const f=(n+.37+.24*seed)/(forelock?(major?25:50):(major?majorCount:fineCount));
+  const f=(n+.37+.24*seed)/(forelock?(major?6:14):(major?majorCount:fineCount));
   const root=tail?
    [(seed-.5)*.00056,.01472+.00084*crossSeed,.03195-.00047*seed]:
    forelock?
-    [side*(.00018+.00034*seed),-.0272+.0008*f,.04708-.00030*seed]:
+    [side*(.00012+.00026*seed),-.0273+.0005*f,.04630-.00020*seed]:
     [side*.00019,-.0271+.0226*f,crest(-.0271+.0226*f)-.00066];
-  const sk=skinAt(...root);
+  const sk=forelock?
+   {joints:[headJoint,0,0,0],weights:[1,0,0,0]}:
+   skinAt(...root);
   const id=++strandCount;
   // Physically plausible hair: shorter layered crest, tapered fine fibers and
   // a weighted tail fan. Previous groom was an oversized solid brown curtain.
   const length=(forelock
-   ?(major?.0027+.0017*seed:.0024+.0021*seed)
+   ?(major?.00175+.00085*seed:.00135+.00110*seed)
    :tail
     ?(major?.021+.0060*seed:.018+.0075*seed)
     :(major?.0060+.0031*seed:.0049+.0030*seed))*size;
@@ -92,9 +96,9 @@ function createHairMass(source,skinAt,{
    if(forelock){
     // True short forelock between the pinnae, rooted to the existing head
     // and tapered downward onto the forehead, not a mesh glued in screen space.
-    x=root[0]+side*(.00037+.00023*seed)*t2;
-    y=root[1]-(.00110+.00038*seed)*t;
-    z=root[2]-length*(.65*t+.35*t2);
+    x=root[0]+side*(.00015+.00018*seed)*t2;
+    y=root[1]-(.00060+.00020*seed)*t;
+    z=root[2]-length*(.72*t+.28*t2);
     if(ribbon===0)x+=cross*breadth*.55*w;
     else y+=cross*breadth*.35*w;
    }else if(tail){
@@ -107,7 +111,7 @@ function createHairMass(source,skinAt,{
     const fan=(seed-.5)*(.0040*Math.sin(PI*t)+.0019*t2);
     x=root[0]+fan+.00040*Math.sin(t*TAU+seed*4)*t2;
     y=root[1]+length*(.58*t+.17*t2)+.00045*Math.sin(PI*t);
-    z=root[2]-(.0135+.0055*crossSeed)*flow
+    z=root[2]-(.0105+.51*length+.0040*crossSeed)*flow
       +.00075*Math.sin(PI*t)*(.5+.5*seed)
       +(seed-.5)*(.0020*Math.sin(PI*t)+.0024*t2);
     if(ribbon===0)x+=cross*breadth*w;
@@ -118,8 +122,8 @@ function createHairMass(source,skinAt,{
     const rearward=t*.78+.22*t2;
     const cy=root[1]+length*rearward;
     const neckZ=crest(cy);
-    const lift=.00080*Math.sin(PI*t)*(.65+.35*seed);
-    const feather=(.00090+.00070*seed)*t2;
+    const lift=.00056*Math.sin(PI*t)*(.65+.35*seed);
+    const feather=(.00034+.00037*seed)*t2;
     const outward=(.00045+.00050*seed)*rearward;
     x=root[0]+side*(outward+.00018*Math.sin(PI*t));
     y=cy;
@@ -162,8 +166,8 @@ function createHairMass(source,skinAt,{
   for(const side of [-1,1]){
    for(let n=0;n<majorCount/2;n++)guide(n,true,side);
    for(let n=0;n<fineCount/2;n++)guide(n,false,side);
-   for(let n=0;n<25;n++)guide(n,true,side,true);
-   for(let n=0;n<50;n++)guide(n,false,side,true);
+   for(let n=0;n<6;n++)guide(n,true,side,true);
+   for(let n=0;n<14;n++)guide(n,false,side,true);
   }
  }else{
   for(let n=0;n<majorCount;n++)guide(n,true,1);
