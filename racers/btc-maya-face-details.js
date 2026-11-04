@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import {BTC_EYE_LAYOUT,eyeNormal} from './btc-maya-eye-layout.js?v=btc-face-poll-tail-20261104-v15';
 
-function makeOrbitAnnulus(source,positions,side,coatColor){
+function makeOrbitAnnulus(source,positions,side,coatColor,anatomyGeometry){
  const e=BTC_EYE_LAYOUT;
  const boundary=side<0?e.boundary.left:e.boundary.right;
  if(positions.length/3<5406||boundary.length!==11)
@@ -36,11 +36,20 @@ function makeOrbitAnnulus(source,positions,side,coatColor){
  geom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  geom.setIndex(idx);
  geom.computeVertexNormals();geom.computeBoundingSphere();
- const bone=source.skeleton.bones.findIndex(b=>b.name==='Head');
- if(bone<0)throw Error('Native Head joint required for welded orbital annulus');
+ // The hole border is deformed by the actual Maya skinning weights.
+ // Duplicate those EXACT four influences at each edge vertex. A synthetic
+ // Head-only rim would drift away from its native border on each Gallop beat.
+ const originalIndices=anatomyGeometry?.getAttribute('skinIndex');
+ const originalWeights=anatomyGeometry?.getAttribute('skinWeight');
+ if(!originalIndices||!originalWeights)throw Error('Original BTC eye border skinning missing');
  const indices=new Uint16Array(xyz.length/3*4);
  const weights=new Float32Array(xyz.length/3*4);
- for(let i=0;i<xyz.length/3;i++){indices[i*4]=bone;weights[i*4]=1;}
+ for(let i=0;i<boundary.length;i++)for(let ring=0;ring<2;ring++)
+  for(let k=0;k<4;k++){
+   const target=(i*2+ring)*4+k;
+   indices[target]=originalIndices.getComponent(boundary[i],k);
+   weights[target]=originalWeights.getComponent(boundary[i],k);
+  }
  geom.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(indices,4));
  geom.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
  const material=new THREE.MeshPhysicalMaterial({
@@ -59,10 +68,10 @@ function makeOrbitAnnulus(source,positions,side,coatColor){
  mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=false;
  return {mesh,geom,material};
 }
-export function createBTCMayaFaceDetails(source,skinAt,positions,{coatColor='#9e6444'}={}){
+export function createBTCMayaFaceDetails(source,skinAt,positions,{coatColor='#9e6444',anatomyGeometry}={}){
  const components=[
-  makeOrbitAnnulus(source,positions,-1,coatColor),
-  makeOrbitAnnulus(source,positions,1,coatColor)
+  makeOrbitAnnulus(source,positions,-1,coatColor,anatomyGeometry),
+  makeOrbitAnnulus(source,positions,1,coatColor,anatomyGeometry)
  ];
  return {
   surfaces:components.length,
