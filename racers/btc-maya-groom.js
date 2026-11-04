@@ -149,7 +149,7 @@ function createHairMass(source,skinAt,{
      const v=point(u,cross,ribbon);
      positions.push(...v);
      const across=Math.abs(cross);
-     const tint=(.93+.08*seed+.028*u+.065*(1-across))*(major?1:.90);
+     const tint=(.955+.040*seed+.025*u+.055*(1-across))*(major?1:1.02);
      colors.push(tint*1.055,tint*.98,tint*.91);
      tip.push(u);ids.push(id*1.71);region.push(tail?1:0);
      const skin=skinFor(sk,u);
@@ -193,9 +193,9 @@ function createHairMass(source,skinAt,{
  geo.computeVertexNormals();geo.computeBoundingSphere();
  const mat=new THREE.MeshPhysicalMaterial({
   name:tail?'BTC tail - tapered layered hair':'BTC neck mane - feathered layers',
-  color,vertexColors:true,metalness:0,roughness:tail?.72:.63,
-  sheen:.70,sheenColor:new THREE.Color('#b48a6c'),
-  sheenRoughness:.69,clearcoat:0,side:THREE.DoubleSide
+  color,vertexColors:true,metalness:0,roughness:tail?.78:.72,
+  sheen:.48,sheenColor:new THREE.Color('#b58a67'),
+  sheenRoughness:.76,clearcoat:0,side:THREE.DoubleSide
  });
  mat.onBeforeCompile=shader=>{
   shader.uniforms.mayaTime=motion.time;
@@ -208,9 +208,9 @@ function createHairMass(source,skinAt,{
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec2 vMayaHair;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat hairRootShade=mix(.85,1.035,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.022;\ndiffuseColor.rgb*=hairRootShade+hairCuticle;');
+   '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\ndiffuseColor.rgb*=hairRootShade+hairCuticle;');
  };
- mat.customProgramCacheKey=()=>tail?'btc-maya-hair-tail-2':'btc-maya-hair-mane-2';
+ mat.customProgramCacheKey=()=>tail?'btc-harmony-hair-tail-3':'btc-harmony-hair-mane-3';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
  return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3};
 }
