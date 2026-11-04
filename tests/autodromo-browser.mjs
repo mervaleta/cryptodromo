@@ -52,7 +52,8 @@ try{
   await page.waitForFunction(()=>window.__cryptodromoAutodromoQA.snapshot().stagingGrid===true,null,{timeout:15000});
   state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
   assert.equal(state.carCount,12);
-  await page.screenshot({path:'/tmp/autodromo-grid-pole.png',animations:'disabled'});
+  // Do not capture after overriding Chromium's clock: GPU screenshots can hang.
+  // The pre-start lineup is asserted via the scene snapshot and pole overlay.
   assert.deepEqual(errors,[],'No uncaught browser errors');
   console.log('AUTODROMO_BROWSER_OK',JSON.stringify({
     cars:state.carCount,garage:100,circuits:3,program:'180s',test:'60s'
