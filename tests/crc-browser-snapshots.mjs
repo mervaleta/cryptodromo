@@ -60,7 +60,15 @@ try{
               }
             }
           }
-          await page.screenshot({path:output+'/'+item.id+'-'+size.name+'-'+phase+'.png',fullPage:false,animations:'disabled',timeout:25000});
+          const screenshot=output+'/'+item.id+'-'+size.name+'-'+phase+'.png';
+          try {
+            await page.screenshot({path:screenshot,fullPage:false,animations:'disabled',timeout:25000});
+          } catch(firstError) {
+            // Chromium occasionally rejects a capture during fixture repaint. Retry once without animation injection.
+            await page.waitForTimeout(350);
+            await page.screenshot({path:screenshot,fullPage:false,animations:'allow',timeout:30000});
+            row.screenshotRetry=true;
+          }
           row.ok=true;
         }catch(error){
           row.ok=false;row.error=String(error?.message||error);failed++;
