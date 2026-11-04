@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "symbol": "BTC",
+  "masterId": "btc-maya-2017-sculpt-gallop-20261104",
+  "buildId": "btc-master-hindquarters-20261104-v5",
+  "status": "needs_fix",
+  "statusLabel": "Modelo en revisión · defectos visibles pendientes",
+  "updatedAt": "2026-11-04",
+  "note": "Registro inicial de comparación: no se modificó el modelo en esta iteración.",
+  "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
+  "openIssues": [
+    "Pelos largos colgantes bajo la crin en el lateral del cuello",
+    "Separación excesiva entre los mechones laterales de la crin",
+    "Posible hueco/transparencia detrás de las orejas",
+    "Globo ocular y pupila equina grande; iris editable desde EyeColor"
+  ],
+  "nextPhase": {
+    "status": "blocked",
+    "title": "Física de crin y cola",
+    "prerequisite": "Primero corregir geometría y ojos y validar en la ficha",
+    "reference": "212734.mp4"
+  }
+}
