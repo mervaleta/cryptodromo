@@ -19,6 +19,7 @@ const routes=[
   {id:'resultados',path:'/resultados/',canonical:true,align:'main.shell'},
   {id:'estadios',path:'/stadiums/',canonical:true,align:'.world-shell'},
   {id:'cuenta-demo',path:'/apuestas/',canonical:true,align:'main.shell',pending:'PR 67'},
+  {id:'gaceta',path:'/cryptodromo-gazette/public/',canonical:false,align:'main'},
   {id:'estilo',path:'/design/crc-styleguide.html',canonical:false,align:'main.crc-container',onlyAfter:true},
 ];
 const sizes=[
