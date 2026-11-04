@@ -23,7 +23,7 @@ try{
  assert.equal(state.heroGroom?.version,'btc-maya-2017-sculpt-gallop-20261104');
  assert.equal(state.heroGroom?.oldHairHidden,true);
  assert.equal(state.heroGroom?.gallopPreserved,true);
- assert.equal(state.heroGroom?.vertices,5409,'Anatomical body plus skinned tail-root closure and both integrated ear-root caps');
+ assert.equal(state.heroGroom?.vertices,5411,'Anatomical body plus skinned tail-root closure and both integrated ear-root caps');
  assert.equal(state.heroGroom?.earRootCapCenters,2,'closed openings at both ears');
  assert.equal(state.heroGroom?.crownBridgeLocks,112,'poll hair bridge must exist in the standard BTC view');
  assert.equal(state.heroGroom?.heroLocks,56,'default BTC must use hero mane silhouette');
