@@ -109,6 +109,18 @@ try{
  });
  await waitHero(filmPage,'btc-v5-motion-study-20261103');
  await filmPage.locator('[data-btc-camera="profile"]').click();
+ // Film the horse, not the page header. Real WebGL remains in the visible
+ // browser viewport throughout the shot. Explicitly fail if it is cropped.
+ await filmPage.evaluate(()=>document.querySelector('.feature')?.scrollIntoView({
+  block:'start',behavior:'instant'
+ }));
+ const coverage=await filmPage.evaluate(()=>{
+  const rect=document.querySelector('#horse-view').getBoundingClientRect();
+  const visible=Math.max(0,Math.min(rect.bottom,innerHeight)-Math.max(rect.top,0));
+  return visible/rect.height;
+ });
+ assert.ok(coverage>.97,'The REAL gallop viewport must be fully on screen; got '+coverage);
+ await filmPage.waitForTimeout(450);
  const start=await filmPage.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.fixedFrame,false);
  assert.ok(start.clips.includes('Gallop'));
