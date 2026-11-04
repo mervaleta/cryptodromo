@@ -18,7 +18,7 @@ test('TV controller has exactly one paused-by-default 3D frame and three actiona
  assert.equal((live.match(/data-tv-tune="/g)||[]).length,3);
  for(const id of ['muybridge','genesis','vint-cerf'])assert.match(live,new RegExp('data-tv-tune="'+id+'"'));
  for(const id of ['tv-loading','tv-error','tv-live-now','tv-replay-again','tv-audio','tv-fullscreen','tv-direct'])assert.ok(live.includes('id="'+id+'"'),id);
- assert.match(live,/satoshi-tv\.css\?v=satoshi-tv-director-v1-20261104/);
+ assert.match(live,/satoshi-tv\.css\?v=winner-slowmo-env-20261104-v1/);
  assert.match(tv,/findRacePlayerSource/);
  assert.match(tv,/window\.self===window\.top/);
  assert.match(tv,/tvNestedHub='blocked'/);
