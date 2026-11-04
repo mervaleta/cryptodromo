@@ -6,6 +6,7 @@
  */
 import * as THREE from 'three';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
+import {createBTCSilkShell} from './btc-silk-shell-v5.js?v=btc-silk-shell-v5-20261103';
 export const BTC_HERO_V5='btc-v5-motion-study-20261103';
 const PI=Math.PI,TAU=PI*2;
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,Number(v)||0));
@@ -141,6 +142,7 @@ export function createBTCHeroV5(root,options={}){
  // Uniform displacement operates before skeletal skinning and vanishes at roots.
  const m={mane:0,tail:0,vm:0,vt:0,time:0,energy:0,gait:0,wind:.95,step:0};
  const uni={mane:{value:0},tail:{value:0},clock:{value:0},wind:{value:1}};
+ const silk=pass>=2?createBTCSilkShell(groom,{pass,maneSize:options.maneSize??1.22,tailSize:options.tailSize??1.16,color:options.color||'#392722'},uni):null;
  const previous=hairMat.onBeforeCompile;
  const prevKey=hairMat.customProgramCacheKey?.bind(hairMat);
  saveMat(hairMat);
@@ -217,7 +219,7 @@ export function createBTCHeroV5(root,options={}){
  return {
   get snapshot(){return {...base.snapshot,version:BTC_HERO_V5,pass,passes,
    hairMotion:{mane:m.mane,tail:m.tail,energy:m.energy,time:m.time,gait:m.gait},
-   motionType:'damped-gallop-coupled-spring',source:'original-skinned-glb',
+   motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,source:'original-skinned-glb',
    noTextures:true,vertexCount:position.count};},
   update(dt,{wind=1,speed=1,running=true,phase=0}={}){
    if(disposed)return;
@@ -227,7 +229,7 @@ export function createBTCHeroV5(root,options={}){
   setColor(color){base.setColor(color);},
   dispose(){
    if(disposed)return;disposed=true;
-   restoreMats();
+   silk?.dispose();restoreMats();
    for(const o of backups){o.p.array.set(o.coords);o.p.needsUpdate=true;o.geometry.computeBoundingSphere();}
    base.dispose();
   }
