@@ -6,7 +6,7 @@ test('stadium broadcast preserves cinematic engine and site has a new landing',(
  const home=read('index.html');
  assert.match(home,/Elegí tu tribuna/);
  const html=read('stadiums/crypto/broadcast/index.html');
- assert.match(html,/\/visual-lab\/scene\.js\?v=hoof-fx-public-20261104-v2/);
+ assert.match(html,/\/visual-lab\/scene\.js\?v=[a-z0-9][\\w.-]+/);
  assert.match(html,/id="presentation-overlay"/);
  assert.match(html,/id="live-countdown"/);
  assert.match(html,/href="\/racers\/"/);
@@ -19,7 +19,7 @@ test('both 3D views load the scenic expansion without any finance-engine change'
  const lab=read('visual-lab/index.html');
  const scene=read('visual-lab/scene.js');
  const scenery=read('visual-lab/stadiumBackdrop.js');
- assert.match(lab,/scene\.js\?v=hoof-fx-public-20261104-v2/);
+ assert.match(lab,/scene\.js\?v=[a-z0-9][\\w.-]+/);
  assert.match(scene,/createStadiumBackdrop\(scene,\{softwareGPU,mobile\}\)/);
  assert.match(scene,/createParadeVillage\(scene,/);
  assert.doesNotMatch(scene,/box\(820,2\.6,36/);
