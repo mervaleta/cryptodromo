@@ -472,13 +472,13 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  material.onBeforeCompile=shader=>{
   shader.uniforms.btcIrisColor={value:irisColor};
   shader.vertexShader=shader.vertexShader.replace('#include <common>',
-   '#include <common>\\nattribute vec3 eyeRest;\\nattribute float eyeSide;\\nvarying vec3 vBTCEyeRest;\\nvarying float vBTCEyeSide;');
+   '#include <common>\nattribute vec3 eyeRest;\nattribute float eyeSide;\nvarying vec3 vBTCEyeRest;\nvarying float vBTCEyeSide;');
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-   '#include <begin_vertex>\\nvBTCEyeRest=eyeRest;\\nvBTCEyeSide=eyeSide;');
+   '#include <begin_vertex>\nvBTCEyeRest=eyeRest;\nvBTCEyeSide=eyeSide;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
-   '#include <common>\\nvarying vec3 vBTCEyeRest;\\nvarying float vBTCEyeSide;\\nuniform vec3 btcIrisColor;');
+   '#include <common>\nvarying vec3 vBTCEyeRest;\nvarying float vBTCEyeSide;\nuniform vec3 btcIrisColor;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\\nfloat btcEyeFront=vBTCEyeRest.x*vBTCEyeSide;\\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\\nvec3 btcEyeIrisShading=btcIrisColor*mix(.72,1.12,smoothstep(.22,1.,btcEyeIrisRadius));\\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
+   '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x*vBTCEyeSide;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=btcIrisColor*mix(.72,1.12,smoothstep(.22,1.,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
  };
  material.customProgramCacheKey=()=> 'btc-three-spherical-eyes-20261104-v1';
  const mesh=new THREE.SkinnedMesh(geometry,material);
