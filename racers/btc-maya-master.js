@@ -12,7 +12,8 @@ import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGait
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
-export const BTC_MAYA_RENDER_BUILD='btc-master-procedural-hind-groom-20261104-v12';
+// v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
+export const BTC_MAYA_RENDER_BUILD='btc-master-procedural-hind-groom-20261104-v12-fx1';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
