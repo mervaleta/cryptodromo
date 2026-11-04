@@ -29,6 +29,7 @@ try{
  assert.ok(start.heroGroom.extraTailFacesRemoved>=150,'second flesh-colored tail must be culled');
  assert.ok(start.heroGroom.extraTailFacesRemoved>250,'retire the old skin-tail free end while preserving croup skin');
  assert.ok(start.heroGroom.poweredHindVertices>1000,'croup and hind thighs must be resculpted, not repainted');
+ assert.ok(start.heroGroom.tailDockVertices>=150,'tail root must be closed by native-rig sculpt');
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
