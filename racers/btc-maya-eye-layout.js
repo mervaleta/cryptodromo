@@ -5,9 +5,9 @@
  * triangles: that was creating clipped eye rims and stray dark polygons.
  */
 export const BTC_EYE_LAYOUT=Object.freeze({
- x:.002265,y:-.02814,z:.04257,
- radiusX:.000385,radiusY:.000505,radiusZ:.000405,
- lidY:.00049,lidZ:.000394
+ x:.002165,y:-.02814,z:.04257,
+ radiusX:.00034,radiusY:.000425,radiusZ:.00036,
+ lidY:.000425,lidZ:.000352
 });
 export function eyeFrame(side,angle,ring=1){
  const e=BTC_EYE_LAYOUT,cy=Math.cos(angle),cz=Math.sin(angle);
