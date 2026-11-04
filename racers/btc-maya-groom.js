@@ -46,7 +46,7 @@ function createHairMass(source,skinAt,{
  // More independent roots, fewer segments/card: better silhouette and lower GPU cost.
  const ROWS=18,WIDTH=2,RIBBONS=2;
  const total=majorCount+fineCount;
- let strandCount=0;
+ let strandCount=0,neckOutliers=0;
  const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
  if(!tail&&headJoint<0)throw Error('BTC Maya mane needs original Head joint');
  // Reuse the native animated Tail1..Tail7 skeleton: every hair root remains
@@ -77,7 +77,7 @@ function createHairMass(source,skinAt,{
    [(seed-.5)*.00056,.01472+.00084*crossSeed,.03195-.00047*seed]:
    forelock?
     [side*(.00012+.00026*seed),-.0273+.0005*f,.04630-.00020*seed]:
-    [side*.00019,-.0249+.0206*f,crest(-.0249+.0206*f)-.00052];
+    [side*.00013,-.0251+.0202*f,crest(-.0251+.0202*f)-.00038];
   const sk=forelock?
    {joints:[headJoint,0,0,0],weights:[1,0,0,0]}:
    skinAt(...root);
@@ -89,7 +89,7 @@ function createHairMass(source,skinAt,{
    :tail
     ?(major?.020+.0070*seed:.018+.0075*seed)
     :(major?.0083+.0028*seed:.0064+.0031*seed))*
-      size*(tail||forelock?1:.63+.37*smooth(f/.29));
+      size*(tail||forelock?1:(.63+.37*smooth(f/.29))*clamp((-.0038-root[1])/.0075,.18,1));
   const breadth=(tail
    ?(major?.00047+.00020*seed:.000080+.000085*seed)
    :(major?.00092+.00035*seed:.000080+.000095*seed));
@@ -124,20 +124,24 @@ function createHairMass(source,skinAt,{
     // A true swept crest: hairs grow backward along the mane, close to
     // the neck. They do not fall vertically over the cheek and shoulders.
     const rearward=t*.70+.30*t2;
-    const cy=root[1]+length*rearward;
+    // Keep the ribbons on the anatomical neck instead of trailing into the shoulder.
+    const cy=root[1]+Math.min(length,Math.max(0,-.0038-root[1]))*rearward;
     const neckZ=crest(cy);
     // The large, smooth "calligraphic" mane is made of feathered layers:
     // it starts on the poll, flows down the full neck and finishes in
     // overlapping tapered curls. Stronger silhouette, fewer dark wires.
     const lift=.00095*Math.sin(PI*t)*(.65+.35*seed);
-    const drape=(.0018+.0012*seed)*t2;
-    const outward=(.0026+.00145*seed)*(.45*rearward+.55*t2);
+    const drape=(.00105+.00060*seed)*t2;
+    // Tighter common root and a gradual bilateral fan.
+    const outward=(.00205+.00105*seed)*(.32*rearward+.68*t2);
     x=root[0]+side*(outward+.00017*Math.sin(PI*t));
     y=cy+.00036*Math.sin(PI*t*1.2+seed*2.8)*t2;
     z=neckZ-.00057+lift-drape+
        .00026*Math.sin(PI*t*1.7+seed*3)*t2;
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
+    // Physically trim low fibers: no alpha masking or recoloring.
+    z=Math.max(z,neckZ-(major?.00215:.00130)-.00012*t2);
    }
    return [x,y,z];
   }
@@ -147,6 +151,7 @@ function createHairMass(source,skinAt,{
     for(let w=0;w<=WIDTH;w++){
      const cross=(w/WIDTH)*2-1;
      const v=point(u,cross,ribbon);
+     if(!tail&&!forelock&&(v[1]>-.00379||v[2]<crest(v[1])-.00235))neckOutliers++;
      positions.push(...v);
      const across=Math.abs(cross);
      const tint=(.955+.040*seed+.025*u+.055*(1-across))*(major?1:1.02);
@@ -212,7 +217,7 @@ function createHairMass(source,skinAt,{
  };
  mat.customProgramCacheKey=()=>tail?'btc-harmony-hair-tail-3':'btc-harmony-hair-mane-3';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
- return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3};
+ return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers};
 }
 
 export function createMayaGroom(source,skinAt,{
@@ -227,6 +232,7 @@ export function createMayaGroom(source,skinAt,{
  return {
   locks:mane.locks+tail.locks,
   vertices:mane.vertices+tail.vertices,
+  neckOutliers:mane.neckOutliers,
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
    motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
