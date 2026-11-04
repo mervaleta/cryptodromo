@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-test('normal BTC card loads V4, with opt-out restoring original version',()=>{
+test('normal BTC card loads anatomical master and retains explicit rollback',()=>{
  const racers=read('racers/racers.js'),html=read('racers/index.html');
  assert.match(racers,/atelierMode==='btc'/);
  assert.match(racers,/atelierMode!=='off'&&selected\.symbol==='BTC'/);
- assert.match(racers,/btc-v5-motion-study-20261103/);
+ assert.match(racers,/btc-maya-face-hooves-groom-20261104/);
  assert.match(racers,/horse-preview\.js\?v=alpha18-gaitmane-1/);
  assert.match(html,/id="btc-atelier-panel"[^>]*hidden/);
  assert.match(html,/href="\?atelier=btc#BTC"/);
- assert.match(html,/btc-v5-motion-study-20261103/);
+ assert.match(html,/btc-maya-face-hooves-groom-20261104/);
 });
 test('V4 visibly alters REAL 3D geometry and streams motion while retaining Gallop',()=>{
  const pilot=read('racers/btc-atelier-preview.js'),v4=read('racers/btc-hero-v5.js');
