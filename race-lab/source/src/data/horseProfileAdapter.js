@@ -70,3 +70,30 @@ export function applyHorseProfileToRenderer(horse, rosterToken, profiles={}) {
   horse?.setGroom?.(options.groom);
   return options;
 }
+
+/**
+ * Bridge to the CURRENT BTC Maya anatomical preview. This is data-only and
+ * deliberately does not import, instantiate or modify a Three.js horse.
+ * Once the visual master is approved, this payload may be consumed by any
+ * token, replacing the BTC-only gate in the presentation layer.
+ *
+ * Color channels not supported by createBTCHeroMaya (muzzle, legs, bridle)
+ * remain in toMasterHorseOptions(). Do not silently promise 3D coverage.
+ */
+export function toCurrentMayaPreviewOptions(rosterToken, profiles={}, {
+  maneSize=1.22, tailSize=1.16, hairColor='#886149'
+}={}) {
+  const p=resolveHorseProfile(rosterToken,profiles);
+  const multipliers={short:0.77,medium:1,long:1.28};
+  return {
+    coatColor:p.coatColor,
+    brandMode:p.appearanceMode,
+    brandAccent:p.raceColor,
+    hoofColor:p.hoofColor,
+    eyeColor:p.eyeColor,
+    color:p.maneColor||hairColor,
+    tailColor:p.tailColor||p.maneColor||hairColor,
+    maneSize:maneSize*p.maneScale*multipliers[p.maneStyle],
+    tailSize:tailSize*p.tailScale*multipliers[p.tailStyle],
+  };
+}
