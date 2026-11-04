@@ -9,6 +9,7 @@ export const TRACKS=Object.freeze([
  Object.freeze({id:'genesis',name:'Genesis',offsetMinutes:1}),
  Object.freeze({id:'vint-cerf',name:'Vint Cerf',offsetMinutes:2})
 ]);
+export const TRIPLE_FIXTURE_VERSION='alpha19-triple-v2-continuous-week';
 export const TRIPLE_RACES_PER_DAY=1440;
 export const TRACK_RACES_PER_DAY=480;
 export const TRACK_SLOT_SECONDS=180;
@@ -29,7 +30,7 @@ export function getTripleRaceFixture(minuteOfDay,day=0){
   return {...entry,priceAtStart:p0,priceAtMid:p1,priceAtFinish:p2,
     input1:100*(p1/p0-1),input2:100*(p2/p1-1)};
  });
- return {day:dayIndex+1,number:minuteOfDay+1,venueRaceNumber:minuteOfDay+1,
+ return {fixtureVersion:TRIPLE_FIXTURE_VERSION,day:dayIndex+1,number:minuteOfDay+1,venueRaceNumber:minuteOfDay+1,
   trackRaceNumber:slot+1,minute:minuteOfDay,
   time:String(Math.floor(minuteOfDay/60)).padStart(2,'0')+':'+String(minuteOfDay%60).padStart(2,'0'),
   trackId:track.id,trackName:track.name,trackSlot:slot,
