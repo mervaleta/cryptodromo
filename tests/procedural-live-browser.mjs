@@ -10,7 +10,7 @@ try{
  const errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
- const url='http://127.0.0.1:8799/?horse-engine=procedural&finish-qa=alpha06&procedural-qa=alpha20';
+ const url='http://127.0.0.1:8799/stadiums/crypto/broadcast/index.html?track=muybridge&replayDay=0&replayMinute=0&horse-engine=procedural&finish-qa=alpha06&procedural-qa=alpha20';
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>window.__cryptodromoProceduralQA?.snapshot().ready,{timeout:120000});
  const shot=await page.evaluate(()=>window.__cryptodromoProceduralQA.snapshot());
@@ -21,7 +21,7 @@ try{
  assert.equal(shot.officialRanking.length,12);
  assert.equal(await page.locator('#horse-engine').inputValue(),'procedural');
  await page.locator('#graphics-quality').selectOption('eco');
- await page.locator('#surface').selectOption('grass');
+ assert.equal(await page.locator('#surface').inputValue(),'dirt','Muybridge keeps its assigned surface');
  await page.locator('#weather').selectOption('noon');
  // The default automatic camera can sit inside the starting gates at 00:00.
  // Advance the fixed manual fixture, then frame horses laterally for visual QA.

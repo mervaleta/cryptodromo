@@ -43,7 +43,7 @@ test('visual renderer opt in, fallback and Alpha20 gate contracts preserved',()=
  assert.match(scene,/const world=trackPoint\(layoutMode,pr,i\)/);
  assert.match(scene,/h\.model\.root\.position\.set\(world\.x,0,world\.z\)/);
  assert.match(scene,/applyGateStaging\(\{horses,gate:gateKit/);
- for(const file of ['index.html','visual-lab/index.html']) {
+ for(const file of ['stadiums/crypto/broadcast/index.html','visual-lab/index.html']) {
   const html=read(file);
   assert.match(html,/id="horse-engine"/);
   assert.match(html,/value="legacy"/);

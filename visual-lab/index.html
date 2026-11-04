@@ -118,7 +118,29 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 <link rel="stylesheet" href="/assets/camera-console.css?v=alpha17-1">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 <link rel="stylesheet" href="/visual-lab/trackSplitsPanel.css?v=alpha15-splits-1">
-<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script></head><body>
+<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script><script>if(new URLSearchParams(location.search).get('embed')==='tv'){document.documentElement.classList.add('tv-embed');}</script>
+<style>
+/* TV feed: hide site chrome but keep all race controls in the DOM for the engine. */
+html.tv-embed,html.tv-embed body{height:100%;min-height:0;overflow:hidden;margin:0}
+html.tv-embed .sitebar,html.tv-embed .top,html.tv-embed .heading,html.tv-embed .below,
+html.tv-embed .foot,html.tv-embed .shell>.hub-footer{display:none!important}
+html.tv-embed .shell{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+html.tv-embed .stage{width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+html.tv-embed #raceCanvas{display:block;width:100%;height:100%}
+html.tv-embed .broadcast{top:10px;left:12px}
+html.tv-embed .lowerthird{padding:24px 18px 12px}
+html.tv-embed .dial{right:13px;top:10px}
+html.tv-embed .dial strong{font-size:clamp(23px,4.5vw,44px)}
+html.tv-embed .lowerthird strong{font-size:clamp(12px,2.3vw,22px)}
+html.tv-embed .result-overlay,html.tv-embed .presentation-overlay{max-width:100%}
+@media(max-width:570px){
+ html.tv-embed .lowerthird{padding:18px 10px 10px}
+ html.tv-embed .lowerthird strong{font-size:12px}
+ html.tv-embed .lowerthird p{font-size:9px}
+ html.tv-embed .broadcast{font-size:8px}
+}
+</style>
+</head><body>
 <header class="top"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="" class="brand-mark" width="38" height="38">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera LIVE</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/parade/">Modo Parade</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/cronicas/">Crónicas</a><a href="/apuestas/">Apuestas · demo</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 16</span></header>
 <main class="shell">
 <div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS · 780 UNIDADES VISUALES · LIVE AUTOMÁTICO</small></div>
@@ -229,4 +251,4 @@ label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:1
 </section>
 <section class="panel info-panel"><h2>Los protagonistas</h2><p>Historias y estadísticas calculadas para los cien caballos del Cryptódromo. Cada identidad es ficticia; las victorias y los podios corresponden a las 3.360 carreras sintéticas.</p><div id="race-biography" aria-live="polite">Seleccioná un caballo en la clasificación para ver su biografía.</div><a href="/racers/">Explorar los 100 caballos y sus estadísticas ↗</a></section>
 <footer class="foot">CRYPTÓDROMO · laboratorio visual. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
-</main><script type="module" src="./scene.js?v=alpha19-refresh-20261104"></script></body></html>
+</main><script type="module" src="./scene.js?v=alpha19-tv-single-20261104"></script></body></html>

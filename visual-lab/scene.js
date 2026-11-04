@@ -1,4 +1,4 @@
-import {mountPresentationHorse} from './presentationHorse.js?v=alpha19-refresh-1';
+import {mountPresentationHorse} from './presentationHorse.js?v=satoshi-tv-safe-20261104';
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
@@ -27,7 +27,7 @@ import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
 import {applyGateStaging} from './gateChoreography.js?v=alpha20-1';
 import {getRaceFixture as getLegacyRaceFixture,RACES_PER_DAY as LEGACY_RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
-import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-live-1';
+import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY,TRACK_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-week-v2';
 import {tripleLiveSlot,getTrack} from './tripleLiveSchedule.js?v=alpha19-live-1';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -439,6 +439,11 @@ async function bootHorses(){
  setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
  status.textContent='CAMPO PREPARADO · 12 CORREDORES'+(horseEngineMode==='procedural'?' · MODELOS GENERADOS':'');
+ // TV archive starts the selected historical replay after all twelve models load.
+ // Automatic replay starts silently. The spectator can turn sound on from the player.
+ if(hasReplay&&broadcastQuery.get('embed')==='tv'){
+  soundManuallyMuted=true;voiceManuallyMuted=true;start.click();
+ }
 }
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
@@ -454,7 +459,7 @@ function setRace(index){
  finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent=(tripleMode?'SATOSHI NAKAMOTO · '+selectedTrack.name.toUpperCase():'GRAN PREMIO CRIPTO')+
- ' · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
+ ' · CARRERA '+String(tripleMode?race.trackRaceNumber:race.number).padStart(3,'0')+' / '+(tripleMode?TRACK_RACES_PER_DAY:RACES_PER_DAY);
  if(horses.length){
   horses.forEach((h,i)=>{
    const e=race.entries[i];h.entry=e;h.progress=0;h.visualMeters=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
@@ -762,6 +767,13 @@ function setTrackType(type){
  proceduralGround?.setSurface(type);
  earthBaseColor=earth.color.clone();earthBaseRough=earth.roughness;
  earth.needsUpdate=true;
+}
+// Identity of each Satoshi course controls visual surface only, never race outcomes.
+if(tripleMode){
+ const courseSurfaces={muybridge:'dirt',genesis:'synthetic','vint-cerf':'grass'};
+ trackType.value=courseSurfaces[selectedTrack.id]||'dirt';
+ trackType.disabled=true;
+ trackType.title='Superficie asignada a '+selectedTrack.name;
 }
 trackType.addEventListener('change',()=>setTrackType(trackType.value));
 setTrackType(trackType.value);

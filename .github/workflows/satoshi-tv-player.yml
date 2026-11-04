@@ -1,0 +1,65 @@
+name: Satoshi TV · single feed, archive replay, no nested page
+on:
+  pull_request:
+    paths:
+      - 'stadiums/crypto/live/index.html'
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'stadiums/crypto/archive/index.html'
+      - 'visual-lab/index.html'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/presentationHorse.js'
+      - 'assets/stadium-hub.css'
+      - 'assets/satoshi-tv.css'
+      - 'assets/satoshi-tv-contract.js'
+      - 'assets/crypto-venue.js'
+      - 'assets/crypto-archive.js'
+      - 'tests/satoshi-tv-player-contract.mjs'
+      - 'tests/satoshi-tv-player-browser.mjs'
+      - '.github/workflows/satoshi-tv-player.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the single-player and replay contracts
+        run: |
+          node --experimental-default-type=module --check assets/crypto-venue.js
+          node --experimental-default-type=module --check assets/crypto-archive.js
+          node --experimental-default-type=module --check assets/satoshi-tv-contract.js
+          node --experimental-default-type=module --check visual-lab/scene.js
+          node --experimental-default-type=module --check visual-lab/presentationHorse.js
+          node --experimental-default-type=module --test tests/satoshi-tv-player-contract.mjs
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium and Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Run TV browser acceptance against the PR itself
+        env:
+          CRP_TV_BASE: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/satoshi-tv-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi; sleep 1; done
+          node tests/satoshi-tv-player-browser.mjs
+      - name: Preserve channel, replay and fallback screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: satoshi-tv-single-player-screenshots
+          path: artifacts/satoshi-tv/
+          if-no-files-found: ignore

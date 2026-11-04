@@ -62,6 +62,31 @@ export const PRICE_FIXTURE = Object.freeze({
   history: createPriceHistory(),
 });
 
+/**
+ * Synthetic tape with a continuous seam between the end and the beginning of
+ * the seven-day REPLAY cycle. Unlike getFixturePrice(day, minute), this accepts
+ * an absolute minute index and preserves the terminal close at minute 10080.
+ *
+ * Crucially, minutes 0..10079 are byte-for-byte the original Float32 prices.
+ * Only the two candles that extend past the end of the last broadcast day
+ * need this continuation. This is NOT a feed of real market quotations.
+ */
+export function getContinuousFixturePrice(symbol, absoluteMinute) {
+  if (!Number.isInteger(absoluteMinute) || absoluteMinute < 0)
+    throw new RangeError('absoluteMinute must be a nonnegative integer');
+  const data=PRICE_FIXTURE.history.get(symbol);
+  if (!data) return null;
+  const period=FIXTURE_DAYS*MINUTES_PER_DAY;
+  const cycles=Math.floor(absoluteMinute/period);
+  const minute=absoluteMinute%period;
+  if (cycles===0) return data.prices[minute];
+  const opening=data.prices[0],closing=data.prices[period];
+  // Carry the final close into the next synthetic week, then replay the
+  // SAME relative first-minute moves. Do not jump back to week-one price.
+  const ratio=closing/opening;
+  return data.prices[minute]*ratio**cycles;
+}
+
 function weightedPick(group, count, random) {
   const pool = [...group];
   const picked = [];

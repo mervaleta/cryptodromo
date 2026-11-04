@@ -1,4 +1,4 @@
-import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-live-1';
+import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-week-v2';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {TRACK_DEFS} from '/visual-lab/tripleLiveSchedule.js?v=alpha19-live-1';
 
@@ -56,9 +56,9 @@ function render(){
       race.entries.map(e=>e.symbol).join(' · ')])tr.append(make('td',content));
    tr.children[3].style.color='#a5f3c1';tr.children[3].style.fontWeight='850';
    const action=document.createElement('td'),link=document.createElement('a');
-   link.textContent='Ver repetición 3D →';
-   link.href='/stadiums/crypto/broadcast/?track='+encodeURIComponent(trackId)+
-     '&replayDay='+currentDay+'&replayMinute='+minute;
+   link.textContent='Ver repetición en TV →';
+   link.href='/stadiums/crypto/live/?track='+encodeURIComponent(trackId)+
+     '&replayDay='+currentDay+'&replayMinute='+minute+'#tv-station';
    action.append(link);tr.append(action);return tr;
  });
  tbody.replaceChildren(...(rows.length?rows:[(()=>{
