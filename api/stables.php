@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/demo-wallet-core.php';
 /**
  * Cryptódromo Escuderías: servidor de DEMOSTRACIÓN.
  * Sólo créditos ficticios, sin depósitos, apuestas, pagos ni retiros.
@@ -112,6 +113,8 @@ function db(): PDO {
     $id = $_SESSION['stable_guest'];
     $stmt = $pdo->prepare('INSERT OR IGNORE INTO demo_owners(id,alias,credits,created_at) VALUES(?,?,5000,?)');
     $stmt->execute([$id, 'Entrenador ' . strtoupper(substr($id, 0, 5)), gmdate('c')]);
+    dw_schema($pdo);
+    dw_owner($pdo,(string)$id);
     return $pdo;
 }
 function my_stable(PDO $db, string $owner): ?array {
@@ -243,9 +246,7 @@ function already(PDO $db, string $key, string $owner, string $action): bool {
     return true;
 }
 function debit(PDO $db, string $owner, int $cost, string $key, string $action, int $stable): void {
-    $q=$db->prepare('UPDATE demo_owners SET credits=credits-? WHERE id=? AND credits>=?');
-    $q->execute([$cost,$owner,$cost]);
-    if($q->rowCount()!==1) fail('Créditos de demostración insuficientes',409);
+    dw_stables_debit($db,$owner,$cost,$key,$action);
     $q=$db->prepare('INSERT INTO demo_wallet_ops VALUES(?,?,?,?,?,?)');
     $q->execute([$key,$owner,$action,-$cost,$stable,gmdate('c')]);
 }
@@ -354,6 +355,9 @@ try {
         commit_tx($db);
         answer(['ok'=>true,'state'=>state($db,$owner)]);
     }catch(Throwable $e){stop($db);throw $e;}
+} catch (DomainException $e) {
+    error_log('stables rejected operation: '.$e->getMessage());
+    fail('Saldo insuficiente u operación ya registrada',409);
 } catch (PDOException $e) {
     error_log('stables DB error: '.$e->getMessage());
     fail('No se pudo guardar la operación. Verificá que PHP tenga SQLite disponible.',503);
