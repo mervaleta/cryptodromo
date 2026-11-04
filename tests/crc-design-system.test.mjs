@@ -74,10 +74,11 @@ test('top-level hubs mount the canonical navigation, rather than maintaining a s
   }
 });
 test('Gazette generator preserves CRC style when rebuilding articles', () => {
-  assert.match(read('cryptodromo-gazette/collector.py'), /CSS = '''@import url\\("\\/design\\/crc-system\\.css/);
+  const source=read('cryptodromo-gazette/collector.py');
+  assert.ok(source.includes('CSS = ' + "'''" + '@import url("/design/crc-system.css'));
   const css=read('cryptodromo-gazette/public/assets/style.css');
-  assert.match(css,/html body:not\\(\\.hub\\) \\.card/);
-  assert.match(css,/width:var\\(--crc-shell-width\\)/);
+  assert.ok(css.includes('html body:not(.hub) .card'));
+  assert.ok(css.includes('width:var(--crc-shell-width)'));
 });
 
 test('navigation and page content align to the same modern shell', () => {
