@@ -8,13 +8,15 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-master-spherical-eyes-20261104-v8';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-master-hero-silhouette-20261104-v9';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
  front:[3.85,2.12,.13],
  rear:[-3.52,1.78,1.70],
- detail:[1.64,2.16,2.89]
+ detail:[1.64,2.16,2.89],
+ threeQuarter:[2.85,2.18,2.75],
+ top:[1.02,4.55,1.12]
 };
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number(x)||0));
 const stageParams=new URLSearchParams(location.search);
@@ -52,7 +54,7 @@ export function createPreview(canvas,onFailure=()=>{}){
 
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#886149';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#29232a';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
