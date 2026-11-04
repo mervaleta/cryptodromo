@@ -16,7 +16,7 @@ const CAMERA_POSITIONS={
 };
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number(x)||0));
 const stageParams=new URLSearchParams(location.search);
-const btcPass=Math.floor(clamp(stageParams.get('btcPass')??10,1,10));
+let btcPass=Math.floor(clamp(stageParams.get('btcPass')??10,1,10));
 const fixedFrame=stageParams.get('btcFreeze')==='1';
 export function createPreview(canvas,onFailure=()=>{}){
  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
@@ -92,6 +92,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   }
  }
  function select(token){selected=token;return rebuild();}
+ function setStage(next){const p=Math.floor(clamp(next,1,10));if(p!==btcPass){btcPass=p;rebuild();}}
  function setVariant(next){
   if(next!=='original'&&next!=='enhanced')return;
   if(variant!==next){variant=next;rebuild();}
@@ -117,7 +118,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   controls.update();renderer.render(scene,camera);
  });
  return {
-  select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,
+  select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,
   snapshot:()=>({
    symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
    originalAsset:true,jockey:false,maneEnabled:!!hero,
