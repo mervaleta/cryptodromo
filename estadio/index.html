@@ -10,6 +10,7 @@
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
   <script type="module" src="/estadio/estadio.js?v=satoshi-cachefix-20261104-v3"></script>
   <link rel="stylesheet" href="/race-lab/source/src/style.css">
+  <link rel="stylesheet" href="/assets/stadium-flight.css?v=stadium-flight-v1-20261104">
   <style>
     .stadium-page{max-width:1480px;margin:auto;padding:26px clamp(16px,3vw,42px) 60px}
     .stadium-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#27d7a2;font-weight:750}
@@ -90,8 +91,46 @@
           <option value="low">Bajo</option><option value="medium" selected>Medio</option><option value="high">Alto</option>
         </select></label>
       </div>
-      <div id="stadiumView"><canvas id="stadiumCanvas" aria-label="Reconstrucción 3D del Estadio Satoshi Nakamoto"></canvas><div id="stadiumNotice" role="status">EXPLORADOR 3D · ESCENOGRAFÍA PROCEDURAL</div></div>
+      <div id="stadiumView">
+ <canvas id="stadiumCanvas" aria-label="Recorrido 3D interactivo. Arrastrar para girar, hacer clic sobre el terreno para viajar. WASD para volar, Q y E para cambiar altura."></canvas>
+ <div id="stadiumFlightDeck" class="flight-deck" aria-label="Controles de vuelo y cámaras">
+  <div class="flight-quick" role="toolbar" aria-label="Accesos directos de cámara">
+   <button data-flight-view="aerial" type="button" title="Vista panorámica" aria-label="Vista panorámica">🛰️<small>General</small></button>
+   <button data-flight-view="grandstand" type="button" title="Tribunas" aria-label="Vista de tribunas">🏟️<small>Tribunas</small></button>
+   <button data-flight-view="entrance" type="button" title="Acceso y plaza" aria-label="Acceso y plaza">🚪<small>Acceso</small></button>
+   <button data-flight-view="paddock" type="button" title="Paddock" aria-label="Vista de paddock">🐎<small>Paddock</small></button>
+   <button data-flight-view="side" type="button" title="Lateral" aria-label="Vista lateral">👁️<small>Lateral</small></button>
+   <button data-flight-view="muybridge" data-flight-course type="button" title="Volar a Muybridge" aria-label="Volar a pista Muybridge">①<small>Muybridge</small></button>
+   <button data-flight-view="genesis" data-flight-course type="button" title="Volar a Genesis" aria-label="Volar a pista Genesis">②<small>Genesis</small></button>
+   <button data-flight-view="vint-cerf" data-flight-course type="button" title="Volar a Vint Cerf" aria-label="Volar a pista Vint Cerf">③<small>Vint Cerf</small></button>
+  </div>
+  <div class="flight-navigation" role="toolbar" aria-label="Movimiento y modo de vuelo">
+   <button data-flight-action="click" type="button" aria-pressed="true" title="Clic para viajar al punto señalado" aria-label="Activar viaje por clic">📍<small>Ir al clic</small></button>
+   <button data-flight-action="orbit" type="button" aria-pressed="false" title="Sobrevolar en órbita automática" aria-label="Órbita automática">🔄<small>Órbita</small></button>
+   <button data-flight-action="forward" type="button" title="Volar hacia delante" aria-label="Avanzar">↑</button>
+   <button data-flight-action="back" type="button" title="Volar hacia atrás" aria-label="Retroceder">↓</button>
+   <button data-flight-action="left" type="button" title="Volar a la izquierda" aria-label="Izquierda">←</button>
+   <button data-flight-action="right" type="button" title="Volar a la derecha" aria-label="Derecha">→</button>
+   <button data-flight-action="up" type="button" title="Ganar altura" aria-label="Subir">⬆<small>Subir</small></button>
+   <button data-flight-action="down" type="button" title="Perder altura" aria-label="Bajar">⬇<small>Bajar</small></button>
+   <label for="flight-speed">Velocidad
+    <select id="flight-speed" data-flight-speed aria-label="Velocidad de vuelo"><option value=".5">Lenta</option><option value="1" selected>Normal</option><option value="2">Rápida</option><option value="3">Turbo</option></select>
+   </label>
+   <button data-flight-action="home" type="button" title="Regresar a panorámica" aria-label="Volver a panorámica">⌂<small>Inicio</small></button>
+   <button data-flight-action="help" type="button" title="Controles: clic, arrastrar, WASD y Q/E" aria-label="Mostrar ayuda de navegación">?<small>Ayuda</small></button>
+  </div>
+  <div class="flight-info"><span data-flight-hint role="status">Clic en el terreno para viajar · Arrastrá para mirar · WASD para sobrevolar</span>
+   <div class="flight-tv-links" aria-label="Ver las transmisiones de las tres pistas">
+    <a href="/stadiums/crypto/live/?track=muybridge" title="Ver canal Muybridge">📺 CH1</a>
+    <a href="/stadiums/crypto/live/?track=genesis" title="Ver canal Genesis">📺 CH2</a>
+    <a href="/stadiums/crypto/live/?track=vint-cerf" title="Ver canal Vint Cerf">📺 CH3</a>
+   </div>
+  </div>
+ </div>
+ <div id="stadiumNotice" role="status">EXPLORADOR 3D · ESCENOGRAFÍA PROCEDURAL</div>
+</div>
     </section>
+    <p class="stadium-lead">Exploración libre: mantené un botón de dirección para volar, usá la rueda para acercarte y hacé clic sobre el terreno para desplazarte suavemente a ese punto.</p>
     <p class="stadium-lead" id="venue-caption" aria-live="polite">Cryptódromo Central · Pista Eadweard Muybridge · Mercado Cripto</p>
     <div class="stadium-copy">
       <article><h2>Ocho identidades mundiales</h2><p>Buenos Aires, Nueva York, Tokio, Londres, commodities, divisas, cripto y la arena de campeones reciben arquitectura y materiales generados por código.</p></article>
