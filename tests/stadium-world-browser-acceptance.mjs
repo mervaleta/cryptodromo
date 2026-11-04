@@ -68,6 +68,8 @@ try{
    assert.ok(init.dimensions.every(n=>n>0),track+' uninitialized WebGL canvas');
    assert.ok(init.preview,track+' preview WebGL canvas missing');
    assert.equal(init.count,12,track+' runners not initialized');
+   const caption=await page.locator('#raceName').innerText();
+   assert.match(caption,/CARRERA 001 \/ 480/,'Per-track race label mismatch in '+track+': '+caption);
    assert.doesNotMatch(init.status,/CARGANDO ESCENARIO 3D|ERROR EN ESCENA/);
    await page.screenshot({path:'artifacts/stadium-world/'+track+'-ready.png'});
    const before=await page.evaluate(()=>window.__cryptodromoQA.state().positions);
