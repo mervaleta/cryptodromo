@@ -136,6 +136,21 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   // Preserve ground contact and imported gait, including all four fetlocks.
   beveledHoofVertices++;
  }
+ // A horse's alert pinnae rise above the poll, not sideways like folded
+ // leaves. Modify only the measured 2017 ear-tip vertex cluster.
+ let elevatedEarVertices=0;
+ for(let i=0;i<positions.length;i+=3){
+  const x=positions[i],y=positions[i+1],z=positions[i+2];
+  const height=smooth((z-.04455)/.00235);
+  const side=smooth((Math.abs(x)-.0010)/.0012);
+  const head=gauss(y,-.0266,.00175);
+  const ear=height*side*head;
+  if(ear<.01)continue;
+  positions[i]+=Math.sign(x)*.00016*ear;
+  positions[i+1]+=.00043*ear;
+  positions[i+2]+=.00130*ear;
+  elevatedEarVertices++;
+ }
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
  for(let i=0;i<positions.length;i+=3){
@@ -242,7 +257,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices};
 }
 
 function makeAnatomicalEyes(source,skinAt){
@@ -308,7 +323,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    version:BTC_MAYA_MASTER,modelPreserved:true,gallopPreserved:true,
    originalRig:true,source:'supplied-Maya-2017-sculpt',
    sculptedBodyParts:1,vertices:anatomy.vertices,
-   triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,oldHairHidden:!best.visible,
+   triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:hoofShells.hooves,hoofMeshVertices:hoofShells.vertices,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
