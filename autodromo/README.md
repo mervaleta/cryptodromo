@@ -27,6 +27,19 @@ El código de `autodromo/car.js` genera chasis, nosecone, alerones, halo, ruedas
 - **Ganador inmutable:** `officialRanking(createOfficialRace(entries))` ordena `finishTime` y no recibe ni grid, ni `visualMeters`, ni clima, ni carril. La fórmula original sigue siendo `D=1000*(1+(91*input1+120*input2)/1200)`. El arreglo de las dosis cambia los adelantamientos, no sus sumas.
 - **Fuente:** semana `synthetic-v1`, repetible. La pole es una **clasificación derivada del pasado sintético**, no una sesión real de clasificación ni datos de mercado en vivo.
 
+## Adelantamientos sin superposición · Traffic Director
+
+La versión visual `traffic-director-v1` consume los mismos `trackMeters` y `positionAt()` de `CRP-DOSE-FAIR-V1` pero **no escribe de regreso** en el motor oficial. Los autos empiezan en su grilla 2×6 y, durante la carrera:
+
+1. El planificador mira 2,8 segundos hacia adelante en la distancia oficial prevista de cada competidor.
+2. Un auto que alcanza a otro reserva una trayectoria lateral libre dentro de la pista (seis carriles visuales) y cambia de carril de forma progresiva, con límite de 8 metros de desplazamiento lateral por segundo.
+3. Cada fotograma debe respetar una envolvente de seguridad entre carrocerías. Si todos los carriles están ocupados, **el auto visual posterior espera** detrás; las variaciones de precio y la distancia de llegada permanecen intactas.
+4. La carrocería gira levemente hacia la trayectoria elegida para evitar desplazamientos laterales antinaturales. El resultado y los tiempos se siguen leyendo exclusivamente de `officialRanking()`.
+
+El sistema precalcula 301 muestras para los 60 segundos y las interpola. También aplica protección entre muestras para evitar que dos trayectorias válidas se crucen al reproducirse a 60 FPS.
+
+QA automática: `node --experimental-default-type=module --test tests/autodromo-traffic.mjs` examina las trayectorias de nueve carreras completas a 10 Hz, exige que el ganador y los metros oficiales permanezcan inmutables y que ningún par de carrocerías invada la envolvente. La prueba Chromium revisa posiciones mundiales de los coches sobre la pista. El estado puede inspeccionarse mediante `window.__cryptodromoAutodromoQA.auditTraffic(.1)`.
+
 ## Cómo probar
 1. Abrir `/autodromo/` mediante un servidor HTTP estático que sirva la raíz del repositorio.
 2. Elegir Vector / Delta / Neón. Cada pista tiene un reloj real del fixture, no un fixture propio.
