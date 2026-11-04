@@ -1,0 +1,78 @@
+name: Stadium clean + photo finish + director submenus
+on:
+  pull_request:
+    paths:
+      - 'visual-lab/**'
+      - 'parade/scenery.js'
+      - 'assets/satoshi-tv-submenus.js'
+      - 'assets/satoshi-tv.css'
+      - 'assets/crypto-venue.js'
+      - 'stadiums/crypto/live/index.html'
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'tests/stadium-clean-photo-finish*'
+      - '.github/workflows/stadium-clean-photo-finish.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'visual-lab/scene.js'
+      - 'visual-lab/winnerSlowMotion.js'
+      - 'assets/satoshi-tv-submenus.js'
+      - 'stadiums/crypto/live/index.html'
+      - '.github/workflows/stadium-clean-photo-finish.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate ES modules
+        run: |
+          for file in visual-lab/scene.js visual-lab/winnerSlowMotion.js visual-lab/hoofTerrainFX.js visual-lab/trackSplitMarkers.js visual-lab/stadiumDensity.js parade/scenery.js assets/crypto-venue.js assets/satoshi-tv-submenus.js; do
+            node --experimental-default-type=module --check "$file"
+          done
+      - name: Check all visual and sport invariants
+        run: |
+          node --experimental-default-type=module --test tests/stadium-clean-photo-finish.mjs tests/winner-replay-env-contract.mjs tests/satoshi-tv-player-contract.mjs tests/stadium-course-clearance.mjs tests/stadium-broadcast-contract.mjs tests/hoof-terrain-fx.mjs tests/stadium-flight-tv-director.mjs tests/satoshi-module-cache-contract.mjs tests/stadium-staggered-countdowns.mjs
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Check TV submenus, photo finish, engine and channel navigation
+        env:
+          CRP_BASE_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/clean-stadium-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          node tests/stadium-clean-photo-finish-browser.mjs
+      - name: Check production after main deployment
+        if: github.event_name == 'push'
+        env:
+          CRP_BASE_URL: https://race.cryptodromo.com
+        run: |
+          for attempt in 1 2 3 4; do
+            if node tests/stadium-clean-photo-finish-browser.mjs; then exit 0; fi
+            sleep 18
+          done
+          exit 1
+      - name: Preserve visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: satoshi-photo-finish-submenu-screenshots
+          path: artifacts/stadium-clean-photo-finish/
+          if-no-files-found: ignore

@@ -17,6 +17,9 @@ test('winner slow-mo is 0.5x, exactly 7.2s, samples real race positions without 
  assert.ok(Math.abs(replay.state.sampleTime-(60-WINNER_REPLAY_SOURCE_SPAN/2))<1e-9);
  assert.equal(replay.state.progress,.5);
  replay.advance(WINNER_REPLAY_DURATION/2);
+ assert.equal(replay.state.phase,'holding');
+ assert.equal(replay.state.complete,false);
+ replay.advance(2.2);
  assert.equal(replay.state.complete,true);
  assert.equal(replay.state.sampleTime,60);
  assert.equal(replay.begin(1,'ETH'),false);
@@ -41,6 +44,8 @@ test('replay can only begin after the 12th horse has crossed the official line',
  assert.equal(gate.state.revealed,true,'official gate may authorize while replay remains visible');
  assert.equal(replay.state.active,true,'TV does not immediately expose official scoreboard');
  replay.advance(WINNER_REPLAY_DURATION);
+ assert.equal(replay.state.phase,'holding');
+ replay.advance(2.2);
  assert.equal(replay.state.complete,true);
 });
 test('both official scene pages mount slow-motion overlay, source and result ordering',()=>{
@@ -49,7 +54,7 @@ test('both official scene pages mount slow-motion overlay, source and result ord
   const doc=read(html);
   for(const id of ['winner-replay','winner-replay-name','winner-replay-progress','result-overlay','raceCanvas'])
    assert.ok(doc.includes('id="'+id+'"'),html+' missing '+id);
-  assert.match(doc,/scene\.js\?v=winner-replay-env-20261104-v1/);
+  assert.match(doc,/scene\.js\?v=photo-finish-tv-params-20261104-v1/);
  }
  assert.match(scene,/winnerReplay\.begin\(index,first\.entry\.symbol\)/);
  assert.match(scene,/lastCrossedAt=gate\.lastCrossAt;\s*startWinnerReplay\(\)/);
@@ -77,6 +82,6 @@ test('TV has real environment actions wired to existing stadium lighting inputs'
  assert.match(deck,/input\.dispatchEvent\(new EventClass\('input'/);
  assert.match(deck,/change\(doc,'daytime-auto'/);
  assert.match(deck,/change\(doc,'weather'/);
- assert.match(live,/winner-slowmo-env-20261104-v1/);
+ assert.match(live,/tv-director-params-20261104-v2/);
  assert.doesNotMatch(deck,/createOfficialRace\(|setRace\(|raceIndex\b|officialRanking\(/);
 });

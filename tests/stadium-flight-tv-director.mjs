@@ -49,5 +49,5 @@ test('TV player uses one iframe with 3 immediate channel buttons and 12 camera i
  assert.match(controller,/button\.dataset\.tvSwitch/);
  assert.match(css,/\.tv-transition/);
  assert.match(css,/transition:opacity 520ms/);
- assert.match(html,/winner-slowmo-env-20261104-v1/);
+ assert.match(html,/tv-director-params-20261104-v2/);
 });

@@ -64,16 +64,17 @@ export function createParadeVillage(scene,{quality='balanced'}={}){
  for(let i=0;i<standCenters.length;i++){
   const x=standCenters[i],width=standW[i],piece=new THREE.Group();
   piece.name='Tribuna '+(i+1);stands.add(piece);
-  cube(piece,x,1.7,-114,width,3.4,18,M.stone);
+   const frontOffset=i===2?9:0; // West stand closer to track but beyond oval clearance.
+  cube(piece,x,1.7,-114+frontOffset,width,3.4,18,M.stone);
   for(let row=0;row<7;row++){
-   const y=3.9+row*.93,z=-107-row*2.6;
+   const y=3.9+row*.93,z=-107-row*2.6+frontOffset;
    cube(piece,x,y,z,width,.3,2.7,row%3===0?M.ivory:M.seat);
    cube(piece,x,y+.34,z+1.2,width,.11,.12,M.steel);
   }
   // Short roof and lighting (not an uninterrupted shadow-casting mega-roof).
-  cube(piece,x,12.8,-115,width+2,.56,23,M.roof);
-  for(const end of [-1,1])cylinder(piece,x+end*(width/2-3),6.4,-127,.28,12.2,M.steel);
-  sign(i===1?'GRAN TRIBUNA':i===0?'TRIBUNA ESTE':'TRIBUNA OESTE',piece,x,11.9,-103,Math.min(42,width*.46));
+  cube(piece,x,12.8,-115+frontOffset,width+2,.56,23,M.roof);
+  for(const end of [-1,1])cylinder(piece,x+end*(width/2-3),6.4,-127+frontOffset,.28,12.2,M.steel);
+  sign(i===1?'GRAN TRIBUNA':i===0?'TRIBUNA ESTE':'TRIBUNA OESTE',piece,x,11.9,-103+frontOffset,Math.min(42,width*.46));
  }
  // A lightweight crowd with stable instance colors and no per-person shadows.
  const crowdN=quality==='eco'?96:quality==='cinematic'?315:220;
@@ -86,7 +87,7 @@ export function createParadeVillage(scene,{quality='balanced'}={}){
  const transform=new THREE.Object3D();
  for(let i=0;i<crowdN;i++){
   const s=i%3,x=standCenters[s],width=standW[s];
-  const row=Math.floor(rand()*7),z=-107-row*2.6;
+  const row=Math.floor(rand()*7),z=-107-row*2.6+(s===2?9:0);
   const cx=x+(rand()-.5)*(width-8),y=4.7+row*.93;
   transform.position.set(cx,y,z);transform.scale.set(.65,1.35,.45);transform.updateMatrix();
   torso.setMatrixAt(i,transform.matrix);torso.setColorAt(i,new THREE.Color(colors[Math.floor(rand()*colors.length)]));
@@ -162,7 +163,7 @@ export function createParadeVillage(scene,{quality='balanced'}={}){
  const lampLocations=[];
  for(const center of standCenters)for(let i=-2;i<=3;i++){
   const x=center+i*16;
-  lampLocations.push([x,11.6,-109]);
+  lampLocations.push([x,11.6,center===207?-100:-109]);
  }
  for(let i=0;i<30;i++){
   const x=-370+i*25;

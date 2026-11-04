@@ -7,12 +7,12 @@ import {reframeCamera,countdownVisibility} from './cameraRig.js?v=alpha17-1';
 import {bindCameraPanel} from './cameraPanel.js?v=alpha17-1';
 import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
-import {createWinnerSlowMotion} from './winnerSlowMotion.js?v=winner-slowmo-20261104-v1';
+import {createWinnerSlowMotion} from './winnerSlowMotion.js?v=photo-finish-tv-params-20261104-v1';
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
-import {createStadiumDensity} from './stadiumDensity.js?v=alpha18-1';
-import {createParadeVillage} from '../parade/scenery.js?v=alpha16-live-2';
+import {createStadiumDensity} from './stadiumDensity.js?v=photo-finish-tv-params-20261104-v1';
+import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
@@ -22,7 +22,7 @@ import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
-import {createHoofTerrainFX} from './hoofTerrainFX.js?v=hoof-fx-1';
+import {createHoofTerrainFX} from './hoofTerrainFX.js?v=photo-finish-tv-params-20261104-v1';
 import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha20-procedural-2';
 import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
@@ -34,7 +34,7 @@ import {tripleLiveSlot,getTrack} from './tripleLiveSchedule.js?v=alpha19-live-1'
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {mountTrackSplitsPanel} from './trackSplitsPanel.js?v=alpha15-splits-1';
-import {createSplitTrackMarkers} from './trackSplitMarkers.js?v=alpha15-splits-1';
+import {createSplitTrackMarkers} from './trackSplitMarkers.js?v=photo-finish-tv-params-20261104-v1';
 
 // Alpha 05: +20% physical/visual course (410 → 492 units), same official race and 60s.
 const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
@@ -180,7 +180,7 @@ function rail(z){
 }
 rail(-20.2);rail(20.2);
 // Outer track lawn, sculpted hedges and paddock fencing.
-for(let x=-399;x<=399;x+=4){box(3.5,.65,2,x,.16,-22.9,C.green);}
+// Turf beside the safety rail stays flush: no raised hedge blocks.
 for(let x=-399;x<=399;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
 box(812,.12,.13,0,1.25,53,C.steel);
 const straightCourse=new THREE.Group();straightCourse.name='Straight track assets';
@@ -192,7 +192,7 @@ createStadiumBackdrop(scene,{softwareGPU,mobile});
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=softwareGPU?55:mobile?90:155;
 for(let i=0;i<treeN;i++){
- const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-74-r()*34:75+r()*25;
+ const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-153-r()*16:132+r()*22;
  const h=5+r()*9;
  cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
  cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
@@ -249,7 +249,7 @@ const rnd=seeded(641903);
 for(let i=0;i<crowdN;i++){
  const section=i%3,row=Math.floor(rnd()*7);
  const x=standCenters[section]+(rnd()-.5)*(standWidths[section]-8);
- const z=-107-row*2.6,y=4.62+row*.93;
+ const z=-107-row*2.6+(section===2?9:0),y=4.62+row*.93;
  dummy.position.set(x,y,z);dummy.rotation.y=(rnd()-.5)*.6;dummy.updateMatrix();crowds[0].setMatrixAt(i,dummy.matrix);
  dummy.position.y+=.52;dummy.updateMatrix();crowds[1].setMatrixAt(i,dummy.matrix);
  crowds[0].setColorAt(i,new THREE.Color(palette[Math.floor(rnd()*palette.length)]));
@@ -265,7 +265,7 @@ const flagPositions=[];
 for(let i=0;i<flagsN;i++){
  const section=i%3,row=(Math.floor(i/3)%7);
  const x=standCenters[section]+((i*71%101)/101-.5)*(standWidths[section]-10);
- const z=-107-row*2.6,y=5.1+row*.93;
+ const z=-107-row*2.6+(section===2?9:0),y=5.1+row*.93;
  flagPositions.push({x,z,y,phase:i*.64});
  flagMatrix.position.set(x,y,z);flagMatrix.updateMatrix();cheerFlags.setMatrixAt(i,flagMatrix.matrix);
 }
@@ -294,7 +294,7 @@ const finishGlow=new THREE.PointLight(0xffd68a,0,95,1.8);scene.add(finishGlow);
 function updateFinishBurst(){
  const t=elapsed-60,active=running&&t>=0&&t<18.5&&!finishShown;
  finishBurst.visible=active;
- cheerFlags.visible=active;
+ cheerFlags.visible=active&&scenicSettings.crowd;
  finishGlow.intensity=active?Math.max(0,22*(1-t/19)):0;
  if(active){
    for(let i=0;i<flagsN;i++){
@@ -333,11 +333,37 @@ const hoofFX=createHoofTerrainFX(scene,{lanes:12,quality:softwareGPU?'eco':mobil
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode=selectedTrack?.layout||'straight';
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
+const scenicSettings={crowd:true,trees:true,splits:true,details:true};
+function applyScenery(){
+ for(const actor of crowds)actor.visible=scenicSettings.crowd;
+ treeGroup.visible=scenicSettings.trees;
+ trackSplitMarkers.setVisible(scenicSettings.splits);
+ liveVillage.root.traverse(object=>{
+  if(/Público|audience/i.test(object.name))object.visible=scenicSettings.crowd;
+ });
+ stadiumDensity.root.traverse(object=>{
+  if(/audience/i.test(object.name))object.visible=scenicSettings.crowd;
+ });
+ liveDistrict.root.traverse(object=>{
+  if(/Árboles|Copas de paseo/i.test(object.name))object.visible=scenicSettings.trees;
+ });
+ const quality=scenicSettings.details?'balanced':'eco';
+ liveDistrict.setQuality(quality);liveVillage.setQuality(quality);
+ stadiumDensity.setQuality(quality);
+}
 const rainN=softwareGPU?260:mobile?450:1050,rainPos=new Float32Array(rainN*3),rr=seeded(624);
 for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*820;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
 rain.visible=false;scene.add(rain);
+const rainIntensityInput=document.querySelector('#rain-intensity');
+function applyRainIntensity(){
+ const level=Math.max(0,Math.min(100,Number(rainIntensityInput?.value??70)))/100;
+ rain.material.opacity=.62*level;
+ rain.geometry.setDrawRange(0,Math.floor(rainN*level));
+}
+rainIntensityInput?.addEventListener('input',applyRainIntensity);
+applyRainIntensity();
 
 const initialQa=new URLSearchParams(location.search).get('finish-qa')==='alpha06';
 const initialLiveSlot=trackSchedule(new Date());
@@ -381,6 +407,22 @@ const winnerReplayOverlay=document.getElementById('winner-replay');
 const winnerReplayName=document.getElementById('winner-replay-name');
 const winnerReplayProgress=document.getElementById('winner-replay-progress');
 let finishGateElapsed=0;
+// Strict, same-origin, visual-only director messages from the containing TV.
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==window.parent||
+    broadcastQuery.get('embed')!=='tv'||!event.data||typeof event.data!=='object')return;
+ if(event.data.type==='CRP_TV_SCENERY'){
+  const values=event.data.settings;
+  if(!values||typeof values!=='object')return;
+  for(const key of Object.keys(scenicSettings)){
+   if(typeof values[key]==='boolean')scenicSettings[key]=values[key];
+  }
+  applyScenery();
+ }else if(event.data.type==='CRP_TV_REPLAY'){
+  const opts=event.data.settings;
+  if(opts&&typeof opts==='object')winnerReplay.configure(opts);
+ }
+});
 function startWinnerReplay(){
  if(finishController.state.crossedCount!==12||winnerReplay.state.phase!=='idle')return false;
  const first=officialRanking(profiles)[0];
@@ -411,7 +453,10 @@ function renderWinnerReplay(){
   horse.visualSpeed=.6;
  }
  winnerReplayProgress.style.width=Math.round(replay.progress*100)+'%';
- clockEl.textContent='0.5×';
+ winnerReplayName.textContent=replay.postHold?
+  replay.winnerSymbol+' · FOTO FINISH · ACTA EN '+Math.ceil(replay.holdAfter-replay.holdElapsed)+' S':
+  replay.winnerSymbol+' · CÁMARA LATERAL DE META';
+ clockEl.textContent=replay.speed.toFixed(2)+'×';
 }
 const tvDirector=createBroadcastDirector({minDwell:5.5});
 let selectedTvShot='pack',lastDirectorUpdate=-Infinity;
@@ -783,7 +828,8 @@ function setLayout(mode){
  alternateTracks.select(mode);
  gateKit.root.visible=mode==='straight';
  finishSign.visible=mode==='straight';
- treeGroup.visible=mode!=='oval';
+ treeGroup.visible=scenicSettings.trees;
+  stadiumDensity.setLayout(mode);
  trackFX.setLayout(mode);hoofFX.setLayout(mode);
  if(horses.length){setRace(raceIndex);if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}}
 }
@@ -989,12 +1035,15 @@ const target=new THREE.Vector3(),goal=new THREE.Vector3(),cameraFocus=new THREE.
 let cameraFocusReady=false;
 function adjustCamera(dt){
  if(winnerReplay.state.active){
+  // True side-on photo-finish view. The finish line never follows the winner:
+  // the nose crosses a stationary frame, perpendicular to racing direction.
   const replay=winnerReplay.state,horse=horses[replay.winnerIndex];
   if(horse){
-   const p=trackPoint(layoutMode,horse.progress,horse.index);
-   goal.set(p.x-p.tangentX*16+p.sideX*12,4.7,p.z-p.tangentZ*16+p.sideZ*12);
-   target.set(p.x+p.tangentX*8,2.0,p.z+p.tangentZ*8);
-   const easing=1-Math.exp(-Math.max(.016,dt)*3.6);
+   const line=trackPoint(layoutMode,1,horse.index);
+   goal.set(line.x+line.sideX*24-line.tangentX*.65,3.25,
+     line.z+line.sideZ*24-line.tangentZ*.65);
+   target.set(line.x+line.tangentX*.75,2.05,line.z+line.tangentZ*.75);
+   const easing=1-Math.exp(-Math.max(.016,dt)*3.9);
    camera.position.lerp(goal,easing);
    cameraFocus.lerp(target,easing);
    camera.lookAt(cameraFocus);
