@@ -9,7 +9,13 @@ let publishedHorseProfiles=Object.create(null);
 function visualToken(token){
  const profile=resolveHorseProfile(token,publishedHorseProfiles);
  if(!profile.edited)return token;
- return {...token,name:profile.name,color:profile.raceColor,coat:profile.appearanceMode==='natural_coat'?profile.coatColor:profile.raceColor};
+ return {...token,name:profile.name,color:profile.raceColor,
+  coat:profile.appearanceMode==='natural_coat'?profile.coatColor:profile.raceColor,
+  mayaAppearance:{coatColor:profile.coatColor,brandMode:profile.appearanceMode,
+   hoofColor:profile.hoofColor,maneColor:profile.maneColor,tailColor:profile.tailColor,
+   eyeColor:profile.eyeColor,muzzleColor:profile.muzzleColor,
+   maneScale:profile.maneScale,tailScale:profile.tailScale,
+   maneStyle:profile.maneStyle,tailStyle:profile.tailStyle}};
 }
 function renderPublicIdentity(profile){
  const parent=document.querySelector('.horse-biography');if(!parent)return;
