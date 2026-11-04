@@ -1,5 +1,6 @@
 import {allLiveTracks,getTrack} from '/visual-lab/tripleLiveSchedule.js?v=alpha19-live-1';
-import {buildTvPlayerUrl,findRacePlayerSource,readTvReplay,RACE_PLAYER_SOURCES} from './satoshi-tv-contract.js?v=satoshi-tv-director-v1-20261104';
+import {buildTvPlayerUrl,findRacePlayerSource,readTvReplay,RACE_PLAYER_SOURCES} from './satoshi-tv-contract.js?v=winner-slowmo-env-20261104-v1';
+import {createTvEnvironmentDeck} from './satoshi-tv-environment.js?v=winner-slowmo-env-20261104-v1';
 
 /**
  * One active WebGL feed at a time. The parent is the station and the iframe
@@ -30,6 +31,7 @@ function setShot(mode){
   select.value=mode;select.dispatchEvent(new frame.contentWindow.Event('change',{bubbles:true}));
  }
 }
+const environmentDeck=createTvEnvironmentDeck({frame,root:$('tv-env-deck'),onShot:setShot});
 let soundEnabled=false;
 const cards=[...document.querySelectorAll('.hub-track[data-track]')];
 const params=new URLSearchParams(location.search);
@@ -63,7 +65,7 @@ const setError=detail=>{
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
 };
-const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=satoshi-tv-director-v1-20261104',{cache:'no-store',redirect:'follow'}));
+const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=winner-slowmo-env-20261104-v1',{cache:'no-store',redirect:'follow'}));
 function setUrl(){
  const url=new URL(location.href);
  url.searchParams.set('track',active);
@@ -94,6 +96,7 @@ function syncPanel(){
   button.setAttribute('aria-pressed',String(button.dataset.tvSwitch===active));
  }
  if(transitionLabel)transitionLabel.textContent='SINTONIZANDO '+track.name.toUpperCase();
+ environmentDeck.setTrack(active);
 }
 function showProgramGuide(){
  const snapshots=allLiveTracks(new Date());
@@ -159,6 +162,9 @@ frame.addEventListener('load',async()=>{
   clearTimeout(loadTimer);frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
   audioButton.disabled=!frame.contentDocument?.querySelector('#sound');
   setShot(activeShot);
+  environmentDeck.apply();
+  const loadedSerial=serial;
+  setTimeout(()=>{if(loadedSerial===serial&&validFrameDoc())environmentDeck.apply();},1100);
   requestAnimationFrame(()=>{requestAnimationFrame(uncover);});
   try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
   return;
@@ -212,12 +218,12 @@ $('tv-fullscreen').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)showProgramGuide();});
 const ticker=setInterval(showProgramGuide,1000);
-window.addEventListener('pagehide',()=>{clearInterval(ticker);clearTimeout(loadTimer);frame.src='about:blank';},{once:true});
+window.addEventListener('pagehide',()=>{clearInterval(ticker);clearTimeout(loadTimer);environmentDeck.dispose();frame.src='about:blank';},{once:true});
 showProgramGuide();
 if(new URLSearchParams(location.search).get('tv-qa')==='1'){
  window.__satoshiTvQA=Object.freeze({
   snapshot:()=>({track:active,shot:activeShot,transition:screen.classList.contains('is-switching'),
-   src:frame.getAttribute('src'),ready:validFrameDoc()}),
+   src:frame.getAttribute('src'),ready:validFrameDoc(),environment:environmentDeck.snapshot()}),
   shot:setShot
  });
 }

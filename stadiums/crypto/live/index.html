@@ -4,7 +4,7 @@
 <meta name="description" content="Sintonizá en un único reproductor 3D las carreras de Muybridge, Genesis y Vint Cerf, o mirá un replay sintético del archivo.">
 <link rel="icon" href="/favicon.svg">
 <link rel="stylesheet" href="/assets/stadium-hub.css?v=hub-1">
-<link rel="stylesheet" href="/assets/satoshi-tv.css?v=satoshi-tv-director-v1-20261104">
+<link rel="stylesheet" href="/assets/satoshi-tv.css?v=winner-slowmo-env-20261104-v1">
 </head><body class="hub tv-page">
 <a class="hub-skip" href="#tv-station">Ir directamente a la transmisión</a>
 <header class="hub-head"><div class="hub-shell hub-head-inner"><a class="hub-logo" href="/" aria-label="Cryptódromo, inicio"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a><nav class="hub-nav" aria-label="Navegación"><a href="/">Estadios</a><a href="/stadiums/crypto/">Satoshi Nakamoto</a><a href="/stadiums/crypto/live/">Transmisiones</a><a href="/stadiums/crypto/archive/">Archivo</a><a href="/racers/#BTC">Corredores</a><a href="/estadio/?venue=crypto">Visita 3D</a></nav></div></header>
@@ -55,7 +55,43 @@
     <button data-tv-shot="grandstand" aria-pressed="false" type="button" title="Desde la tribuna">🏟️<small>Tribuna</small></button>
     <button data-tv-shot="orbit" aria-pressed="false" type="button" title="Órbita del estadio">🔄<small>Órbita</small></button>
    </div>
-   <div class="tv-remote" role="group" aria-label="Controles del canal">
+   <section class="tv-env-deck" id="tv-env-deck" aria-label="Dirección de estadio, clima, iluminación y hora solar">
+ <div class="tv-env-group" role="group" aria-label="estadio"><span class="tv-env-heading">🏟️ ESTADIO</span>
+  <button type="button" data-tv-stage="overview"  title="Vista general del estadio" aria-label="Vista general del estadio">🌐<small>Estadio</small></button>
+  <button type="button" data-tv-stage="grandstand"  title="Desde las tribunas" aria-label="Desde las tribunas">🏟️<small>Gradas</small></button>
+  <button type="button" data-tv-stage="paddock"  title="Vista del paddock" aria-label="Vista del paddock">🐴<small>Paddock</small></button>
+  <a data-tv-stadium-link href="/estadio/?venue=crypto&course=muybridge" title="Explorar el estadio 3D">🧭<small>Visita 3D</small></a>
+ </div>
+ <div class="tv-env-group" role="group" aria-label="clima"><span class="tv-env-heading">🌤️ CLIMA</span>
+  <button type="button" data-tv-weather="auto" aria-pressed="true" title="Clima automático" aria-label="Clima automático">🔁<small>Auto</small></button>
+  <button type="button" data-tv-weather="noon" aria-pressed="false" title="Cielo despejado" aria-label="Cielo despejado">☀️<small>Sol</small></button>
+  <button type="button" data-tv-weather="golden" aria-pressed="false" title="Atardecer" aria-label="Atardecer">🌅<small>Dorado</small></button>
+  <button type="button" data-tv-weather="night" aria-pressed="false" title="Cielo nocturno" aria-label="Cielo nocturno">🌙<small>Noche</small></button>
+  <button type="button" data-tv-weather="rain" aria-pressed="false" title="Lluvia sobre la pista" aria-label="Lluvia sobre la pista">🌧️<small>Lluvia</small></button>
+  <button type="button" data-tv-cloud="down"  title="Menos nubes" aria-label="Menos nubes">☁️−<small>Nubes -</small></button>
+  <button type="button" data-tv-cloud="up"  title="Más nubes" aria-label="Más nubes">☁️+<small>Nubes +</small></button>
+  <button type="button" data-tv-fog="toggle" aria-pressed="false" title="Activar o desactivar la niebla" aria-label="Activar o desactivar la niebla">🌫️<small>Niebla</small></button>
+ </div>
+ <div class="tv-env-group" role="group" aria-label="luces"><span class="tv-env-heading">💡 LUCES</span>
+  <button type="button" data-tv-light="power" aria-pressed="true" title="Encender o apagar reflectores" aria-label="Encender o apagar reflectores">💡<small>Focos</small></button>
+  <button type="button" data-tv-light="down"  title="Reducir potencia de reflectores" aria-label="Reducir potencia de reflectores">🔅<small>Menos</small></button>
+  <button type="button" data-tv-light="up"  title="Aumentar potencia de reflectores" aria-label="Aumentar potencia de reflectores">🔆<small>Más</small></button>
+  <button type="button" data-tv-light="steady" aria-pressed="true" title="Iluminación fija" aria-label="Iluminación fija">📺<small>Fijo</small></button>
+  <button type="button" data-tv-light="pulse" aria-pressed="false" title="Luces pulsantes" aria-label="Luces pulsantes">✨<small>Pulso</small></button>
+  <button type="button" data-tv-light="perimeter" aria-pressed="true" title="Faroles del perímetro" aria-label="Faroles del perímetro">🏮<small>Perímetro</small></button>
+  <button type="button" data-tv-light="warm"  title="Color cálido" aria-label="Color cálido">🟠<small>Cálida</small></button>
+  <button type="button" data-tv-light="cool"  title="Color frío" aria-label="Color frío">🔵<small>Fría</small></button>
+ </div>
+ <div class="tv-env-group" role="group" aria-label="hora"><span class="tv-env-heading">🕘 HORA</span>
+  <button type="button" data-tv-hour="auto" aria-pressed="true" title="Seguir hora real del estadio" aria-label="Seguir hora real del estadio">🕒<small>Auto</small></button>
+  <button type="button" data-tv-hour="420" aria-pressed="false" title="Amanecer" aria-label="Amanecer">🌄<small>07:00</small></button>
+  <button type="button" data-tv-hour="720" aria-pressed="false" title="Mediodía" aria-label="Mediodía">☀️<small>12:00</small></button>
+  <button type="button" data-tv-hour="1050" aria-pressed="false" title="Atardecer" aria-label="Atardecer">🌇<small>17:30</small></button>
+  <button type="button" data-tv-hour="1320" aria-pressed="false" title="Noche" aria-label="Noche">🌌<small>22:00</small></button>
+ </div>
+<span class="tv-env-status" id="tv-env-status" role="status">Ajustes visuales del estadio · resultados intactos</span>
+</section>
+<div class="tv-remote" role="group" aria-label="Controles del canal">
     <button type="button" id="tv-live-now" class="tv-live-button" disabled>● ESTÁS EN VIVO</button>
     <button type="button" id="tv-replay-again" hidden>↻ Volver a reproducir</button>
     <button type="button" id="tv-audio" aria-pressed="false" disabled>🔊 Activar sonido</button>
@@ -96,5 +132,5 @@
 </section>
 </main>
 <footer class="hub-footer"><div class="hub-shell"><span>ESTADIO SATOSHI NAKAMOTO · FIxture sintético reproducible · Sin apuestas reales</span><span><a href="/stadiums/">Todos los estadios</a> · <a href="/metodologia.html">Metodología</a> · <a href="/juego-responsable.html">Uso responsable</a></span></div></footer>
-<script type="module" src="/assets/crypto-venue.js?v=satoshi-tv-director-v1-20261104"></script>
+<script type="module" src="/assets/crypto-venue.js?v=winner-slowmo-env-20261104-v1"></script>
 </body></html>

@@ -45,6 +45,6 @@ test('card phase and labels derive from the same independent channel snapshot',(
  assert.match(live,/data\.next\.label/);
  assert.match(live,/data-race-label/);
  assert.doesNotMatch(live,/60-data\.slotSeconds:phase==='results'/);
- assert.match(page,/crypto-venue\.js\?v=satoshi-tv-director-v1-20261104/);
+ assert.match(page,/crypto-venue\.js\?v=winner-slowmo-env-20261104-v1/);
  assert.throws(()=>projectChannelCountdown(null),TypeError);
 });
