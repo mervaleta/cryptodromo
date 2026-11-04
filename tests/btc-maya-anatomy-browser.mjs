@@ -26,6 +26,7 @@ try{
  assert.equal(start.heroGroom.triangles,10790);
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.originalRig,true);
+ assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
  assert.ok(start.heroGroom.facialSurfaces>=5,'rigged eyes, nostrils and mouth required');
  assert.ok(start.heroGroom.facialTriangles>200,'facial detail is actual 3D geometry');
  assert.ok(start.heroGroom.fineLocks>=900,'full layered mane and tail required');
@@ -50,9 +51,12 @@ try{
  const eth=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(eth.heroGroom,null,'No BTC anatomical mesh leaks to other tokens');
  assert.equal(eth.variant,'original');
- await page.goto('http://127.0.0.1:8799/racers/?atelier=off#BTC',{waitUntil:'domcontentloaded'});
- assert.equal(await page.locator('#btc-atelier-panel').isVisible(),false);
- assert.equal(await page.evaluate(()=>Boolean(window.__cryptodromoBTCAtelierQA)),false);
+ // Fresh page avoids SW-renderer stalling during an in-page second GLB load.
+ const rollback=await browser.newPage({viewport:{width:900,height:650}});
+ await rollback.goto('http://127.0.0.1:8799/racers/?atelier=off#BTC',{waitUntil:'commit',timeout:90000});
+ assert.equal(await rollback.locator('#btc-atelier-panel').isVisible(),false);
+ assert.equal(await rollback.evaluate(()=>Boolean(window.__cryptodromoBTCAtelierQA)),false);
+ await rollback.close();
  assert.deepEqual(errors,[],errors.join('; '));
  console.log('BTC_MAYA_ANATOMY_EDITOR_ROSTER_AND_ROLLBACK_OK');
 }finally{await browser.close();}
