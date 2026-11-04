@@ -129,7 +129,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  };
  const tailVertex=id=>{
   const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
-  return y>.01315&&Math.abs(x)<.00245&&z>.019&&z<.0355;
+  // The dock joins the rump here. Removing the root tears an open hole.
+  // Only retire the old free end; preserve the skinned croup envelope.
+  return y>.0155&&Math.abs(x)<.00155&&z>.016&&z<.0355;
  };
  for(let t=0;t<originalIndices.length;t+=3){
   const tri=[originalIndices[t],originalIndices[t+1],originalIndices[t+2]];
@@ -214,14 +216,15 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const lateral=smooth((Math.abs(x)-.0012)/.0021);
   const croup=gauss(y,.0093,.0068)*gauss(z,.028,.0078);
   const thigh=gauss(y,.0108,.0058)*gauss(z,.0180,.0081);
-  const gaskin=gauss(y,.0114,.0038)*gauss(z,.0101,.0056);
-  const muscle=lateral*(.14*croup+.29*thigh+.11*gaskin);
+  const gaskin=gauss(y,.0114,.0044)*gauss(z,.0107,.0061);
+  const hock=gauss(y,.0115,.0040)*gauss(z,.0072,.0049)*smooth((z-.0032)/.0028);
+  const muscle=lateral*(.15*croup+.31*thigh+.20*gaskin+.09*hock);
   if(muscle<.006)continue;
   // Radial expansion widens the top of both hind legs and rounds their
   // front/back contour without thickening the cannon bone or hoof.
   positions[i]=x*(1+muscle);
-  positions[i+1]=y+(y-.0104)*(.18*thigh+.10*gaskin)
-    +.00048*croup*lateral;
+  positions[i+1]=y+(y-.0104)*(.25*thigh+.21*gaskin+.13*hock)
+    +.00050*croup*lateral;
   positions[i+2]=z+.00023*croup*lateral+.00009*thigh*lateral;
   poweredHindVertices++;
  }
