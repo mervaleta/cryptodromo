@@ -23,7 +23,10 @@ try{
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.variant,'maya');
  assert.equal(start.heroGroom.vertices,5406);
- assert.equal(start.heroGroom.triangles,10790);
+ assert.ok(start.heroGroom.triangles>9500&&start.heroGroom.triangles<10500,
+  'Maya horse must retain full body topology but remove duplicate appendages');
+ assert.ok(start.heroGroom.nativeEarFacesRemoved>=150,'legacy horns must be culled');
+ assert.ok(start.heroGroom.extraTailFacesRemoved>=150,'second flesh-colored tail must be culled');
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
