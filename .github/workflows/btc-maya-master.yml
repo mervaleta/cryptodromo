@@ -26,6 +26,7 @@ jobs:
       - name: Check original rig contract and real-source geometry
         run: |
           node --check racers/btc-maya-master.js
+          node --check racers/btc-maya-groom.js
           node --check racers/btc-maya-body-data.js
           node --check racers/btc-atelier-preview.js
           node --check tests/btc-maya-anatomy-browser.mjs
