@@ -8,7 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-maya-luxe-20261104-v2';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
