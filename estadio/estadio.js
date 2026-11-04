@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStadiumVenue} from '/race-lab/source/src/stadium/venue.js';
 import {getStadiumPreset,WORLD_STADIUM_IDS} from '/race-lab/source/src/stadium/presets.js';
-import {buildThreeCoursePreview} from '/visual-lab/threeCoursePreview.js?v=alpha19-live-1';
+import {buildThreeCoursePreview} from '/visual-lab/threeCoursePreview.js?v=satoshi-master-v2-20261104';
 // The stadium museum is independent from the alpha14 live race and its horse/camera pipeline.
 
 const $=id=>document.getElementById(id);
@@ -39,11 +39,20 @@ const views={
 };
 const venueInput=$('venue-select'),qualityInput=$('quality-select'),cameraInput=$('camera-select'),
   hourInput=$('lighting'),weatherInput=$('climate'),caption=$('venue-caption');
+const courseInput=$('course-select'),coursePicker=$('course-picker');
+const courseShots=Object.freeze({
+ muybridge:{eye:[345,153,164],target:[0,3,0]},
+ genesis:{eye:[255,162,465],target:[0,3,205]},
+ 'vint-cerf':{eye:[198,105,146],target:[0,3,0]}
+});
 if(window.innerWidth<720)qualityInput.value='low';
 const initial=new URLSearchParams(location.search).get('venue');
 if([...venueInput.options].some(o=>o.value===initial))venueInput.value=initial;
+const requestedCourse=new URLSearchParams(location.search).get('course');
+if(Object.hasOwn(courseShots,requestedCourse))courseInput.value=requestedCourse;
 function pickCamera(){
-  const view=views[cameraInput.value]||views.aerial;
+  const focused=coursePreview&&courseShots[courseInput.value]&&cameraInput.value==='aerial';
+  const view=focused?courseShots[courseInput.value]:(views[cameraInput.value]||views.aerial);
   camera.position.set(...view.eye);controls.target.set(...view.target);
   controls.update();
 }
@@ -74,6 +83,8 @@ function rebuild(){
       nextPreview=buildThreeCoursePreview({THREE,scene,quality:qualityInput.value});
     }
     venue=next;coursePreview=nextPreview;
+    coursePicker.hidden=!crypto;
+    if(nextPreview)nextPreview.setFocus(courseInput.value==='all'?null:courseInput.value);
     oldPreview?.dispose();previous?.dispose();
     const preset=getStadiumPreset(venueInput.value),stats=venue.getStats();
     caption.textContent=(coursePreview?'Estadio Satoshi Nakamoto · Muybridge / Genesis / Vint Cerf · Tres trazados 3D':
@@ -98,6 +109,15 @@ venueInput.addEventListener('change',()=>{
 });
 qualityInput.addEventListener('change',rebuild);
 cameraInput.addEventListener('change',pickCamera);
+courseInput.addEventListener('change',()=>{
+  coursePreview?.setFocus(courseInput.value==='all'?null:courseInput.value);
+  const url=new URL(location.href);
+  if(courseInput.value==='all')url.searchParams.delete('course');
+  else url.searchParams.set('course',courseInput.value);
+  history.replaceState(null,'',url.pathname+url.search+url.hash);
+  cameraInput.value='aerial';
+  pickCamera();
+});
 hourInput.addEventListener('change',environment);
 weatherInput.addEventListener('change',environment);
 const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(wrap);
@@ -112,6 +132,8 @@ if(new URLSearchParams(location.search).get('stadium-qa')==='1'){
       canvas:[canvas.width,canvas.height],
       meshes:venue?.getStats(),
       courses:coursePreview?.courses||[],
+      focusedCourse:coursePreview?.focus||null,
+      courseStats:coursePreview?.stats||null,
       fog:[scene.fog.near,scene.fog.far],
       renderCalls:renderer.info.render.calls,
       webgl:renderer.capabilities.isWebGL2 ?? true
