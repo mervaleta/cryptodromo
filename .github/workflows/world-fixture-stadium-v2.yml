@@ -1,0 +1,70 @@
+name: Cryptódromo World · fixture and eight 3D venues
+on:
+  pull_request:
+    paths:
+      - 'assets/stadium-network-*'
+      - 'stadiums/**'
+      - 'estadio/**'
+      - 'race-lab/source/src/stadium/**'
+      - 'tests/world-fixture-stadium-*'
+      - 'docs/world-fixture-stadium-rollout.md'
+      - '.github/workflows/world-fixture-stadium-v2.yml'
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: 'Optional public origin, e.g. https://race.cryptodromo.com (leave empty for local QA)'
+        required: false
+        type: string
+permissions: {contents: read}
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Three.js used by legacy stadium contracts
+        run: npm ci --prefix race-lab/source --no-audit --no-fund
+      - name: Syntax
+        run: |
+          node --check assets/stadium-network-engine.js
+          node --check assets/stadium-network-ui.js
+          node --check assets/stadium-network-watchdog.js
+          node --check estadio/estadio.js
+          node --check race-lab/source/src/stadium/presets.js
+          node --check race-lab/source/src/stadium/venue.js
+      - name: World fixture, routing, 3D scene and finance isolation
+        run: |
+          node --test tests/world-fixture-stadium-20261103.mjs tests/stadium-world.mjs tests/stadium-surfaces.mjs
+          node tests/world-stadium-network.mjs
+  browser:
+    needs: contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Browser QA (local or published site)
+        shell: bash
+        env:
+          CRP_PREVIEW_ORIGIN: ${{ inputs.origin }}
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/world-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          CRP_PREVIEW_ORIGIN="${CRP_PREVIEW_ORIGIN:-http://127.0.0.1:8799}" node tests/world-fixture-stadium-browser.mjs
+      - name: Keep visual proof and network responses
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-fixture-and-eight-3d-qa
+          path: artifacts/world-*
+          retention-days: 14
+          if-no-files-found: ignore

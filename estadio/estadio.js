@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStadiumVenue} from '/race-lab/source/src/stadium/venue.js';
-import {getStadiumPreset} from '/race-lab/source/src/stadium/presets.js';
+import {getStadiumPreset,WORLD_STADIUM_IDS} from '/race-lab/source/src/stadium/presets.js';
 // The stadium museum is independent from the alpha14 live race and its horse/camera pipeline.
 
 const $=id=>document.getElementById(id);
@@ -18,8 +18,8 @@ try{
   throw error;
 }
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x93b8c2);
-scene.fog=new THREE.Fog(0x93b8c2,250,920);
-const camera=new THREE.PerspectiveCamera(49,1,.1,1500);
+scene.fog=new THREE.Fog(0x93b8c2,580,1600);
+const camera=new THREE.PerspectiveCamera(46,1,.1,2000);
 const controls=new OrbitControls(camera,canvas);
 controls.enableDamping=true;controls.dampingFactor=.065;controls.minDistance=25;controls.maxDistance=850;
 controls.maxPolarAngle=Math.PI*.49;
@@ -30,17 +30,17 @@ sun.shadow.camera.left=-400;sun.shadow.camera.right=400;
 sun.shadow.camera.top=400;sun.shadow.camera.bottom=-400;sun.shadow.camera.far=1100;
 scene.add(sun);
 const views={
-  aerial:{eye:[570,215,380],target:[0,5,-55]},
+  aerial:{eye:[365,188,325],target:[0,6,-72]},
   grandstand:{eye:[0,44,162],target:[0,13,-152]},
   entrance:{eye:[0,83,-405],target:[0,9,-243]},
   paddock:{eye:[-470,85,-30],target:[-340,7,-100]},
-  side:{eye:[585,170,95],target:[0,16,-65]}
+  side:{eye:[435,138,148],target:[0,15,-80]}
 };
 const venueInput=$('venue-select'),qualityInput=$('quality-select'),cameraInput=$('camera-select'),
   hourInput=$('lighting'),weatherInput=$('climate'),caption=$('venue-caption');
 if(window.innerWidth<720)qualityInput.value='low';
 const initial=new URLSearchParams(location.search).get('venue');
-if(['satoshi','exchange','horizon'].includes(initial))venueInput.value=initial;
+if([...venueInput.options].some(o=>o.value===initial))venueInput.value=initial;
 function pickCamera(){
   const view=views[cameraInput.value]||views.aerial;
   camera.position.set(...view.eye);controls.target.set(...view.target);
@@ -53,12 +53,12 @@ function environment(){
   const base=night?0x1b3044:hour<9?0xc8a797:hour<16?0x85bbcb:0xd5b393;
   const color=type==='storm'?0x687781:type==='cloudy'?0xa2abad:base;
   scene.background.setHex(color);scene.fog.color.setHex(color);
-  scene.fog.near=type==='fog'?65:type==='storm'?185:260;
-  scene.fog.far=type==='fog'?370:type==='storm'?700:950;
+  scene.fog.near=type==='fog'?80:type==='storm'?260:type==='rain'?340:type==='cloudy'?420:580;
+  scene.fog.far=type==='fog'?420:type==='storm'?920:type==='rain'?1150:type==='cloudy'?1320:1600;
   ambient.intensity=night?.6:1.5;
   sun.intensity=night?.23:type==='storm'?.7:2.7;
   sun.color.setHex(night?0x9abce4:hour>16?0xffc48f:0xffebcb);
-  renderer.toneMappingExposure=night?.87:1.1;
+  renderer.toneMappingExposure=night?.9:hour>=16?1.02:1.12;
   venue.setEnvironment({hour,type,wind:type==='storm'?24:8,clouds:type==='clear'?.12:.82});
 }
 function rebuild(){
@@ -82,7 +82,11 @@ function resize(){
   if(width<=0||height<=0)return;
   renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();
 }
-venueInput.addEventListener('change',rebuild);
+venueInput.addEventListener('change',()=>{
+  const url=new URL(location.href);url.searchParams.set('venue',venueInput.value);
+  history.replaceState(null,'',url.pathname+url.search+url.hash);
+  rebuild();
+});
 qualityInput.addEventListener('change',rebuild);
 cameraInput.addEventListener('change',pickCamera);
 hourInput.addEventListener('change',environment);
@@ -90,6 +94,20 @@ weatherInput.addEventListener('change',environment);
 const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(wrap);
 window.addEventListener('resize',resize);
 rebuild();resize();
+// Read-only visual telemetry for browser quality gates; never touches fixtures.
+if(new URLSearchParams(location.search).get('stadium-qa')==='1'){
+  window.__crpStadiumQA=Object.freeze({
+    ids:[...WORLD_STADIUM_IDS],
+    snapshot:()=>({
+      venue:venueInput.value,
+      canvas:[canvas.width,canvas.height],
+      meshes:venue?.getStats(),
+      fog:[scene.fog.near,scene.fog.far],
+      renderCalls:renderer.info.render.calls,
+      webgl:renderer.capabilities.isWebGL2 ?? true
+    })
+  });
+}
 function tick(now){
   frame=requestAnimationFrame(tick);
   const dt=Math.min(.05,Math.max(0,(now-lastTime)/1000||0));lastTime=now;
