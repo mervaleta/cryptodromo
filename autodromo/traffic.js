@@ -4,7 +4,7 @@
  * Only produces camera-facing Three.js positions. It NEVER writes into
  * createOfficialRace(), positionAt(), officialRanking() or the synthetic tape.
  *
- * Deterministic 0.2 s trajectories prevent the cars from "ghosting" through
+ * Deterministic 0.05 s trajectories prevent the cars from "ghosting" through
  * one another at overtakes. Cars scan ahead, select an available lane and
  * move laterally at a limited rate. If every passing lane is occupied the
  * visual follower yields longitudinal space until it can safely overtake.
@@ -14,7 +14,7 @@
  */
 import {positionsAt} from './logic.js?v=autodromo-pole-2';
 
-export const TRAFFIC_STEP_SECONDS=0.2;
+export const TRAFFIC_STEP_SECONDS=0.05;
 export const PASS_LOOKAHEAD_SECONDS=2.8;
 export const LANE_CENTERS=Object.freeze([-20,-12,-4,4,12,20]);
 export const MAX_LATERAL_RATE_METERS_PER_SECOND=8;
