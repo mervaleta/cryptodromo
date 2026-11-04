@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const read = name => readFileSync(new URL('../'+name,import.meta.url),'utf8');
 const source=read('racers/btc-maya-hindquarters.js');
 const module=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
-const build='btc-face-poll-tail-20261104-v14';
+const build='btc-face-poll-tail-20261104-v15';
 
 test('BTC rump, thighs and gaskins are sculpted as real rest mesh vertices on both sides',()=>{
  const vertices=new Float32Array([
@@ -56,11 +56,11 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  const files=['racers/index.html','racers/racers.js','racers/btc-atelier-preview.js'];
  for(const file of files){
    const content=read(file);
-   assert.ok(content.includes('btc-face-poll-tail-20261104-v14'),'FX public build not used by '+file);
+   assert.ok(content.includes('btc-face-poll-tail-20261104-v15'),'FX public build not used by '+file);
    assert.ok(!content.includes('btc-master-solid-groom-20261104-v11'),file+' still stale');
  }
- assert.match(read('racers/btc-maya-master.js'),/btc-face-poll-tail-20261104-v14/);
- assert.match(read('racers/btc-maya-master.js'),/btc-face-poll-tail-20261104-v14/);
+ assert.match(read('racers/btc-maya-master.js'),/btc-face-poll-tail-20261104-v15/);
+ assert.match(read('racers/btc-maya-master.js'),/btc-face-poll-tail-20261104-v15/);
  assert.match(read('racers/btc-atelier-preview.js'),/createBTCTerrainStage/);
  const master=read('racers/btc-maya-master.js');
  assert.match(master,/sculptBTCHindquarters\(positions\)/);
