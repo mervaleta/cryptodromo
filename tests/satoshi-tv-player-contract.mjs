@@ -17,7 +17,7 @@ test('TV controller has exactly one paused-by-default 3D frame and three actiona
  assert.match(live,/<iframe id="stadium-broadcast"[^>]*src="about:blank"/);
  assert.equal((live.match(/data-tv-tune="/g)||[]).length,3);
  for(const id of ['muybridge','genesis','vint-cerf'])assert.match(live,new RegExp('data-tv-tune="'+id+'"'));
- for(const id of ['tv-loading','tv-error','tv-live-now','tv-replay-again','tv-fullscreen','tv-direct'])assert.ok(live.includes('id="'+id+'"'),id);
+ for(const id of ['tv-loading','tv-error','tv-live-now','tv-replay-again','tv-audio','tv-fullscreen','tv-direct'])assert.ok(live.includes('id="'+id+'"'),id);
  assert.match(live,/satoshi-tv\.css\?v=tv-single-20261104/);
  assert.match(tv,/findRacePlayerSource/);
  assert.match(tv,/window\.self===window\.top/);
