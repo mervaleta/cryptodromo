@@ -1,0 +1,21 @@
+name: One-click MVP Showcase
+on:
+  pull_request:
+    paths:
+      - 'visual-lab/showcase.js'
+      - 'visual-lab/index.html'
+      - 'tests/mvp-showcase-launcher.mjs'
+      - '.github/workflows/mvp-showcase-launcher.yml'
+  workflow_dispatch:
+jobs:
+  showcase:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify opt-in showcase contract
+        run: node --test tests/mvp-showcase-launcher.mjs
