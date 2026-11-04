@@ -4,8 +4,10 @@ on:
     paths:
       - 'stadiums/**'
       - 'assets/stadium-network-*'
+      - 'assets/janch-market-settlement.js'
       - 'assets/crp-global-nav.js'
       - 'tests/world-stadium-network.mjs'
+      - 'tests/janch-market-settlement.mjs'
       - '.github/workflows/world-stadium-network.yml'
   pull_request:
     paths:
@@ -29,3 +31,4 @@ jobs:
           node --check assets/stadium-network-ui.mjs
           node --check assets/crp-global-nav.js
           node tests/world-stadium-network.mjs
+          node tests/janch-market-settlement.mjs
