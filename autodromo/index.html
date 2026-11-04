@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07101b">
+<meta name="description" content="Autódromo Crypto: 100 monoplazas procedurales vinculados a tokens, 12 por carrera, tres circuitos y el mismo motor oficial de Cryptódromo.">
+<title>Autódromo Crypto | Cryptódromo</title>
+<link rel="icon" href="/assets/cryptodromo-logo.png">
+<link rel="stylesheet" href="./style.css?v=autodromo-poc-1">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js"}}</script>
+</head>
+<body>
+<header class="sitebar">
+  <a class="logo" href="/"><span class="glyph">◇</span>CRYPTÓDROMO<span class="divider">/</span><em>AUTÓDROMO</em></a>
+  <nav aria-label="Navegación"><a href="/">Hipódromo</a><a href="/stadiums/">Estadios</a><a href="/fixture/">Fixture</a><a href="/racers/">100 tokens</a></nav>
+</header>
+<main class="shell">
+  <div class="eyebrow">CRYPTÓDROMO MOTORSPORT · PROTOTIPO INDEPENDIENTE</div>
+  <div class="heading"><div><h1>El mercado <em>toma la pista.</em></h1>
+    <p>Mismos datos. Mismas reglas. Otro deporte. Cien autos personalizados por token y doce competidores en cada largada.</p></div>
+    <div class="numbers"><div><strong>100</strong><span>monoplazas</span></div><div><strong>12</strong><span>por carrera</span></div><div><strong>60 s</strong><span>competencia</span></div><div><strong>3 min</strong><span>ciclo / pista</span></div></div>
+  </div>
+  <section aria-label="Seleccionar circuito" class="circuit-select" id="circuit-select">
+    <button type="button" data-track="muybridge" class="selected"><span>01 / VELOCIDAD</span><strong>Circuito Vector</strong><small>Rectas largas · curvas rápidas</small></button>
+    <button type="button" data-track="genesis"><span>02 / TÉCNICO</span><strong>Circuito Delta</strong><small>Curvas enlazadas · chicanas</small></button>
+    <button type="button" data-track="vint-cerf"><span>03 / NOCTURNO</span><strong>Circuito Neón</strong><small>Urbano · iluminación artificial</small></button>
+  </section>
+  <section class="broadcast-wrap" aria-label="Transmisión 3D">
+    <div class="stage">
+      <canvas id="race-canvas" role="img" aria-label="Doce monoplazas tridimensionales corriendo en un circuito procedural"></canvas>
+      <div class="on-air"><span class="dot"></span><b id="live-tag">SIMULACIÓN SINTÉTICA</b><span id="track-label">VECTOR / CIRCUITO 01</span></div>
+      <div class="clock"><small id="phase-label">PREPARANDO PISTA</small><strong id="clock">00:00</strong></div>
+      <div class="race-title"><div><span class="tiny">GRAN PREMIO · CRP-DOSE-FAIR-V1</span><strong id="race-name">Circuito Vector</strong><small id="race-count">Fixture semanal reproducible</small></div><div class="leader"><small>LÍDER</small><b id="leader">···</b></div></div>
+      <div class="canvas-fallback" id="canvas-fallback" hidden>No se pudo iniciar WebGL. Los resultados oficiales siguen disponibles en la clasificación.</div>
+    </div>
+    <div class="controls">
+      <div class="mode"><button id="test-race" type="button" class="primary">▶ Probar carrera ahora</button><button id="return-live" type="button">↻ Volver a programación</button></div>
+      <label>Cámara<select id="camera-mode"><option value="tv">TV / Tribuna</option><option value="follow">Persecución</option><option value="aerial">Aérea</option></select></label>
+      <label>Prueba rápida<select id="replay-speed"><option value="1">1× · 60 s</option><option value="2">2× · 30 s</option><option value="4">4× · 15 s</option></select></label>
+      <span id="source-label" class="source">Fuente: fixture synthetic-v1 · demostración</span>
+    </div>
+  </section>
+  <div class="below">
+    <section class="panel standings-panel"><div class="panel-head"><h2>Clasificación <em>de carrera</em></h2><span id="entries-count">12 participantes</span></div>
+      <ol id="standings" aria-live="off"></ol>
+      <p class="footnote" id="classification-note">Las posiciones proceden del motor oficial. El circuito, las cámaras y la decoración no alteran resultados.</p>
+    </section>
+    <section class="panel schedule-panel"><div class="panel-head"><h2>Tres señales <em>escalonadas</em></h2><span>Hora Argentina</span></div>
+      <div id="schedule" class="channels"></div>
+      <div class="dividerline"></div>
+      <h3>Mecánica original, carrocería nueva</h3>
+      <p>La carrera se define con dos variaciones de precio y las mismas doce dosis de cinco segundos que usa el hipódromo. Cada circuito tiene una competencia de 60 segundos por ciclo de 180 segundos, escalonada un minuto respecto de las otras pistas.</p>
+      <p class="footnote">Todos los precios de esta demo son sintéticos y precomputados. No hay apuestas, cotizaciones reales ni garantías de rendimiento financiero.</p>
+    </section>
+  </div>
+  <section class="panel garage"><div class="panel-head"><div><span class="eyebrow">PADDOCK COMPLETO</span><h2>Las 100 <em>escuderías/token</em></h2></div><label>Filtrar monoplazas<input type="search" id="garage-filter" placeholder="Buscar BTC, ETH, SOL…" autocomplete="off"></label></div>
+    <div id="garage-grid" class="garage-grid"></div>
+  </section>
+  <footer><a href="/">Volver al hipódromo</a><span>CRYPTÓDROMO MOTORSPORT · EXPERIMENTO VISUAL, NO EVENTO REAL</span></footer>
+</main>
+<script type="module" src="./app.js?v=autodromo-poc-1"></script>
+</body></html>
