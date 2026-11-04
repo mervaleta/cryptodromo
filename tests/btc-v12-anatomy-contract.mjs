@@ -90,7 +90,7 @@ test('BTC FX2 repair is real geometry and native poll skinning, not an image',()
  assert.doesNotMatch(face,/anatomical tear ducts/);
  assert.match(groom,/geo\.addGroup\(hairIndexCount/);
  assert.match(groom,/anatomical poll bed/);
- assert.match(face,/concentric-skinned-palpebra-v14/);
+ assert.match(face,/integrated-maya-eyelid-shading-v15/);
   assert.match(groom,/tailInertia/);
  assert.match(groom,/tailVelocity/);
  assert.match(groom,/fineCount:500/);
