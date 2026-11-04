@@ -216,8 +216,8 @@ function createHairMass(source,skinAt,{
  geo.computeVertexNormals();geo.computeBoundingSphere();
  const mat=new THREE.MeshPhysicalMaterial({
   name:tail?'BTC tail - tapered layered hair':'BTC neck mane - feathered layers',
-  color,vertexColors:true,metalness:0,roughness:tail?.78:.72,
-  sheen:.48,sheenColor:new THREE.Color('#b58a67'),
+  color,vertexColors:true,metalness:0,roughness:tail?.68:.61,
+  sheen:.62,sheenColor:new THREE.Color('#b58a67'),
   sheenRoughness:.76,clearcoat:0,side:THREE.DoubleSide
  });
  mat.onBeforeCompile=shader=>{
@@ -233,7 +233,7 @@ function createHairMass(source,skinAt,{
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
    '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\ndiffuseColor.rgb*=hairRootShade+hairCuticle;');
  };
- mat.customProgramCacheKey=()=>tail?'btc-harmony-hair-tail-3':'btc-harmony-hair-mane-3';
+ mat.customProgramCacheKey=()=>tail?'btc-hero-tail-flow-v9':'btc-hero-connected-mane-v9';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
  return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112};
 }
