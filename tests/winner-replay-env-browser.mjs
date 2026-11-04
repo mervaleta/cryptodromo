@@ -29,6 +29,7 @@ try{
    window.__winnerReplayQA?.snapshot()?.officialVisible===true,
    null,{timeout:22000});
  assert.equal(await race.locator('#winner-replay').isVisible(),false);
+ await race.locator('#result-overlay').waitFor({state:'visible',timeout:8000});
  assert.equal(await race.locator('#result-overlay').isVisible(),true);
  assert.equal(await race.locator('#result-list .result-row').count(),12);
  await race.screenshot({path:'artifacts/winner-replay-env/official-after-replay.png',timeout:16000});
