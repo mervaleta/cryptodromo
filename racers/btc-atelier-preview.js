@@ -17,7 +17,9 @@ const CAMERA_POSITIONS={
  rear:[-3.52,1.78,1.70],
  detail:[1.64,2.16,2.89],
  threeQuarter:[2.85,2.18,2.75],
- top:[1.02,4.55,1.12]
+ top:[1.02,4.55,1.12],
+ face:[2.36,2.19,1.32],
+ poll:[1.32,2.34,1.56]
 };
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number(x)||0));
 const stageParams=new URLSearchParams(location.search);
@@ -36,7 +38,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const controls=new OrbitControls(camera,canvas);
  controls.target.set(0,1.05,0);
  controls.enableDamping=true;
- controls.minDistance=2.7;
+ controls.minDistance=1.2;
  controls.maxDistance=11;
  controls.enablePan=false;
  scene.add(new THREE.HemisphereLight('#e1e6e7','#344035',1.06));scene.add(new THREE.AmbientLight('#d8c8b2',.16));
@@ -73,7 +75,8 @@ export function createPreview(canvas,onFailure=()=>{}){
   if(!(view in CAMERA_POSITIONS))return;
   cameraView=view;
   camera.position.set(...CAMERA_POSITIONS[view]);
-  controls.target.set(0,1.05,0);controls.update();
+  const t=view==='face'?[.87,1.62,0]:view==='poll'?[.49,1.82,0]:[0,1.05,0];
+  controls.target.set(...t);controls.update();
  }
  async function rebuild(){
   const token=selected;if(!token||disposed)return;
