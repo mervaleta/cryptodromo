@@ -650,17 +650,21 @@ function updateLiveProgram(){
    // A spectator may tune in AFTER the last horse has already crossed.
    // Verify the complete synthetic runout deterministically instead of
    // leaving an empty result overlay or fabricating an unobserved finish.
-   if(!finishController.state.revealed){
+   // Late arrivals may recover the acta instantly, but an on-screen
+   // winner replay owns the finish clock until its slow-motion picture ends.
+   if(!finishController.state.revealed&&winnerReplay.state.phase==='idle'){
     const officialDistance=officialRanking(profiles)[0].distanceAt60;
     const positions=broadcastProfiles.map(p=>broadcastRunoutDistance(
       {...p,exitVelocity:broadcastSpeed(p,59.99)},officialDistance,RUNOUT_SECONDS));
+    finishGateElapsed=Math.max(finishGateElapsed,60+RUNOUT_SECONDS);
     const gate=finishController.update({
-      elapsed:60+RUNOUT_SECONDS,
+      elapsed:finishGateElapsed,
       distances:positions,finishDistance:officialDistance
     });
     if(gate.allCrossed&&!gate.showOfficialResult){
+      finishGateElapsed=Math.max(finishGateElapsed,60+RUNOUT_SECONDS+2.4);
       finishController.update({
-        elapsed:60+RUNOUT_SECONDS+2.4,
+        elapsed:finishGateElapsed,
         distances:positions,finishDistance:officialDistance
       });
     }
