@@ -2,22 +2,22 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-sculpted-locks-20261104-v10",
+  "buildId": "btc-master-procedural-hind-groom-20261104-v12",
   "status": "pending_deploy",
-  "statusLabel": "Crin con mechones escultóricos 3D, cola volumétrica y orejas más proporcionadas · QA pendiente",
+  "statusLabel": "Corrección geométrica 3D de grupa y piernas; crin compacta y flexión ligada al Gallop · QA de Hostinger pendiente",
   "updatedAt": "2026-11-04",
-  "note": "v10: a las 112 guías puente y al lecho continuo de coronilla se agregaron 56 mechones tridimensionales levantados sobre el cuello, con menos filamentos finos, cola más plena, orejas más cortas y ojo menos hundido. Meta visual: referencia hero horse. Comprobar en Hostinger.",
+  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Cotejar crin elevada y su continuidad en vista superior, perfil y galope",
-    "Revisar volumen real de cola frente a la referencia y continuidad en la raíz",
-    "Validar ojos y longitud de orejas con capturas WebGL",
-    "Seguir refinando anatomía de caballo estilizado y sombreado sin alterar los otros 99"
+    "Confirmar visualmente en la URL canónica ambos perfiles, frente y atrás, transiciones y movimiento Gallop bajo WebGL",
+    "Comprobar continuidad de las raíces de la crin, sin filamentos de garganta ni huecos alrededor de orejas",
+    "Verificar sin torsiones la articulación de babilla/corvejón en todas las fases; no sustituir el galope original",
+    "Validar sombras y legibilidad del pelo procedimental en dispositivos móviles y navegadores sin GPU dedicada"
   ],
   "nextPhase": {
     "status": "blocked",
-    "title": "Física de crin y cola",
-    "prerequisite": "Primero corregir geometría y ojos y validar en la ficha",
+    "title": "Física avanzada de crin y cola",
+    "prerequisite": "Aceptar nueva topología y deformación en ficha pública y cotejar contra 212734.mp4",
     "reference": "212734.mp4"
   }
 }
