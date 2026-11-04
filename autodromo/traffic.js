@@ -192,11 +192,21 @@ export function trafficAudit(session,stepSeconds=0.2){
  if(!Number.isFinite(stepSeconds)||stepSeconds<=0||stepSeconds>10)
    throw new RangeError('Invalid traffic audit sample');
  let closest=Infinity,unsafePairs=0,changeCount=0,frames=0;
+ let maximumVisualSpeed=0,minimumVisualSpeed=Infinity,previousFrame=null;
  const examples=[];
  const starting=trafficAt(session,0);
  const oldSides=new Map(starting.map(row=>[row.symbol,row.sideMeters]));
  for(let t=0;t<=60+1e-6;t+=stepSeconds){
    const rows=trafficAt(session,Math.min(60,t));frames++;
+   if(previousFrame){
+     for(const row of rows){
+       const older=previousFrame.get(row.symbol);
+       const velocity=(row.visualMeters-older)/stepSeconds;
+       maximumVisualSpeed=Math.max(maximumVisualSpeed,velocity);
+       minimumVisualSpeed=Math.min(minimumVisualSpeed,velocity);
+     }
+   }
+   previousFrame=new Map(rows.map(row=>[row.symbol,row.visualMeters]));
    for(const row of rows){
      if(Math.abs(row.sideMeters-oldSides.get(row.symbol))>5)changeCount++;
    }
@@ -214,5 +224,6 @@ export function trafficAudit(session,stepSeconds=0.2){
    }
  }
  return {frames,unsafePairs,closestClearance:closest,sideChanges:changeCount,
-   winner:session.official[0].entry.symbol,sessionKey:session.key,examples};
+   winner:session.official[0].entry.symbol,sessionKey:session.key,examples,
+   maximumVisualSpeed,minimumVisualSpeed};
 }
