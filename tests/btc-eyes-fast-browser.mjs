@@ -15,7 +15,7 @@ try{
  assert.equal(s.heroGroom.eyeApertureBorders,22);
  assert.equal(s.heroGroom.eyeApertureCenters,2);
  assert.equal(s.heroGroom.vertices,5411);
- assert.equal(s.heroGroom.eyeAssembly,'concentric-skinned-palpebra-v14');
+ assert.equal(s.heroGroom.eyeAssembly,'integrated-maya-eyelid-shading-v15');
  mkdirSync('artifacts/btc-ocular-fast',{recursive:true});
  for(const camera of ['face','poll','profile']){
   await page.locator('[data-btc-camera="'+camera+'"]').click();
