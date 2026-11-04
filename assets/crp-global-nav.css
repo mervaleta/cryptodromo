@@ -58,3 +58,6 @@ body>.shell,body>main.shell,body>main.sports,body>main.comm,body>main.page{max-w
   white-space:nowrap;
 }
 .crp-unified .site-action:hover{background:var(--crc-support-hover)!important;border-color:var(--crc-support-hover)!important;}
+
+/* Browser QA: hub standalone pages lacked the site-shell auto margins (24/16px drift). */
+.crp-unified .sitebar-inner{margin-left:auto!important;margin-right:auto!important;}
