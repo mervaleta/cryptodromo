@@ -78,7 +78,8 @@ if (!is_array($claims) ||
 $email = filter_var($claims['email'] ?? '', FILTER_VALIDATE_EMAIL);
 if (!$email) respond(401, ['status' => 'error', 'message' => 'Correo no verificado']);
 $googleId = $claims['sub'];
-$name = mb_substr(trim((string) ($claims['name'] ?? 'Usuario')), 0, 120);
+$rawName = trim((string) ($claims['name'] ?? 'Usuario'));
+$name = function_exists('mb_substr') ? mb_substr($rawName, 0, 120, 'UTF-8') : substr($rawName, 0, 120);
 $avatar = filter_var($claims['picture'] ?? '', FILTER_VALIDATE_URL) ?: '';
 if ($avatar !== '' && parse_url($avatar, PHP_URL_SCHEME) !== 'https') $avatar = '';
 
