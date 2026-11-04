@@ -35,6 +35,19 @@ try{
   await page.locator('#return-live').click();
   state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
   assert.equal(state.mode,'program');
+  assert.equal(state.grid.length,12);
+  assert.equal(state.grid[0].position,1);
+  assert.equal(state.grid[0].row,1);
+  assert.equal(state.grid[0].column,0);
+  assert.equal(state.grid[1].row,1);
+  assert.equal(state.grid[1].column,1);
+  assert.match(await page.locator('#pole-label').innerText(),/POLE/);
+  // At XX:02:20 America/Argentina/Buenos_Aires, Muybridge is 10s from the next start.
+  await page.clock.setFixedTime(new Date('2026-11-04T18:02:20.000Z'));
+  await page.waitForFunction(()=>window.__cryptodromoAutodromoQA.snapshot().stagingGrid===true,{timeout:10000});
+  state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
+  assert.equal(state.carCount,12);
+  await page.screenshot({path:'/tmp/autodromo-grid-pole.png'});
   await page.setViewportSize({width:390,height:844});
   await page.waitForTimeout(350);
   assert.equal(await page.locator('#standings li').count(),12);
