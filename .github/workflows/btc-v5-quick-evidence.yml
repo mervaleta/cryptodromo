@@ -1,0 +1,48 @@
+name: BTC V5 quick WebGL A-B and real Gallop video
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-*.js'
+      - 'racers/index.html'
+      - 'tests/btc-v5-evidence.mjs'
+      - '.github/workflows/btc-v5-quick-evidence.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: btc-v5-quick-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify isolated BTC safety and syntax
+        run: |
+          node --check racers/btc-hero-v5.js
+          node --check racers/btc-silk-shell-v5.js
+          node --check tests/btc-v5-evidence.mjs
+          node --test tests/btc-horse-atelier-contract.mjs
+      - name: Install WebGL Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Record A-B WebGL and animated horse
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/btc-fast-proof.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-v5-evidence.mjs
+      - name: Preserve real browser output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-v5-real-gallop-and-v4-v5-comparison
+          path: artifacts/btc-v5/evidence/**
+          if-no-files-found: warn
