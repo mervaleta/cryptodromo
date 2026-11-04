@@ -116,7 +116,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
   const dummy=new THREE.Object3D(),color=new THREE.Color();
   let surfaceName=normalizedSurface(surface),preset=QUALITY[quality]?quality:'balanced';
   let wetness=0,layout='straight',groundY=.06,markCursor=0,particleCursor=0;
-  let active=0,impacts=0,spawns=0,rng=seed>>>0;
+  let active=0,impacts=0,spawns=0,rng=seed>>>0,contactSource='phase';
   const random=()=>{rng=(Math.imul(rng,1664525)+1013904223)>>>0;return rng/4294967296;};
   const profile=()=>SURFACES[surfaceName];
   const maxLive=()=>QUALITY[preset].particles;
@@ -219,7 +219,10 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     const phase=Number.isFinite(rawPhase)?rawPhase:null;
     // The final master's world-space sole API has priority over GLB bone tips.
     const trueSoles=typeof model.getHoofContactPoints==='function'?model.getHoofContactPoints():null;
-    const soles=Array.isArray(trueSoles)&&trueSoles.length===4?trueSoles:readAnimatedSoles(model);
+    const explicit=Array.isArray(trueSoles)&&trueSoles.length===4;
+    const skeleton=explicit?null:readAnimatedSoles(model);
+    const soles=explicit?trueSoles:skeleton;
+    contactSource=explicit?'master':skeleton?'skeleton':phase!==null?'phase':'clock';
     const events=solver.sample({lane,x,z,heading,phase,dt,speed,enabled:running,soles,groundY});
     if(running)for(const e of events)impact(e,e.heading);
     if(!running){for(let i=0;i<4;i++){const idx=lane*4+i;dummy.position.set(0,-99,0);dummy.scale.setScalar(.001);dummy.updateMatrix();shadows.setMatrixAt(idx,dummy.matrix);}shadows.count=lanes*4;shadows.instanceMatrix.needsUpdate=true;return;}
@@ -267,5 +270,5 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     shadowGeometry.dispose();shadowMaterial.dispose();
     particleGeometry.dispose();particleMaterial.dispose();
   },get stats(){return {surface:surfaceName,quality:preset,impacts,particles:active,
-    spawned:spawns,imprints:marks.count,wetness};},marks,shadows,cloud};
+    spawned:spawns,imprints:marks.count,wetness,contactSource};},marks,shadows,cloud};
 }
