@@ -30,6 +30,7 @@ try {
  assert.equal(s.heroGroom.sculptedEyes,2);
  assert.equal(s.heroGroom.eyeGlobes,2,'two actual spherical eyes must be present');
  assert.equal(s.heroGroom.crownBridgeLocks,112,'hero mane must be connected across the poll');
+ assert.equal(s.heroGroom.heroLocks,56,'the normal public BTC must use raised locks');
  assert.equal(s.heroGroom.rootBedVertices,495,'the real public horse must have a continuous sculpted hair root bed');
  assert.equal(s.heroGroom.neckOutliers,0,'no hair vertices outside dorsal neck envelope');
  assert.ok(s.heroGroom.eyeRadius<.0004,'eyes should not protrude out of socket');
