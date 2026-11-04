@@ -41,11 +41,44 @@ const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='B
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
 // Normal BTC profile uses the sculpted horse; ?btcMaster=v5 retains the legacy study.
 let atelierVariant=new URLSearchParams(location.search).get('btcMaster')==='v5'?'enhanced':'maya';
+let btcRevision=null;
+function renderBTCRevision(){
+ const panel=$('#btc-master-revision');
+ if(!panel)return;
+ panel.hidden=selected.symbol!=='BTC';
+ if(panel.hidden)return;
+ const header=$('#btc-master-build'),status=$('#btc-master-status'),list=$('#btc-master-issues');
+ if(!btcRevision){
+  header.textContent='Maestro BTC · registro de versión no disponible';
+  status.textContent='No se pudo cotejar la revisión publicada.';
+  list.replaceChildren();
+  return;
+ }
+ header.textContent='Maestro BTC · build '+btcRevision.buildId;
+ status.textContent=(btcRevision.status==='verified'?'Verificado':btcRevision.status==='pending_deploy'?'Pendiente de despliegue':'En revisión, defectos pendientes')+' · '+btcRevision.updatedAt;
+ const items=(Array.isArray(btcRevision.openIssues)?btcRevision.openIssues:[]).map(issue=>{
+  const li=document.createElement('li');li.textContent=issue;return li;
+ });
+ list.replaceChildren(...items);
+}
+async function loadBTCRevision(){
+ try{
+  const response=await fetch('/racers/btc-master-revision.json?v=btc-fiche-policy-20261104-1',{cache:'no-store'});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const data=await response.json();
+  if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
+   throw new Error('Registro inválido');
+  btcRevision=data;
+ }catch(error){console.warn('BTC master revision unavailable:',error);}
+ renderBTCRevision();
+}
+void loadBTCRevision();
 function updateAtelierState(token){
  const btc=token.symbol==='BTC';
  const entry=$('#btc-atelier-entry'),panel=$('#btc-atelier-panel');
  if(entry)entry.hidden=!btc||btcAtelier;
  if(panel)panel.hidden=!btcAtelier||!btc;
+ renderBTCRevision();
  if(btcAtelier){
   preview?.setVariant?.(btc?atelierVariant:'original');
   if(btc)preview?.setWind?.(Number($('#btc-wind').value));
