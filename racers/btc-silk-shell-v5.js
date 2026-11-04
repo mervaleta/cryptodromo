@@ -40,7 +40,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
    // Shared flowing S silhouette: a full, rounded root and feathered tips.
    const lift=mane?
     (.0023+.00065*seed)*Math.sin(PI*u)+(.00075+.0006*secondary)*t:
-    (.0028+.0011*seed)*Math.sin(PI*u)+(.0082+.0007*secondary)*t;
+    (.0028+.0011*seed)*Math.sin(PI*u)+(.0057+.0007*secondary)*t;
    const curl=(mane?.00055:.0010)*t*Math.sin(u*TAU*1.05+seed*PI);
    const cy=rootY+length*(u+.055*Math.sin(PI*u))+
     .0002*t*Math.sin(id*.73);
