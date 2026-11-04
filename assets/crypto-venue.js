@@ -62,6 +62,7 @@ function syncPanel(){
  document.querySelector('.tv-brand').classList.toggle('is-replay',!!replay);
  liveButton.disabled=!replay;
  liveButton.textContent=replay?'● VOLVER AL VIVO':'● ESTÁS EN VIVO';
+ $('tv-replay-again').hidden=!replay;
  for(const card of cards){
   const on=card.dataset.track===active;
   card.dataset.selected=String(on);
@@ -148,6 +149,7 @@ for(const card of cards){
  button?.addEventListener('click',()=>{tune(card.dataset.track,null);screen.scrollIntoView({behavior:'smooth',block:'center'});});
 }
 liveButton.addEventListener('click',()=>tune(active,null));
+$('tv-replay-again').addEventListener('click',()=>{if(replay)tune(active,replay,false);});
 $('tv-retry').addEventListener('click',()=>{sourcePromise=null;source=null;tune(active,replay,false);});
 $('tv-fullscreen').addEventListener('click',()=>{
  if(document.fullscreenElement)document.exitFullscreen();
