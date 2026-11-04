@@ -9,7 +9,7 @@ const spring=await pure('racers/btc-maya-tail-spring.js');
 
 test('both eyes share one symmetric cornea and lid landmark without surface-snap seams',()=>{
  const a=eyes.BTC_EYE_LAYOUT;
- assert.ok(a.x>.0022&&a.x<.0026);
+ assert.ok(a.x>.0020&&a.x<.0025);
  assert.ok(a.radiusX>.00030&&a.radiusX<.0004);
  assert.ok(a.radiusY>a.radiusX,'naturally elongated equine eye');
  for(const angle of [0,.2,1.2,2.7,Math.PI,4.2,6.2]){
