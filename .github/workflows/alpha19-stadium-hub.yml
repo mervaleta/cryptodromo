@@ -38,6 +38,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install procedural stadium dependency
+        run: npm ci --prefix race-lab/source
       - name: JavaScript syntax and source contracts
         run: |
           for f in assets/crypto-archive.js assets/crypto-venue.js visual-lab/tripleLiveSchedule.js visual-lab/threeCoursePreview.js visual-lab/scene.js estadio/estadio.js; do node --experimental-default-type=module --check "$f"; done
