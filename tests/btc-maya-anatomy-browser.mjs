@@ -14,7 +14,7 @@ try{
  const page=await browser.newPage({viewport:{width:1320,height:840},deviceScaleFactor:1,reducedMotion:'no-preference'});
  page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text())});
- await page.goto('http://127.0.0.1:8799/racers/?btcMaster=maya#BTC',{waitUntil:'domcontentloaded',timeout:90000});
+ await page.goto('http://127.0.0.1:8799/racers/#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
