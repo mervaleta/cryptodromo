@@ -35,7 +35,12 @@ try{
  assert.ok(start.heroGroom.tailDockBorderEdges>=20,'identify tail-root cut boundary');
  assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges,'close every exposed dock edge with skinned Maya triangles');
  assert.ok(start.heroGroom.fineLocks>=650);
- assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
+ assert.equal(start.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
+  assert.equal(start.heroGroom.proceduralHairTexture,true);
+  assert.equal(start.heroGroom.hindTextureGenerated,true);
+  assert.equal(start.heroGroom.hindGaitCorrective,true);
+  assert.ok(start.heroGroom.hindMaxExpansion>.10);
+  assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
  assert.equal(start.heroGroom.crownBridgeLocks,112,'forelock and dorsal mane must be joined across the poll');
  assert.equal(start.heroGroom.heroLocks,56,'sculpted swept hero locks must actually render');
  assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
