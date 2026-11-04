@@ -7,11 +7,11 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-hero-silhouette-20261104-v9';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-hero-silhouette-20261104-v9';
-import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-hero-silhouette-20261104-v9';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-sculpted-locks-20261104-v10';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-sculpted-locks-20261104-v10';
+import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-sculpted-locks-20261104-v10';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
-export const BTC_MAYA_RENDER_BUILD='btc-master-hero-silhouette-20261104-v9';
+export const BTC_MAYA_RENDER_BUILD='btc-master-sculpted-locks-20261104-v10';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -444,7 +444,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   const base=xyz.length/3;
   for(let i=0;i<point.count;i++){
    const x=point.getX(i),y=point.getY(i),z=point.getZ(i);
-   xyz.push(side*.002035+x,-.02814+y,.04257+z);
+   xyz.push(side*.002075+x,-.02814+y,.04257+z);
    normals.push(normal.getX(i),normal.getY(i),normal.getZ(i));
    local.push(x/radius,y/radius,z/radius);
    sides.push(side);
@@ -565,7 +565,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    poweredHindVertices:anatomy.poweredHindVertices,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,neckOutliers:groom.neckOutliers,crownBridgeLocks:groom.bridgeLocks,rootBedVertices:groom.rootBedVertices,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,neckOutliers:groom.neckOutliers,crownBridgeLocks:groom.bridgeLocks,heroLocks:groom.heroLocks,rootBedVertices:groom.rootBedVertices,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},

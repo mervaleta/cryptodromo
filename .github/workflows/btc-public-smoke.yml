@@ -29,9 +29,9 @@ jobs:
               if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "${ORIGIN}/${module}?deploy=${GITHUB_SHA}" -o "/tmp/btc-${module}"; then ok=false; break; fi
             done
             if [[ "$ok" == true ]] &&
-              grep -q 'btc-master-hero-silhouette-20261104-v9' /tmp/btc-index.html &&
-              grep -q 'btc-master-hero-silhouette-20261104-v9' /tmp/btc-racers.js &&
-              grep -q 'btc-master-hero-silhouette-20261104-v9' /tmp/btc-btc-atelier-preview.js &&
+              grep -q 'btc-master-sculpted-locks-20261104-v10' /tmp/btc-index.html &&
+              grep -q 'btc-master-sculpted-locks-20261104-v10' /tmp/btc-racers.js &&
+              grep -q 'btc-master-sculpted-locks-20261104-v10' /tmp/btc-btc-atelier-preview.js &&
               grep -q 'BTC_MAYA_RENDER_BUILD' /tmp/btc-btc-maya-master.js &&
               grep -q 'neckOutliers' /tmp/btc-btc-maya-groom.js &&
               grep -q 'createBTCMayaFaceDetails' /tmp/btc-btc-maya-face-details.js &&

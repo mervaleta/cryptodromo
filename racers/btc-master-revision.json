@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-hero-silhouette-20261104-v9",
+  "buildId": "btc-master-sculpted-locks-20261104-v10",
   "status": "pending_deploy",
-  "statusLabel": "Crin continua, ojos encastrados y cola rediseñada · cotejo WebGL pendiente",
+  "statusLabel": "Crin con mechones escultóricos 3D, cola volumétrica y orejas más proporcionadas · QA pendiente",
   "updatedAt": "2026-11-04",
-  "note": "Iteración de Three.js contra la referencia de caballo estilizado: puente entre flequillo y crin (112 mechones), límites dorsales del cuello, ocular reducido y hundido, cola de mayor arco y sombreado más sedoso. Cotejo visual pendiente de despliegue.",
+  "note": "v10: a las 112 guías puente y al lecho continuo de coronilla se agregaron 56 mechones tridimensionales levantados sobre el cuello, con menos filamentos finos, cola más plena, orejas más cortas y ojo menos hundido. Meta visual: referencia hero horse. Comprobar en Hostinger.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Comprobar continuidad de crin y flequillo desde arriba, perfil y Gallop",
-    "Verificar que ya no queden fibras aisladas bajo la cresta del cuello",
-    "Verificar encastre ocular y material del iris en ambas órbitas",
-    "Aprobar la silueta heroica y el volumen de la cola frente a la referencia; optimización para 12 corredores"
+    "Cotejar crin elevada y su continuidad en vista superior, perfil y galope",
+    "Revisar volumen real de cola frente a la referencia y continuidad en la raíz",
+    "Validar ojos y longitud de orejas con capturas WebGL",
+    "Seguir refinando anatomía de caballo estilizado y sombreado sin alterar los otros 99"
   ],
   "nextPhase": {
     "status": "blocked",
