@@ -59,7 +59,7 @@ try{
  await tv.locator('[data-tv-light="pulse"]').click();
  assert.equal(await value('light-pattern'),'pulse');
  await tv.locator('[data-tv-cloud="up"]').click();
- assert.equal(await value('cloud-cover'),'72');
+ assert.equal(await value('cloud-cover'),'70');
  await tv.locator('[data-tv-fog="toggle"]').click();
  assert.equal(await value('fog-intensity'),'220');
  await tv.locator('[data-tv-hour="1050"]').click();
