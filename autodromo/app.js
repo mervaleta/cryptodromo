@@ -198,12 +198,14 @@ function animate(time){
  frameId=requestAnimationFrame(animate);
  const delta=lastFrame?Math.min((time-lastFrame)/1000,.12):0;lastFrame=time;
  const now=new Date(),clock=tripleLiveSlot(now,selected);
+ lastClock=clock;
  let seconds;
  if(mode==='test'){
   demoElapsed=Math.min(60,demoElapsed+delta*Number($('replay-speed').value));
   seconds=demoElapsed;
  }else{
-  setSession(currentSession(now));
+  const clockKey=clock.dayIndex+':'+clock.minuteOfDay+':'+selected;
+  if(clockKey!==oldSessionKey)setSession(currentSession(now));
   seconds=Math.min(60,clock.slotSeconds);
  }
  const tick=Math.floor(time/750);
