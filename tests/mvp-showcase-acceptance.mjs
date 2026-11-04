@@ -7,7 +7,6 @@ import {gatePositions,validateGateEntries} from '../visual-lab/broadcastGates.js
 
 const scene=readFileSync(new URL('../visual-lab/scene.js',import.meta.url),'utf8');
 const signs=readFileSync(new URL('../visual-lab/broadcastGateNumbers.js',import.meta.url),'utf8');
-const finish=readFileSync(new URL('../visual-lab/finishController.js',import.meta.url),'utf8');
 
 test('showcase fixture is explicitly synthetic and offline',()=>{
  assert.equal(PRICE_FIXTURE.generated,true);
@@ -39,5 +38,5 @@ test('signage stays visual-only and does not change official scoring',()=>{
 });
 test('result display is guarded by a dedicated finish controller',()=>{
  assert.match(scene,/finishController/);
- assert.ok(finish.length>500);
+ assert.match(scene,/finishController\.reset|finishController\.update|finishController\.resolve/);
 });
