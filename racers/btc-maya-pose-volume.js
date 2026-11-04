@@ -1,127 +1,79 @@
 /**
- * BTC pose-stable hind thigh deformation (v13).
+ * BTC v13b: anatomically consistent skin weights for the 2017 Maya body.
  *
- * Why: the copied Quaternius Gallop has several rotating joints per Maya 2017
- * thigh. Conventional linear blend skinning mixes their matrices, shortens the
- * transverse diameter at some frames, and makes the same muscle look "thin".
+ * The experiment with dual quaternion skinning was visually rejected:
+ * although DQS preserves volume on synthetic joints, the transferred
+ * Quaternius weights made large triangular membranes between hind bones.
+ * Production therefore retains Three.js's ORIGINAL linear skinning and
+ * Gallop clip, with stable left/right hind-leg influences.
  *
- * Here the original skeleton, clip, and weights stay exactly as imported.
- * Only BTC's body material substitutes a gently masked DUAL-QUATERNION result
- * for the thigh / gaskin skin surface. DQS blends rigid transformations without
- * the skin-volume collapse caused by averaging rotated matrices.
- *
- * No topology change, new animation clip, extra bones or stadium code.
+ * The GLB's BackLeg.L and BackLeg.R rest coordinates match +X and -X.
+ * Filtering cross-leg influences is gradual and confined to the hind limb.
  */
-export const BTC_POSE_VOLUME_BUILD='btc-hind-pose-volume-dq-20261104-v13';
+const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+const smooth=v=>{const x=clamp(v,0,1);return x*x*(3-2*x);};
+export const BTC_POSE_VOLUME_BUILD='btc-hind-skin-continuity-20261104-v13b';
 
-const functions=String.raw`
-vec4 btcDQMultiply(vec4 a,vec4 b) {
-  return vec4(a.w*b.xyz+b.w*a.xyz+cross(a.xyz,b.xyz),
-              a.w*b.w-dot(a.xyz,b.xyz));
-}
-vec4 btcDQRotation(mat4 m) {
-  // GLSL matrices are indexed column,row. Four stable quaternion branches.
-  float tr=m[0][0]+m[1][1]+m[2][2];
-  if(tr>0.0) {
-    float s=sqrt(max(1.0+tr,0.000001))*2.0;
-    return normalize(vec4((m[1][2]-m[2][1])/s,
-      (m[2][0]-m[0][2])/s,(m[0][1]-m[1][0])/s,0.25*s));
-  }
-  if(m[0][0]>m[1][1] && m[0][0]>m[2][2]) {
-    float s=sqrt(max(1.0+m[0][0]-m[1][1]-m[2][2],0.000001))*2.0;
-    return normalize(vec4(0.25*s,(m[1][0]+m[0][1])/s,
-      (m[2][0]+m[0][2])/s,(m[1][2]-m[2][1])/s));
-  }
-  if(m[1][1]>m[2][2]) {
-    float s=sqrt(max(1.0+m[1][1]-m[0][0]-m[2][2],0.000001))*2.0;
-    return normalize(vec4((m[1][0]+m[0][1])/s,0.25*s,
-      (m[2][1]+m[1][2])/s,(m[2][0]-m[0][2])/s));
-  }
-  float s=sqrt(max(1.0+m[2][2]-m[0][0]-m[1][1],0.000001))*2.0;
-  return normalize(vec4((m[2][0]+m[0][2])/s,
-    (m[2][1]+m[1][2])/s,0.25*s,(m[0][1]-m[1][0])/s));
-}
-void btcDQAccumulate(in mat4 m,in float weight,in vec4 reference,
-                     inout vec4 realPart,inout vec4 dualPart) {
-  if(weight<=0.000001)return;
-  vec4 q=btcDQRotation(m);
-  vec4 d=0.5*btcDQMultiply(vec4(m[3].xyz,0.0),q);
-  float signFix=dot(reference,q)<0.0?-1.0:1.0;
-  realPart+=q*weight*signFix;
-  dualPart+=d*weight*signFix;
-}
-vec3 btcDQApply(vec4 realPart,vec4 dualPart,vec3 p) {
-  float lengthReal=max(length(realPart),0.000001);
-  vec4 q=realPart/lengthReal;
-  vec4 d=dualPart/lengthReal;
-  d-=q*dot(d,q);
-  vec3 rotated=p+2.0*cross(q.xyz,cross(q.xyz,p)+q.w*p);
-  vec3 translation=2.0*btcDQMultiply(d,vec4(-q.xyz,q.w)).xyz;
-  return rotated+translation;
-}
-`;
-
-const skinning=String.raw`
-#ifdef USE_SKINNING
-  // Restrict volume-preserving skinning to rear muscles. The loin, body,
-  // coronet and hooves remain on the original skinning implementation.
-  float btcHindMask=smoothstep(0.0045,0.0090,position.y) *
-    (1.0-smoothstep(0.0170,0.0202,position.y)) *
-    smoothstep(0.0085,0.0130,position.z) *
-    (1.0-smoothstep(0.0250,0.0310,position.z)) *
-    smoothstep(0.0012,0.0027,abs(position.x));
-  float btcDqMix=btcHindMask*btcVolumePreservation;
-  if(btcDqMix>0.001) {
-    vec4 btcRef=btcDQRotation(boneMatX);
-    vec4 btcReal=vec4(0.0);
-    vec4 btcDual=vec4(0.0);
-    btcDQAccumulate(boneMatX,skinWeight.x,btcRef,btcReal,btcDual);
-    btcDQAccumulate(boneMatY,skinWeight.y,btcRef,btcReal,btcDual);
-    btcDQAccumulate(boneMatZ,skinWeight.z,btcRef,btcReal,btcDual);
-    btcDQAccumulate(boneMatW,skinWeight.w,btcRef,btcReal,btcDual);
-    vec3 btcDqSkin=btcDQApply(btcReal,btcDual,skinVertex.xyz);
-    vec3 btcDqLocal=(bindMatrixInverse*vec4(btcDqSkin,1.0)).xyz;
-    transformed=mix(transformed,btcDqLocal,btcDqMix);
-  }
-#endif
-`;
-
-export function installBTCVolumePreservingSkin(shader, strengthUniform={value:0.95}){
-  if(!shader||!shader.vertexShader?.includes('#include <skinning_vertex>')||
-       !shader.vertexShader.includes('#include <common>'))
-    throw Error('BTC DQS correction requires the standard Three.js skinned-vertex chunks');
-  shader.uniforms.btcVolumePreservation=strengthUniform;
-  shader.vertexShader=shader.vertexShader.replace('#include <common>',
-    '#include <common>\nuniform float btcVolumePreservation;\n'+functions);
-  shader.vertexShader=shader.vertexShader.replace('#include <skinning_vertex>',
-    '#include <skinning_vertex>\n'+skinning);
+/** Returns a smooth 0..1 mask. Zero at feet, spine and limb center seam. */
+export function hindSkinRegion(x,y,z){
+ const side=smooth((Math.abs(x)-.00120)/.00165);
+ const rear=smooth((y-.0038)/.0052);
+ const upper=smooth((z-.0065)/.006);
+ const lower=1-smooth((z-.0285)/.007);
+ return side*rear*upper*lower;
 }
 
-/** Reference maths for source-level regression tests. Synthetic joints only;
- * the GPU shader above is the runtime implementation.
+/**
+ * Remove weights assigned to the WRONG hind leg or to front/tail controls
+ * on the posterior thigh. Don't replace bone IDs or introduce new joints.
+ * The remaining weights are renormalized, preserving native skin order.
  */
-const mul=(a,b)=>[
- a[3]*b[0]+b[3]*a[0]+a[1]*b[2]-a[2]*b[1],
- a[3]*b[1]+b[3]*a[1]+a[2]*b[0]-a[0]*b[2],
- a[3]*b[2]+b[3]*a[2]+a[0]*b[1]-a[1]*b[0],
- a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]
-];
-const dot=(a,b)=>a.reduce((v,x,i)=>v+x*b[i],0);
-export function dualQuaternionSkinPoint(point,bones,weights){
- if(bones.length!==weights.length||bones.length===0)throw Error('Expected bone transforms and weights');
- const ref=bones[weights.findIndex(w=>w>0)]?.rotation;
- if(!ref)throw Error('At least one bone influence required');
- let r=[0,0,0,0],d=[0,0,0,0];
- for(let i=0;i<bones.length;i++){
-  const {rotation:q,translation:t}=bones[i],w=weights[i];
-  if(w<=0)continue;
-  const sign=dot(q,ref)<0?-1:1;
-  const dual=mul([t[0],t[1],t[2],0],q).map(x=>x*.5);
-  for(let k=0;k<4;k++){r[k]+=sign*w*q[k];d[k]+=sign*w*dual[k];}
+export function stabilizeHindSkinWeights(positions,bones,weights,boneNames){
+ if(!(positions instanceof Float32Array)||
+    !(bones instanceof Uint16Array)||
+    !(weights instanceof Float32Array)||
+    positions.length/3*4!==bones.length||
+    bones.length!==weights.length||
+    !Array.isArray(boneNames))throw Error('BTC limb skin stabilizer needs rest positions and original skin attributes');
+ let adjusted=0,badBefore=0,badAfter=0,scanned=0;
+ for(let v=0;v<positions.length/3;v++){
+  const x=positions[v*3],y=positions[v*3+1],z=positions[v*3+2];
+  const region=hindSkinRegion(x,y,z);
+  if(region<=.005)continue;
+  const correctSide=x>0?'.L':'.R',otherSide=x>0?'.R':'.L';
+  let removed=0,available=0,originalTotal=0;
+  const original=[],wrong=[];
+  for(let k=0;k<4;k++){
+   const j=bones[v*4+k],name=boneNames[j]||'',w=weights[v*4+k];
+   const invalid=(name.startsWith('Back')&&name.endsWith(otherSide)) ||
+      name.startsWith('Front') || name.startsWith('Tail');
+   original.push(w);wrong.push(invalid);
+   originalTotal+=w;
+   if(invalid)removed+=w;
+   else available+=w;
+  }
+  if(originalTotal<=0||removed<=.00001||available<.15)continue;
+  scanned++;
+  badBefore+=removed;
+  // A narrow floor prevents a hard seam at the inner thigh boundary.
+  const attenuation=1-.985*region;
+  let sum=0;
+  for(let k=0;k<4;k++){
+   const value=original[k]*(wrong[k]?attenuation:1);
+   weights[v*4+k]=value;sum+=value;
+  }
+  if(sum<=.0000001){
+   for(let k=0;k<4;k++)weights[v*4+k]=original[k];
+   continue;
+  }
+  let after=0;
+  for(let k=0;k<4;k++){
+   weights[v*4+k]/=sum;
+   if(wrong[k])after+=weights[v*4+k];
+  }
+  badAfter+=after;
+  adjusted++;
  }
- const norm=Math.hypot(...r);r=r.map(x=>x/norm);d=d.map(x=>x/norm);
- const offset=dot(r,d);d=d.map((x,i)=>x-offset*r[i]);
- const rotated=mul(mul(r,[...point,0]),[-r[0],-r[1],-r[2],r[3]]);
- const translated=mul(d,[-r[0],-r[1],-r[2],r[3]]);
- return rotated.slice(0,3).map((v,i)=>v+2*translated[i]);
+ return {adjusted,scanned,crossSideBefore:badBefore,crossSideAfter:badAfter,
+   nativeLinearSkinning:true,rigPreserved:true};
 }
