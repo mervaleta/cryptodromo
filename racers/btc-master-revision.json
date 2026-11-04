@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-hind-pose-volume-20261104-v13",
+  "buildId": "btc-hind-skin-continuity-20261104-v13b",
   "status": "pending_deploy",
-  "statusLabel": "v13 · volumen del muslo estabilizado durante Gallop con doble cuaternión · pendiente QA y despliegue",
+  "statusLabel": "v13b · ancas estables con skinning nativo y pesos posteriores filtrados · QA visual pendiente",
   "updatedAt": "2026-11-04",
-  "note": "v13: corrige el adelgazamiento del muslo trasero en determinadas poses del Gallop. Se mantiene la escultura y el pelaje procedural v12, pero se sustituye la deformación sinusoidal de piel por skinning de doble cuaternión (DQS) enmascarado exclusivamente a muslos y músculos posteriores; el resto continúa con el skinning original. El clip Gallop, huesos, cuatro cascos, colores de BTC y los 99 corredores restantes no se modifican. Pendiente validar 16 fases del ciclo en navegador y producción.",
+  "note": "v13b: descartamos experimentalmente el skinning de doble cuaternión (DQS). Un A/B de cinco intensidades en la MISMA pose mostró membranas triangulares progresivas a medida que aumentaba DQS; el problema no era la falta de geometría, sino la incompatibilidad de la mezcla con los pesos transferidos. Se mantiene el skinning nativo LBS y se filtran, sólo en muslos posteriores, las influencias incorrectas de la pata contraria, miembros anteriores y cola. El volumen de la escultura v12 y el clip Gallop original permanecen sin cambios. Capturas y pruebas WebGL de v13b pendientes.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Revisar las 16 capturas del ciclo Gallop desde perfil para confirmar volumen y articulación del muslo constantes",
-    "Comprobar 4 fases adicionales de frente y desde atrás para excluir abultamientos anómalos",
-    "Cotejar continuidad visual en unión muslo-corvejón y ausencia de hundimientos en la cadera",
-    "Validar en Hostinger el build v13 y repetición correcta del ciclo antes de marcar verified"
+    "Revisar 16 fotogramas de v13b para verificar que se eliminan membranas triangulares y que el grosor del muslo se conserva en todo el ciclo",
+    "Validar perfiles izquierdo/derecho y vistas posteriores sin skin weights cruzados",
+    "Confrontar pose recogida de referencia 212734.mp4 sin inventar nuevos keyframes",
+    "Confirmar build de Hostinger después de aprobar el PR; no atribuir éxito a producción antes de deploy"
   ],
   "nextPhase": {
     "status": "blocked",
