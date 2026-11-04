@@ -18,12 +18,13 @@ const page=await context.newPage();
 const errors=[];
 page.on('pageerror',e=>errors.push(e.message));
 try{
+ await page.goto('http://127.0.0.1:8799/racers/?btcPass=1&btcFreeze=1#BTC',{
+  waitUntil:'domcontentloaded',timeout:90000
+ });
  for(let n=1;n<=10;n++){
   const stage=String(n).padStart(2,'0'),dir=root+'/pass-'+stage;
   mkdirSync(dir,{recursive:true});
-  await page.goto('http://127.0.0.1:8799/racers/?btcPass='+n+'&btcFreeze=1#BTC',{
-   waitUntil:'domcontentloaded',timeout:90000
-  });
+  if(n>1)await page.evaluate(n=>window.__cryptodromoBTCAtelierSetStage(n),n);
   await page.waitForFunction(expected=>{
    const s=window.__cryptodromoBTCAtelierQA?.();
    return s?.heroGroom?.version==='btc-v5-motion-study-20261103'&&
