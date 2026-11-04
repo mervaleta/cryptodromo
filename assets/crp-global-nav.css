@@ -32,3 +32,29 @@ body>.shell,body>main.shell,body>main.sports,body>main.comm,body>main.page{max-w
   .crp-unified .sitebar-inner{width:var(--crc-shell-width)!important;}
   .crp-unified .crp-unified-nav{max-width:100%!important;scroll-padding-inline:8px;}
 }
+
+/* Standalone hub pages did not load site-shell.css. Give canonical navigation a complete skin. */
+.crp-unified.sitebar{
+  box-sizing:border-box;
+  background:rgba(9,10,10,.97)!important;
+  color:var(--crc-support-text);
+  border-bottom:1px solid var(--crc-support-line)!important;
+  font-family:var(--crc-font);
+}
+.crp-unified .sitebar-inner *{box-sizing:border-box;}
+.crp-unified .site-brand{color:var(--crc-support-text);text-decoration:none;}
+.crp-unified .site-action{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:10px 14px!important;
+  min-height:42px!important;
+  border:1px solid var(--crc-green)!important;
+  border-radius:var(--crc-radius-sm)!important;
+  color:#071108!important;
+  background:var(--crc-green)!important;
+  text-decoration:none!important;
+  font:800 11px/1.2 var(--crc-font)!important;
+  white-space:nowrap;
+}
+.crp-unified .site-action:hover{background:var(--crc-support-hover)!important;border-color:var(--crc-support-hover)!important;}
