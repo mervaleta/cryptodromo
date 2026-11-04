@@ -204,6 +204,48 @@ function createHairMass(source,skinAt,{
   for(let n=0;n<majorCount;n++)guide(n,true,1);
   for(let n=0;n<fineCount;n++)guide(n,false,1);
  }
+ // A smooth, skinned root bed closes gaps between the forehead, ear roots
+ // and mane. Sculpted cross-sections remain below the individual flowing
+ // locks, not a floating billboard or a flat solid curtain.
+ let rootBedVertices=0;
+ if(!tail){
+  const bedRows=44,bedWidth=10,bedBase=positions.length/3;
+  for(let row=0;row<=bedRows;row++){
+   const t=row/bedRows,y=-.02755+.0230*t;
+   const fullness=.42+.58*Math.sin(PI*Math.pow(t,.75));
+   const halfWidth=.00062+.00049*fullness;
+   for(let col=0;col<=bedWidth;col++){
+    const across=col/bedWidth*2-1;
+    const sideRound=Math.sqrt(Math.max(0,1-across*across));
+    const x=across*halfWidth;
+    const z=crest(y)-.00014+
+      (.00045+.00102*fullness)*sideRound+
+      .00009*Math.sin(12*PI*t+across*2)*sideRound;
+    positions.push(x,y,z);
+    colors.push(.96+.06*sideRound,.92+.07*sideRound,.89+.07*sideRound);
+    tip.push(0);ids.push(0);region.push(0);
+    // Gently transfer the bed from the Head to the native neck skeleton.
+    const blend=smooth((y+.0271)/.0049);
+    const native=skinAt(x,y,z),sums=new Map([[headJoint,1-blend]]);
+    for(let k=0;k<4;k++){
+     const joint=native.joints[k]||0,weight=(native.weights[k]||0)*blend;
+     sums.set(joint,(sums.get(joint)||0)+weight);
+    }
+    const top=[...sums].sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const sum=top.reduce((n,p)=>n+p[1],0)||1;
+    for(let k=0;k<4;k++){
+     bones.push(top[k]?.[0]||0);
+     weights.push((top[k]?.[1]||0)/sum);
+    }
+    rootBedVertices++;
+   }
+  }
+  for(let row=0;row<bedRows;row++)for(let col=0;col<bedWidth;col++){
+   const a=bedBase+row*(bedWidth+1)+col,b=a+1,
+     c=a+bedWidth+1,d=c+1;
+   indices.push(a,c,b,b,c,d);
+  }
+ }
  const geo=new THREE.BufferGeometry();
  geo.setIndex(indices);
  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
@@ -235,7 +277,7 @@ function createHairMass(source,skinAt,{
  };
  mat.customProgramCacheKey=()=>tail?'btc-hero-tail-flow-v9':'btc-hero-connected-mane-v9';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
- return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112};
+ return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112,rootBedVertices};
 }
 
 export function createMayaGroom(source,skinAt,{
@@ -252,6 +294,7 @@ export function createMayaGroom(source,skinAt,{
   vertices:mane.vertices+tail.vertices,
   neckOutliers:mane.neckOutliers,
   bridgeLocks:mane.bridgeLocks,
+  rootBedVertices:mane.rootBedVertices,
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
    motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
