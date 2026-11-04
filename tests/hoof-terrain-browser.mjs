@@ -16,12 +16,12 @@ try{
  const response=await page.goto(base+'/visual-lab/hoof-fx-lab/?qa=1',{waitUntil:'domcontentloaded',timeout:45000});
  assert.equal(response?.status(),200);
  await page.waitForFunction(()=>window.__cryptodromoHoofLabQA?.snapshot().ready,
-  {timeout:90000,polling:500});
+  undefined,{timeout:90000,polling:500});
  let state=await page.evaluate(()=>window.__cryptodromoHoofLabQA.snapshot());
  assert.equal(state.failed,false);
  assert.equal(state.surface,'dirt');
  await page.waitForFunction(()=>window.__cryptodromoHoofLabQA.snapshot().stats.impacts>=3,
-  {timeout:55000,polling:350});
+  undefined,{timeout:55000,polling:350});
  for(const [type,name] of [['dirt','01-earth'],['sand','02-sand'],['grass','03-grass']]){
   await page.selectOption('#surface',type);
   await page.waitForFunction(t=>{
