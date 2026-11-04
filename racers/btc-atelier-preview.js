@@ -8,6 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
+import {createBTCHeroMaya} from './btc-maya-master.js';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
@@ -70,7 +71,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  async function rebuild(){
   const token=selected;if(!token||disposed)return;
   const request=++selection;
-  const candidate=(variant==='enhanced'||variant==='baseline')&&token.symbol==='BTC';
+  const candidate=(variant==='enhanced'||variant==='baseline'||variant==='maya')&&token.symbol==='BTC';
   try{
    const next=await createHorse({
     coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
@@ -83,7 +84,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    try{
     if(candidate){
      next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.40);
-     nextHero=(variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,{maneSize,tailSize,color:hairColor,pass:btcPass});
+     nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,{maneSize,tailSize,color:hairColor,pass:btcPass});
     }
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
@@ -98,7 +99,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  function select(token){selected=token;return rebuild();}
  function setStage(next){const p=Math.floor(clamp(next,1,10));if(p!==btcPass){btcPass=p;rebuild();}}
  function setVariant(next){
-  if(next!=='original'&&next!=='enhanced'&&next!=='baseline')return;
+  if(next!=='original'&&next!=='enhanced'&&next!=='baseline'&&next!=='maya')return;
   if(variant!==next){variant=next;rebuild();}
  }
  function setWind(value){wind=clamp(value,0,2);}
