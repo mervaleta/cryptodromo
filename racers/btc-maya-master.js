@@ -117,7 +117,32 @@ function applySkin(mesh,source){
  return mesh;
 }
 function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coat',hoofColor}={}){
- const {positions,indices}=unbox();
+ const {positions,indices:originalIndices}=unbox();
+ // Actual sculpt contains its OWN old ear tips and a thin skin-colored tail.
+ // Both were still visible beneath the new pinnae and groom, generating
+ // the reported four-horn and double-tail silhouettes.
+ const removed={nativeEarFaces:0,extraTailFaces:0};
+ const visibleTriangles=[];
+ const earVertex=id=>{
+  const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
+  return Math.abs(x)>.00113&&y>-.0302&&y<-.0230&&z>.04485;
+ };
+ const tailVertex=id=>{
+  const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
+  return y>.0155&&Math.abs(x)<.00155&&z>.016&&z<.0355;
+ };
+ for(let t=0;t<originalIndices.length;t+=3){
+  const tri=[originalIndices[t],originalIndices[t+1],originalIndices[t+2]];
+  if(tri.filter(earVertex).length>=2){removed.nativeEarFaces++;continue;}
+  if(tri.filter(tailVertex).length>=2){removed.extraTailFaces++;continue;}
+  visibleTriangles.push(...tri);
+ }
+ const indices=new Uint16Array(visibleTriangles);
+ if(removed.nativeEarFaces<150||removed.extraTailFaces<150)
+  throw Error('BTC original ear/tail geometry not located; refusing cosmetic patch');
+ // Weight transfer remains anchored to the ORIGINAL rest surface while
+ // sculpting; moving geometry must never reassign its joints by proximity.
+ const skinRest=Float32Array.from(positions);
  // Model real hoof flare, quarters and the toe/heel transition directly on
  // the Maya sculpt vertices. The four measured coronet centers are defined
  // in original .ma rest space, not guessed in normalized scene coordinates.
@@ -182,7 +207,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
  for(let i=0;i<positions.length;i+=3){
-  const skin=skinAt(positions[i],positions[i+1],positions[i+2]);
+  const skin=skinAt(skinRest[i],skinRest[i+1],skinRest[i+2]);
   for(let k=0;k<4;k++){
    bone[(i/3)*4+k]=skin.joints[k];weights[(i/3)*4+k]=skin.weights[k];
   }
@@ -295,7 +320,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,...removed};
 }
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
@@ -362,6 +387,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    originalRig:true,source:'supplied-Maya-2017-sculpt',
    sculptedBodyParts:1,vertices:anatomy.vertices,
    harmonyBuild:BTC_MAYA_RENDER_BUILD,
+   nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
