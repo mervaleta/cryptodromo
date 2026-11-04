@@ -88,7 +88,7 @@ function createHairMass(source,skinAt,{
     :(major?.0060+.0031*seed:.0049+.0030*seed))*size;
   const breadth=(tail
    ?(major?.00028+.00012*seed:.000055+.000070*seed)
-   :(major?.00031+.00014*seed:.000037+.000045*seed));
+   :(major?.00049+.00020*seed:.000045+.000065*seed));
   const base=positions.length/3;
   function point(t,cross,ribbon){
    const t2=smooth(t),w=Math.pow(1-t,.81)*(0.72+0.28*Math.sin(PI*t));
@@ -123,11 +123,14 @@ function createHairMass(source,skinAt,{
     const cy=root[1]+length*rearward;
     const neckZ=crest(cy);
     const lift=.00056*Math.sin(PI*t)*(.65+.35*seed);
-    const feather=(.00034+.00037*seed)*t2;
-    const outward=(.00045+.00050*seed)*rearward;
-    x=root[0]+side*(outward+.00018*Math.sin(PI*t));
+    // The neck is substantially wider than the centerline hair roots. The
+    // previous groom lived INSIDE the neck and only exposed wire-like tips.
+    // Sweep clumps over the sides of the actual sculpted crest.
+    const feather=(-.00110+.00055*seed)*t2;
+    const outward=(.00230+.00092*seed)*(.54*rearward+.46*t2);
+    x=root[0]+side*(outward+.00015*Math.sin(PI*t));
     y=cy;
-    z=neckZ-.00066+lift+feather-(.00014+.00019*crossSeed)*t2;
+    z=neckZ-.00066+lift+feather+.00018*Math.sin(PI*t*1.6+seed*4)*t2;
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
    }
