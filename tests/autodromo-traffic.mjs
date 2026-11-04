@@ -16,7 +16,7 @@ test('traffic director preserves the official positions, doses and winners',()=>
    const winner=resultsAtFinish(session)[0].symbol;
    const plan=getTrafficPlan(session);
    assert.strictEqual(plan,getTrafficPlan(session),'cache per immutable fixture');
-   assert.equal(plan.samples.length,301);
+   assert.equal(plan.samples.length,Math.round(60/TRAFFIC_STEP_SECONDS)+1);
    for(const seconds of [0,.25,3,5,10,15,30,44.7,45,50,59.9,60]){
      const rows=trafficAt(session,seconds),official=positionsAt(session,seconds);
      assert.equal(rows.length,12);
@@ -39,7 +39,7 @@ test('twelve car bodies do not overlap while overtaking at 10Hz, including turns
  let laneTransitions=0;
  for(const time of TIMES)for(const track of CAR_TRACKS){
    const session=getCarSession(track.id,time);
-   const report=trafficAudit(session,.1);
+   const report=trafficAudit(session,.025);
    console.log('TRAFFIC_DIAGNOSTIC',JSON.stringify({
      session:session.key,unsafePairs:report.unsafePairs,
      minSpeed:Number(report.minimumVisualSpeed.toFixed(2)),
