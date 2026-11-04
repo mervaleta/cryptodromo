@@ -135,13 +135,13 @@ function createHairMass(source,skinAt,{
     // Tighter common root and a gradual bilateral fan.
     const outward=(.00205+.00105*seed)*(.32*rearward+.68*t2);
     x=root[0]+side*(outward+.00017*Math.sin(PI*t));
-    y=cy+.00036*Math.sin(PI*t*1.2+seed*2.8)*t2;
+    y=Math.min(-.0038,cy+.00022*Math.sin(PI*t*1.2+seed*2.8)*t2);
     z=neckZ-.00057+lift-drape+
        .00026*Math.sin(PI*t*1.7+seed*3)*t2;
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
     // Physically trim low fibers: no alpha masking or recoloring.
-    z=Math.max(z,neckZ-(major?.00215:.00130)-.00012*t2);
+    z=Math.max(z,crest(y)-(major?.00215:.00130)-.00012*t2);
    }
    return [x,y,z];
   }
