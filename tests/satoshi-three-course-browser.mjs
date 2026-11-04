@@ -35,7 +35,25 @@ try{
   assert.equal(view.courseStats.courseCount,3);
   console.log('COURSE',course,'meshes',JSON.stringify(view.courseStats));
  }
- await page.selectOption('#quality-select','low');
+
+ assert.ok((await page.locator('[data-flight-view]').count())>=8);
+ await page.locator('[data-flight-view="genesis"]').click();
+ await page.waitForFunction(()=>window.__crpStadiumQA.snapshot().focusedCourse==='genesis');
+ await page.waitForFunction(()=>!window.__crpStadiumQA.snapshot().flight.traveling,
+   null,{timeout:12000});
+ const prior=await page.evaluate(()=>window.__crpStadiumQA.snapshot().flight.target);
+ await page.locator('#stadiumCanvas').click({position:{x:870,y:415}});
+ await page.waitForFunction(before=>{
+  const now=window.__crpStadiumQA.snapshot().flight.target;
+  return Math.hypot(now[0]-before[0],now[2]-before[2])>2;
+ },prior,{timeout:15000});
+ await page.waitForFunction(()=>!window.__crpStadiumQA.snapshot().flight.traveling,
+  null,{timeout:12000});
+ await page.screenshot({path:'artifacts/stadium-world/satoshi-click-to-fly.png'});
+ await page.locator('[data-flight-action="up"]').click();
+ const higher=await page.evaluate(()=>window.__crpStadiumQA.snapshot().flight.camera[1]);
+ assert.ok(Number.isFinite(higher));
+  await page.selectOption('#quality-select','low');
  await page.waitForFunction(()=>window.__crpStadiumQA.snapshot().courseStats?.courseCount===3);
  await page.setViewportSize({width:390,height:844});
  await page.waitForTimeout(300);
