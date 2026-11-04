@@ -132,11 +132,12 @@ export function createBTCHeroV5(root,options={}){
  }
 
  const hairMat=groom.material;
+ const previousFiberShadow=groom.castShadow;
  saveMat(hairMat);
  // Keep the V4 procedural fibers as a translucent detail layer, not a wall
  // of spiky wires. The new silk shells carry the dominant hair silhouette.
- if(pass>=4){hairMat.transparent=true;hairMat.opacity=.20;
-  hairMat.depthWrite=false;hairMat.needsUpdate=true;}
+ if(pass>=4){hairMat.transparent=true;hairMat.opacity=.28;
+  hairMat.depthWrite=false;hairMat.needsUpdate=true;groom.castShadow=false;}
 
  if(pass>=6){
   hairMat.roughness=.56;hairMat.sheen=.95;
@@ -183,6 +184,12 @@ export function createBTCHeroV5(root,options={}){
   ].join('\n');
   if(!shader.vertexShader.includes(oldLine))throw new Error('BTC V5 shader missing V4 displacement');
   shader.vertexShader=shader.vertexShader.replace(oldLine,oldLine+'\n'+code);
+  if(pass>=4){
+   // The old tubular tail is what created the wire curtain in rear views.
+   // The skinned silk shell now owns the tail silhouette and casts its shadow.
+   shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',
+    '#include <alphatest_fragment>\nif(vHair.z > .5) discard;');
+  }
   if(pass>=9){
    shader.fragmentShader=shader.fragmentShader.replace(
     'diffuseColor.rgb*=rootShade*(.955+.066*fine);',
@@ -236,7 +243,7 @@ export function createBTCHeroV5(root,options={}){
   setColor(color){base.setColor(color);},
   dispose(){
    if(disposed)return;disposed=true;
-   silk?.dispose();restoreMats();
+   silk?.dispose();groom.castShadow=previousFiberShadow;restoreMats();
    for(const o of backups){o.p.array.set(o.coords);o.p.needsUpdate=true;o.geometry.computeBoundingSphere();}
    base.dispose();
   }
