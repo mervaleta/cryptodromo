@@ -93,7 +93,8 @@ function createHairMass(source,skinAt,{
     x=root[0]+fan+.00042*Math.sin(t*TAU+seed*4)*t2;
     y=root[1]+length*flow+.00045*Math.sin(PI*t);
     z=root[2]-(.0090+.0026*crossSeed)*flow
-      +.00095*Math.sin(PI*t)*(.5+.5*seed);
+      +.00095*Math.sin(PI*t)*(.5+.5*seed)
+      +(seed-.5)*(.0023*Math.sin(PI*t)+.0019*t2);
     if(ribbon===0)x+=cross*breadth*w;
     else z+=cross*breadth*.42*w;
    }else{
@@ -102,11 +103,12 @@ function createHairMass(source,skinAt,{
     const rearward=t*.78+.22*t2;
     const cy=root[1]+length*rearward;
     const neckZ=crest(cy);
-    const lift=.00052*Math.sin(PI*t)*(.65+.35*seed);
+    const lift=.00048*Math.sin(PI*t)*(.65+.35*seed);
+    const feather=(.00082+.00040*seed)*t2;
     const outward=(.00042+.00037*seed)*rearward;
     x=root[0]+side*(outward+.00018*Math.sin(PI*t));
     y=cy;
-    z=neckZ-.00066+lift-(.00036+.00034*crossSeed)*t2;
+    z=neckZ-.00066+lift+feather-(.00014+.00019*crossSeed)*t2;
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
    }
