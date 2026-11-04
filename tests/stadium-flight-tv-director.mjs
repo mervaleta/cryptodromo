@@ -44,7 +44,7 @@ test('TV player uses one iframe with 3 immediate channel buttons and 12 camera i
  for(const shot of ['broadcast','rail','aerial','drone','finish','leader','pack','grandstand','orbit'])
   assert.ok(html.includes('data-tv-shot="'+shot+'"'));
  assert.match(controller,/function setShot\(mode\)/);
- assert.match(controller,/requestAnimationFrame\(uncover\)/);
+ assert.match(controller,/requestAnimationFrame\(release\)/);
  assert.match(controller,/await wait\(270\)/);
  assert.match(controller,/button\.dataset\.tvSwitch/);
  assert.match(css,/\.tv-transition/);
