@@ -6,7 +6,7 @@
 <meta name="description" content="Autódromo Crypto: 100 monoplazas procedurales vinculados a tokens, 12 por carrera, tres circuitos y el mismo motor oficial de Cryptódromo.">
 <title>Autódromo Crypto | Cryptódromo</title>
 <link rel="icon" href="/assets/cryptodromo-logo.png">
-<link rel="stylesheet" href="./style.css?v=autodromo-poc-1">
+<link rel="stylesheet" href="./style.css?v=autodromo-pole-2">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js"}}</script>
 </head>
 <body>
@@ -30,7 +30,7 @@
       <canvas id="race-canvas" role="img" aria-label="Doce monoplazas tridimensionales corriendo en un circuito procedural"></canvas>
       <div class="on-air"><span class="dot"></span><b id="live-tag">SIMULACIÓN SINTÉTICA</b><span id="track-label">VECTOR / CIRCUITO 01</span></div>
       <div class="clock"><small id="phase-label">PREPARANDO PISTA</small><strong id="clock">00:00</strong></div>
-      <div class="race-title"><div><span class="tiny">GRAN PREMIO · CRP-DOSE-FAIR-V1</span><strong id="race-name">Circuito Vector</strong><small id="race-count">Fixture semanal reproducible</small></div><div class="leader"><small>LÍDER</small><b id="leader">···</b></div></div>
+      <div class="race-title"><div><span class="tiny">GRAN PREMIO · CRP-DOSE-FAIR-V1</span><strong id="race-name">Circuito Vector</strong><small id="race-count">Fixture semanal reproducible</small><small id="pole-label" class="pole-label">CLASIFICACIÓN · CALCULANDO POLE</small></div><div class="leader"><small>LÍDER</small><b id="leader">···</b></div></div>
       <div class="canvas-fallback" id="canvas-fallback" hidden>No se pudo iniciar WebGL. Los resultados oficiales siguen disponibles en la clasificación.</div>
     </div>
     <div class="controls">
@@ -41,7 +41,7 @@
     </div>
   </section>
   <div class="below">
-    <section class="panel standings-panel"><div class="panel-head"><h2>Clasificación <em>de carrera</em></h2><span id="entries-count">12 participantes</span></div>
+    <section class="panel standings-panel"><div class="panel-head"><h2>Grilla y clasificación <em>de carrera</em></h2><span id="entries-count">12 participantes</span></div>
       <ol id="standings" aria-live="off"></ol>
       <p class="footnote" id="classification-note">Las posiciones proceden del motor oficial. El circuito, las cámaras y la decoración no alteran resultados.</p>
     </section>
@@ -49,7 +49,7 @@
       <div id="schedule" class="channels"></div>
       <div class="dividerline"></div>
       <h3>Mecánica original, carrocería nueva</h3>
-      <p>La carrera se define con dos variaciones de precio y las mismas doce dosis de cinco segundos que usa el hipódromo. Cada circuito tiene una competencia de 60 segundos por ciclo de 180 segundos, escalonada un minuto respecto de las otras pistas.</p>
+      <p>La pole se determina por el rendimiento sintético de los 3 minutos previos a la largada. Los 12 autos parten en 6 filas escalonadas de 2. Las dos variaciones de precio de la carrera y las 12 dosis de 5 segundos del hipódromo determinan el rendimiento y la llegada. Cada circuito tiene una competencia de 60 segundos por ciclo de 180 segundos, escalonada un minuto respecto de las otras pistas.</p>
       <p class="footnote">Todos los precios de esta demo son sintéticos y precomputados. No hay apuestas, cotizaciones reales ni garantías de rendimiento financiero.</p>
     </section>
   </div>
@@ -58,5 +58,5 @@
   </section>
   <footer><a href="/">Volver al hipódromo</a><span>CRYPTÓDROMO MOTORSPORT · EXPERIMENTO VISUAL, NO EVENTO REAL</span></footer>
 </main>
-<script type="module" src="./app.js?v=autodromo-poc-1"></script>
+<script type="module" src="./app.js?v=autodromo-pole-2"></script>
 </body></html>
