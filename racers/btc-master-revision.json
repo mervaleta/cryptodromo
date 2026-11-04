@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-sculpted-locks-20261104-v10",
+  "buildId": "btc-master-solid-groom-20261104-v11",
   "status": "pending_deploy",
-  "statusLabel": "Crin con mechones escultóricos 3D, cola volumétrica y orejas más proporcionadas · QA pendiente",
+  "statusLabel": "Mechones sólidos esculpidos en Three.js · verificación visual pendiente",
   "updatedAt": "2026-11-04",
-  "note": "v10: a las 112 guías puente y al lecho continuo de coronilla se agregaron 56 mechones tridimensionales levantados sobre el cuello, con menos filamentos finos, cola más plena, orejas más cortas y ojo menos hundido. Meta visual: referencia hero horse. Comprobar en Hostinger.",
+  "note": "v11: las cintas planas se sustituyeron por tubos cónicos de 6 lados y 18 tramos con skinning al Gallop; volúmenes redondeados de crin/flequillo/cola y menos hebras finas. Estado de producción pendiente de QA Hostinger.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Cotejar crin elevada y su continuidad en vista superior, perfil y galope",
-    "Revisar volumen real de cola frente a la referencia y continuidad en la raíz",
-    "Validar ojos y longitud de orejas con capturas WebGL",
-    "Seguir refinando anatomía de caballo estilizado y sombreado sin alterar los otros 99"
+    "Validar que los mechones sólidos no atraviesen cráneo, orejas o cuello durante Gallop",
+    "Confirmar en seis vistas que la crin continúa entre orejas sin quedar rígida",
+    "Ajustar expresión, ojo y materiales para acercar el master al caballo estilizado de referencia",
+    "Verificar cola densa sin filamentos aislados y rendimiento antes de física avanzada"
   ],
   "nextPhase": {
     "status": "blocked",
