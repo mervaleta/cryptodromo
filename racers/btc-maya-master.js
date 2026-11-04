@@ -555,10 +555,11 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
  const rumpPatch=sculptRumpSurfacePatch(best,anatomy.materials[0]);
  const groom=createMayaGroom(best,skinAt,{
-  maneSize,tailSize,maneColor:color,tailColor:tailColor||color
+  maneSize,tailSize,maneColor:color,tailColor:tailColor||color,
+  scalpColor:anatomy.materials[0].color
  });
  const eyes=makeAnatomicalEyes(best,skinAt,{eyeColor});
- const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions);
+ const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions,{coatColor:anatomy.materials[0].color});
  const ears=createBTCHarmonyEars(best,{coatColor});
  for(const h of hidden)h.obj.visible=false;
  // The original plastic eyes are hidden in favor of two inset glossy
@@ -579,6 +580,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.002235,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
+   eyeAssembly:face.eyeAssembly,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,neckOutliers:groom.neckOutliers,crownBridgeLocks:groom.bridgeLocks,heroLocks:groom.heroLocks,solidRingSides:groom.solidRingSides,rootBedVertices:groom.rootBedVertices,looseNeckFibers:groom.looseNeckFibers,proceduralHairTexture:groom.proceduralHairTexture,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-vertex-spring-solid-locks',
    time,phase,disposed
