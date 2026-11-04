@@ -46,7 +46,7 @@ export function createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout='s
   }
  }
  update();
- return {update,dispose(){
+ return {update,setVisible(on){group.visible=Boolean(on);},dispose(){
   scene.remove(group);
   for(const item of posts){item.sprite.material.dispose();item.holder.clear();}
   for(const t of textures.values())t.dispose();
