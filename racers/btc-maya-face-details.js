@@ -106,33 +106,10 @@ export function createBTCMayaFaceDetails(source,skinAt,positions) {
    ctx.idx.push(a,b,c);
   }
  }));
- // Nostrils: real oriented elliptical inner surfaces with a narrow dark rim.
- // Anatomical landmarks use the muzzle coordinates measured from the supplied
- // 2017 mesh, then project to the nearest lateral facial surface.
- components.push(detailMesh(source,skinAt,positions,{
-  name:'BTC Maya two inset nostril cavities',color:'#241911',roughness:.92
- },ctx=>{
-  for(const side of [-1,1]){
-   const cy=-.0335,cz=.0359,rx=.00036,rz=.00025,N=24;
-   const x=project(side,cy,cz,.00135).x+side*.00009;
-   const center=ctx.vert(x,cy,cz,.72),rim=[];
-   for(let i=0;i<N;i++){
-    const theta=i*TAU/N;
-    const y=cy+rx*cos(theta)-.00005*sin(theta);
-    const z=cz+rz*sin(theta);
-    const px=project(side,y,z,.00135).x+side*.00011;
-    rim.push(ctx.vert(px,y,z,.78+.16*sin(theta)));
-   }
-   for(let i=0;i<N;i++)ctx.idx.push(center,rim[i],rim[(i+1)%N]);
-  }
- }));
- components.push(detailMesh(source,skinAt,positions,{
-  name:'BTC Maya nostril fleshy folded rims',color:'#78523f',roughness:.86
- },ctx=>{
-  for(const side of [-1,1]){
-   loopRibbon(ctx,project,side,-.0335,.0359,.00038,.00029,.000037);
-  }
- }));
+ // The user's Maya surface already has physically shaped nostrils. Additional
+ // flat skinned disks and edge strips floated ahead of the animated lips and
+ // looked like dark metal clips, so nostril darkening now belongs solely to
+ // the actual coat shader in btc-maya-master.js.
  // Mouth seam is implemented in the coat's fragment shader, following
  // the actual skinned Maya muzzle surface. Added standalone strips looked
  // disconnected at the nostril and must never reappear.
