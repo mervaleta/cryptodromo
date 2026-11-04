@@ -34,7 +34,7 @@ try{
  assert.ok(start.heroGroom.poweredHindVertices>650,'croup and hind thighs must be resculpted, not repainted');
  assert.ok(start.heroGroom.tailDockBorderEdges>=20,'identify tail-root cut boundary');
  assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges,'close every exposed dock edge with skinned Maya triangles');
- assert.ok(start.heroGroom.fineLocks>=650);
+ assert.ok(start.heroGroom.fineLocks>=1000,'finer strand density must actually reach the WebGL horse');
  assert.equal(start.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
   assert.equal(start.heroGroom.proceduralHairTexture,true);
   assert.equal(start.heroGroom.hindTextureGenerated,true);
@@ -45,7 +45,9 @@ try{
  assert.equal(start.heroGroom.heroLocks,56,'sculpted swept hero locks must actually render');
  assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
  assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
- assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must sit within the sockets');
+ assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must remain anatomically sized');
+  assert.equal(start.heroGroom.eyeCenterX,.002235,'cornea must be visible beyond the Maya socket');
+  assert.ok(start.heroGroom.pollAnchoredVertices>10,'poll must inherit smooth Head weighting');
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
  assert.equal(start.heroGroom.heroHooves,4,'four visible, articulated hoof shells required');
@@ -57,7 +59,7 @@ try{
  assert.equal(start.heroGroom.blackEquinePupils,true,'pupils must stay black and horizontally elongated');
  assert.ok(start.heroGroom.earTriangles>=800,'ears must be real skinned 3D leaves, not image sprites');
  assert.ok(start.heroGroom.facialSurfaces>=2,'rigged eyelids, nostril contours and tear ducts required');
- assert.ok(start.heroGroom.facialTriangles>140,'facial detail is actual 3D geometry');
+ assert.ok(start.heroGroom.facialTriangles>=280,'symmetrical skinned upper/lower eyelids must exist');
  assert.ok(start.heroGroom.fineLocks>=650,'full layered mane and tail required');
  assert.equal(start.heroGroom.modelPreserved,true);
  assert.equal(start.heroGroom.gallopPreserved,true);
@@ -65,13 +67,26 @@ try{
  await page.waitForTimeout(600);
  const after=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.ok(Math.abs(after.hoofPhase-before)>.001,'Original Gallop must animate sculpted model');
- for(const angle of ['profile','front','rear','detail','threeQuarter','top']){
+ for(const angle of ['profile','front','rear','detail','threeQuarter','top','face','poll']){
   await page.evaluate(angle=>document.querySelector('[data-btc-camera="'+angle+'"]').click(),angle);
   await page.waitForTimeout(350);
   await page.locator('#horse-view').screenshot({path:dir+'/'+angle+'.png',timeout:70000});
   console.log('BTC_MAYA_GEOMETRY_RENDER_OK',angle);
  }
- await page.evaluate(()=>document.querySelector('[data-btc-variant="baseline"]').click());
+ await page.waitForFunction(()=>Math.abs(window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.tailInertia||0)>.005,
+   null,{timeout:30000});
+  // Native Gallop phases expose eyelid fragmentation and crest sinking.
+  await page.evaluate(()=>document.querySelector('[data-btc-camera="poll"]').click());
+  for(let i=0;i<4;i++){
+   await page.waitForTimeout(175);
+   await page.locator('#horse-canvas').screenshot({path:dir+'/poll-gallop-'+i+'.png',timeout:70000});
+  }
+  await page.evaluate(()=>document.querySelector('[data-btc-camera="face"]').click());
+  for(let i=0;i<3;i++){
+   await page.waitForTimeout(190);
+   await page.locator('#horse-canvas').screenshot({path:dir+'/eyes-gallop-'+i+'.png',timeout:70000});
+  }
+  await page.evaluate(()=>document.querySelector('[data-btc-variant="baseline"]').click());
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.version==='btc-real-hero-v4-20261103',null,{timeout:120000});
  await page.evaluate(()=>document.querySelector('[data-btc-variant="maya"]').click());
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104',null,{timeout:120000});
