@@ -9,6 +9,9 @@ on:
       - 'tests/btc-v5-*'
       - '.github/workflows/btc-v5-lookdev.yml'
   workflow_dispatch:
+concurrency:
+  group: btc-v5-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -22,6 +25,7 @@ jobs:
       - name: Syntax and safety contracts
         run: |
           node --check racers/btc-hero-v5.js
+          node --check racers/btc-silk-shell-v5.js
           node --check racers/btc-atelier-preview.js
           node --check racers/racers.js
           node --check tests/btc-v5-visual-iterations.mjs
