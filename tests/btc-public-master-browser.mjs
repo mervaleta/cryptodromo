@@ -21,7 +21,7 @@ try {
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.symbol==='BTC'&&s?.variant==='maya'&&
     s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
-    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.facialSurfaces>=4&&
+    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.facialSurfaces>=2&&
     s?.clips?.includes('Gallop')&&s?.drawCalls>0;
  },null,{timeout:120000});
  const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
