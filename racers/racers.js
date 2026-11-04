@@ -33,7 +33,7 @@ let tier='all', selected=TOKEN_ROSTER.find(t=>t.symbol===location.hash.slice(1))
 const atelierMode=new URLSearchParams(location.search).get('atelier');
 const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='BTC');
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
-let atelierVariant='enhanced';
+let atelierVariant=new URLSearchParams(location.search).get('btcMaster')==='maya'?'maya':'enhanced';
 function updateAtelierState(token){
  const btc=token.symbol==='BTC';
  const entry=$('#btc-atelier-entry'),panel=$('#btc-atelier-panel');
@@ -135,7 +135,7 @@ if(btcAtelier){
  $('#btc-hair-color').addEventListener('input',event=>preview?.setHairColor?.(event.target.value));
  document.querySelectorAll('[data-btc-camera]').forEach(button=>
   button.addEventListener('click',()=>preview?.setCamera?.(button.dataset.btcCamera)));
- changeVariant('enhanced');
+ changeVariant(atelierVariant);
 }
 import(previewModule).then(({createPreview})=>{
  preview=createPreview($('#horse-canvas'),previewFallback);
