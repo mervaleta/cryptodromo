@@ -1,3 +1,4 @@
+@import url("/design/crc-system.css?v=crc-1");
 /* Alpha18 shared navigation. Scoped to the new header to avoid 3D controls. */
 :root{--crp-site-max:1480px}
 .crp-unified.sitebar{width:100%!important;max-width:none!important;position:relative!important;z-index:110!important;overflow:visible!important}
