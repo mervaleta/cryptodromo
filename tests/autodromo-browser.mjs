@@ -42,8 +42,8 @@ try{
   assert.equal(state.grid[1].row,1);
   assert.equal(state.grid[1].column,1);
   assert.match(await page.locator('#pole-label').innerText(),/POLE/);
-  // At XX:02:20 America/Argentina/Buenos_Aires, Muybridge is 10s from the next start.
-  await page.clock.setFixedTime(new Date('2026-11-04T18:02:20.000Z'));
+  // At XX:03:20 America/Argentina/Buenos_Aires, Muybridge is 10s from the next start.
+  await page.clock.setFixedTime(new Date('2026-11-04T18:03:20.000Z'));
   await page.waitForFunction(()=>window.__cryptodromoAutodromoQA.snapshot().stagingGrid===true,{timeout:10000});
   state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
   assert.equal(state.carCount,12);
