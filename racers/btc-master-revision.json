@@ -2,22 +2,22 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-solid-groom-20261104-v11",
+  "buildId": "btc-master-procedural-hind-groom-20261104-v12",
   "status": "pending_deploy",
-  "statusLabel": "Mechones sólidos esculpidos en Three.js · verificación visual pendiente",
+  "statusLabel": "Ancas y muslos ampliados en malla 3D; crin compacta y textura procedimental. Falta verificar Hostinger.",
   "updatedAt": "2026-11-04",
-  "note": "v11: las cintas planas se sustituyeron por tubos cónicos de 6 lados y 18 tramos con skinning al Gallop; volúmenes redondeados de crin/flequillo/cola y menos hebras finas. Estado de producción pendiente de QA Hostinger.",
+  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Validar que los mechones sólidos no atraviesen cráneo, orejas o cuello durante Gallop",
-    "Confirmar en seis vistas que la crin continúa entre orejas sin quedar rígida",
-    "Ajustar expresión, ojo y materiales para acercar el master al caballo estilizado de referencia",
-    "Verificar cola densa sin filamentos aislados y rendimiento antes de física avanzada"
+    "Confirmar visualmente en la URL canónica ambos perfiles, frente y atrás, transiciones y movimiento Gallop bajo WebGL",
+    "Comprobar continuidad de las raíces de la crin, sin filamentos de garganta ni huecos alrededor de orejas",
+    "Verificar sin torsiones la articulación de babilla/corvejón en todas las fases; no sustituir el galope original",
+    "Validar sombras y legibilidad del pelo procedimental en dispositivos móviles y navegadores sin GPU dedicada"
   ],
   "nextPhase": {
     "status": "blocked",
-    "title": "Física de crin y cola",
-    "prerequisite": "Primero corregir geometría y ojos y validar en la ficha",
+    "title": "Física avanzada de crin y cola",
+    "prerequisite": "Aceptar nueva topología y deformación en ficha pública y cotejar contra 212734.mp4",
     "reference": "212734.mp4"
   }
 }
