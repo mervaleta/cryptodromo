@@ -4,15 +4,15 @@
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
   "buildId": "btc-master-neck-cleanup-20261104-v6",
   "status": "pending_deploy",
-  "statusLabel": "Nuevo groom del cuello pendiente de verificación WebGL",
+  "statusLabel": "Corrección de crin Three.js pendiente de validación visual y despliegue",
   "updatedAt": "2026-11-04",
-  "note": "Iteración 1: geometría de la crin restringida al cuello en Three.js; sin confirmación pública ni comparación visual todavía.",
+  "note": "Iteración 1: trayectoria de crin limitada a la línea dorsal del cuello, falta comparar capturas y publicación Hostinger.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Validar desaparición de filamentos del cuello con cámaras y Gallop",
-    "Comprobar continuidad de grupos laterales de crin",
+    "Validar eliminación de filamentos bajos del cuello con Gallop y cámaras",
+    "Continuidad de ambos mechones laterales pendiente de aprobación visual",
     "Posible hueco/transparencia detrás de las orejas",
-    "Globo ocular tridimensional con pupila equina e iris editable"
+    "Ojos con globo tridimensional, pupila equina e iris editable"
   ],
   "nextPhase": {
     "status": "blocked",
