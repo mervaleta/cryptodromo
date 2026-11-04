@@ -10,7 +10,7 @@ import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {createMayaGroom} from './btc-maya-groom.js?v=btc-face-poll-tail-20261104-v14';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-face-poll-tail-20261104-v14';
-import {BTC_EYE_LAYOUT} from './btc-maya-eye-layout.js?v=btc-face-poll-tail-20261104-v14';
+import {BTC_EYE_LAYOUT,eyePoint} from './btc-maya-eye-layout.js?v=btc-face-poll-tail-20261104-v14';
 import {pollBlend,pollCrestLift,stabilizePollWeights} from './btc-maya-poll-bridge.js?v=btc-face-poll-tail-20261104-v14';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
@@ -450,22 +450,29 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   for(let i=0;i<point.count;i++){
    const x=point.getX(i),y=point.getY(i),z=point.getZ(i);
    // A visible but seated cornea: synchronized with skinned eyelid landmarks.
-   xyz.push(side*BTC_EYE_LAYOUT.x+x,
-    BTC_EYE_LAYOUT.y+y*(BTC_EYE_LAYOUT.radiusY/radius),
-    BTC_EYE_LAYOUT.z+z*(BTC_EYE_LAYOUT.radiusZ/radius));
+   const point3=eyePoint(side,x,
+     y*(BTC_EYE_LAYOUT.radiusY/radius),
+     z*(BTC_EYE_LAYOUT.radiusZ/radius));
+    xyz.push(point3.x,point3.y,point3.z);
    normals.push(normal.getX(i),normal.getY(i),normal.getZ(i));
    local.push(x/radius,y/radius,z/radius);
    sides.push(side);
    bones.push(headJoint,0,0,0);
    weights.push(1,0,0,0);
   }
-  for(let i=0;i<tris.count;i++)indices.push(base+tris.getX(i));
+  // The left orbital basis is mirrored, so reverse its winding to keep
+  // outward-facing normals and corneal lighting on BOTH sides.
+  for(let i=0;i<tris.count;i+=3){
+   const a=base+tris.getX(i),b=base+tris.getX(i+1),c=base+tris.getX(i+2);
+   if(side<0)indices.push(a,c,b);else indices.push(a,b,c);
+  }
  }
  template.dispose();
  const geometry=new THREE.BufferGeometry();
  geometry.setIndex(indices);
  geometry.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
- geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+ // Normals must follow the true oblique socket plane, not the GLB X-axis.
+ geometry.computeVertexNormals();
  geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
  geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
  geometry.setAttribute('eyeRest',new THREE.Float32BufferAttribute(local,3));
@@ -487,13 +494,13 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCEyeRest;\nvarying float vBTCEyeSide;\nuniform vec3 btcIrisColor;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   "#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x*vBTCEyeSide;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.79,vBTCEyeRest.z/.74));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.57,vBTCEyeRest.z/.31));\nfloat btcEyeFacing=smoothstep(.40,.65,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.80,.96,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.84,1.02,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=btcIrisColor*mix(.58,1.28,smoothstep(.13,.99,btcEyeIrisRadius));\nfloat btcLimbalRing=smoothstep(.73,.91,btcEyeIrisRadius)*(1.-smoothstep(.94,1.05,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading*(1.-.22*btcLimbalRing),btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.009,.005,.004),btcEyePupilMask);");
+   "#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.79,vBTCEyeRest.z/.74));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.57,vBTCEyeRest.z/.31));\nfloat btcEyeFacing=smoothstep(.40,.65,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.80,.96,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.84,1.02,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=btcIrisColor*mix(.58,1.28,smoothstep(.13,.99,btcEyeIrisRadius));\nfloat btcLimbalRing=smoothstep(.73,.91,btcEyeIrisRadius)*(1.-smoothstep(.94,1.05,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading*(1.-.22*btcLimbalRing),btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.009,.005,.004),btcEyePupilMask);");
  };
  material.customProgramCacheKey=()=> 'btc-ellipsoid-equine-eye-shared-lids-v14';
  const mesh=new THREE.SkinnedMesh(geometry,material);
  mesh.name='BTC bilateral embedded spherical eyes on native Head joint';
  applySkin(mesh,source);
- return {mesh,geometry,material,globes:2,eyeRadius:radius,irisEditable:true,blackEquinePupils:true};
+ return {mesh,geometry,material,globes:2,eyeRadius:radius,irisEditable:true,blackEquinePupils:true,alignedToMayaEyeHoles:true};
 }
 
 /**
