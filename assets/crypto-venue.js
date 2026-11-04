@@ -1,5 +1,5 @@
 import {allLiveTracks,getTrack} from '/visual-lab/tripleLiveSchedule.js?v=alpha19-live-1';
-import {buildTvPlayerUrl,findRacePlayerSource,readTvReplay,RACE_PLAYER_SOURCES} from './satoshi-tv-contract.js?v=winner-slowmo-env-20261104-v1';
+import {buildTvPlayerUrl,findRacePlayerSource,readTvReplay,RACE_PLAYER_SOURCES} from './satoshi-tv-contract.js?v=photo-finish-tv-params-20261104-v1';
 import {createTvEnvironmentDeck} from './satoshi-tv-environment.js?v=winner-slowmo-env-20261104-v1';
 import {createTvParameterMenus} from './satoshi-tv-submenus.js?v=tv-director-params-20261104-v2';
 
@@ -67,7 +67,7 @@ const setError=detail=>{
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
 };
-const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=winner-slowmo-env-20261104-v1',{cache:'no-store',redirect:'follow'}));
+const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=photo-finish-tv-params-20261104-v1',{cache:'no-store',redirect:'follow'}));
 function setUrl(){
  const url=new URL(location.href);
  url.searchParams.set('track',active);
