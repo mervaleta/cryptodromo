@@ -179,7 +179,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
- const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#936e50');
+ const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#856348');
  const accent=new THREE.Color(/^#[0-9a-f]{6}$/i.test(brandAccent||'')?brandAccent:'#f7931a');
  coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.10));
  coat.flatShading=false;coat.side=THREE.FrontSide;
@@ -194,7 +194,11 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCMayaRest;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\ndiffuseColor.rgb*=mix(vec3(1.0),vec3(.76,.73,.71),crpMuzzle*.78);');
+   '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\nfloat coatDirection=sin(vBTCMayaRest.y*13700.+vBTCMayaRest.z*1850.)*sin(vBTCMayaRest.x*7600.-vBTCMayaRest.y*920.);\nfloat coatSalt=fract(sin(dot(floor(vBTCMayaRest*4700.),vec3(17.43,37.2,91.1)))*43758.5453);\nfloat dorsalLight=smoothstep(.027,.041,vBTCMayaRest.z)*.04;\nfloat amberBreak=sin(vBTCMayaRest.y*470.+vBTCMayaRest.z*890.)*sin(vBTCMayaRest.x*340.);\nfloat coatGrain=.97+.045*coatDirection+.05*(coatSalt-.5)+.055*amberBreak+dorsalLight;\ndiffuseColor.rgb*=clamp(coatGrain,.85,1.09);\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.76,.73,.71),crpMuzzle*.78);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
+   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.027*coatDirection+.035*amberBreak,.68,.95);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
+   '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.004,amberBreak*.003,coatDirection*.003));');
  };
  coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-maya-muzzle-v2';
  const hoof=new THREE.MeshStandardMaterial({
