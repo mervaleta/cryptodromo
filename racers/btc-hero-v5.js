@@ -36,6 +36,7 @@ export function createBTCHeroV5(root,options={}){
  const restoreMats=()=>{
   for(const [m,s] of originalMaterials){
    m.roughness=s.roughness;m.sheen=s.sheen;
+   m.transparent=s.transparent;m.opacity=s.opacity;m.depthWrite=s.depthWrite;
    m.sheenColor.copy(s.sheenColor);m.sheenRoughness=s.sheenRoughness;
    m.onBeforeCompile=s.onBeforeCompile;m.customProgramCacheKey=s.cacheKey;
    m.needsUpdate=true;
@@ -44,6 +45,7 @@ export function createBTCHeroV5(root,options={}){
  function saveMat(m){
   if(!originalMaterials.has(m))originalMaterials.set(m,{
    roughness:m.roughness,sheen:m.sheen,sheenColor:m.sheenColor.clone(),
+   transparent:m.transparent,opacity:m.opacity,depthWrite:m.depthWrite,
    sheenRoughness:m.sheenRoughness,
    onBeforeCompile:m.onBeforeCompile,cacheKey:m.customProgramCacheKey
   });
@@ -77,13 +79,13 @@ export function createBTCHeroV5(root,options={}){
   }else{
    if(pass>=3){
     // Tail bends into an S and transitions from thick root to silky wisps.
-    dy+=t*(.0045+.0014*p);
-    dz+=Math.sin(PI*u)*(.0011+.0005*p)-t*(.0008+.0007*q);
+    dy+=t*(.0020+.0010*p);
+    dz+=Math.sin(PI*u)*(.0011+.0005*p)+t*(.0042+.0007*q);
     dx+=t*(.0010*p);
     width*=1.30-.35*t;
    }
    if(pass>=4){
-    dy+=.0018*t;
+    dy+=.0006*t;
     dz+=.0008*Math.sin(PI*u*1.7+strand*.12)*t;
    }
    if(pass>=10){
@@ -131,6 +133,11 @@ export function createBTCHeroV5(root,options={}){
 
  const hairMat=groom.material;
  saveMat(hairMat);
+ // Keep the V4 procedural fibers as a translucent detail layer, not a wall
+ // of spiky wires. The new silk shells carry the dominant hair silhouette.
+ if(pass>=4){hairMat.transparent=true;hairMat.opacity=.34;
+  hairMat.depthWrite=false;hairMat.needsUpdate=true;}
+
  if(pass>=6){
   hairMat.roughness=.56;hairMat.sheen=.95;
   hairMat.sheenColor.set('#b18462');hairMat.sheenRoughness=.45;
