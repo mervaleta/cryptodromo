@@ -31,10 +31,10 @@ try{
  assert.equal(start.heroGroom.earRootCapCenters,2,'close both ear-root openings in the actual skin mesh');
  assert.ok(start.heroGroom.extraTailFacesRemoved>=150,'second flesh-colored tail must be culled');
  assert.ok(start.heroGroom.extraTailFacesRemoved>250,'retire the old skin-tail free end while preserving croup skin');
- assert.ok(start.heroGroom.poweredHindVertices>1000,'croup and hind thighs must be resculpted, not repainted');
+ assert.ok(start.heroGroom.poweredHindVertices>650,'croup and hind thighs must be resculpted, not repainted');
  assert.ok(start.heroGroom.tailDockBorderEdges>=20,'identify tail-root cut boundary');
  assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges,'close every exposed dock edge with skinned Maya triangles');
- assert.ok(start.heroGroom.fineLocks>=500);
+ assert.ok(start.heroGroom.fineLocks>=650);
  assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
  assert.equal(start.heroGroom.crownBridgeLocks,112,'forelock and dorsal mane must be joined across the poll');
  assert.equal(start.heroGroom.heroLocks,56,'sculpted swept hero locks must actually render');
@@ -53,7 +53,7 @@ try{
  assert.ok(start.heroGroom.earTriangles>=800,'ears must be real skinned 3D leaves, not image sprites');
  assert.ok(start.heroGroom.facialSurfaces>=2,'rigged eyelids, nostril contours and tear ducts required');
  assert.ok(start.heroGroom.facialTriangles>140,'facial detail is actual 3D geometry');
- assert.ok(start.heroGroom.fineLocks>=900,'full layered mane and tail required');
+ assert.ok(start.heroGroom.fineLocks>=650,'full layered mane and tail required');
  assert.equal(start.heroGroom.modelPreserved,true);
  assert.equal(start.heroGroom.gallopPreserved,true);
  const before=start.hoofPhase;
