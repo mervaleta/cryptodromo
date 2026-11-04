@@ -1,5 +1,5 @@
 import {allLiveTracks,getTrack} from '/visual-lab/tripleLiveSchedule.js?v=alpha19-live-1';
-import {buildTvPlayerUrl,findRacePlayerSource,readTvReplay,RACE_PLAYER_SOURCES} from './satoshi-tv-contract.js?v=satoshi-cachefix-20261104-v3';
+import {buildTvPlayerUrl,findRacePlayerSource,readTvReplay,RACE_PLAYER_SOURCES} from './satoshi-tv-contract.js?v=satoshi-tv-director-v1-20261104';
 
 /**
  * One active WebGL feed at a time. The parent is the station and the iframe
@@ -63,7 +63,7 @@ const setError=detail=>{
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
 };
-const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=satoshi-cachefix-20261104-v3',{cache:'no-store',redirect:'follow'}));
+const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=satoshi-tv-director-v1-20261104',{cache:'no-store',redirect:'follow'}));
 function setUrl(){
  const url=new URL(location.href);
  url.searchParams.set('track',active);
