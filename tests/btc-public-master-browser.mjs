@@ -31,6 +31,7 @@ try {
  assert.equal(s.heroGroom.sculptedEars,2,'stylized pinnae should appear on the public horse');
  assert.equal(s.heroGroom.integratedMayaHooves,true);
  assert.ok(s.heroGroom.nativeEarFacesRemoved>=150,'no extra horn geometry on public BTC');
+ assert.equal(s.heroGroom.integratedEarRootCapTriangles,s.heroGroom.earCutBorderEdges,'no cut edge exposed behind the ears');
  assert.ok(s.heroGroom.extraTailFacesRemoved>=150,'no second native flesh tail on public BTC');
  assert.ok(s.heroGroom.extraTailFacesRemoved>250,'the old tail free end must be absent without opening the rump');
  assert.ok(s.heroGroom.poweredHindVertices>1000,'hindquarters must be physically fuller in production');
