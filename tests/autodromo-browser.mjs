@@ -23,6 +23,7 @@ try{
     await page.waitForFunction(id=>window.__cryptodromoAutodromoQA.snapshot().trackId===id,trackId);
     state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
     assert.equal(state.carCount,12);
+    await page.screenshot({path:'/tmp/autodromo-'+trackId+'-desktop.png'});
   }
   await page.locator('#camera-mode').selectOption('follow');
   await page.locator('#replay-speed').selectOption('4');
@@ -34,6 +35,10 @@ try{
   await page.locator('#return-live').click();
   state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
   assert.equal(state.mode,'program');
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForTimeout(350);
+  assert.equal(await page.locator('#standings li').count(),12);
+  await page.screenshot({path:'/tmp/autodromo-mobile.png'});
   assert.deepEqual(errors,[],'No uncaught browser errors');
   console.log('AUTODROMO_BROWSER_OK',JSON.stringify({
     cars:state.carCount,garage:100,circuits:3,program:'180s',test:'60s'
