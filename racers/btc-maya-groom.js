@@ -66,30 +66,36 @@ function createHairMass(source,skinAt,{
    weights:[(1-follow)*rootWeight,follow*(1-mix),follow*mix,
     (1-follow)*(1-rootWeight)]};
  }
- function guide(n,major,side,forelock=false){
+ function guide(n,major,side,forelock=false,crown=false){
   const seed=noise(n*13.7+(tail?141:27)+(side+3)*53.5+(major?3:17));
   const crossSeed=noise(n*7.03+(tail?47:3)+(side+1)*33.4);
   // A bilateral crest gets HALF the roots on each side. Using the full
   // count in this denominator cropped the mane to its FRONT HALF.
-  const f=(n+.37+.24*seed)/(forelock?(major?6:14):
+  const f=(n+.37+.24*seed)/(forelock?(major?6:14):crown?(major?14:42):
    (tail?(major?majorCount:fineCount):(major?majorCount/2:fineCount/2)));
   const root=tail?
    [(seed-.5)*.00056,.01472+.00084*crossSeed,.03195-.00047*seed]:
    forelock?
-    [side*(.00012+.00026*seed),-.0273+.0005*f,.04630-.00020*seed]:
-    [side*.00013,-.0251+.0202*f,crest(-.0251+.0202*f)-.00038];
-  const sk=forelock?
+    [side*(.00010+.00025*seed),-.02765+.00070*f,.04575-.00010*seed]:
+   crown?
+    [side*(.00010+.00034*crossSeed),-.02755+.00310*f,
+     crest(-.02755+.00310*f)+.00022]:
+    [side*.00011,-.02625+.02185*f,crest(-.02625+.02185*f)+.00012];
+  // The crown shares Head weights with the forelock: no visible separation when nodding.
+  const sk=(forelock||crown)?
    {joints:[headJoint,0,0,0],weights:[1,0,0,0]}:
    skinAt(...root);
   const id=++strandCount;
   // Physically plausible hair: shorter layered crest, tapered fine fibers and
   // a weighted tail fan. Previous groom was an oversized solid brown curtain.
   const length=(forelock
-   ?(major?.00175+.00085*seed:.00135+.00110*seed)
+   ?(major?.00155+.00052*seed:.00110+.00065*seed)
+   :crown
+    ?(major?.00255+.00125*seed:.00210+.00105*seed)
    :tail
     ?(major?.020+.0070*seed:.018+.0075*seed)
     :(major?.0083+.0028*seed:.0064+.0031*seed))*
-      size*(tail||forelock?1:(.63+.37*smooth(f/.29))*clamp((-.0038-root[1])/.0075,.18,1));
+      size*(tail||forelock||crown?1:(.70+.30*smooth(f/.29))*clamp((-.0038-root[1])/.008,.15,1));
   const breadth=(tail
    ?(major?.00047+.00020*seed:.000080+.000085*seed)
    :(major?.00092+.00035*seed:.000080+.000095*seed));
@@ -97,7 +103,16 @@ function createHairMass(source,skinAt,{
   function point(t,cross,ribbon){
    const t2=smooth(t),w=Math.pow(1-t,.81)*(0.72+0.28*Math.sin(PI*t));
    let x,y,z;
-   if(forelock){
+   if(crown){
+    // Continuous raised scalp bridge between the ears, from forelock to mane.
+    // Root vertices live near the crest and never become floating side wisps.
+    const cy=Math.min(-.0236,root[1]+length*(.72*t+.28*t2));
+    x=root[0]+side*(.00009*t+.00049*t2)+side*.00007*Math.sin(PI*t+seed);
+    y=cy;
+    z=crest(cy)+.00022+.00082*Math.sin(PI*t)*(.64+.36*seed)-.00020*t2;
+    if(ribbon===0)z+=cross*breadth*.59*w;
+    else x+=side*cross*breadth*.32*w;
+   }else if(forelock){
     // True short forelock between the pinnae, rooted to the existing head
     // and tapered downward onto the forehead, not a mesh glued in screen space.
     x=root[0]+side*(.00015+.00018*seed)*t2;
@@ -112,12 +127,13 @@ function createHairMass(source,skinAt,{
     const flow=t*.68+.32*t2;
     // Three-dimensional tapered fan: a compact tail dock opens into a
     // soft plumelike cascade, with deliberate staggered free ends.
-    const fan=(seed-.5)*(.0031*Math.sin(PI*t)+.0030*t2);
+    const fan=(seed-.5)*(.0037*Math.sin(PI*t)+.0043*t2);
     x=root[0]+fan+.00034*Math.sin(t*TAU+seed*4)*t2;
-    y=root[1]+length*(.53*t+.22*t2)+.00068*Math.sin(PI*t);
-    z=root[2]-(.0081+.44*length+.0024*crossSeed)*flow
-      +.0018*Math.sin(PI*t)*(.5+.5*seed)
-      +(seed-.5)*(.0043*Math.sin(PI*t)+.0070*t2);
+    y=root[1]+length*(.62*t+.32*t2)+.00055*Math.sin(PI*t);
+    // Raised tail with an elegant backward sweep rather than limp free ends.
+    z=root[2]-(.0045+.28*length+.0010*crossSeed)*flow
+      +.0028*Math.sin(PI*t)*(.5+.5*seed)
+      +(seed-.5)*(.0035*Math.sin(PI*t)+.0047*t2);
     if(ribbon===0)x+=cross*breadth*w;
     else z+=cross*breadth*.42*w;
    }else{
@@ -130,18 +146,18 @@ function createHairMass(source,skinAt,{
     // The large, smooth "calligraphic" mane is made of feathered layers:
     // it starts on the poll, flows down the full neck and finishes in
     // overlapping tapered curls. Stronger silhouette, fewer dark wires.
-    const lift=.00095*Math.sin(PI*t)*(.65+.35*seed);
-    const drape=(.00105+.00060*seed)*t2;
-    // Tighter common root and a gradual bilateral fan.
-    const outward=(.00205+.00105*seed)*(.32*rearward+.68*t2);
-    x=root[0]+side*(outward+.00017*Math.sin(PI*t));
-    y=Math.min(-.0038,cy+.00022*Math.sin(PI*t*1.2+seed*2.8)*t2);
-    z=neckZ-.00057+lift-drape+
-       .00026*Math.sin(PI*t*1.7+seed*3)*t2;
+    const lift=.00128*Math.sin(PI*t)*(.68+.32*seed);
+    const drape=(.00042+.00030*seed)*t2;
+    // Locks sit on the crest; the previous wide sweep detached at the shoulder.
+    const outward=(.00048+.00071*seed)*(.20*rearward+.80*t2);
+    x=root[0]+side*(outward+.00009*Math.sin(PI*t));
+    y=Math.min(-.0038,cy+.00013*Math.sin(PI*t*1.2+seed*2.8)*t2);
+    z=neckZ+.00018+lift-drape+
+       .00019*Math.sin(PI*t*1.7+seed*3)*t2;
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
     // Physically trim low fibers: no alpha masking or recoloring.
-    z=Math.max(z,crest(y)-(major?.00215:.00130)-.00012*t2);
+    z=Math.max(z,crest(y)-.00047);
    }
    return [x,y,z];
   }
@@ -179,6 +195,8 @@ function createHairMass(source,skinAt,{
   for(const side of [-1,1]){
    for(let n=0;n<majorCount/2;n++)guide(n,true,side);
    for(let n=0;n<fineCount/2;n++)guide(n,false,side);
+   for(let n=0;n<14;n++)guide(n,true,side,false,true);
+   for(let n=0;n<42;n++)guide(n,false,side,false,true);
    for(let n=0;n<6;n++)guide(n,true,side,true);
    for(let n=0;n<14;n++)guide(n,false,side,true);
   }
@@ -217,7 +235,7 @@ function createHairMass(source,skinAt,{
  };
  mat.customProgramCacheKey=()=>tail?'btc-harmony-hair-tail-3':'btc-harmony-hair-mane-3';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
- return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers};
+ return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112};
 }
 
 export function createMayaGroom(source,skinAt,{
@@ -233,6 +251,7 @@ export function createMayaGroom(source,skinAt,{
   locks:mane.locks+tail.locks,
   vertices:mane.vertices+tail.vertices,
   neckOutliers:mane.neckOutliers,
+  bridgeLocks:mane.bridgeLocks,
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
    motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
