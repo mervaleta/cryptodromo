@@ -96,7 +96,26 @@ def edit(races, observed, published, mode):
     stories.append(dict(id=identity('roundup', day, mode), title='Parte de la jornada virtual · ' + day, body=f'Esta edición conserva {len(races)} carreras identificadas en una instantánea de la fuente; no representa una jornada completa. No hay una fuente de resultados confirmados validada para esta edición. Las nóminas y horarios son evidencia observada, no resultados.', kind='roundup', category='Actualidad / Previas', source_url=SOURCE_URL, observed_at=observed.isoformat(), published_at=published.isoformat(), mode=mode))
     return stories
 
-CSS = '''*{box-sizing:border-box}body{margin:0;background:#f5f0e2;color:#223d31;font:17px/1.6 Georgia,serif}a{color:#215d43;text-underline-offset:3px}header,main,footer{max-width:1180px;margin:auto;padding:24px}header{text-align:center;border-bottom:double 5px #a08445}h1{font-size:clamp(2.2rem,6vw,4.8rem);line-height:1.05;margin:14px 0}h2{line-height:1.2}nav{display:flex;flex-wrap:wrap;justify-content:center;gap:20px}.kicker,.badge,time{font:13px/1.6 system-ui,sans-serif}.badge{background:#e7dab3;padding:5px 9px;display:inline-block}.notice{padding:14px;border:1px solid #b5944d;background:#fff8e5}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px}.card{border-top:3px solid #a08445;padding:18px 4px}.card h3{line-height:1.25}article.full{max-width:800px;margin:auto}.ticker{padding:12px 0;border-bottom:1px solid #b5944d;font:14px system-ui,sans-serif}.muted{color:#566b5b}.skip{position:absolute;left:-9999px}.skip:focus{left:10px;background:white;padding:10px}img{max-width:100%;height:auto}section{margin:32px 0}footer{border-top:double 4px #a08445}p{overflow-wrap:anywhere}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}'''
+CSS = '''@import url("/design/crc-system.css?v=crc-1");
+*{box-sizing:border-box}body{margin:0;background:#f5f0e2;color:#223d31;font:17px/1.6 Georgia,serif}a{color:#215d43;text-underline-offset:3px}header,main,footer{max-width:1180px;margin:auto;padding:24px}header{text-align:center;border-bottom:double 5px #a08445}h1{font-size:clamp(2.2rem,6vw,4.8rem);line-height:1.05;margin:14px 0}h2{line-height:1.2}nav{display:flex;flex-wrap:wrap;justify-content:center;gap:20px}.kicker,.badge,time{font:13px/1.6 system-ui,sans-serif}.badge{background:#e7dab3;padding:5px 9px;display:inline-block}.notice{padding:14px;border:1px solid #b5944d;background:#fff8e5}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px}.card{border-top:3px solid #a08445;padding:18px 4px}.card h3{line-height:1.25}article.full{max-width:800px;margin:auto}.ticker{padding:12px 0;border-bottom:1px solid #b5944d;font:14px system-ui,sans-serif}.muted{color:#566b5b}.skip{position:absolute;left:-9999px}.skip:focus{left:10px;background:white;padding:10px}img{max-width:100%;height:auto}section{margin:32px 0}footer{border-top:double 4px #a08445}p{overflow-wrap:anywhere}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+
+/* CRC editorial skin (generator-owned): newspaper layout preserved, common colors and shell width. */
+html body:not(.hub){background:#070707;color:var(--crc-support-text);font-family:var(--crc-font);}
+html body:not(.hub) a{color:var(--crc-green);}
+html body:not(.hub) header,html body:not(.hub) main,html body:not(.hub) footer{
+  box-sizing:border-box;width:var(--crc-shell-width);max-width:var(--crc-shell-max);
+  padding:24px 0;margin-inline:auto;
+}
+html body:not(.hub) header{text-align:center;border-bottom:1px solid var(--crc-support-line);}
+html body:not(.hub) header h1{font-family:var(--crc-font);font-weight:800;letter-spacing:-.045em;}
+html body:not(.hub) .card{background:var(--crc-panel);border:1px solid var(--crc-support-line);border-top:3px solid var(--crc-green);padding:18px;}
+html body:not(.hub) .badge{background:var(--crc-support-raised);color:var(--crc-green);border:1px solid var(--crc-support-line);}
+html body:not(.hub) .notice{background:var(--crc-panel);color:var(--crc-support-text);border:1px solid var(--crc-support-line);border-left:3px solid var(--crc-support-warn);}
+html body:not(.hub) .muted{color:var(--crc-support-muted);}
+html body:not(.hub) .ticker,html body:not(.hub) footer{border-color:var(--crc-support-line);}
+html body:not(.hub) .kicker{color:var(--crc-green);}
+html body:not(.hub) .skip:focus{background:var(--crc-green);color:#071108;}
+'''
 
 def database(state):
     state.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
