@@ -11,6 +11,8 @@ on:
       - 'visual-lab/tripleLiveSchedule.js'
       - 'visual-lab/threeCoursePreview.js'
       - 'estadio/estadio.js'
+      - 'race-lab/source/src/stadium/presets.js'
+      - 'tests/world-fixture-stadium-20261103.mjs'
       - 'tests/alpha19-stadium-hub.mjs'
       - '.github/workflows/alpha19-stadium-hub.yml'
   push:
@@ -25,6 +27,8 @@ on:
       - 'visual-lab/tripleLiveSchedule.js'
       - 'visual-lab/threeCoursePreview.js'
       - 'estadio/estadio.js'
+      - 'race-lab/source/src/stadium/presets.js'
+      - 'tests/world-fixture-stadium-20261103.mjs'
       - 'tests/alpha19-stadium-hub.mjs'
       - '.github/workflows/alpha19-stadium-hub.yml'
   workflow_dispatch:
