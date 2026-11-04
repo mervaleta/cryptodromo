@@ -76,10 +76,10 @@ function createHairMass(source,skinAt,{
   // a weighted tail fan. Previous groom was an oversized solid brown curtain.
   const length=(tail
    ?(major?.019+.0045*seed:.0155+.006*seed)
-   :(major?.0032+.0016*seed:.0028+.0023*seed))*size;
+   :(major?.0053+.00215*seed:.0038+.00255*seed))*size;
   const breadth=(tail
    ?(major?.00027+.00013*seed:.000065+.000075*seed)
-   :(major?.00048+.00022*seed:.000058+.00008*seed));
+   :(major?.00039+.00015*seed:.000048+.000067*seed));
   const base=positions.length/3;
   function point(t,cross,ribbon){
    const t2=smooth(t),w=Math.pow(1-t,.81)*(0.72+0.28*Math.sin(PI*t));
@@ -95,7 +95,7 @@ function createHairMass(source,skinAt,{
    }else{
     // The mane lies against the crest instead of spreading into a huge
     // shoulder-length veil; root motion stays zero.
-    const outflow=(.00165+.00075*seed)*(t*.47+.53*t2);
+    const outflow=(.0021+.0009*seed)*(t*.47+.53*t2);
     x=root[0]+side*(outflow+.00024*Math.sin(PI*t));
     y=root[1]+(.00035+.00065*crossSeed)*t2;
     z=root[2]-length*(.48*t+.52*t2)
