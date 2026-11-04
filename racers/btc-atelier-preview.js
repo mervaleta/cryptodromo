@@ -138,6 +138,12 @@ export function createPreview(canvas,onFailure=()=>{}){
   select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,
   // Deterministic visual QA only: ?btcFreeze=1 keeps the rendered pose stationary
   // while a test explicitly advances the original AnimationMixer. Not exposed on LIVE.
+  debugSetHindVolumeStrength(value){
+   if(!fixedFrame||selected?.symbol!=='BTC'||!hero?.setHindVolumeStrength)return null;
+   hero.setHindVolumeStrength(value);
+   renderer.render(scene,camera);
+   return hero.snapshot?.hindVolumeStrength??null;
+  },
   debugAdvance(frames=1,step=.583/16){
    if(!fixedFrame||!horse||!hero||selected?.symbol!=='BTC')return null;
    const count=Math.min(32,Math.max(1,Math.floor(frames)));
