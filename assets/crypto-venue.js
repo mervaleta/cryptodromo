@@ -169,6 +169,8 @@ frame.addEventListener('load',async()=>{
   const loadedSerial=serial;
   setTimeout(()=>{if(loadedSerial===serial&&validFrameDoc()){environmentDeck.apply();parameterDeck.apply();}},1100);
   requestAnimationFrame(()=>{requestAnimationFrame(uncover);});
+   // WebGL renderers can throttle animation frames; never strand the overlay.
+   setTimeout(()=>{if(loadedSerial===serial)uncover();},350);
   try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
   return;
  }
