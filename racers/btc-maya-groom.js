@@ -195,7 +195,7 @@ function createHairMass(source,skinAt,{
    const aLength=Math.hypot(ax,ay,az)||1;
    ax/=aLength;ay/=aLength;az/=aLength;
    const bx=ty*az-tz*ay,by=tz*ax-tx*az,bz=tx*ay-ty*ax;
-   const radius=radiusBase*Math.pow(1-u,.77)+.000003;
+   const radius=radiusBase*Math.pow(1-u,.86)+.000002;
    for(let col=0;col<SIDES;col++){
     const angle=TAU*col/SIDES,cs=Math.cos(angle),sn=Math.sin(angle);
     const v=[c[0]+radius*(ax*cs+bx*sn),
@@ -203,7 +203,7 @@ function createHairMass(source,skinAt,{
      c[2]+radius*(az*cs+bz*sn)];
     if(!tail&&!forelock&&(v[1]>-.00379||v[2]<crest(v[1])-.00235))neckOutliers++;
     positions.push(...v);
-    const tint=(.955+.045*seed+.025*(1-u));
+    const tint=(.90+.11*seed+.035*(1-u));
     colors.push(tint*1.04,tint*.99,tint*.95);
     tip.push(u);ids.push(id*1.71);region.push(tail?1:0);
     const skin=skinFor(sk,u);
@@ -318,9 +318,9 @@ export function createMayaGroom(source,skinAt,{
 }={}){
  const motion={time:{value:0},wind:{value:1},gait:{value:0},tailInertia:{value:0}};
  let lastPhase=0,tailVelocity=0;
- const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:48,
+ const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:240,
   size:clamp(maneSize,.6,1.9),color:maneColor,motion});
- const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:192,
+ const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:320,
   size:clamp(tailSize,.6,1.9),color:tailColor,motion});
  let disposed=false;
  return {
