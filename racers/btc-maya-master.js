@@ -7,11 +7,11 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-neck-cleanup-20261104-v6';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-neck-cleanup-20261104-v6';
-import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-neck-cleanup-20261104-v6';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-ear-root-seal-20261104-v7';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-ear-root-seal-20261104-v7';
+import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-ear-root-seal-20261104-v7';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
-export const BTC_MAYA_RENDER_BUILD='btc-master-neck-cleanup-20261104-v6';
+export const BTC_MAYA_RENDER_BUILD='btc-master-ear-root-seal-20261104-v7';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -124,6 +124,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const removed={nativeEarFaces:0,extraTailFaces:0};
  const visibleTriangles=[];
  const retiredTailEdges=new Set();
+ const retiredEarEdges=new Set();
  const edgeKey=(a,b)=>a<b?a+':'+b:b+':'+a;
  const earVertex=id=>{
   const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
@@ -137,7 +138,11 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  };
  for(let t=0;t<originalIndices.length;t+=3){
   const tri=[originalIndices[t],originalIndices[t+1],originalIndices[t+2]];
-  if(tri.filter(earVertex).length>=2){removed.nativeEarFaces++;continue;}
+  if(tri.filter(earVertex).length>=2){
+   removed.nativeEarFaces++;
+   for(let k=0;k<3;k++)retiredEarEdges.add(edgeKey(tri[k],tri[(k+1)%3]));
+   continue;
+  }
   if(tri.filter(tailVertex).length>=2){
    removed.extraTailFaces++;
    for(let k=0;k<3;k++)retiredTailEdges.add(edgeKey(tri[k],tri[(k+1)%3]));
@@ -175,6 +180,48 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  for(const {a,b} of border)visibleTriangles.push(b,a,capCenter);
  removed.tailDockBorderEdges=border.length;
  removed.integratedDockCapTriangles=border.length;
+ // The removed native ear tips also cut HOLES through the original poll.
+ // Reconnect each ear-root opening to its OWN existing boundary vertices.
+ // No floating cover or separate prop: the caps belong to the skinned body.
+ const earEdges=[...keptEdges].filter(([key,e])=>
+  e.count===1&&retiredEarEdges.has(key)).map(([,e])=>e);
+ if(earEdges.length<40||earEdges.length>80)
+  throw Error('BTC ear cut boundaries unexpectedly changed');
+ const graph=new Map();
+ for(const {a,b} of earEdges)for(const [u,v] of [[a,b],[b,a]]){
+  if(!graph.has(u))graph.set(u,new Set());
+  graph.get(u).add(v);
+ }
+ const visited=new Set(),earComponents=[];
+ for(const vertex of graph.keys()){
+  if(visited.has(vertex))continue;
+  const stack=[vertex],component=new Set();
+  visited.add(vertex);
+  while(stack.length){
+   const at=stack.pop();component.add(at);
+   for(const next of graph.get(at)||[])if(!visited.has(next)){
+    visited.add(next);stack.push(next);
+   }
+  }
+  earComponents.push(component);
+ }
+ if(earComponents.length!==2||earComponents.some(c=>c.size<15))
+  throw Error('BTC ear roots must have two original connected boundaries');
+ const newEarCenters=[];
+ for(const component of earComponents){
+  const centerId=positions.length/3+newEarCenters.length/3;
+  const cap=[0,0,0];
+  for(const id of component)for(let k=0;k<3;k++)cap[k]+=positions[id*3+k];
+  for(let k=0;k<3;k++)cap[k]/=component.size;
+  cap[2]-=.00016; // inside the actual poll, never hovering over the skin
+  newEarCenters.push(...cap);
+  for(const {a,b} of earEdges)if(component.has(a)&&component.has(b))
+   visibleTriangles.push(b,a,centerId);
+ }
+ positions=Float32Array.from([...positions,...newEarCenters]);
+ removed.earCutBorderEdges=earEdges.length;
+ removed.integratedEarRootCapTriangles=earEdges.length;
+ removed.earRootCapCenters=earComponents.length;
  const indices=new Uint16Array(visibleTriangles);
  if(removed.nativeEarFaces<150||removed.extraTailFaces<150)
   throw Error('BTC original ear/tail geometry not located; refusing cosmetic patch');
@@ -499,6 +546,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    sculptedBodyParts:1,vertices:anatomy.vertices,
    harmonyBuild:BTC_MAYA_RENDER_BUILD,
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
+   earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
