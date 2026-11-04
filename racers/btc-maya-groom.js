@@ -46,6 +46,23 @@ function createHairMass(source,skinAt,{
  const ROWS=20,WIDTH=4,RIBBONS=2;
  const total=majorCount+fineCount;
  let strandCount=0;
+ // Reuse the native animated Tail1..Tail7 skeleton: every hair root remains
+ // attached to the croup, with an increasingly light secondary tail chain
+ // influence toward the ends. Never overwrite Gallop bone rotations.
+ const tailJoints=tail?Array.from({length:7},(_,i)=>
+  source.skeleton.bones.findIndex(b=>b.name==='Tail'+(i+1))):[];
+ if(tail&&tailJoints.some(i=>i<0))throw Error('BTC Maya tail requires native Tail1..Tail7');
+ function skinFor(sk,u){
+  if(!tail)return sk;
+  const stretch=smooth(u)*5.99999,j=Math.min(5,Math.floor(stretch)),mix=stretch-j;
+  const follow=.06+.16*smooth(u);
+  const rootIndex=sk.joints[0],rootWeight=sk.weights[0];
+  const followA=tailJoints[j],followB=tailJoints[j+1];
+  // Keep headroom for blending with the existing croup influence.
+  return {joints:[rootIndex,followA,followB,sk.joints[1]||0],
+   weights:[(1-follow)*rootWeight,follow*(1-mix),follow*mix,
+    (1-follow)*(1-rootWeight)]};
+ }
  function guide(n,major,side){
   const seed=noise(n*13.7+(tail?141:27)+(side+3)*53.5+(major?3:17));
   const crossSeed=noise(n*7.03+(tail?47:3)+(side+1)*33.4);
@@ -99,8 +116,9 @@ function createHairMass(source,skinAt,{
      const tint=(.76+.18*seed+.10*u+.085*(1-across))*(major?1:.85);
      colors.push(tint*1.045,tint*.99,tint*.95);
      tip.push(u);ids.push(id*1.71);region.push(tail?1:0);
+     const skin=skinFor(sk,u);
      for(let k=0;k<4;k++){
-      bones.push(sk.joints[k]||0);weights.push(sk.weights[k]||0);
+      bones.push(skin.joints[k]||0);weights.push(skin.weights[k]||0);
      }
     }
    }
