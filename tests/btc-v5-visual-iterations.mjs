@@ -17,7 +17,7 @@ const page=await context.newPage();
 const errors=[];
 page.on('pageerror',e=>errors.push(e.message));
 try{
- await page.goto('http://127.0.0.1:8799/racers/?btcPass=1&btcFreeze=1#BTC',{
+ await page.goto('http://127.0.0.1:8799/racers/?btcMaster=v5&btcPass=1&btcFreeze=1#BTC',{
   waitUntil:'domcontentloaded',timeout:90000
  });
  for(let n=1;n<=10;n++){
@@ -45,7 +45,7 @@ try{
   writeFileSync(dir+'/notes.json',JSON.stringify(s.heroGroom,null,2));
   console.log('BTC_V5_PASS_OK',stage,s.heroGroom.passes.length,s.heroGroom.vertexCount);
  }
- await page.goto('http://127.0.0.1:8799/racers/?btcPass=10&btcFreeze=1#BTC',{waitUntil:'domcontentloaded'});
+ await page.goto('http://127.0.0.1:8799/racers/?btcMaster=v5&btcPass=10&btcFreeze=1#BTC',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.pass===10,null,{timeout:100000});
  await page.locator('[data-btc-camera="profile"]').click();
  await page.locator('#btc-wind').evaluate(el=>{
