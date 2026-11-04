@@ -7,12 +7,12 @@ import {reframeCamera,countdownVisibility} from './cameraRig.js?v=alpha17-1';
 import {bindCameraPanel} from './cameraPanel.js?v=alpha17-1';
 import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
-import {createWinnerSlowMotion} from './winnerSlowMotion.js?v=winner-slowmo-20261104-v1';
+import {createWinnerSlowMotion} from './winnerSlowMotion.js?v=photo-finish-tv-params-20261104-v1';
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
-import {createStadiumDensity} from './stadiumDensity.js?v=alpha18-1';
-import {createParadeVillage} from '../parade/scenery.js?v=alpha16-live-2';
+import {createStadiumDensity} from './stadiumDensity.js?v=photo-finish-tv-params-20261104-v1';
+import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
@@ -22,7 +22,7 @@ import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
-import {createHoofTerrainFX} from './hoofTerrainFX.js?v=hoof-fx-1';
+import {createHoofTerrainFX} from './hoofTerrainFX.js?v=photo-finish-tv-params-20261104-v1';
 import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha20-procedural-2';
 import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
@@ -34,7 +34,7 @@ import {tripleLiveSlot,getTrack} from './tripleLiveSchedule.js?v=alpha19-live-1'
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {mountTrackSplitsPanel} from './trackSplitsPanel.js?v=alpha15-splits-1';
-import {createSplitTrackMarkers} from './trackSplitMarkers.js?v=alpha15-splits-1';
+import {createSplitTrackMarkers} from './trackSplitMarkers.js?v=photo-finish-tv-params-20261104-v1';
 
 // Alpha 05: +20% physical/visual course (410 → 492 units), same official race and 60s.
 const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL_START_X;
