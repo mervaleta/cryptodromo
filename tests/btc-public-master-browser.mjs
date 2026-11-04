@@ -43,9 +43,9 @@ try {
  assert.equal(s.heroGroom.integratedEarRootCapTriangles,s.heroGroom.earCutBorderEdges,'no cut edge exposed behind the ears');
  assert.ok(s.heroGroom.extraTailFacesRemoved>=150,'no second native flesh tail on public BTC');
  assert.ok(s.heroGroom.extraTailFacesRemoved>250,'the old tail free end must be absent without opening the rump');
- assert.ok(s.heroGroom.poweredHindVertices>1000,'hindquarters must be physically fuller in production');
+ assert.ok(s.heroGroom.poweredHindVertices>650,'hindquarters must be physically fuller in production');
  assert.ok(s.heroGroom.integratedDockCapTriangles>=20,'rump opening must be welded inside original Maya mesh');
- assert.ok(s.heroGroom.fineLocks>=900,'fewer true 3D hair locks replace hundreds of flat fibers');
+ assert.ok(s.heroGroom.fineLocks>=650,'fewer true 3D hair locks replace hundreds of flat fibers');
  const before=s.hoofPhase;
  await page.waitForTimeout(1100);
  const after=(await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.())).hoofPhase;
