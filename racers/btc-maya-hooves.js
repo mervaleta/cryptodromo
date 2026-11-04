@@ -16,7 +16,7 @@ export function createBTCSculptedHooves(source,skinAt,{hoofColor='#37302b'}={}){
   {x:.00278,y:.01045,front:false}
  ];
  for(const [footIndex,foot] of feet.entries()){
-  const sk=skinAt(foot.x,foot.y,.0016),start=xyz.length/3;
+  const start=xyz.length/3;
   // The closed oval sole, flaring hoof wall, bevel and coronet are distinct.
   const rings=[
    {z:0,scale:1.20,forward:1.17},
@@ -39,6 +39,10 @@ export function createBTCSculptedHooves(source,skinAt,{hoofColor='#37302b'}={}){
     const x=foot.x+cs*rx*r.scale*sideScale;
     const y=foot.y+sn*ry*r.scale*toe+yToe*(1-row/(rings.length-1));
     xyz.push(x,y,r.z);
+    // Hoof shells must follow the SAME interpolated bone influences as the
+    // adjoining native Maya fetlocks. A single skin sample at the hoof center
+    // previously caused four detached rigid boots during the real Gallop.
+    const sk=skinAt(x,y,r.z);
     const sum=sk.weights.reduce((a,b)=>a+b,0)||1;
     for(let b=0;b<4;b++){skinIndices.push(sk.joints[b]||0);skinWeights.push((sk.weights[b]||0)/sum);}
     const streak=.93+.055*Math.sin(theta*14+footIndex*4)
