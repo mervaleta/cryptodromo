@@ -4,7 +4,7 @@
  * procedural cuticle grain restores detail without hundreds of dangling fibers.
  */
 import * as THREE from 'three';
-import {createBTCTailSpring} from './btc-maya-tail-spring.js?v=btc-face-poll-tail-20261104-v14';
+import {createBTCTailSpring} from './btc-maya-tail-spring.js?v=btc-face-poll-tail-20261104-v15';
 const PI=Math.PI,TAU=2*PI;
 const smooth=v=>{const t=Math.max(0,Math.min(1,v));return t*t*(3-2*t);};
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
