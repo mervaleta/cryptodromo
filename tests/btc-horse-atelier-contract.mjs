@@ -8,7 +8,7 @@ test('normal BTC card loads anatomical master and retains explicit rollback',()=
  assert.match(racers,/atelierMode!=='off'&&selected\.symbol==='BTC'/);
  assert.match(racers,/hoof-btc-fiche-20261104-v1/);
  const pilot=read('racers/btc-atelier-preview.js');
- assert.match(pilot,/btc-master-procedural-hind-groom-20261104-v12/);
+ assert.match(pilot,/hoof-btc-fiche-20261104-v1/);
  assert.match(pilot,/createBTCTerrainStage/);
  assert.match(racers,/horse-preview\.js\?v=alpha18-gaitmane-1/);
  assert.match(html,/id="btc-atelier-panel"[^>]*hidden/);
