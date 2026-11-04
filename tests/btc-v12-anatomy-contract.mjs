@@ -28,6 +28,10 @@ test('BTC rump, thighs and gaskins are sculpted as real rest mesh vertices on bo
  }
  assert.deepEqual([...vertices.slice(18,24)],[...original.slice(18,24)],'hooves and forequarters untouched');
  assert.equal(info.hoofDisplacement,0);
+ const profileWidth=new Float32Array([.004,.008,.019,.004,.014,.019]);
+ const initialWidth=profileWidth[4]-profileWidth[1];
+ module.sculptBTCHindquarters(profileWidth);
+ assert.ok(profileWidth[4]-profileWidth[1]>initialWidth*1.10,'posterior thigh also grows in sagittal side profile, not only depth');
 });
 test('Groom, bone weights and coat texture remain procedural rather than images',()=>{
  assert.match(source,/BTC_HINDQUARTER_COAT_FRAGMENT/);
@@ -41,6 +45,12 @@ test('Groom, bone weights and coat texture remain procedural rather than images'
  assert.ok(module.hindLimbSkinNeighborWeight(.012,.013,true)>2);
  assert.ok(module.hindLimbSkinNeighborWeight(.012,.013,false)<1);
  assert.equal(module.hindLimbSkinNeighborWeight(-.014,.03,true),2);
+ const phase={value:.35},vertexShader={vertexShader:'#include <common>\\n#include <begin_vertex>',uniforms:{}};
+ module.addBTCHindquarterGaitShader(vertexShader,phase);
+ assert.strictEqual(vertexShader.uniforms.btcHindGait,phase);
+ assert.match(vertexShader.vertexShader,/btcStifle/);
+ assert.match(vertexShader.vertexShader,/transformed\\.x/);
+ assert.ok(vertexShader.vertexShader.includes('\\nfloat btcHindPhase'),'shader inserts a real newline before muscle motion');
 });
 test('canonical BTC chain picks new groom and body modules; 99 other horses unchanged',()=>{
  const files=['racers/index.html','racers/racers.js','racers/btc-atelier-preview.js','racers/btc-maya-master.js'];
@@ -53,6 +63,7 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.match(master,/sculptBTCHindquarters\(positions\)/);
  assert.match(master,/addBTCHindquarterCoatTexture\(shader\)/);
  assert.match(master,/hindLimbSkinNeighborWeight/);
+ assert.match(master,/anatomy\.hindGait\.value=gait/);
  assert.match(master,/createMayaGroom/);
  assert.match(master,/gallopPreserved:true/);
  const groom=read('racers/btc-maya-groom.js');
