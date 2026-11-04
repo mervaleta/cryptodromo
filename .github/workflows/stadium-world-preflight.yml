@@ -1,0 +1,56 @@
+name: Stadium World · isolated pre-integration acceptance
+on:
+  pull_request:
+    paths:
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/presentationHorse.js'
+      - 'tests/stadium-broadcast-contract.mjs'
+      - 'tests/stadium-world-browser-acceptance.mjs'
+      - '.github/workflows/stadium-world-preflight.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install race module dependencies
+        run: npm ci --prefix race-lab/source
+      - name: Verify syntax and every referenced DOM id
+        run: |
+          node --experimental-default-type=module --check visual-lab/scene.js
+          node --experimental-default-type=module --check visual-lab/presentationHorse.js
+          node --experimental-default-type=module --test tests/stadium-broadcast-contract.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Verify 3 complete replay transmissions against local branch
+        env:
+          CRP_WORLD_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/stadium-world-http.log 2>&1 &
+          web_pid=$!
+          trap 'kill $web_pid || true' EXIT
+          for i in $(seq 1 30); do if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then break; fi; sleep 1; done
+          node tests/stadium-world-browser-acceptance.mjs
+      - name: Preserve actual Chromium screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stadium-world-three-channels
+          path: artifacts/stadium-world/
+          if-no-files-found: ignore
