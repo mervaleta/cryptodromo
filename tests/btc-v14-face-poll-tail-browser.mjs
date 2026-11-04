@@ -1,5 +1,20 @@
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
+async function captureHorse(page,name){
+ // Playwright locator.screenshot waits for visual stability; the horse has
+ // an always-running Gallop and a large WebGL buffer, so it can time out.
+ // Clip a direct viewport capture to the same card without that requirement.
+ const box=await page.locator('#horse-view').boundingBox();
+ assert.ok(box?.width>200&&box?.height>200,'BTC WebGL card must be visible');
+ await page.screenshot({
+  path:'artifacts/btc-v14/'+name,
+  clip:{x:Math.max(0,box.x),y:Math.max(0,box.y),
+   width:Math.min(box.width,1460-Math.max(0,box.x)),
+   height:Math.min(box.height,970-Math.max(0,box.y))},
+  animations:'disabled',timeout:90000
+ });
+}
+
 import {chromium} from 'playwright';
 
 const browser=await chromium.launch({headless:true,args:[
@@ -40,7 +55,7 @@ try{
  await page.locator('button[data-btc-camera="face"]').click();
  await page.waitForTimeout(850);
  assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())).camera,'face');
- await page.locator('#horse-view').screenshot({path:'artifacts/btc-v14/01-eyes-nape-close.png',timeout:60000});
+ await captureHorse(page,'01-eyes-nape-close.png');
  const dynamics=[];
  for(let i=0;i<8;i++){
   await page.waitForTimeout(320);
@@ -51,15 +66,15 @@ try{
   'free tail must have meaningful inertial left/right motion: '+JSON.stringify(dynamics));
  await page.locator('button[data-btc-camera="front"]').click();
  await page.waitForTimeout(430);
- await page.locator('#horse-view').screenshot({path:'artifacts/btc-v14/02-eyes-front.png',timeout:60000});
+ await captureHorse(page,'02-eyes-front.png');
  await page.locator('button[data-btc-camera="profile"]').click();
  await page.waitForTimeout(400);
- await page.locator('#horse-view').screenshot({path:'artifacts/btc-v14/03-nape-profile-phase-a.png',timeout:60000});
+ await captureHorse(page,'03-nape-profile-phase-a.png');
  await page.waitForTimeout(320);
- await page.locator('#horse-view').screenshot({path:'artifacts/btc-v14/04-nape-profile-phase-b.png',timeout:60000});
+ await captureHorse(page,'04-nape-profile-phase-b.png');
  await page.locator('button[data-btc-camera="rear"]').click();
  await page.waitForTimeout(600);
- await page.locator('#horse-view').screenshot({path:'artifacts/btc-v14/05-tail-rear.png',timeout:60000});
+ await captureHorse(page,'05-tail-rear.png');
  await page.locator('#motion').click();
  await page.waitForTimeout(850);
  assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())).paused,true);
