@@ -1,0 +1,31 @@
+name: Hoof Terrain FX | Contacts and Regression
+on:
+  pull_request:
+    paths:
+      - 'visual-lab/hoofContactSolver.js'
+      - 'visual-lab/hoofTerrainFX.js'
+      - 'visual-lab/hoof-fx-lab/**'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/proceduralGround.js'
+      - 'tests/hoof-terrain-fx.mjs'
+      - '.github/workflows/hoof-terrain-fx.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hoof-terrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check of procedural VFX and broadcast
+        run: |
+          for f in visual-lab/hoofContactSolver.js visual-lab/hoofTerrainFX.js visual-lab/hoof-fx-lab/lab.js visual-lab/scene.js visual-lab/proceduralGround.js; do
+            node --experimental-default-type=module --check "$f"
+          done
+      - name: All hoof event, safety and 12-horse regression tests
+        run: node --experimental-default-type=module --test tests/hoof-terrain-fx.mjs
+      - name: Existing race-result invariants
+        run: node --experimental-default-type=module --test tests/official-race.mjs tests/alpha20-gates.mjs
