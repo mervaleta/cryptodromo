@@ -74,7 +74,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
   const shadowGeometry=new THREE.CircleGeometry(1,14);
   shadowGeometry.rotateX(-Math.PI/2);
   const shadowMaterial=new THREE.MeshBasicMaterial({
-    color:0x142013,transparent:true,opacity:.27,depthWrite:false,side:THREE.DoubleSide
+    color:0x142013,transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide
   });
   const shadows=new THREE.InstancedMesh(shadowGeometry,shadowMaterial,lanes*4);
   shadows.name='Hoof FX · four per-hoof contact shadows';
@@ -82,7 +82,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
   shadows.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(shadows);
 
   const xyz=new Float32Array(maxParticles*3),rgb=new Float32Array(maxParticles*3);
-  const sizes=new Float32Array(maxParticles),alpha=new Float32Array(maxParticles);
+  const sizes=new Float32Array(maxParticles),alpha=new Float32Array(maxParticles),kinds=new Float32Array(maxParticles);
   const baseSize=new Float32Array(maxParticles),baseAlpha=new Float32Array(maxParticles);
   const velocities=new Float32Array(maxParticles*3),gravity=new Float32Array(maxParticles);
   const ages=new Float32Array(maxParticles),lifetimes=new Float32Array(maxParticles);
@@ -91,20 +91,21 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
   particleGeometry.setAttribute('color',new THREE.BufferAttribute(rgb,3).setUsage(THREE.DynamicDrawUsage));
   particleGeometry.setAttribute('aSize',new THREE.BufferAttribute(sizes,1).setUsage(THREE.DynamicDrawUsage));
   particleGeometry.setAttribute('aAlpha',new THREE.BufferAttribute(alpha,1).setUsage(THREE.DynamicDrawUsage));
+  particleGeometry.setAttribute('aKind',new THREE.BufferAttribute(kinds,1).setUsage(THREE.DynamicDrawUsage));
   const particleMaterial=new THREE.ShaderMaterial({
     transparent:true,depthTest:true,depthWrite:false,blending:THREE.NormalBlending,
     uniforms:{uDpr:{value:1}},
-    vertexShader:`attribute float aSize;attribute float aAlpha;
-      varying vec3 vColor;varying float vAlpha;uniform float uDpr;
-      void main(){vColor=color;vAlpha=aAlpha;
+    vertexShader:`attribute float aSize;attribute float aAlpha;attribute float aKind;
+      varying vec3 vColor;varying float vAlpha;varying float vKind;uniform float uDpr;
+      void main(){vColor=color;vAlpha=aAlpha;vKind=aKind;
         vec4 eye=modelViewMatrix*vec4(position,1.);
         gl_Position=projectionMatrix*eye;
         gl_PointSize=min(66.,max(1.,aSize*uDpr*370./max(2.,-eye.z)));
       }`,
-    fragmentShader:`varying vec3 vColor;varying float vAlpha;
+    fragmentShader:`varying vec3 vColor;varying float vAlpha;varying float vKind;
       void main(){
         float d=length(gl_PointCoord-vec2(.5))*2.;
-        float edge=1.-smoothstep(.12,1.,d);
+        float edge=vKind>.5?1.-smoothstep(.70,.98,d):1.-smoothstep(.08,1.,d);
         gl_FragColor=vec4(vColor,edge*vAlpha);
       }`,
     vertexColors:true
@@ -151,7 +152,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
   function setWetness(n){
     wetness=clamp(n,0,1);
     printMaterial.opacity=(surfaceName==='grass'?.28:.53)*(1+wetness*.22);
-    shadowMaterial.opacity=.23+wetness*.10;
+    shadowMaterial.opacity=.15+wetness*.08;
   }
   function renderPrint(event){
     dummy.position.set(event.x,groundY+.017,event.z);
@@ -176,8 +177,8 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     lifetimes[i]=isGrain?.29+random()*.36:isWet?.22+random()*.28:isGrass?.35+random()*.28:.62+random()*.62;
     gravity[i]=isGrain?8.0:isWet?9.2:isGrass?5.2:.36;
     baseSize[i]=isGrain?.12+random()*.11:isWet?.12+random()*.17:isGrass?.11+random()*.10:.49+random()*.71;
-    baseAlpha[i]=isGrain?.75:isWet?.70:isGrass?.77:.12+random()*.24;
-    sizes[i]=baseSize[i];alpha[i]=baseAlpha[i];
+    baseAlpha[i]=isGrain?.79:isWet?.73:isGrass?.82:.28+random()*.24;
+    sizes[i]=baseSize[i];alpha[i]=baseAlpha[i];kinds[i]=(isGrain||isWet||isGrass)?1:0;
     if(isWet)color.set('#94a9a2');
     else color.set(profile().pigment);
     const shade=.76+random()*.45;
@@ -228,9 +229,9 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
       const offset=Number.isFinite(phase)?Math.abs((((phase-HOOF_LAYOUT[i].beat)+1.5)%1)-.5):.07;
       const weight=sole?.y!==undefined?clamp(1-(sole.y-groundY)/.35,0,1):
         clamp(1-offset/.20,.10,1);
-      dummy.position.set(p.x,groundY+.008,p.z);
+      dummy.position.set(p.x,weight<.055?-80:groundY+.008,p.z);
       dummy.rotation.set(0,heading,0);
-      dummy.scale.set(.14+.25*weight,1,.18+.20*weight);
+      dummy.scale.set(.035+.23*weight,1,.05+.28*weight);
       dummy.updateMatrix();
       shadows.setMatrixAt(idx,dummy.matrix);
     }
@@ -255,7 +256,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
       sizes[i]=baseSize[i]*(1+t*.55);
       alpha[i]=baseAlpha[i]*Math.pow(1-t,1.35);
     }
-    for(const key of ['position','aSize','aAlpha'])particleGeometry.attributes[key].needsUpdate=true;
+    for(const key of ['position','aSize','aAlpha','aKind'])particleGeometry.attributes[key].needsUpdate=true;
     // Colors change on contact only; one upload per render is inexpensive.
     particleGeometry.attributes.color.needsUpdate=true;
   }
