@@ -1055,7 +1055,7 @@ function updateEnvironment(){
    // All stadium surfaces retain accumulated dampness even after rain stops.
    earth.color.copy(earthBaseColor).lerp(new THREE.Color('#34342e'),wet*.49);
    earth.roughness=Math.max(.19,earthBaseRough-wet*.57);
-   earth.bumpScale=(trackType.value==='grass'?.023:trackType.value==='synthetic'?0:.047)*(1-wet*.62);
+   earth.bumpScale=(trackType.value==='grass'?.023:trackType.value==='sand'?.07:trackType.value==='synthetic'?0:.047)*(1-wet*.62);
    grass.color.copy(grassBase).lerp(new THREE.Color('#536147'),wet*.41);
    C.roof.color.copy(roofBase).lerp(new THREE.Color('#1c2825'),wet*.38);
    C.roof.roughness=.46-wet*.24;
