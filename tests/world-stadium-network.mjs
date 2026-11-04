@@ -21,6 +21,8 @@ assert.equal(makeDay('tokyo','2026-11-04').races[150].localStart,'12:30');
 assert.equal(makeDay('london','2026-11-04').races.length,510);
 assert.equal(makeDay('commodities','2026-11-04').races.length,150);
 assert.equal(makeDay('forex','2026-11-04').races.at(-1).localStart,'23:59');
+assert.equal(makeDay('forex','2026-11-04').races.at(-1).sessionLastMinute,false,'El cambio de fecha FX no es cierre del mercado');
+assert.equal(makeDay('forex','2026-11-04').races.find(x=>x.localStart==='16:59').sessionLastMinute,true,'Pausa diaria FX sí cierra segmento');
 assert.equal(makeDay('merval','2026-11-09').status,'REVIEW_REQUIRED');
 assert.equal(makeDay('tokyo','2026-11-23').status,'CLOSED');
 assert.equal(makeDay('commodities','2026-11-27').status,'REVIEW_REQUIRED');
