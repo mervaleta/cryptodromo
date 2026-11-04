@@ -11,7 +11,7 @@ import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
  front:[3.85,2.12,.13],
- rear:[-3.85,1.48,.13],
+ rear:[-3.52,1.78,1.70],
  detail:[1.64,2.16,2.89]
 };
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,Number(x)||0));
