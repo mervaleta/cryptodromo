@@ -52,7 +52,7 @@ export function createPreview(canvas,onFailure=()=>{}){
 
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#704937';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#886149';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
