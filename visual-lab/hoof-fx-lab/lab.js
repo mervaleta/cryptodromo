@@ -148,6 +148,12 @@ function draw(now){
     ' | DRAW CALLS '+renderer.info.render.calls;
  }
 }
+if(new URLSearchParams(location.search).get('qa')==='1'){
+ window.__cryptodromoHoofLabQA=Object.freeze({snapshot:()=>Object.freeze({
+  ready:!!horse,master:!!hero,failed,running,horseX,surface:$('surface').value,
+  wetness,stats:fx.stats,drawCalls:renderer.info.render.calls
+ })});
+}
 requestAnimationFrame(draw);loadHorse();
 window.addEventListener('pagehide',()=>{
  fx.dispose();hero?.dispose();horse?.dispose();controls.dispose();
