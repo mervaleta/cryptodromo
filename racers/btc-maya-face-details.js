@@ -4,7 +4,7 @@
  * The old cosmetic strip was placed outside these original anatomical holes.
  */
 import * as THREE from 'three';
-import {BTC_EYE_LAYOUT,eyeNormal} from './btc-maya-eye-layout.js?v=btc-face-poll-tail-20261104-v14';
+import {BTC_EYE_LAYOUT,eyeNormal} from './btc-maya-eye-layout.js?v=btc-face-poll-tail-20261104-v15';
 
 function makeOrbitAnnulus(source,positions,side,coatColor){
  const e=BTC_EYE_LAYOUT;
