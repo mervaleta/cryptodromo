@@ -591,6 +591,13 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    anatomy.hindGait.value=gait;
    groom.update(dt,{wind,speed,phase:gait,running});
   },
+  focusWorldPoint(){
+   // True animated skin position, not a guessed camera pivot.
+   eyes.mesh.updateWorldMatrix(true,false);
+   const p=eyes.mesh.getVertexPosition(0,new THREE.Vector3());
+   eyes.mesh.localToWorld(p);
+   return {x:p.x,y:p.y,z:p.z};
+  },
   setColor(next){
    if(typeof next==='string'&&/^#[0-9a-f]{6}$/i.test(next))
     groom.setColor(next);
