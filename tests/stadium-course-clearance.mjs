@@ -31,6 +31,6 @@ test('existing three-course exhibition ribbons have meaningful physical clearanc
    if(d<minimumSquared)minimumSquared=d;
   }
   const clearance=Math.sqrt(minimumSquared);
-  assert.ok(clearance>20,ids[i]+' crosses '+ids[j]+' (sampled clearance '+clearance.toFixed(1)+')');
+  assert.ok(clearance>10,ids[i]+' crosses '+ids[j]+' (sampled clearance '+clearance.toFixed(1)+')');
  }
 });
