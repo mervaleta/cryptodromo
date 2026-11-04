@@ -117,12 +117,14 @@ function applySkin(mesh,source){
  return mesh;
 }
 function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coat',hoofColor}={}){
- const {positions,indices:originalIndices}=unbox();
+ let {positions,indices:originalIndices}=unbox();
  // Actual sculpt contains its OWN old ear tips and a thin skin-colored tail.
  // Both were still visible beneath the new pinnae and groom, generating
  // the reported four-horn and double-tail silhouettes.
  const removed={nativeEarFaces:0,extraTailFaces:0};
  const visibleTriangles=[];
+ const retiredTailEdges=new Set();
+ const edgeKey=(a,b)=>a<b?a+':'+b:b+':'+a;
  const earVertex=id=>{
   const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
   return Math.abs(x)>.00113&&y>-.0302&&y<-.0230&&z>.04485;
@@ -136,9 +138,43 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  for(let t=0;t<originalIndices.length;t+=3){
   const tri=[originalIndices[t],originalIndices[t+1],originalIndices[t+2]];
   if(tri.filter(earVertex).length>=2){removed.nativeEarFaces++;continue;}
-  if(tri.filter(tailVertex).length>=2){removed.extraTailFaces++;continue;}
+  if(tri.filter(tailVertex).length>=2){
+   removed.extraTailFaces++;
+   for(let k=0;k<3;k++)retiredTailEdges.add(edgeKey(tri[k],tri[(k+1)%3]));
+   continue;
+  }
   visibleTriangles.push(...tri);
  }
+ // The old free tail leaves a polygonal opening at its skinned dock.
+ // Close the actual body manifold rather than adding another tail-shaped
+ // capsule. Each retained boundary edge gets a triangle to a single
+ // depressed interior center. Reverse the inherited edge orientation so
+ // the cap meets the source's normal winding.
+ const keptEdges=new Map();
+ for(let t=0;t<visibleTriangles.length;t+=3){
+  for(let k=0;k<3;k++){
+   const a=visibleTriangles[t+k],b=visibleTriangles[t+(k+1)%3];
+   const key=edgeKey(a,b);
+   const entry=keptEdges.get(key)||{a,b,count:0};
+   entry.count++;
+   keptEdges.set(key,entry);
+  }
+ }
+ const border=[...keptEdges].filter(([key,e])=>
+  e.count===1&&retiredTailEdges.has(key)).map(([,e])=>e);
+ if(border.length<20||border.length>100)
+  throw Error('BTC tail root border unexpectedly changed');
+ const borderVertices=new Set(border.flatMap(e=>[e.a,e.b]));
+ const center=[0,0,0];
+ for(const id of borderVertices)for(let k=0;k<3;k++)center[k]+=positions[id*3+k];
+ for(let k=0;k<3;k++)center[k]/=borderVertices.size;
+ // Sink the cap fractionally into the rump, never let it form a stump.
+ center[1]-=.00048;
+ const capCenter=positions.length/3;
+ positions=Float32Array.from([...positions,...center]);
+ for(const {a,b} of border)visibleTriangles.push(b,a,capCenter);
+ removed.tailDockBorderEdges=border.length;
+ removed.integratedDockCapTriangles=border.length;
  const indices=new Uint16Array(visibleTriangles);
  if(removed.nativeEarFaces<150||removed.extraTailFaces<150)
   throw Error('BTC original ear/tail geometry not located; refusing cosmetic patch');
