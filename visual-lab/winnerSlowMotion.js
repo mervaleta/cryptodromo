@@ -26,6 +26,17 @@ export function createWinnerSlowMotion({
   speed:sourceSpan/duration
  });
  return Object.freeze({
+  configure(settings={}){
+   if(phase==='playing'||phase==='holding')return false;
+   const nextSpeed=Number(settings.speed??(sourceSpan/duration));
+   const nextPre=Number(settings.pre??sourceSpan);
+   const nextHold=Number(settings.hold??holdAfter);
+   if(!Number.isFinite(nextSpeed)||nextSpeed<.25||nextSpeed>1||
+      !Number.isFinite(nextPre)||nextPre<1||nextPre>6||
+      !Number.isFinite(nextHold)||nextHold<0||nextHold>5)return false;
+   sourceSpan=nextPre;duration=nextPre/nextSpeed;holdAfter=nextHold;
+   return true;
+  },
   begin(index,symbol){
    if(phase!=='idle'||!Number.isInteger(index)||index<0||index>=12||
     !String(symbol||'').trim())return false;
