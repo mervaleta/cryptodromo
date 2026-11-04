@@ -120,15 +120,25 @@ export function createBTCHeroV5(root,options={}){
    backups.push({p,coords,geometry:coat.geometry});
    for(let i=0;i<p.count;i++){
     const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
-    const flank=gauss(y,.010,.011)*gauss(z,.021,.012);
-    const shoulder=gauss(y,-.017,.009)*gauss(z,.028,.012);
-    const crest=gauss(y,-.020,.012)*gauss(z,.037,.009);
-    const muscle=.055*flank+.07*shoulder;
-    p.setXYZ(i,x*(1+muscle),y,z+.00018*crest+.00015*flank);
+    // Anatomical planes over the original Quaternius skinned rig: an athletic
+    // scapula, fuller thorax and round croup. Local gaussians keep limbs,
+    // face and original bone weights untouched, with no baked animation.
+    const scapula=gauss(y,-.018,.010)*gauss(z,.028,.012);
+    const croup=gauss(y,.013,.010)*gauss(z,.024,.013);
+    const shoulder=gauss(y,-.023,.010)*gauss(z,.020,.011);
+    const barrel=gauss(y,-.001,.014)*gauss(z,.024,.014);
+    const crest=gauss(y,-.023,.009)*gauss(z,.038,.008);
+    const loin=gauss(y,.006,.010)*gauss(z,.034,.009);
+    const tuck=gauss(y,.012,.010)*gauss(z,.016,.008);
+    const depth=1+.18*scapula+.22*croup+.11*shoulder+.09*barrel+
+      .06*loin-.025*tuck;
+    const dorsal=.00080*crest+.00062*croup+.00032*loin;
+    const shoulderPlane=.00044*scapula+.00020*shoulder;
+    p.setXYZ(i,x*depth,y,z+dorsal+shoulderPlane);
    }
    p.needsUpdate=true;coat.geometry.computeBoundingSphere();
   }
-  passes.push('05 Volumen corporal: hombros, cuello y grupa sin caras planas');
+  passes.push('05 Anatomía V5: escápulas, caja torácica, grupa y línea dorsal esculpidas');
  }
 
  const hairMat=groom.material;
@@ -139,11 +149,19 @@ export function createBTCHeroV5(root,options={}){
  if(pass>=4){hairMat.transparent=true;hairMat.opacity=.28;
   hairMat.depthWrite=false;hairMat.needsUpdate=true;groom.castShadow=false;}
 
+ const coatFinish=[];
  if(pass>=6){
-  hairMat.roughness=.56;hairMat.sheen=.95;
-  hairMat.sheenColor.set('#b18462');hairMat.sheenRoughness=.45;
+  hairMat.roughness=.46;hairMat.sheen=1.0;
+  hairMat.sheenColor.set('#c49673');hairMat.sheenRoughness=.40;
   hairMat.needsUpdate=true;
-  passes.push('06 Seda con brillo anisotrópico aproximado, sombras en raíces');
+  for(const coat of coats)for(const material of [coat.material].flat()){
+   if(!material||coatFinish.some(s=>s.material===material))continue;
+   coatFinish.push({material,roughness:material.roughness,metalness:material.metalness});
+   // Wet-looking plastic is avoided; directional shoulder shading is retained.
+   if(typeof material.roughness==='number')material.roughness=Math.max(.35,material.roughness*.78);
+   if(typeof material.metalness==='number')material.metalness=0;
+  }
+  passes.push('06 Seda con cutícula satinada; pelaje con especular controlado');
  }
 
  // Physically inspired delayed response of a damped hair mass to the Gallop.
@@ -211,39 +229,43 @@ export function createBTCHeroV5(root,options={}){
   m.wind=clamp(wind,0,2);
   const omega=TAU*phase;
   const drive=running?1:.24;
-  const targetM=drive*(Math.sin(omega-.9)*.0010+
-     .00032*Math.sin(m.time*3.3));
-  const targetT=drive*(Math.sin(omega-2.15)*.0017+
-     .00048*Math.sin(m.time*2.1));
+  // Distinct natural delays: crest is relatively light and reactive;
+  // tail is heavy, with a later peak and its own slower airflow oscillation.
+  const gust=.45+.55*m.wind;
+  const targetM=drive*(Math.sin(omega-.88)*(.0028+.0009*gust)+
+     .00100*gust*Math.sin(m.time*4.4)+.00038*Math.sin(m.time*8.1));
+  const targetT=drive*(Math.sin(omega-2.10)*(.0056+.0014*gust)+
+     .00145*gust*Math.sin(m.time*2.5-.7)+.0006*Math.sin(m.time*5.2));
   // Spring-damper integrated with small timesteps for fps independence.
   const n=Math.max(1,Math.ceil(step/.012));
   const h=step/n;
   for(let i=0;i<n;i++){
-   m.vm+=(45*(targetM-m.mane)-13*m.vm)*h;
-   m.vt+=(25*(targetT-m.tail)-9*m.vt)*h;
+   m.vm+=(64*(targetM-m.mane)-15*m.vm)*h;
+   m.vt+=(23*(targetT-m.tail)-8*m.vt)*h;
    m.mane+=m.vm*h;m.tail+=m.vt*h;
   }
   m.energy=.91*m.energy+.09*(Math.abs(m.mane)+Math.abs(m.tail));
   uni.mane.value=pass>=7?m.mane:0;
   uni.tail.value=pass>=8?m.tail:0;
   uni.clock.value=m.time;
-  uni.wind.value=(pass>=8?1:.3)*(running?(.8+m.wind*.4):.18)*clamp(speed,.3,2);
+  uni.wind.value=(pass>=8?1:.3)*(running?(.55+m.wind*.66):(.22+m.wind*.36))*clamp(speed,.3,2);
  }
  let disposed=false;
  return {
   get snapshot(){return {...base.snapshot,version:BTC_HERO_V5,pass,passes,
-   hairMotion:{mane:m.mane,tail:m.tail,energy:m.energy,time:m.time,gait:m.gait},
-   motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,source:'original-skinned-glb',
+   hairMotion:{mane:m.mane,tail:m.tail,energy:m.energy,time:m.time,gait:m.gait,wind:m.wind},
+   motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,silkTopology:silk?.quality||null,source:'original-skinned-glb',
    noTextures:true,vertexCount:position.count};},
   update(dt,{wind=1,speed=1,running=true,phase=0}={}){
    if(disposed)return;
    base.update(dt,{wind:Math.min(wind,.85),speed,running});
    integrate(dt,phase,wind,speed,running);
   },
-  setColor(color){base.setColor(color);},
+  setColor(color){base.setColor(color);silk?.setColor(color);},
   dispose(){
    if(disposed)return;disposed=true;
    silk?.dispose();groom.castShadow=previousFiberShadow;restoreMats();
+   for(const o of coatFinish){o.material.roughness=o.roughness;o.material.metalness=o.metalness;}
    for(const o of backups){o.p.array.set(o.coords);o.p.needsUpdate=true;o.geometry.computeBoundingSphere();}
    base.dispose();
   }
