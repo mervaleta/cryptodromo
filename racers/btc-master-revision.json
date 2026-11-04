@@ -4,9 +4,9 @@
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
   "buildId": "btc-master-procedural-hind-groom-20261104-v12",
   "status": "pending_deploy",
-  "statusLabel": "Ancas y muslos ampliados en malla 3D; crin compacta y textura procedimental. Falta verificar Hostinger.",
+  "statusLabel": "Corrección geométrica 3D de grupa y piernas; crin compacta y flexión ligada al Gallop · QA de Hostinger pendiente",
   "updatedAt": "2026-11-04",
-  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción.",
+  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
     "Confirmar visualmente en la URL canónica ambos perfiles, frente y atrás, transiciones y movimiento Gallop bajo WebGL",
