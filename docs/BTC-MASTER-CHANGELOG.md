@@ -64,3 +64,13 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - **QA automatizado:** `crownBridgeLocks=112`, `neckOutliers=0`, `eyeRadius<0.0004`, Gallop preservado, mismos tests de otros 99 símbolos y capturas adicionales de detalle/superior/tres cuartos.
 - **Antes/después en producción:** pendiente confirmar por navegador y revisar imágenes de WebGL con los encuadres oficiales. **No se afirma calidad AAA alcanzada sólo por código y tests.**
 - **Estado hasta publicar y validar:** `pending_deploy`. No se ha alterado estadio, precio, fixture, clasificaciones ni lógica de juego.
+
+## 2026-11-04 · `btc-master-sculpted-locks-20261104-v10` · volumen heroico de crin y cola
+- **Antes:** `btc-master-hero-silhouette-20261104-v9`, verificable en Hostinger y con capturas de seis cámaras en GitHub Actions. Aunque el flequillo se conecta por encima de las orejas, el grueso de la crin todavía parecía una banda plana y la cola un abanico estrecho; ojos y orejas necesitan revisión.
+- **Nueva geometría Three.js:** 56 mechones hero extra (28 por lado) con elevación arqueada, longitud hacia atrás, anchos y terminaciones cónicas diferenciadas, realmente modelados como cintas cruzadas tridimensionales y skinned sobre el rig original. El pelo de fondo se reduce de 624 a 448 guías finas en crin y de 360 a 280 en cola para evitar filamentos negros flotantes sin aumentar excesivamente buffers.
+- **Cola:** se ensancha cada grupo mayor y aumenta la dispersión vertical progresiva y el arco aerodinámico; sin agregar todavía un nuevo simulador de física.
+- **Orejas:** pabellones 24% más cortos y discretamente más anchos en `btc-maya-ears.js`, conservando hueso `Head` y paredes 3D. **Ojo:** leve corrección de la distancia a la superficie para que el iris sea visible sin restaurar el globo sobresaliente de v8.
+- **Contrato visual:** sigue conectado el flequillo a 112 guías de coronilla y 495 vértices de lecho capilar con skinning graduado. El maestro expone `heroLocks=56`, `crownBridgeLocks=112` y `rootBedVertices=495`.
+- **QA:** pruebas Chromium local, normal/public y sobre Hostinger; capturas de perfil, frente, atrás, detalle, superior y tres cuartos. No modificar `Gallop`, fixture, rangos ni el resto del plantel.
+- **Ficha:** scripts y versión cache-busting `btc-master-sculpted-locks-20261104-v10`, manifest visible actualizado. **Estado `pending_deploy` hasta comprobar la build real.**
+- **Pendiente de aprobación artística:** verificar si los mechones se leen como volumen continuo y no aspas. Ajustar proporciones de cabeza/cuerpo y materiales en iteraciones posteriores a partir de las capturas reales, no sólo por tests.
