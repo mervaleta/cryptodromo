@@ -1,0 +1,37 @@
+name: Horse editor persistence and master bridge
+on:
+  pull_request:
+    paths:
+      - 'admin/horses/**'
+      - 'api/horse-*.php'
+      - 'race-lab/source/src/data/horseProfileAdapter.js'
+      - 'tests/horse-editor-admin.mjs'
+      - 'tests/horse-master-bridge.mjs'
+      - '.github/workflows/horse-editor-contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'admin/horses/**'
+      - 'api/horse-*.php'
+      - 'race-lab/source/src/data/horseProfileAdapter.js'
+      - 'tests/horse-editor-admin.mjs'
+      - 'tests/horse-master-bridge.mjs'
+      - '.github/workflows/horse-editor-contract.yml'
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PHP Syntax
+        run: |
+          for file in admin/horses/*.php api/horse-*.php; do php -l "$file"; done
+      - name: Save / publish / optimistic lock / logo upload (real PHP)
+        run: node --test tests/horse-editor-admin.mjs
+      - name: 100 runner visual profile contract
+        run: node --test tests/horse-master-bridge.mjs

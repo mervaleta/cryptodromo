@@ -59,6 +59,9 @@ if ($action==='reset') {
         ++$state['publishedRevision'];$state['publishedAt']=gmdate('c');
     }
 }
+// An accepted edit must advance the optimistic-lock revision before persistence.
+// publishedRevision tracks public changes independently.
+++$state['revision'];
 $now=gmdate('c');
 $temp=tempnam($dir,'horse-');
 if ($temp===false)horse_problem('No se pudo crear el archivo temporal',503);
