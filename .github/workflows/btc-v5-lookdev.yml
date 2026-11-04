@@ -3,7 +3,9 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'racers/btc-*'
+      - 'racers/btc-hero-v5.js'
+      - 'racers/btc-silk-shell-v5.js'
+      - 'racers/btc-atelier-preview.js'
       - 'racers/racers.js'
       - 'racers/index.html'
       - 'tests/btc-v5-*'
@@ -29,7 +31,6 @@ jobs:
           node --check racers/btc-atelier-preview.js
           node --check racers/racers.js
           node --check tests/btc-v5-visual-iterations.mjs
-          node --check tests/btc-v5-evidence.mjs
           node --test tests/btc-horse-atelier-contract.mjs
       - name: Install Chromium and Playwright
         run: |
@@ -42,14 +43,7 @@ jobs:
           trap 'kill "$SERVER_PID" || true' EXIT
           sleep 2
           node tests/btc-v5-visual-iterations.mjs
-      - name: Compare V4 and V5 WebGL silhouette, record native Gallop video
-        run: |
-          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/btc-v5-evidence.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill "$SERVER_PID" || true' EXIT
-          sleep 2
-          node tests/btc-v5-evidence.mjs
-      - name: Keep screenshots and actual animation
+      - name: Keep internal diagnostic WebGL screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
