@@ -70,7 +70,7 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.match(master,/createMayaGroom/);
  assert.match(master,/gallopPreserved:true/);
  const groom=read('racers/btc-maya-groom.js');
- assert.match(groom,/majorCount:112,fineCount:240/);
+ assert.match(groom,/majorCount:112,fineCount:480/);
  assert.match(groom,/looseNeckFibers/);
  assert.match(groom,/btcCuticle/);
  assert.match(groom,/solidRingSides:SIDES/);
@@ -86,13 +86,13 @@ test('BTC FX2 repair is real geometry and native poll skinning, not an image',()
  assert.match(master,/pollAnchoredVertices/);
  assert.match(master,/headIndex=source\.skeleton\.bones\.findIndex/);
  assert.match(master,/side\*\.00185\+x\*1\.28/);
- assert.match(face,/smooth bilateral lower eyelids/);
+ assert.match(face,/integrated-maya-eyelid-shading-v15/);
  assert.doesNotMatch(face,/anatomical tear ducts/);
  assert.match(groom,/geo\.addGroup\(hairIndexCount/);
  assert.match(groom,/anatomical poll bed/);
  assert.match(face,/concentric-skinned-palpebra-v14/);
   assert.match(groom,/tailInertia/);
  assert.match(groom,/tailVelocity/);
- assert.match(groom,/fineCount:320/);
+ assert.match(groom,/fineCount:500/);
  for(const text of [master,face,groom])assert.doesNotMatch(text,/\.png|\.jpeg|TextureLoader|ImageLoader/);
 });
