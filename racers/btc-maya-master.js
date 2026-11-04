@@ -7,10 +7,11 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js';
-import {createBTCSculptedHooves} from './btc-maya-hooves.js';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-luxe-20261104-v2';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-luxe-20261104-v2';
+import {createBTCSculptedHooves} from './btc-maya-hooves.js?v=btc-maya-luxe-20261104-v2';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
+export const BTC_MAYA_RENDER_BUILD='btc-maya-luxe-20261104-v2';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
