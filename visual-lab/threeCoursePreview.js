@@ -1,5 +1,5 @@
-import {trackPoint} from './trackMath.js';
-import {STADIUM_COURSES} from './threeCourseLayout.js';
+import {trackPoint} from './trackMath.js?v=satoshi-cachefix-20261104-v3';
+import {STADIUM_COURSES} from './threeCourseLayout.js?v=satoshi-cachefix-20261104-v3';
 
 /**
  * SATOSHI NAKAMOTO / MASTER THREE-COURSE PLAN v2.

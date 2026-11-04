@@ -1,5 +1,5 @@
-import {createStadiumSurfaces} from './surfaces.js';
-import {getStadiumPreset} from './presets.js';
+import {createStadiumSurfaces} from './surfaces.js?v=satoshi-cachefix-20261104-v3';
+import {getStadiumPreset} from './presets.js?v=satoshi-cachefix-20261104-v3';
 
 /**
  * Scenic-only, deterministic stadium generator. X=course, Y=up, Z=width.

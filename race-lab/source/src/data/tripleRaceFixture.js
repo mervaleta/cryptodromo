@@ -3,7 +3,7 @@
  * its horse identities and dose coefficients, and the SAME minute price history.
  * No modifications to the race engine, outcome calculations or source prices.
  */
-import {getRaceFixture,getContinuousFixturePrice,FIXTURE_DAYS,MINUTES_PER_DAY,RACES_PER_DAY as BASE_RACES} from './raceFixture.js';
+import {getRaceFixture,getContinuousFixturePrice,FIXTURE_DAYS,MINUTES_PER_DAY,RACES_PER_DAY as BASE_RACES} from './raceFixture.js?v=satoshi-cachefix-20261104-v3';
 export const TRACKS=Object.freeze([
  Object.freeze({id:'muybridge',name:'Eadweard Muybridge',offsetMinutes:0}),
  Object.freeze({id:'genesis',name:'Genesis',offsetMinutes:1}),

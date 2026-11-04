@@ -30,18 +30,18 @@ test('all directly referenced race DOM elements exist in BOTH broadcast and labo
 test('all channel pages use the continuous synthetic fixture and local 1..480 race labels',()=>{
  assert.match(scene,/tripleMode\?race\.trackRaceNumber:race\.number/);
  assert.match(scene,/TRACK_RACES_PER_DAY/);
- assert.match(scene,/tripleRaceFixture\.js\?v=alpha19-week-v2/);
+ assert.match(scene,/tripleRaceFixture\.js\?v=satoshi-cachefix-20261104-v3/);
  const archive=read('assets/crypto-archive.js');
- assert.match(archive,/tripleRaceFixture\.js\?v=alpha19-week-v2/);
- assert.match(read('stadiums/crypto/archive/index.html'),/crypto-archive\.js\?v=satoshi-tv-single-20261104/);
- assert.match(read('visual-lab/index.html'),/scene\.js\?v=alpha19-tv-single-20261104/);
+ assert.match(archive,/tripleRaceFixture\.js\?v=satoshi-cachefix-20261104-v3/);
+ assert.match(read('stadiums/crypto/archive/index.html'),/crypto-archive\.js\?v=satoshi-cachefix-20261104-v3/);
+ assert.match(read('visual-lab/index.html'),/scene\.js\?v=alpha19-satoshi-cachefix-20261104-v3/);
 });
 test('optional WebGL presentation failure cannot stop the official race',()=>{
  assert.match(preview,/if\(!container\)/);
  assert.match(preview,/return \{show:noop,dispose:noop\}/);
  assert.match(preview,/catch\(error\)/);
  assert.match(scene,/mountPresentationHorse\(document\.querySelector\('#present-horse-3d'\)\)/);
- assert.match(broadcast,/alpha19-tv-single-20261104/,'broadcast must bust old scene cache');
+ assert.match(broadcast,/alpha19-satoshi-cachefix-20261104-v3/,'broadcast must bust old scene cache');
  assert.match(scene,/satoshi-tv-safe-20261104/,'scene must bust old preview cache');
 });
 

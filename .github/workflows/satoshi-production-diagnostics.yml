@@ -1,0 +1,33 @@
+name: Satoshi production runtime diagnostic
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/satoshi-production-diagnostics.mjs'
+      - '.github/workflows/satoshi-production-diagnostics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Diagnose deployed races, archive and stadium
+        env:
+          CRP_BASE_URL: https://race.cryptodromo.com
+        run: node tests/satoshi-production-diagnostics.mjs
+      - name: Save full report and four screenshots even if test fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: satoshi-actual-public-runtime
+          path: artifacts/production-diagnostics/
+          if-no-files-found: ignore

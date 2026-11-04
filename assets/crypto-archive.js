@@ -1,4 +1,4 @@
-import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-week-v2';
+import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=satoshi-cachefix-20261104-v3';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {TRACK_DEFS} from '/visual-lab/tripleLiveSchedule.js?v=alpha19-live-1';
 
