@@ -1,0 +1,42 @@
+name: Satoshi TV · public Hostinger verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'stadiums/crypto/live/index.html'
+      - 'stadiums/crypto/archive/index.html'
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'assets/crypto-venue.js'
+      - 'assets/crypto-archive.js'
+      - 'assets/satoshi-tv.css'
+      - 'assets/satoshi-tv-contract.js'
+      - 'race-lab/source/src/data/tripleRaceFixture.js'
+      - 'tests/satoshi-tv-public-verify.mjs'
+      - '.github/workflows/satoshi-tv-public-verify.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Verify deployment on race.cryptodromo.com, including actual races
+        env:
+          CRP_BASE_URL: https://race.cryptodromo.com
+        run: node tests/satoshi-tv-public-verify.mjs
+      - name: Preserve real production TV screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: satoshi-tv-production-verified
+          path: artifacts/satoshi-public-tv/
+          if-no-files-found: ignore
