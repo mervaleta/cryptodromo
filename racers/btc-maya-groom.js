@@ -121,7 +121,7 @@ function createHairMass(source,skinAt,{
     // Three-dimensional sculpted locks fly behind the poll above the coat.
     // Every guide has a different arch and a naturally tapering lifted tip.
     const flow=t*.72+.28*t2;
-    const cy=Math.min(-.0039,root[1]+length*flow);
+    const cy=Math.min(-.00455,root[1]+length*flow);
     const arch=(.00265+.00125*seed)*Math.sin(PI*t);
     const tipRise=.00065*t2*t2*(.7+.3*seed);
     x=root[0]+side*(.00030+(.00130+.00050*seed)*t2);
@@ -159,7 +159,7 @@ function createHairMass(source,skinAt,{
     // the neck. They do not fall vertically over the cheek and shoulders.
     const rearward=t*.70+.30*t2;
     // Keep the ribbons on the anatomical neck instead of trailing into the shoulder.
-    const cy=root[1]+Math.min(length,Math.max(0,-.0038-root[1]))*rearward;
+    const cy=root[1]+Math.min(length,Math.max(0,-.00455-root[1]))*rearward;
     const neckZ=crest(cy);
     // The large, smooth "calligraphic" mane is made of feathered layers:
     // it starts on the poll, flows down the full neck and finishes in
@@ -169,7 +169,7 @@ function createHairMass(source,skinAt,{
     // Locks sit on the crest; the previous wide sweep detached at the shoulder.
     const outward=(.00048+.00071*seed)*(.20*rearward+.80*t2);
     x=root[0]+side*(outward+.00009*Math.sin(PI*t));
-    y=Math.min(-.0038,cy+.00013*Math.sin(PI*t*1.2+seed*2.8)*t2);
+    y=Math.min(-.00455,cy+.00013*Math.sin(PI*t*1.2+seed*2.8)*t2);
     z=neckZ+.00018+lift-drape+
        .00019*Math.sin(PI*t*1.7+seed*3)*t2;
     if(ribbon===0)z+=cross*breadth*w;
