@@ -63,7 +63,7 @@ function renderBTCRevision(){
 }
 async function loadBTCRevision(){
  try{
-  const response=await fetch('/racers/btc-master-revision.json?v=btc-master-procedural-hind-groom-20261104-v12',{cache:'no-store'});
+  const response=await fetch('/racers/btc-master-revision.json?v=hoof-btc-fiche-20261104-v1',{cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
