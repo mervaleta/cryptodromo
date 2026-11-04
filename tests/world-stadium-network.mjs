@@ -72,7 +72,7 @@ for(const slug of STADIUM_SLUGS){
   assert(delta>=1,'Largadas monotónicas, no se solapan minutos');
   if(delta===1)assert.notEqual(prev.trackSlug,next.trackSlug,'Deben alternar pistas');
   if(i>=3&&delta===1&&Date.parse(prev.startsAt)-Date.parse(day.races[i-3].startsAt)===120000){
-    assert.equal(next.trackSlug,day.races[i-2].trackSlug,'Reutilizar pista luego de tres minutos');
+    assert.equal(next.trackSlug,day.races[i-3].trackSlug,'Reutilizar pista luego de tres minutos');
   }
  }
 }
