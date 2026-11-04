@@ -1,63 +1,65 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const source=read('racers/btc-maya-pose-volume.js');
+const skin=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 
-const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const src=read('racers/btc-maya-pose-volume.js');
-const dq=await import('data:text/javascript;base64,'+Buffer.from(src).toString('base64'));
-const qZ=angle=>[0,0,Math.sin(angle/2),Math.cos(angle/2)];
-const bone=(angle,t=[0,0,0])=>({rotation:qZ(angle),translation:t});
-const distance=p=>Math.hypot(...p);
-
-test('DQS keeps thigh girth constant for opposing animated bone rotations',()=>{
- const p=[.004,0,0],phases=[0,.10,.20,.30,.40,.50,.60,.70,.80,.90,1];
- for(const phase of phases){
-   const bend=(Math.sin(2*Math.PI*phase)+1)/2*(Math.PI/3);
-   const bones=[bone(bend),bone(-bend)];
-   const v=dq.dualQuaternionSkinPoint(p,bones,[.5,.5]);
-   assert.ok(Math.abs(distance(v)-distance(p))<.00000001, 'girth changed at phase '+phase+': '+distance(v));
+test('different Gallop poses keep side-specific joint ownership without cross-leg influence',()=>{
+ const positions=new Float32Array([
+  .004,.012,.018,-.004,.012,.018,
+  .004,.012,.002,.004,-.012,.018,
+  .004,.012,.035
+ ]);
+ const jointNames=['Body','BackLeg.L','BackLeg.R','FrontUpperLeg.L','Tail1'];
+ const bone=new Uint16Array([
+  1,2,0,3,
+  2,1,0,4,
+  1,2,0,3,
+  1,2,0,3,
+  1,2,0,3
+ ]);
+ const weights=new Float32Array([
+  .45,.35,.18,.02,
+  .45,.35,.18,.02,
+  .45,.35,.18,.02,
+  .45,.35,.18,.02,
+  .45,.35,.18,.02
+ ]);
+ const original=weights.slice();
+ const result=skin.stabilizeHindSkinWeights(positions,bone,weights,jointNames);
+ assert.equal(result.nativeLinearSkinning,true);
+ assert.equal(result.rigPreserved,true);
+ assert.ok(result.adjusted>=2,'both left and right thigh vertices must be sanitized');
+ assert.ok(result.crossSideAfter<result.crossSideBefore*.2,'wrong leg weights must be strongly reduced');
+ for(let v=0;v<2;v++){
+  const norm=weights.slice(v*4,v*4+4).reduce((a,b)=>a+b,0);
+  assert.ok(Math.abs(norm-1)<1e-6,'native weights remain normalized');
  }
- const collapsed=.004*Math.cos(Math.PI/3);
- assert.ok(collapsed<.0021,'LBS would narrow the same muscle by around half at the worst phase');
+ assert.deepEqual([...weights.slice(8)],[...original.slice(8)],
+  'front limb, hoof and rump outside mask must remain intact');
+ assert.equal(skin.hindSkinRegion(.004,.012,.002),0,'fetlock outside stabilizer');
+ assert.equal(skin.hindSkinRegion(.004,-.012,.018),0,'front limb outside stabilizer');
+ assert.equal(skin.hindSkinRegion(.004,.012,.035),0,'top croup outside stabilizer');
 });
 
-test('DQS preserves rigid translations and handles antipodal quaternions',()=>{
- const a={rotation:qZ(.8),translation:[.02,-.01,.005]};
- const b={rotation:a.rotation.map(x=>-x),translation:[.02,-.01,.005]};
- const output=dq.dualQuaternionSkinPoint([.003,0,0],[a,b],[.5,.5]);
- assert.ok(Math.abs(Math.hypot(output[0]-.02,output[1]+.01,output[2]-.005)-.003)<1e-8);
-});
-
-test('generated body shader applies only to the rear muscle and leaves hoof unchanged',()=>{
- const shader={vertexShader:'#include <common>\n#include <skinning_vertex>',uniforms:{}};
- const uniform={value:.96};
- dq.installBTCVolumePreservingSkin(shader,uniform);
- assert.equal(shader.uniforms.btcVolumePreservation,uniform);
- assert.match(shader.vertexShader,/vec4 btcDQRotation\(mat4 m\)/);
- assert.match(shader.vertexShader,/btcDQAccumulate\(boneMatW,skinWeight.w/);
- assert.match(shader.vertexShader,/transformed=mix\(transformed,btcDqLocal,btcDqMix\)/);
- assert.match(shader.vertexShader,/smoothstep\(0\.0085,0\.0130,position.z\)/);
- assert.match(shader.vertexShader,/smoothstep\(0\.0012,0\.0027,abs\(position.x\)\)/);
- assert.doesNotMatch(shader.vertexShader,/btcHindGait|sin\(btcHindGait/);
- assert.throws(()=>dq.installBTCVolumePreservingSkin({vertexShader:'void main() {}',uniforms:{}}));
-});
-
-test('main BTC viewer connects pose-stable DQ without changing Gallop or other tokens',()=>{
+test('BTC production keeps real LBS and original Gallop rather than rejected DQS',()=>{
  const master=read('racers/btc-maya-master.js');
  const preview=read('racers/btc-atelier-preview.js');
  const racers=read('racers/racers.js');
  const html=read('racers/index.html');
- for(const x of [master,preview,racers,html])assert.match(x,/btc-hind-pose-volume-20261104-v13/);
- assert.match(master,/installBTCVolumePreservingSkin\(shader,hindDqStrength\)/);
- assert.doesNotMatch(master,/addBTCHindquarterGaitShader\(shader/);
- assert.doesNotMatch(master,/anatomy\.hindGait\.value=gait/);
- assert.match(master,/volumeSkinMethod:'masked-dual-quaternion'/);
+ for(const src of [master,preview,racers,html])
+  assert.match(src,/btc-hind-skin-continuity-20261104-v13b/);
+ assert.match(master,/stabilizeHindSkinWeights\(/);
+ assert.match(master,/volumeSkinMethod:'side-stabilized-native-linear'/);
+ assert.doesNotMatch(master,/installBTCVolumePreservingSkin|btcHindGait|hindDqStrength|setHindVolumeStrength/);
+ assert.doesNotMatch(source,/btcDQAccumulate|dualQuaternionSkinPoint|skinning_vertex/);
  assert.match(master,/originalRig:true/);
  assert.match(master,/gallopPreserved:true/);
  assert.match(racers,/horse-preview\.js\?v=alpha18-gaitmane-1/);
- assert.match(preview,/if\(!fixedFrame\|\|!horse\|\|!hero\|\|selected\?\.symbol!=='BTC'\)return null/);
- assert.equal(dq.BTC_POSE_VOLUME_BUILD,'btc-hind-pose-volume-dq-20261104-v13');
+ assert.match(preview,/debugAdvance\(frames=1,step=\.583\/16\)/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- assert.equal(manifest.buildId,'btc-hind-pose-volume-20261104-v13');
+ assert.equal(manifest.buildId,'btc-hind-skin-continuity-20261104-v13b');
  assert.equal(manifest.status,'pending_deploy');
+ assert.equal(skin.BTC_POSE_VOLUME_BUILD,'btc-hind-skin-continuity-20261104-v13b');
 });
