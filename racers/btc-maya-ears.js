@@ -25,8 +25,8 @@ export function createBTCHarmonyEars(source,{coatColor}={}){
    for(let row=0;row<=SEGMENTS;row++){
     const t=row/SEGMENTS;
     const balloon=Math.pow(Math.max(0,Math.sin(PI*t)),.76);
-    const halfWidth=.00018*(1-t)+.00055*balloon+.000055;
-    const z=.04505+.00416*t+.00010*Math.sin(PI*t);
+    const halfWidth=.00022*(1-t)+.00060*balloon+.000060;
+    const z=.04505+.00318*t+.00010*Math.sin(PI*t);
     const cx=side*(.00148+.00016*t + (side>0?.00006:0)*t);
     const cy=-.02586-.00092*t+.00026*Math.sin(PI*t);
     for(let col=0;col<=ACROSS;col++){
