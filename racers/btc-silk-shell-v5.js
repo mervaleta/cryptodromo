@@ -26,8 +26,12 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   // Smoothstep delays influence near the dock, keeping roots anchored.
   const a=smooth(u)*5.99999;
   const i=Math.min(5,Math.floor(a)),blend=a-i;
-  return {bones:[tailBones[i],tailBones[i+1],0,0],
-   weights:[1-blend,blend,0,0]};
+  // The GLB's authored Gallop already swishes the tail aggressively.
+  // Transfer only part of that motion from the seven native joints;
+  // the stable back anchor avoids the vertical tail-flip artifact.
+  const rigInfluence=.22+.16*smooth(u);
+  return {bones:[1,tailBones[i],tailBones[i+1],0],
+   weights:[1-rigInfluence,rigInfluence*(1-blend),rigInfluence*blend,0]};
  }
  function bindMane(s){
   const a=smooth((s-.06)/.53),b=smooth((s-.4)/.57);
@@ -47,10 +51,10 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   // A deliberate silhouette change: full athletic crest and a long weighted
   // tail, rather than the short V5 tubes. All lengths remain in GLB rest space.
   const length=(mane?
-    (.0170+.0068*Math.sin(PI*f))*(.82+.34*seed)*maneSize:
-    (.0330+.0110*seed)*tailSize)*(isMain?1:.80);
-  const vWidth=(mane?.00144:.00165)*(isMain?1:.50)*(.76+.38*seed);
-  const dWidth=vWidth*(mane?.65:.68);
+    (.0130+.0042*Math.sin(PI*f))*(.88+.26*seed)*maneSize:
+    (.0255+.0060*seed)*tailSize)*(isMain?1:.80);
+  const vWidth=(mane?.00094:.00113)*(isMain?1:.48)*(.79+.30*seed);
+  const dWidth=vWidth*(mane?.52:.58);
   if(mane){if(isMain)quality.majorMane++;else quality.detailMane++;}
   else{if(isMain)quality.majorTail++;else quality.detailTail++;}
   const start=positions.length/3;
@@ -63,19 +67,19 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
    // Root anchoring is exact; successive sections gather into coherent locks.
    // Large low-frequency bends build shape; higher-frequency wisps are secondary.
    const lift=mane?
-    (.0034+.0012*seed)*Math.sin(PI*u)+(.0018+.0011*secondary)*t:
-    (.0042+.0017*seed)*Math.sin(PI*u)+(.0064+.0025*secondary)*t;
-   const wave=.0013*Math.sin(u*TAU*.92+seed*PI*1.4)*t*t;
-   const curl=(mane?.00105:.0021)*t*Math.sin(u*TAU*1.05+seed*PI);
+    (.0017+.0006*seed)*Math.sin(PI*u)+(.0010+.0006*secondary)*t:
+    (.0026+.0010*seed)*Math.sin(PI*u)+(.0032+.0011*secondary)*t;
+   const wave=.00070*Math.sin(u*TAU*.92+seed*PI*1.4)*t*t;
+   const curl=(mane?.00062:.00125)*t*Math.sin(u*TAU*1.05+seed*PI);
    const cy=rootY+length*(u+.080*Math.sin(PI*u))+
     .00055*t*Math.sin(id*.73);
    const cz=rootZ+lift+curl+wave;
    const cx=mane?
-    flank*(.00020+.00062*belly+.00155*t*t)*(tier===0?1:.78):
-    (secondary-.5)*(.0020+.0071*belly)+
-    .00145*t*Math.sin(index*.7+u*PI);
-   const falloff=Math.pow(1-u,.72);
-   const thick=(.23+.77*Math.pow(belly,.63))*falloff;
+    flank*(.00018+.00047*belly+.00112*t*t)*(tier===0?1:.78):
+    (secondary-.5)*(.0014+.0045*belly)+
+    .00088*t*Math.sin(index*.7+u*PI);
+   const falloff=Math.pow(1-u,.93);
+   const thick=(.15+.85*Math.pow(belly,.73))*falloff;
    for(let side=0;side<SIDES;side++){
     const theta=TAU*side/SIDES;
     const striation=1+.024*Math.sin(side*4.17+id);
