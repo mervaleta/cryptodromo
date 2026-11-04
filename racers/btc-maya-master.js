@@ -224,6 +224,39 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  removed.earCutBorderEdges=earEdges.length;
  removed.integratedEarRootCapTriangles=earEdges.length;
  removed.earRootCapCenters=earComponents.length;
+ // Seal the 22 genuine boundary edges of the TWO original Maya eye sockets.
+ // There are 11 edges per eye. Their gaps exposed the blue background.
+ const eyeBorders=[...keptEdges].filter(([key,e])=>{
+  if(e.count!==1||retiredEarEdges.has(key)||retiredTailEdges.has(key))return false;
+  const a=e.a*3,b=e.b*3;
+  const mx=(positions[a]+positions[b])*.5,my=(positions[a+1]+positions[b+1])*.5,
+   mz=(positions[a+2]+positions[b+2])*.5;
+  return Math.abs(mx)>.00045&&Math.abs(mx)<.0025&&
+    my<-.0255&&my>-.0306&&mz>.0406&&mz<.0442;
+ }).map(([,e])=>e);
+ const eyeComponents=new Map([[-1,new Set()],[1,new Set()]]);
+ for(const e of eyeBorders){
+  const side=Math.sign(positions[e.a*3]+positions[e.b*3]);
+  if(!eyeComponents.has(side))throw Error('BTC eye boundary crosses midline');
+  eyeComponents.get(side).add(e.a);eyeComponents.get(side).add(e.b);
+ }
+ if(eyeBorders.length!==22||[...eyeComponents.values()].some(c=>c.size!==11))
+  throw Error('BTC Maya eye border topology changed from eleven edges per socket');
+ const eyeCenters=[];
+ for(const [side,component] of eyeComponents){
+  const center=[0,0,0];
+  for(const id of component)for(let k=0;k<3;k++)center[k]+=positions[id*3+k];
+  for(let k=0;k<3;k++)center[k]/=component.size;
+  center[0]=side*.00178; // convex anatomical orbital bed
+  const centerId=positions.length/3+eyeCenters.length/3;
+  eyeCenters.push(...center);
+  for(const {a,b} of eyeBorders)if(component.has(a)&&component.has(b))
+   visibleTriangles.push(b,a,centerId);
+ }
+ positions=Float32Array.from([...positions,...eyeCenters]);
+ removed.eyeApertureBorders=eyeBorders.length;
+ removed.integratedEyeApertureTriangles=eyeBorders.length;
+ removed.eyeApertureCenters=eyeComponents.size;
  const indices=new Uint16Array(visibleTriangles);
  if(removed.nativeEarFaces<150||removed.extraTailFaces<150)
   throw Error('BTC original ear/tail geometry not located; refusing cosmetic patch');
@@ -455,7 +488,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   for(let i=0;i<point.count;i++){
    const x=point.getX(i),y=point.getY(i),z=point.getZ(i);
    // Eye cornea calibrated to Maya's actual outer socket, x approximately .00240.
-    xyz.push(side*.002235+x,-.02814+y,.04257+z);
+    // Ellipsoidal ocular surface follows the ORIGINAL eye aperture,
+    // centered ~x=.00145,y=-.02831,z=.04268, not the outer cheek.
+    xyz.push(side*.00185+x*1.28,-.02831+y*1.78,.04268+z*1.86);
    normals.push(normal.getX(i),normal.getY(i),normal.getZ(i));
    local.push(x/radius,y/radius,z/radius);
    sides.push(side);
@@ -572,13 +607,14 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    sculptedBodyParts:1,vertices:anatomy.vertices,
    harmonyBuild:BTC_MAYA_RENDER_BUILD,
    pollAnchoredVertices:anatomy.pollAnchoredVertices,
+   eyeApertureBorders:anatomy.eyeApertureBorders,eyeApertureCenters:anatomy.eyeApertureCenters,integratedEyeApertureTriangles:anatomy.integratedEyeApertureTriangles,
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:true,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.002235,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
+   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.00185,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
    eyeAssembly:face.eyeAssembly,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,neckOutliers:groom.neckOutliers,crownBridgeLocks:groom.bridgeLocks,heroLocks:groom.heroLocks,solidRingSides:groom.solidRingSides,rootBedVertices:groom.rootBedVertices,looseNeckFibers:groom.looseNeckFibers,proceduralHairTexture:groom.proceduralHairTexture,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
