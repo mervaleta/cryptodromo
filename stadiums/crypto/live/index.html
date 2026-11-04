@@ -4,7 +4,7 @@
 <meta name="description" content="Sintonizá en un único reproductor 3D las carreras de Muybridge, Genesis y Vint Cerf, o mirá un replay sintético del archivo.">
 <link rel="icon" href="/favicon.svg">
 <link rel="stylesheet" href="/assets/stadium-hub.css?v=hub-1">
-<link rel="stylesheet" href="/assets/satoshi-tv.css?v=winner-slowmo-env-20261104-v1">
+<link rel="stylesheet" href="/assets/satoshi-tv.css?v=tv-director-params-20261104-v2">
 </head><body class="hub tv-page">
 <a class="hub-skip" href="#tv-station">Ir directamente a la transmisión</a>
 <header class="hub-head"><div class="hub-shell hub-head-inner"><a class="hub-logo" href="/" aria-label="Cryptódromo, inicio"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a><nav class="hub-nav" aria-label="Navegación"><a href="/">Estadios</a><a href="/stadiums/crypto/">Satoshi Nakamoto</a><a href="/stadiums/crypto/live/">Transmisiones</a><a href="/stadiums/crypto/archive/">Archivo</a><a href="/racers/#BTC">Corredores</a><a href="/estadio/?venue=crypto">Visita 3D</a></nav></div></header>
@@ -42,6 +42,7 @@
    </div>
    <div class="tv-shotbar" role="toolbar" aria-label="Controles rápidos de cámara del canal">
     <span class="tv-shot-caption">🎥 CÁMARAS</span>
+    <button data-tv-replay-panel type="button" title="Repetición: velocidad, anticipación y pausa antes del acta">🎞️<small>Replay</small></button>
     <button data-tv-shot="broadcast" aria-pressed="true" type="button" title="Dirección automática">🎬<small>Auto</small></button>
     <button data-tv-shot="rail" aria-pressed="false" type="button" title="Cámara a pie de pista">🏇<small>Rail</small></button>
     <button data-tv-shot="low" aria-pressed="false" type="button" title="Cámara baja">⬇<small>Baja</small></button>
@@ -91,7 +92,14 @@
  </div>
 <span class="tv-env-status" id="tv-env-status" role="status">Ajustes visuales del estadio · resultados intactos</span>
 </section>
-<div class="tv-remote" role="group" aria-label="Controles del canal">
+<section class="tv-control-detail" id="tv-control-detail" hidden aria-label="Submenú de parámetros del director de TV">
+    <div class="tv-control-detail-head"><strong data-panel-title>Parámetros de realización</strong>
+      <button type="button" data-panel-close aria-label="Cerrar submenú">✕</button>
+    </div>
+    <div class="tv-control-detail-body" data-panel-body></div>
+    <p>Estos ajustes modifican la presentación audiovisual, nunca el resultado oficial de la carrera.</p>
+   </section>
+   <div class="tv-remote" role="group" aria-label="Controles del canal">
     <button type="button" id="tv-live-now" class="tv-live-button" disabled>● ESTÁS EN VIVO</button>
     <button type="button" id="tv-replay-again" hidden>↻ Volver a reproducir</button>
     <button type="button" id="tv-audio" aria-pressed="false" disabled>🔊 Activar sonido</button>
@@ -132,5 +140,5 @@
 </section>
 </main>
 <footer class="hub-footer"><div class="hub-shell"><span>ESTADIO SATOSHI NAKAMOTO · FIxture sintético reproducible · Sin apuestas reales</span><span><a href="/stadiums/">Todos los estadios</a> · <a href="/metodologia.html">Metodología</a> · <a href="/juego-responsable.html">Uso responsable</a></span></div></footer>
-<script type="module" src="/assets/crypto-venue.js?v=winner-slowmo-env-20261104-v1"></script>
+<script type="module" src="/assets/crypto-venue.js?v=tv-director-params-20261104-v2"></script>
 </body></html>
