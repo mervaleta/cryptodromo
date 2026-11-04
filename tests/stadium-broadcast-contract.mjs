@@ -10,10 +10,10 @@ const scene=read('visual-lab/scene.js');
 const broadcast=read('stadiums/crypto/broadcast/index.html');
 const lab=read('visual-lab/index.html');
 const preview=read('visual-lab/presentationHorse.js');
-const ids=html=>[...html.matchAll(/\\bid=["']([A-Za-z][\\w-]*)["']/g)].map(match=>match[1]);
+const ids=html=>[...html.matchAll(/\bid=["']([A-Za-z][\w-]*)["']/g)].map(match=>match[1]);
 const usedIds=[...new Set([
- ...[...scene.matchAll(/\\bgetElementById\\(\\s*['"]([A-Za-z][\\w-]*)['"]/g)].map(m=>m[1]),
- ...[...scene.matchAll(/\\bquerySelector\\(\\s*['"]#([A-Za-z][\\w-]*)['"]/g)].map(m=>m[1])
+ ...[...scene.matchAll(/\bgetElementById\(\s*['"]([A-Za-z][\w-]*)['"]/g)].map(m=>m[1]),
+ ...[...scene.matchAll(/\bquerySelector\(\s*['"]#([A-Za-z][\w-]*)['"]/g)].map(m=>m[1])
 ])];
 
 test('all directly referenced race DOM elements exist in BOTH broadcast and laboratory',()=>{
@@ -28,10 +28,10 @@ test('all directly referenced race DOM elements exist in BOTH broadcast and labo
 });
 
 test('optional WebGL presentation failure cannot stop the official race',()=>{
- assert.match(preview,/if\\(!container\\)/);
- assert.match(preview,/return \\{show:noop,dispose:noop\\}/);
- assert.match(preview,/catch\\(error\\)/);
- assert.match(scene,/mountPresentationHorse\\(document\\.querySelector\\('#present-horse-3d'\\)\\)/);
+ assert.match(preview,/if\(!container\)/);
+ assert.match(preview,/return \{show:noop,dispose:noop\}/);
+ assert.match(preview,/catch\(error\)/);
+ assert.match(scene,/mountPresentationHorse\(document\.querySelector\('#present-horse-3d'\)\)/);
  assert.match(broadcast,/world-broadcast-p0-20261104/,'broadcast must bust old scene cache');
  assert.match(scene,/world-presenter-p0-20261104/,'scene must bust old preview cache');
 });
