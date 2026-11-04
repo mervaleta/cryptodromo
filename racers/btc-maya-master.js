@@ -390,11 +390,62 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  return {mesh,geometry,material};
 }
 
+
+/**
+ * Heal the circular rump opening left by the old polygon tail. Rather than
+ * placing another tail-like tube on top, this is a low convex patch of the
+ * actual COAT material, following the original Back bone in Gallop.
+ * The new groom grows from immediately behind this seamless rump surface.
+ */
+function sculptRumpSurfacePatch(source,coat){
+ const back=source.skeleton.bones.findIndex(b=>b.name==='Back');
+ if(back<0)throw Error('BTC rump patch requires original Back bone');
+ const SIDE=36,RINGS=6,xyz=[0,.01605,.03045],joints=[back,0,0,0],
+   weights=[1,0,0,0],indices=[];
+ for(let row=1;row<=RINGS;row++){
+  const r=row/RINGS;
+  for(let i=0;i<SIDE;i++){
+   const theta=TAU*i/SIDE,cs=Math.cos(theta),sn=Math.sin(theta);
+   const x=cs*.00235*r,z=.03045+sn*.00250*r;
+   const y=.01422+.00183*(1-r*r);
+   xyz.push(x,y,z);
+   joints.push(back,0,0,0);weights.push(1,0,0,0);
+  }
+ }
+ for(let j=0;j<SIDE;j++){
+  const k=(j+1)%SIDE;
+  indices.push(0,1+k,1+j);
+ }
+ for(let row=1;row<RINGS;row++){
+  for(let j=0;j<SIDE;j++){
+   const k=(j+1)%SIDE;
+   const a=1+(row-1)*SIDE+j,b=1+(row-1)*SIDE+k,
+      c=1+row*SIDE+j,d=1+row*SIDE+k;
+   indices.push(a,b,c,b,d,c);
+  }
+ }
+ const geo=new THREE.BufferGeometry();
+ geo.setIndex(indices);
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
+ geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(joints,4));
+ geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+ geo.computeVertexNormals();
+ const mesh=new THREE.SkinnedMesh(geo,coat);
+ mesh.name='BTC integrated sculpted rump, single tail exit';
+ mesh.position.copy(source.position);mesh.quaternion.copy(source.quaternion);
+ mesh.scale.copy(source.scale);mesh.bindMode=source.bindMode;
+ source.parent.add(mesh);mesh.bind(source.skeleton,source.bindMatrix.clone());
+ mesh.bindMatrixInverse.copy(source.bindMatrixInverse);
+ mesh.frustumCulled=false;mesh.castShadow=true;mesh.receiveShadow=true;
+ return {vertices:xyz.length/3,triangles:indices.length/3,
+  dispose(){mesh.removeFromParent();geo.dispose();}};
+}
 export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e',tailColor,eyeColor,coatColor,brandAccent,brandMode,hoofColor}={}){
  const {best,hidden}=sourceBody(root);
  const originalVisibility=hidden.map(x=>({...x}));
  const skinAt=makeSkinTransfer(best);
  const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
+ const rumpPatch=sculptRumpSurfacePatch(best,anatomy.materials[0]);
  const groom=createMayaGroom(best,skinAt,{
   maneSize,tailSize,maneColor:color,tailColor:tailColor||color
  });
@@ -414,7 +465,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    poweredHindVertices:anatomy.poweredHindVertices,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,tailDockVertices:groom.tailDockVertices,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},
@@ -431,7 +482,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
   dispose(){
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
-   groom.dispose();face.dispose();ears.dispose();
+   groom.dispose();face.dispose();ears.dispose();rumpPatch.dispose();
    eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());
