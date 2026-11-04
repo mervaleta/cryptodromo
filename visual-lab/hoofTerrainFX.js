@@ -55,7 +55,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     for(let i=0;i<4;i++){
       const v=entry.bones[i].getWorldPosition(entry.vectors[i]);
       const p=entry.soles[i];
-      p.x=v.x;p.y=v.y-.22;p.z=v.z;
+      p.x=v.x;p.y=v.y-.22*(Number(model.root.scale.y)||1);p.z=v.z;
     }
     return entry.soles;
   }
@@ -240,9 +240,21 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     }
     shadows.count=lanes*4;shadows.instanceMatrix.needsUpdate=true;
   }
-  function update(dt,{wind=0,pixelRatio=1}={}){
+  function update(dt,{wind=0,pixelRatio=1,scrollSpeed=0}={}){
     const step=clamp(dt,0,.08),n=maxLive();
     particleMaterial.uniforms.uDpr.value=clamp(pixelRatio,.6,2);
+    // Preview-only running-belt illusion. The stadium passes zero and retains
+    // every mark in immutable world coordinates; the BTC stationary card can
+    // scroll the turf behind its animated planted hoof without moving the horse.
+    if(scrollSpeed>0&&marks.count){
+      const matrix=marks.instanceMatrix.array,dx=clamp(scrollSpeed,0,6)*step;
+      for(let i=0;i<marks.count;i++){
+        const at=i*16+12;
+        matrix[at]-=dx;
+        if(matrix[at]<-4.6)matrix[at+1]=-80;
+      }
+      marks.instanceMatrix.needsUpdate=true;
+    }
     for(let i=0;i<n;i++){
       if(!lifetimes[i])continue;
       const p=i*3,age=ages[i]+step,duration=lifetimes[i];
