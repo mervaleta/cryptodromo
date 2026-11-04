@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const src=readFileSync(new URL('../assets/crypto-venue.js',import.meta.url),'utf8');
+test('channel fade is always released once a verified race canvas is present',()=>{
+ assert.match(src,/function signalReady\(expectedSerial=serial\)/);
+ assert.match(src,/if\(expectedSerial!==serial\|\|!validFrameDoc\(\)\)return false/);
+ assert.match(src,/frameReadySerial===expectedSerial/);
+ assert.match(src,/setTimeout\(release,350\)/);
+ assert.match(src,/requestAnimationFrame\(release\)/);
+ assert.match(src,/try\{\s*audioButton\.disabled/);
+ assert.match(src,/catch\(err\)\{console\.warn\('Optional TV director settings:'/);
+ assert.match(src,/framePoller=setInterval/);
+ assert.match(src,/signalReady\(expectedSerial\)/);
+ assert.match(src,/clearInterval\(framePoller\)/);
+ assert.match(src,/if\(validFrameDoc\(\)\)\{\s*signalReady\(serial\)/);
+});
+test('single verified iframe and existing Hostinger rewrite fallback survive',()=>{
+ const html=readFileSync(new URL('../stadiums/crypto/live/index.html',import.meta.url),'utf8');
+ assert.equal((html.match(/<iframe\b/g)||[]).length,1);
+ assert.match(src,/source===RACE_PLAYER_SOURCES\[0\]/);
+ assert.match(src,/source=RACE_PLAYER_SOURCES\[1\]/);
+ assert.match(src,/tvNestedHub='blocked'/);
+});
