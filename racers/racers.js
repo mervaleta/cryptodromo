@@ -111,7 +111,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-master-hindquarters-20261104-v4':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-master-hindquarters-20261104-v5':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
