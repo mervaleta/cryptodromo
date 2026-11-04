@@ -77,7 +77,7 @@ function createHairMass(source,skinAt,{
    [(seed-.5)*.00056,.01472+.00084*crossSeed,.03195-.00047*seed]:
    forelock?
     [side*(.00012+.00026*seed),-.0273+.0005*f,.04630-.00020*seed]:
-    [side*.00019,-.0271+.0226*f,crest(-.0271+.0226*f)-.00066];
+    [side*.00019,-.0249+.0206*f,crest(-.0249+.0206*f)-.00052];
   const sk=forelock?
    {joints:[headJoint,0,0,0],weights:[1,0,0,0]}:
    skinAt(...root);
@@ -88,7 +88,8 @@ function createHairMass(source,skinAt,{
    ?(major?.00175+.00085*seed:.00135+.00110*seed)
    :tail
     ?(major?.020+.0070*seed:.018+.0075*seed)
-    :(major?.0080+.0035*seed:.0065+.0037*seed))*size;
+    :(major?.0083+.0028*seed:.0064+.0031*seed))*
+      size*(tail||forelock?1:.63+.37*smooth(f/.29));
   const breadth=(tail
    ?(major?.00047+.00020*seed:.000080+.000085*seed)
    :(major?.00092+.00035*seed:.000080+.000095*seed));
@@ -116,7 +117,7 @@ function createHairMass(source,skinAt,{
     y=root[1]+length*(.53*t+.22*t2)+.00068*Math.sin(PI*t);
     z=root[2]-(.0081+.44*length+.0024*crossSeed)*flow
       +.0018*Math.sin(PI*t)*(.5+.5*seed)
-      +(seed-.5)*(.0048*Math.sin(PI*t)+.0095*t2);
+      +(seed-.5)*(.0043*Math.sin(PI*t)+.0070*t2);
     if(ribbon===0)x+=cross*breadth*w;
     else z+=cross*breadth*.42*w;
    }else{
@@ -129,7 +130,7 @@ function createHairMass(source,skinAt,{
     // it starts on the poll, flows down the full neck and finishes in
     // overlapping tapered curls. Stronger silhouette, fewer dark wires.
     const lift=.00095*Math.sin(PI*t)*(.65+.35*seed);
-    const drape=(.0019+.0015*seed)*t2;
+    const drape=(.0018+.0012*seed)*t2;
     const outward=(.0026+.00145*seed)*(.45*rearward+.55*t2);
     x=root[0]+side*(outward+.00017*Math.sin(PI*t));
     y=cy+.00036*Math.sin(PI*t*1.2+seed*2.8)*t2;
@@ -148,7 +149,7 @@ function createHairMass(source,skinAt,{
      const v=point(u,cross,ribbon);
      positions.push(...v);
      const across=Math.abs(cross);
-     const tint=(.88+.13*seed+.035*u+.08*(1-across))*(major?1:.89);
+     const tint=(.93+.08*seed+.028*u+.065*(1-across))*(major?1:.90);
      colors.push(tint*1.055,tint*.98,tint*.91);
      tip.push(u);ids.push(id*1.71);region.push(tail?1:0);
      const skin=skinFor(sk,u);
@@ -217,9 +218,9 @@ export function createMayaGroom(source,skinAt,{
  maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e'
 }={}){
  const motion={time:{value:0},wind:{value:1},gait:{value:0}};
- const mane=createHairMass(source,skinAt,{tail:false,majorCount:200,fineCount:536,
+ const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:624,
   size:clamp(maneSize,.6,1.9),color:maneColor,motion});
- const tail=createHairMass(source,skinAt,{tail:true,majorCount:176,fineCount:328,
+ const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:360,
   size:clamp(tailSize,.6,1.9),color:tailColor,motion});
  let disposed=false;
  return {
