@@ -10,6 +10,15 @@ La carrera anterior emitía polvo desde una nube regenerada constantemente detr�
 
 El módulo nuevo usa cuatro eventos de apoyo diferenciados por caballo, sobre una secuencia de galope transverso: posterior exterior, posterior interior, anterior exterior, anterior interior y suspensión. El liderazgo de la mano podrá configurarse cuando el rig definitivo lo exponga. En el motor de carrera actual, el GLB ofrece `hoofPhase` y la fase sincroniza esos eventos. También hay un modo **prioritario** de colisión real que acepta coordenadas mundiales de las cuatro suelas.
 
+**Mejora añadida durante el QA:** en el GLB actual, los nodos animados
+`BackLowerLeg.L_end`, `BackLowerLeg.R_end`,
+`FrontLowerLeg.L_end` y `FrontLowerLeg.R_end` permiten calcular
+la posición de cada punta de casco a través de la cinemática real del
+esqueleto (en orden LH/RH/LF/RF). Se emplea un desplazamiento vertical
+provisional de 0,22 m calibrado para el caballo de 2,85 m. Esto habilita
+aterrizajes geométricos aproximados desde ya. No representa aún el
+volumen de colisión de la herradura final ni un sistema de IK.
+
 La API esperada del futuro maestro es:
 
 ```js
@@ -23,7 +32,7 @@ model.getHoofContactPoints = () => [
 // No entregar la posición de la articulación por encima del casco.
 ```
 
-Si la función existe y entrega cuatro posiciones finitas, `hoofContactSolver` usa aterrizaje, despegue e histéresis. Si no existe, usa `hoofPhase`. Si tampoco existe, utiliza un reloj cosmético independiente. Ningún modo escribe posiciones deportivas ni datos de precios.
+Si la función existe y entrega cuatro posiciones finitas, `hoofContactSolver` usa aterrizaje, despegue e histéresis. Si no existe, lee los cuatro huesos terminales del GLB actual. Cuando faltan esos huesos, usa `hoofPhase`. Si tampoco existe, utiliza un reloj cosmético independiente. Ningún modo escribe posiciones deportivas ni datos de precios.
 
 ## Archivos añadidos
 
@@ -61,7 +70,7 @@ Con la rama desplegada en un entorno de prueba (no producción):
 4. En un replay, pausar/reanudar, cambiar carrera, completar 60 s y verificar que no quedan huellas de la carrera anterior ni nacen impactos durante presentación.
 5. Registrar video de cámara baja, cámara lateral y toma aérea, tiempos de GPU/CPU, FPS p50/p95 y conteo de draw calls. Metas de **aprobación** (no medidas): 50+ FPS desktop y 30+ móvil con 12 animales, sin sobreposición de cascos, flotación ni huellas durante suspensión.
 
-**Límite actual:** el contacto geométrico exacto queda pendiente del getter de cuatro suelas del agente 3D. En tanto no exista, el fallback de fase es una aproximación razonable, no un solver de deformación física del suelo. Para una producción AAA se requieren además validación visual cuadro a cuadro, geometría de suela definitiva, orientación de la mano del galope, variación volumétrica y LOD probado en hardware real.
+**Límite actual:** las cuatro puntas de hueso animadas se pueden seguir geométricamente, pero una punta de hueso con offset es una aproximación a la suela, no la superficie física final del casco. Falta el getter de cuatro suelas del agente 3D, el ajuste de altura final y el locking/IK durante la fase de apoyo; el fallback de fase solo se usa si no están los cuatro huesos. Para una producción AAA se requieren además validación visual cuadro a cuadro, geometría de suela definitiva, orientación de la mano del galope, variación volumétrica y LOD probado en hardware real.
 
 ## Integración cuando el agente termine
 
