@@ -13,9 +13,9 @@ renderer.setPixelRatio(Math.min(1.6,window.devicePixelRatio||1));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#98b6bd');
 scene.fog=new THREE.FogExp2('#c2c4ba',.012);
-const camera=new THREE.PerspectiveCamera(45,1,.08,220);camera.position.set(-19,4.9,12);
+const camera=new THREE.PerspectiveCamera(36,1,.08,220);camera.position.set(-20,2.9,6.4);
 const controls=new OrbitControls(camera,canvas);
-controls.target.set(-13,1.3,0);controls.enableDamping=true;
+controls.target.set(-16,1.15,0);controls.enableDamping=true;
 controls.maxPolarAngle=Math.PI*.49;controls.minDistance=2;controls.maxDistance=35;controls.update();
 scene.add(new THREE.HemisphereLight('#f1f0dc','#49564b',2.1));
 const sun=new THREE.DirectionalLight('#fff1cc',3.1);sun.position.set(-12,22,11);
@@ -102,7 +102,7 @@ function setModel(){
 function restart(){
  horseX=-16;fx.reset();
  if(horse)horse.root.position.x=horseX;
- controls.target.set(horseX,1.4,0);camera.position.set(horseX-6,4.8,12);controls.update();
+ controls.target.set(horseX,1.15,0);camera.position.set(horseX-4,2.9,6.4);controls.update();
 }
 $('surface').addEventListener('change',changeSurface);
 $('horse-model').addEventListener('change',setModel);
