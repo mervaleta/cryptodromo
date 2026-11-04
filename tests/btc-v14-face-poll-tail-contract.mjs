@@ -19,7 +19,8 @@ test('both eyes share one symmetric cornea and lid landmark without surface-snap
   assert.ok(l.x<0&&r.x>0&&Number.isFinite(l.z));
  }
  const source=read('racers/btc-maya-face-details.js');
- assert.match(source,/makeOrbitAnnulus\(source,positions/);\n assert.match(source,/boundary\.left/);
+ assert.match(source,/makeOrbitAnnulus\(source,positions/);
+ assert.match(source,/boundary\.left/);
  assert.doesNotMatch(source,/makeProjector|project\(side,y,z/);
  assert.match(source,/skin\.bind|mesh\.bind\(source\.skeleton/);
 });
