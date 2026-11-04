@@ -28,6 +28,8 @@ try {
  assert.equal(s.heroGroom.gallopPreserved,true);
  assert.equal(s.heroGroom.originalRig,true);
  assert.equal(s.heroGroom.sculptedEyes,2);
+ assert.equal(s.heroGroom.sculptedEars,2,'stylized pinnae should appear on the public horse');
+ assert.equal(s.heroGroom.integratedMayaHooves,true);
  assert.ok(s.heroGroom.fineLocks>1100);
  const before=s.hoofPhase;
  await page.waitForTimeout(1100);
