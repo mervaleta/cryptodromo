@@ -1,0 +1,37 @@
+name: BTC master public fiche contract
+on:
+  pull_request:
+    paths:
+      - 'racers/**'
+      - 'race-lab/source/src/horse.js'
+      - 'docs/BTC-*.md'
+      - 'AGENTS.md'
+      - '.github/workflows/btc-master-publication-policy.yml'
+      - 'tests/btc-master-change-policy.mjs'
+  push:
+    branches: [main]
+    paths:
+      - 'racers/**'
+      - 'docs/BTC-*.md'
+      - 'AGENTS.md'
+      - '.github/workflows/btc-master-publication-policy.yml'
+      - 'tests/btc-master-change-policy.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-fiche:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate BTC fiche and revision contract
+        env:
+          CRP_POLICY_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
+        run: |
+          node --check racers/racers.js
+          node --test tests/btc-master-change-policy.mjs
