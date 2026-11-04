@@ -7,7 +7,7 @@
  * node scripts/audit-satoshi-week.mjs --csv > satoshi-week-results.csv
  */
 import {createHash} from 'node:crypto';
-import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY,TRACKS} from '../race-lab/source/src/data/tripleRaceFixture.js';
+import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY,TRIPLE_FIXTURE_VERSION,TRACKS} from '../race-lab/source/src/data/tripleRaceFixture.js';
 import {createOfficialRace,officialRanking} from '../race-lab/source/src/data/officialRace.js';
 import {FIXTURE_DAYS,PRICE_FIXTURE} from '../race-lab/source/src/data/raceFixture.js';
 
@@ -42,7 +42,7 @@ for(let day=0;day<FIXTURE_DAYS;day++){
 if(summary){
  process.stdout.write(JSON.stringify({
   title:'Cryptodromo Satoshi Nakamoto | seven-day deterministic simulated fixture',
-  version:'satoshi-synthetic-week-v2-continuous',
+  version:TRIPLE_FIXTURE_VERSION,
   source:PRICE_FIXTURE.version,
   notice:'DEMO synthetic prices. Outcomes known in advance. Never suitable for real-money bets.',
   days:FIXTURE_DAYS,tracks:TRACKS.map(t=>t.id),counts,
