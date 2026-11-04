@@ -188,7 +188,10 @@ import(previewModule).then(({createPreview})=>{
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
   if(new URLSearchParams(location.search).get('btcFreeze')==='1')
-   window.__cryptodromoBTCAtelierAdvanceFrame=step=>preview?.debugAdvance?.(1,step)||null;
+   {
+    window.__cryptodromoBTCAtelierAdvanceFrame=step=>preview?.debugAdvance?.(1,step)||null;
+    window.__cryptodromoBTCAtelierSetHindVolumeForQA=value=>preview?.debugSetHindVolumeStrength?.(value)??null;
+   }
  }
  $('#preview-state').textContent=btcAtelier?'BTC · CABALLO ANATÓMICO · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
