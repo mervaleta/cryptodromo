@@ -109,11 +109,27 @@ try{
  });
  await waitHero(filmPage,'btc-v5-motion-study-20261103');
  await filmPage.locator('[data-btc-camera="profile"]').click();
- // Film the horse, not the page header. Real WebGL remains in the visible
- // browser viewport throughout the shot. Explicitly fail if it is cropped.
- await filmPage.evaluate(()=>document.querySelector('.feature')?.scrollIntoView({
-  block:'start',behavior:'instant'
- }));
+ // Film ONLY the real WebGL horse scene. Pin the existing live Three.js
+ // canvas to the video viewport: this is NOT an image, video texture, or
+ // offline rendering substitution. Its ResizeObserver updates the camera.
+ await filmPage.addStyleTag({content:`
+  .feature .stage {
+   position:fixed!important;top:0!important;left:0!important;
+   width:100vw!important;height:100vh!important;z-index:999999!important;
+   margin:0!important;padding:0!important;transform:none!important;
+   box-sizing:border-box!important;border:0!important;overflow:hidden!important;
+  }
+  .feature .stage-top,.feature .stage-bottom {display:none!important}
+  .feature #horse-view {
+   width:100vw!important;height:100vh!important;min-height:0!important;
+   position:relative!important;margin:0!important;padding:0!important;
+  }
+  .feature #horse-canvas {display:block!important;width:100%!important;height:100%!important}
+ `});
+ await filmPage.waitForTimeout(650);
+ await filmPage.locator('#horse-view').screenshot({
+  path:out+'/film-first-frame.png',timeout:60000
+ });
  const coverage=await filmPage.evaluate(()=>{
   const rect=document.querySelector('#horse-view').getBoundingClientRect();
   const visible=Math.max(0,Math.min(rect.bottom,innerHeight)-Math.max(rect.top,0));
