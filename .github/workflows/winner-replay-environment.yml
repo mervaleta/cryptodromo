@@ -1,0 +1,84 @@
+name: Satoshi TV · slow-motion winner and stadium environment director
+on:
+  pull_request:
+    paths:
+      - 'visual-lab/winnerSlowMotion.js'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/index.html'
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'stadiums/crypto/live/index.html'
+      - 'assets/crypto-venue.js'
+      - 'assets/satoshi-tv-environment.js'
+      - 'assets/satoshi-tv.css'
+      - 'assets/satoshi-tv-contract.js'
+      - 'tests/winner-replay-env-contract.mjs'
+      - 'tests/winner-replay-env-browser.mjs'
+      - '.github/workflows/winner-replay-environment.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'visual-lab/winnerSlowMotion.js'
+      - 'visual-lab/scene.js'
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'stadiums/crypto/live/index.html'
+      - 'assets/crypto-venue.js'
+      - 'assets/satoshi-tv-environment.js'
+      - 'tests/winner-replay-env-browser.mjs'
+      - '.github/workflows/winner-replay-environment.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate source and invariant tests
+        run: |
+          node --experimental-default-type=module --check visual-lab/scene.js
+          node --experimental-default-type=module --check visual-lab/winnerSlowMotion.js
+          node --experimental-default-type=module --check assets/satoshi-tv-environment.js
+          node --experimental-default-type=module --check assets/crypto-venue.js
+          node --experimental-default-type=module --test tests/winner-replay-env-contract.mjs tests/satoshi-tv-player-contract.mjs tests/satoshi-module-cache-contract.mjs tests/stadium-staggered-countdowns.mjs tests/stadium-flight-tv-director.mjs
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless WebGL Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Validate arrival, winner slow-mo, official scoreboard and real environmental controls
+        env:
+          CRP_BASE_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/winner-replay-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          node tests/winner-replay-env-browser.mjs
+      - name: Verify actual Hostinger site after merge
+        if: github.event_name == 'push'
+        env:
+          CRP_BASE_URL: https://race.cryptodromo.com
+        run: |
+          for attempt in 1 2 3; do
+            echo "Public TV replay/environment validation $attempt"
+            if node tests/winner-replay-env-browser.mjs; then exit 0; fi
+            sleep 20
+          done
+          exit 1
+      - name: Preserve screenshots of slow-mo and TV control
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: satoshi-winner-replay-environment-proof
+          path: artifacts/winner-replay-env/
+          if-no-files-found: ignore
