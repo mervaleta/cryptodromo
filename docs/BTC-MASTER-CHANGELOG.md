@@ -102,3 +102,11 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Segunda pasada sobre `btc-maya-hindquarters.js`: se agrega grosor en el eje longitudinal (visible de perfil), no únicamente ancho lateral de malla, con crecimiento continuo de la sección de glúteos, muslos y gaskin. Para las transiciones del galope se suma una microcorrección de piel en shader según la fase real de `hoofPhase`; las matrices de huesos y el clip original `Gallop` **no se reemplazan**.
 - Contratos reforzados: test de espesor sagital de pierna posterior en malla, shader vertex procedural, `hindGaitCorrective` y métricas del modelo en WebGL. Nueva captura después de esta segunda pasada requerida antes de declarar cumplida la anatomía.
 - No desplegar a producción ni considerar finalizado si el smoke de Hostinger sigue mostrando v10/v11.
+
+
+### Comprobación en el sitio público · 2026-11-04
+- **Publicación confirmada:** merge PR #87 `90126f8`; workflow de producción `41895376031` aprobó el contenido v12 servido por Hostinger y WebGL Chromium contra `https://race.cryptodromo.com/racers/#BTC`. Comprobó variante `maya`, galope nativo activo, crin sin filamentos geométricos fuera del límite y ETH sin componentes BTC.
+- **Evidencia real:** `btc-live-anatomical-verification` en GitHub Actions `41895376031`, captura `public-btc-anatomical.png`; capturas de seis ángulos en workflow de PR `41894499285`. Versiones v11/v12 comparadas mediante capturas WebGL, no mediante ImageGen.
+- **Resultado de dirección artística:** se eliminaron las hebras del cuello y se redondeó la grupa; aún hay estrechamiento y flexión poco convincente en patas traseras, visible en la captura de producción. No se declara calidad AAA ni anatomía del galope resuelta.
+- **Estado de manifiesto:** `needs_fix` (implementación desplegada y verificada, estética posterior pendiente). La fase de nuevas físicas se mantiene bloqueada hasta corregir y cotejar el muslo-corvejón con referencia.
+- **Incidencia ajena a este cambio:** workflow `41895376040` del editor/admin terminó con HTTP 503 por credenciales PHP de administración no configuradas. La API pública de perfiles y `racers.js` respondieron 200; este problema no invalida la verificación del caballo y requiere al responsable del backend.
