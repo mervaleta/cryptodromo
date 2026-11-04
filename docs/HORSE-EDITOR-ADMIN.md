@@ -1,4 +1,4 @@
-# Cryptódromo · Horse Atelier (preparado para integración)
+# Cryptódromo · Horse Atelier (integrado en `main`)
 
 ## Alcance y estado
 
@@ -11,17 +11,17 @@
 - Fuente única de identidad de carrera: los **100 símbolos** de `stables/official-week-v1.json` y `TOKEN_ROSTER` de `race-lab/source/src/data/tokenRoster.js`. No introducir un segundo roster ni modificar pesos, tiers, precios, resultados o rankings.
 - El estado se guarda **fuera del document root**, en `cryptodromo-horses-private/profiles-v1.json`, con escritura atómica y bloqueo exclusivo. Los logos se guardan fuera del directorio público en `cryptodromo-horses-private/logos/<sha256>.<ext>`. No hay archivos editables públicamente.
 - Versiones y borradores por símbolo. Publicar BTC no publica a la vez un borrador de ETH.
-- No se toca `racers/racers.js`, `race-lab/source/src/horse.js`, el GLB ni los experimentos de BTC, para evitar conflictos con las PR de arte (especialmente #58/#60). No fusionar ni desplegar antes de la integración coordinada.
+- La ficha pública `/racers/` ya consulta la API publicada y muestra nombre, biografía, logo y redes. Conserva el motor, el GLB, el rig y los experimentos de BTC; la personalización avanzada del pelo permanece pendiente de la aprobación del master 3D.
 
 ## Uso
 
-1. Instalar **solamente** los archivos nuevos del ZIP en la misma estructura de la raíz del repositorio del sitio `race.cryptodromo.com` (PHP habilitado). Este es un overlay modular, NO un reemplazo completo del sitio. No instalar hasta que se finalice y coordine la integración con la PR del master BTC.
+1. El módulo se integró por GitHub en `main`, que sincroniza con Hostinger. Abrir `https://race.cryptodromo.com/admin/horses/` para editar; la ficha pública se consulta en `https://race.cryptodromo.com/racers/#BTC`. La operación requiere PHP y el despliegue de Hostinger.
 2. Mantener las variables existentes `CRP_FIXTURE_ADMIN_USER` y `CRP_FIXTURE_ADMIN_PASSWORD_HASH` ya usadas por `/admin/fixture/`. No incorporar credenciales al repo. Acceso solo mediante HTTPS y la misma protección Basic Auth existente.
 3. Ingresar a `/admin/horses/` y seleccionar un símbolo. Editar identidad, biografía, redes blockchain, enlaces y materiales. Los colores tienen **picker y código HEX editable** simultáneos, con formato `#RRGGBB` validado. Elegir **Corto / Medio / Largo** para crin y para cola de forma independiente, con escala de volumen opcional.
 4. Para el logo, seleccionar un PNG/JPEG/WebP de hasta 2 MB y pulsar **Cargar logo**. El archivo queda privado y el formulario marca cambios pendientes. Pulsar **Guardar borrador** o **Publicar este caballo** para asociarlo al símbolo. **Quitar logo** lo desvincula de la ficha actual al guardarla. El archivo antiguo puede permanecer en almacenamiento privado (se requiere purga administrada antes de borrar blobs sin referencias).
 5. Guardar crea un borrador privado. Publicar activa solo la ficha seleccionada. Restaurar elimina la personalización de ese símbolo y vuelve al catálogo base.
 6. Comprobar `/api/horse-profiles.php` en el servidor PHP, donde solo aparecen entradas publicadas, sin borradores ni tokens de sesión. `/api/horse-logo.php?symbol=BTC` devuelve el logo solo si BTC tiene uno publicado; un logo en borrador no aparece públicamente.
-7. El modelo 3D maestro permanece sin modificar mientras el otro agente perfecciona BTC. Una vez aprobado, importar `fetchPublishedHorseProfiles` y `toMasterHorseOptions` en el render público y pasar materiales/groom al nuevo renderer (ver el siguiente apartado).
+7. El modelo 3D maestro permanece sin modificar mientras el otro agente perfecciona BTC. `racers/racers.js` ya consume los perfiles para los datos visibles y la coloración admitida por el renderer actual; el futuro master BTC aplicará `materials` y `groom` completos.
 
 ## Contrato de datos para el caballo master
 
@@ -35,7 +35,7 @@ maneStyle, tailStyle, maneScale, tailScale
 
 `maneStyle` y `tailStyle` admiten **exactamente `short`, `medium` y `long`**. El valor predeterminado es `medium` y el volumen se almacena por separado; el modelo master aprobado debe interpretar ambos controles. `logoId` es `null` o un hash SHA-256 de un logo subido y validado. El adaptador expone `logoUrl` pública por símbolo cuando exista `logoId`. `raceColor` es la identidad de marca; `coatColor` el pelaje natural. `appearanceMode=brand_colored` respeta el aspecto legado basado en color de marca, mientras que `natural_coat` usa el pelaje definido. El adaptador arma opciones (`coat`, `accent`, `materials`, `groom`) para la futura geometría BTC. **El GLB y el esqueleto se cargan una sola vez y se clonan para los 100 competidores**, con materiales instanciados por caballo para evitar contaminación cruzada.
 
-Ejemplo futuro, **no conectado todavía en la página pública**:
+Ejemplo de integración **futura para las partes 3D avanzadas** (la ficha pública ya está conectada):
 
 ```js
 import {fetchPublishedHorseProfiles,toMasterHorseOptions} from '/race-lab/source/src/data/horseProfileAdapter.js';
