@@ -376,7 +376,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const x=positions[v*3],y=positions[v*3+1],z=positions[v*3+2];
   const mask=smooth((-.0208-y)/.0054)*smooth((z-.039)/.0048)*
    smooth((.0033-Math.abs(x))/.0022);
-  const attach=.88*mask;
+  const eyeRing=gauss(y,-.02831,.00110)*gauss(z,.04268,.00125)*
+    smooth((.0033-Math.abs(x))/.0015);
+   const attach=Math.max(.88*mask,.985*eyeRing);
   if(attach<.01)continue;
   const sums=new Map([[headIndex,attach]]);
   for(let k=0;k<4;k++){
@@ -491,7 +493,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
     // Ellipsoidal ocular surface follows the ORIGINAL eye aperture,
     // centered ~x=.00145,y=-.02831,z=.04268, not the outer cheek.
     xyz.push(side*.00185+x*1.28,-.02831+y*1.78,.04268+z*1.86);
-   normals.push(normal.getX(i),normal.getY(i),normal.getZ(i));
+   const nx=normal.getX(i)/1.28,ny=normal.getY(i)/1.78,
+     nz=normal.getZ(i)/1.86,nl=Math.hypot(nx,ny,nz)||1;
+    normals.push(nx/nl,ny/nl,nz/nl);
    local.push(x/radius,y/radius,z/radius);
    sides.push(side);
    bones.push(headJoint,0,0,0);
