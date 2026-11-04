@@ -70,7 +70,7 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.match(master,/createMayaGroom/);
  assert.match(master,/gallopPreserved:true/);
  const groom=read('racers/btc-maya-groom.js');
- assert.match(groom,/majorCount:112,fineCount:208/);
+ assert.match(groom,/majorCount:112,fineCount:320/);
  assert.match(groom,/looseNeckFibers/);
  assert.match(groom,/btcCuticle/);
  assert.match(groom,/solidRingSides:SIDES/);
