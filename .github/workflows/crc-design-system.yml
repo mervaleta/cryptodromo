@@ -31,6 +31,8 @@ jobs:
           node-version: '22'
       - name: Validate CRC CSS, routes, components and shell widths
         run: node --test tests/crc-design-system.test.mjs
+      - name: Validate Gazette generator Python syntax
+        run: python3 -m py_compile cryptodromo-gazette/collector.py
   responsive-visual:
     name: Browser snapshots before/after
     runs-on: ubuntu-24.04
