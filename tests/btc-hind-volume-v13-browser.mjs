@@ -6,7 +6,7 @@
  */
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {mkdirSync,writeFileSync,statSync} from 'node:fs';
 const base=process.env.BTC_BASE_URL||'http://127.0.0.1:8799';
 const dir='artifacts/btc-hind-volume-v13';
 mkdirSync(dir,{recursive:true});
@@ -49,6 +49,7 @@ try{
     skin:snap.heroGroom.volumeSkinMethod,drawCalls:snap.drawCalls});
    const id=String(i).padStart(2,'0');
    await page.locator('#horse-view').screenshot({path:dir+'/profile-'+id+'.png',timeout:90000,animations:'allow'});
+   assert.ok(statSync(dir+'/profile-'+id+'.png').size>10000,'missing rendered WebGL evidence for pose '+id);
    if([0,4,8,12].includes(i)){
      for(const view of ['rear','front']){
        await page.locator('[data-btc-camera="'+view+'"]').click();
