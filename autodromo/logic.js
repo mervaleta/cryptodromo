@@ -5,7 +5,7 @@
  */
 import {TOKEN_ROSTER} from '../race-lab/source/src/data/tokenRoster.js';
 import {getTripleRaceFixture} from '../race-lab/source/src/data/tripleRaceFixture.js';
-import {getContinuousFixturePrice,MINUTES_PER_DAY} from '../race-lab/source/src/data/raceFixture.js';
+import {getContinuousFixturePrice,MINUTES_PER_DAY} from '../race-lab/source/src/data/raceFixture.js?v=satoshi-cachefix-20261104-v3';
 import {createOfficialRace,officialRanking,positionAt} from '../race-lab/source/src/data/officialRace.js';
 import {tripleLiveSlot} from '../visual-lab/tripleLiveSchedule.js';
 
