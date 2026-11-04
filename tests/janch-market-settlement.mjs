@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {resolveClosingPrice} from '../assets/janch-market-settlement.js';
+
+const marketCloseAt='2026-11-04T21:00:00.000Z';
+const candle={timestamp:'2026-11-04T20:59:00.000Z',close:123.4,final:true,observedAt:'2026-11-04T21:00:02.000Z'};
+const officialClose={price:123.8,final:true,sessionCloseAt:marketCloseAt,publishedAt:'2026-11-04T21:00:05.000Z'};
+const args={marketCloseAt,sourcePolicy:'minute-candle',candle,now:'2026-11-04T21:00:03.000Z'};
+assert.deepEqual(resolveClosingPrice(args),{status:'VERIFIED',reason:null,price:123.4,source:'minute-candle',asOf:candle.observedAt});
+assert.equal(resolveClosingPrice({...args,now:'2026-11-04T20:59:59.000Z'}).reason,'SESSION_STILL_OPEN');
+assert.equal(resolveClosingPrice({...args,now:'2026-11-04T21:00:01.000Z'}).reason,'CANDLE_NOT_YET_AVAILABLE');
+assert.equal(resolveClosingPrice({...args,candle:{...candle,final:false}}).reason,'CANDLE_NOT_FINAL');
+assert.equal(resolveClosingPrice({...args,candle:{...candle,timestamp:'2026-11-04T21:00:00.000Z'}}).reason,'WRONG_CANDLE_INTERVAL');
+assert.equal(resolveClosingPrice({...args,candle:{...candle,close:NaN}}).reason,'MISSING_OR_INVALID_CANDLE');
+assert.equal(resolveClosingPrice({...args,candle:null}).status,'PENDING');
+assert.equal(resolveClosingPrice({...args,sourcePolicy:null}).reason,'SOURCE_POLICY_REQUIRED');
+assert.equal(resolveClosingPrice({...args,sourcePolicy:'official-close',officialClose,now:'2026-11-04T21:00:06.000Z'}).price,123.8);
+assert.equal(resolveClosingPrice({...args,sourcePolicy:'official-close',officialClose,now:'2026-11-04T21:00:04.000Z'}).reason,'OFFICIAL_CLOSE_NOT_YET_AVAILABLE');
+assert.equal(resolveClosingPrice({...args,sourcePolicy:'official-close',officialClose:{...officialClose,final:false},now:'2026-11-04T21:00:06.000Z'}).reason,'OFFICIAL_CLOSE_NOT_FINAL');
+assert.equal(resolveClosingPrice({...args,sourcePolicy:'official-close',officialClose:{...officialClose,sessionCloseAt:'2026-11-05T21:00:00.000Z'},now:'2026-11-04T21:00:06.000Z'}).reason,'WRONG_MARKET_SESSION');
+assert.equal(resolveClosingPrice({...args,marketCloseAt:'bad'}).reason,'INVALID_TIMESTAMP');
+console.log('OK: settlement uses only final, verified, time-appropriate closing data.');
