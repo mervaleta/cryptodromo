@@ -120,6 +120,7 @@ import(previewModule).then(({createPreview})=>{
   preview.setSpeed(Number($('#btc-speed').value));
   preview.setHairColor($('#btc-hair-color').value);
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
+  window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
  }
  $('#preview-state').textContent=btcAtelier?'BTC · HERO V5 · PELO DINÁMICO · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
