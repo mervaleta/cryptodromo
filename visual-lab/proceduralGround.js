@@ -2,7 +2,7 @@
  * Hooks only the two existing LIVE race materials. Stadium and oval keep their own surfaces.
  */
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,Number(n)||0));
-const TYPE={grass:0,dirt:1,synthetic:2};
+const TYPE={grass:0,dirt:1,synthetic:2,sand:3};
 function patch(material,{seed=1,kind=0}={}){
  const state={seed:Number(seed)||1,kind,wetness:0,mowing:6.5,stripe:.12};
  let compiled=null;
@@ -35,7 +35,8 @@ function patch(material,{seed=1,kind=0}={}){
    'float crpTurf=(crpMicro*.16+crpMacro*.19+crpCut*crpGroundStripe);'+
    'float crpSoil=crpMicro*.27+crpMacro*.22;'+
    'float crpStone=crpMicro*.045+crpMacro*.045;'+
-   'float crpDetail=crpGroundKind<.5?crpTurf:(crpGroundKind<1.5?crpSoil:crpStone);'+
+   'float crpSand=crpMicro*.13+crpMacro*.12+sin(crpXZ.x*2.8+sin(crpXZ.y*.9)*.9)*.045;'+
+   'float crpDetail=crpGroundKind<.5?crpTurf:(crpGroundKind<1.5?crpSoil:(crpGroundKind<2.5?crpStone:crpSand));'+
    'diffuseColor.rgb*=1.0+crpDetail-crpGroundWetness*.19;');
  };
  material.customProgramCacheKey=()=> 'crp-procedural-ground-v2';
