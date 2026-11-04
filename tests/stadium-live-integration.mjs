@@ -25,7 +25,7 @@ test('Alpha14 uses one camera, race controller, sky, weather, crowd and course',
   assert.match(scene,/broadcastPosition/);
   assert.doesNotMatch(scene,/createStadiumVenue/);
   for(const html of ['stadiums/crypto/broadcast/index.html','visual-lab/index.html'])
-    assert.match(read(html),/scene\.js\?v=hoof-fx-public-20261104-v2/);
+    assert.match(read(html),/scene\.js\?v=winner-replay-env-20261104-v1/);
 });
 for(const venueId of STADIUM_IDS){
   test('live exterior '+venueId+' stays off-course, changes weather and disposes safely',()=>{
