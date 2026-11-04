@@ -57,7 +57,7 @@ export function resolveWorldRace(reference){
  }):null;
  return Object.freeze({
   schema:WORLD_RACE_RECORD_SCHEMA,
-  key:eventKey,family,fixtureVersion:triple?'alpha19-triple-v1':'alpha18-legacy-v1',
+  key:eventKey,family,fixtureVersion:triple?fixture.fixtureVersion:'alpha18-legacy-v1',
   stadiumId:'crypto',trackId:track?.id??null,
   raceNumber:fixture.number,dayIndex,syntheticDay:dayIndex+1,slot,
   minuteOfDay:minute,localTime:clock,timezone:WORLD_RACE_TZ,
