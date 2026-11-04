@@ -6,7 +6,7 @@
  */
 export const BTC_EYE_LAYOUT=Object.freeze({
  x:.002265,y:-.02814,z:.04257,
- radiusX:.000415,radiusY:.000505,radiusZ:.000405,
+ radiusX:.000385,radiusY:.000505,radiusZ:.000405,
  lidY:.00049,lidZ:.000394
 });
 export function eyeFrame(side,angle,ring=1){
