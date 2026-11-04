@@ -214,6 +214,49 @@ function createHairMass(source,skinAt,{
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
  return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3};
 }
+
+/**
+ * Small closed sculpt between rump and hair: the original Maya polygon tail
+ * was culled, leaving a dark open patch at the dock. This convex, tapering
+ * root sits mostly inside the rump; its last ring lives UNDER the new
+ * flowing tail, not as a second visible skin-colored appendage.
+ */
+function sculptTailDock(source,{color='#704936'}={}){
+ const back=source.skeleton.bones.findIndex(b=>b.name==='Back');
+ const tail=source.skeleton.bones.findIndex(b=>b.name==='Tail1');
+ if(back<0||tail<0)throw Error('BTC tail dock requires native rump and Tail1 bones');
+ const pos=[],joints=[],weights=[],faces=[],ring=20,rows=9;
+ for(let i=0;i<=rows;i++){
+  const t=i/rows,ease=smooth(t);
+  const cy=.01420+.00275*t,cz=.03195-.00130*ease;
+  const rx=.00230*(1-.53*t),rz=.00160*(1-.48*t);
+  for(let j=0;j<ring;j++){
+   const a=TAU*j/ring,cs=Math.cos(a),sn=Math.sin(a);
+   pos.push(cs*rx,cy,cz+sn*rz);
+   const follow=.12+.78*ease;
+   joints.push(back,tail,0,0);
+   weights.push(1-follow,follow,0,0);
+  }
+ }
+ for(let i=0;i<rows;i++)for(let j=0;j<ring;j++){
+  const k=(j+1)%ring, a=i*ring+j,b=i*ring+k,
+    c=(i+1)*ring+j,d=(i+1)*ring+k;
+  faces.push(a,c,b,b,c,d);
+ }
+ const geo=new THREE.BufferGeometry();
+ geo.setIndex(faces);
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+ geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(joints,4));
+ geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+ geo.computeVertexNormals();
+ const mat=new THREE.MeshPhysicalMaterial({
+  name:'BTC single curved tail-dock root',
+  color,roughness:.85,sheen:.14,sheenRoughness:.81,
+  side:THREE.DoubleSide,metalness:0
+ });
+ const mesh=attach(source,geo,mat,'BTC native-tail rooted dock under flowing mane');
+ return {vertices:pos.length/3,mesh,mat,geo,dispose(){mesh.removeFromParent();geo.dispose();mat.dispose();}};
+}
 export function createMayaGroom(source,skinAt,{
  maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e'
 }={}){
@@ -222,10 +265,12 @@ export function createMayaGroom(source,skinAt,{
   size:clamp(maneSize,.6,1.9),color:maneColor,motion});
  const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:360,
   size:clamp(tailSize,.6,1.9),color:tailColor,motion});
+ const tailDock=sculptTailDock(source,{color:tailColor});
  let disposed=false;
  return {
   locks:mane.locks+tail.locks,
   vertices:mane.vertices+tail.vertices,
+  tailDockVertices:tailDock.vertices,
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
    motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
@@ -233,13 +278,14 @@ export function createMayaGroom(source,skinAt,{
    motion.gait.value=phase;
   },
   setColor(color){
-   if(/^#[0-9a-f]{6}$/i.test(color)){mane.mat.color.set(color);tail.mat.color.set(color);}
+   if(/^#[0-9a-f]{6}$/i.test(color)){mane.mat.color.set(color);tail.mat.color.set(color);tailDock.mat.color.set(color);}
   },
   dispose(){
    if(disposed)return;disposed=true;
    for(const layer of [mane,tail]){
     layer.mesh.removeFromParent();layer.geo.dispose();layer.mat.dispose();
    }
+   tailDock.dispose();
   }
  };
 }
