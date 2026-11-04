@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const read = name => readFileSync(new URL('../'+name,import.meta.url),'utf8');
 const source=read('racers/btc-maya-hindquarters.js');
 const module=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
-const build='btc-hind-pose-volume-20261104-v13';
+const build='btc-hind-skin-continuity-20261104-v13b';
 
 test('BTC rump, thighs and gaskins are sculpted as real rest mesh vertices on both sides',()=>{
  const vertices=new Float32Array([
@@ -63,8 +63,8 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.match(master,/sculptBTCHindquarters\(positions\)/);
  assert.match(master,/addBTCHindquarterCoatTexture\(shader\)/);
  assert.match(master,/hindLimbSkinNeighborWeight/);
- assert.match(master,/installBTCVolumePreservingSkin\(shader,hindDqStrength\)/);
- assert.doesNotMatch(master,/anatomy\.hindGait\.value=gait/);
+ assert.match(master,/stabilizeHindSkinWeights\(/);
+ assert.doesNotMatch(master,/installBTCVolumePreservingSkin|anatomy\.hindGait\.value=gait/);
  assert.match(master,/createMayaGroom/);
  assert.match(master,/gallopPreserved:true/);
  const groom=read('racers/btc-maya-groom.js');
