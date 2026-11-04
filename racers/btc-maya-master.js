@@ -475,7 +475,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const irisColor=new THREE.Color(chosen);
  const material=new THREE.MeshPhysicalMaterial({
   name:'BTC inset natural eye globes with independently colored irises',
-  color:'#201713',metalness:0,roughness:.205,
+  color:'#34231b',metalness:0,roughness:.205,
   clearcoat:.88,clearcoatRoughness:.10,side:THREE.FrontSide
  });
  material.onBeforeCompile=shader=>{
