@@ -128,7 +128,14 @@ try{
  await filmPage.waitForTimeout(3600);
  const mid=await filmPage.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.ok(Math.abs(mid.hoofPhase-start.hoofPhase)>.005,'gallop must be running');
- await filmPage.locator('[data-btc-camera="rear"]').click();
+ // A browser automation click would scroll the hidden camera control into
+ // view and push the horse OUT of the video frame. Dispatch it in-page.
+ await filmPage.evaluate(()=>document.querySelector('[data-btc-camera="rear"]')?.click());
+ const rearCoverage=await filmPage.evaluate(()=>{
+  const rect=document.querySelector('#horse-view').getBoundingClientRect();
+  return Math.max(0,Math.min(rect.bottom,innerHeight)-Math.max(rect.top,0))/rect.height;
+ });
+ assert.ok(rearCoverage>.97,'Rear camera must keep the FULL horse viewport visible');
  await filmPage.waitForTimeout(2700);
  const end=await filmPage.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.ok(end.heroGroom.hairMotion.time>mid.heroGroom.hairMotion.time);
