@@ -12,7 +12,7 @@ const params=new URLSearchParams(location.search);
 let selected=carTrack(params.get('track'))?.id||CAR_TRACKS[0].id;
 let mode='program',demoElapsed=0,session=null,scene,renderer,camera,circuit;
 let cars=[],lastFrame=0,lastUI=-1,oldSessionKey='',disposed=false,frameId=0;
-let frameReady=false,sceneError='',lastClock=null;
+let frameReady=false,sceneError='',lastClock=null,stagingGrid=false;
 let hemi,sun;
 
 function pretty(seconds){
@@ -136,8 +136,8 @@ function updateBroadcast(seconds,clock){
  $('track-label').textContent=carTrack(selected).name.toUpperCase();
  $('live-tag').textContent=mode==='test'?'PRUEBA REPRODUCIBLE':'PROGRAMACIÓN SINTÉTICA';
  $('phase-label').textContent=mode==='test'
-   ?(finished?'RESULTADO OFICIAL':'CARRERA DE PRUEBA')
-   :(clock.slotSeconds<60?'EN CARRERA':'PRÓXIMA LARGADA');
+   ?(finished?'RESULTADO OFICIAL':seconds<1?'GRILLA · POLE POSITION':'CARRERA DE PRUEBA')
+   :(stagingGrid?'FORMACIÓN · POLE POSITION':clock.slotSeconds<60?'EN CARRERA':'PRÓXIMA LARGADA');
  $('clock').textContent=mode==='test'
    ?pretty(seconds)
    :(clock.slotSeconds<60?pretty(60-clock.slotSeconds):pretty(clock.secondsToNext));
@@ -171,9 +171,18 @@ function renderCarPositions(seconds,delta){
   camera.position.lerp(wanted,Math.min(1,delta*2.1));
   camera.lookAt(target);
  }else{
-  const p=circuit.pose(185,6),wanted=new THREE.Vector3(p.x+87,58,p.z+87);
-  camera.position.lerp(wanted,Math.min(1,delta*2.1));
-  camera.lookAt(target.clone().add(new THREE.Vector3(0,2,0)));
+  if(seconds<10||stagingGrid){
+   // Reveal the actual 2-by-6 starting grid, not twelve cars abreast.
+   const p=circuit.pose(-42,0),direction=new THREE.Vector3(Math.cos(p.heading),0,-Math.sin(p.heading));
+   const right=new THREE.Vector3(-direction.z,0,direction.x);
+   const focus=new THREE.Vector3(p.x,1.6,p.z);
+   const wanted=focus.clone().addScaledVector(right,82).addScaledVector(direction,-49).add(new THREE.Vector3(0,36,0));
+   camera.position.lerp(wanted,Math.min(1,delta*3.8));camera.lookAt(focus);
+  }else{
+   const p=circuit.pose(185,6),wanted=new THREE.Vector3(p.x+87,58,p.z+87);
+   camera.position.lerp(wanted,Math.min(1,delta*2.1));
+   camera.lookAt(target.clone().add(new THREE.Vector3(0,2,0)));
+  }
  }
 }
 function initThree(){
@@ -207,9 +216,16 @@ function animate(time){
  const now=new Date(),clock=tripleLiveSlot(now,selected);
  lastClock=clock;
  let seconds;
+ stagingGrid=false;
  if(mode==='test'){
   demoElapsed=Math.min(60,demoElapsed+delta*Number($('replay-speed').value));
   seconds=demoElapsed;
+ }else if(clock.slotSeconds>=170){
+  // Last ten seconds of the slot: display the NEXT race's 2x6 starting grid.
+  const nextDate=new Date(now.getTime()+(clock.secondsToNext+0.2)*1000);
+  const upcoming=currentSession(nextDate);
+  if(upcoming.key!==oldSessionKey)setSession(upcoming);
+  seconds=0;stagingGrid=true;
  }else{
   const clockKey=clock.dayIndex+':'+clock.minuteOfDay+':'+selected;
   if(clockKey!==oldSessionKey)setSession(currentSession(now));
@@ -250,7 +266,7 @@ window.__cryptodromoAutodromoQA={
     carCount:cars.length,rosterCount:CAR_ROSTER.length,sessionKey:oldSessionKey,
     elapsed:mode==='test'?demoElapsed:lastClock?.slotSeconds||0,
     fixtureVersion:session?.fixture.fixtureVersion,trackNames:CAR_TRACKS.map(x=>x.name),
-    winner:session?.official[0]?.entry.symbol,pole:session?.grid[0]?.symbol,
+    winner:session?.official[0]?.entry.symbol,pole:session?.grid[0]?.symbol,stagingGrid,
     grid:session?.grid.map(g=>({symbol:g.symbol,position:g.position,row:g.row,column:g.column,backMeters:g.backMeters})),
     synthetic:true})
 };
