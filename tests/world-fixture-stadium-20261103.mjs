@@ -17,7 +17,7 @@ test('world pages use Hostinger-compatible .js modules, watchdog and valid HTML'
    assert.match(html,/\/stadiums\/crypto\/archive\//);
    continue;
   }
-  assert.match(html,/stadium-network-ui\.js\?v=world2/);
+  assert.match(html,/stadium-network-ui\.js\?v=world3/);
   assert.match(html,/stadium-network-watchdog\.js\?v=world2/);
   assert.doesNotMatch(html,/src="\/assets\/stadium-network-ui\.mjs/);
   assert.match(html,/id="world-app"/);
@@ -25,7 +25,7 @@ test('world pages use Hostinger-compatible .js modules, watchdog and valid HTML'
  const engine=read('assets/stadium-network-engine.js');
  const ui=read('assets/stadium-network-ui.js');
  assert.match(engine,/export const STADIUMS/);
- assert.match(ui,/stadium-network-engine\.js\?v=world2/);
+ assert.match(ui,/stadium-network-engine\.js\?v=world3/);
  assert.match(ui,/root\.dataset\.worldReady='1'/);
  assert.match(read('assets/stadium-network-watchdog.js'),/No se pudo cargar esta sección/);
 });

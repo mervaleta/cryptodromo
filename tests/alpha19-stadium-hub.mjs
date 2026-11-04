@@ -44,7 +44,7 @@ test('each track gets its own 180-second channel, at :30 with one-minute offsets
 });
 test('world catalog reflects agreed Muybridge Genesis Vint Cerf tracks',()=>{
  assert.equal(STADIUMS.length,8);
- assert.equal(STADIUMS.reduce((x,s)=>x+s.tracks.length,0),13);
+ assert.equal(STADIUMS.reduce((x,s)=>x+s.tracks.length,0),24);
  assert.deepEqual(STADIUMS.find(s=>s.slug==='crypto').tracks.map(t=>t.id),
   ['muybridge','genesis','vint-cerf']);
  assert.deepEqual(TRACK_DEFS.map(t=>t.id),['muybridge','genesis','vint-cerf']);
