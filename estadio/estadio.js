@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {initStadiumFlight} from './flightControls.js?v=stadium-flight-v1-20261104';
 import {createStadiumVenue} from '/race-lab/source/src/stadium/venue.js?v=satoshi-cachefix-20261104-v3';
 import {getStadiumPreset,WORLD_STADIUM_IDS} from '/race-lab/source/src/stadium/presets.js?v=satoshi-cachefix-20261104-v3';
 import {buildThreeCoursePreview} from '/visual-lab/threeCoursePreview.js?v=satoshi-cachefix-20261104-v3';
@@ -45,6 +46,22 @@ const courseShots=Object.freeze({
  genesis:{eye:[255,162,465],target:[0,3,205]},
  'vint-cerf':{eye:[198,105,146],target:[0,3,0]}
 });
+const flight=initStadiumFlight({
+ THREE,camera,controls,canvas,scene,toolbar:$('stadiumFlightDeck'),views,courseShots,
+ onTrackFocus:id=>{
+  if(venueInput.value!=='crypto'&&venueInput.value!=='satoshi'){
+   venueInput.value='crypto';
+   rebuild();
+  }
+  courseInput.value=id;
+  coursePreview?.setFocus(id);
+  const url=new URL(location.href);
+  url.searchParams.set('venue',venueInput.value);
+  url.searchParams.set('course',id);
+  history.replaceState(null,'',url.pathname+url.search+url.hash);
+ }
+});
+let cameraHasPosition=false;
 if(window.innerWidth<720)qualityInput.value='low';
 const initial=new URLSearchParams(location.search).get('venue');
 if([...venueInput.options].some(o=>o.value===initial))venueInput.value=initial;
@@ -53,8 +70,8 @@ if(Object.hasOwn(courseShots,requestedCourse))courseInput.value=requestedCourse;
 function pickCamera(){
   const focused=coursePreview&&courseShots[courseInput.value]&&cameraInput.value==='aerial';
   const view=focused?courseShots[courseInput.value]:(views[cameraInput.value]||views.aerial);
-  camera.position.set(...view.eye);controls.target.set(...view.target);
-  controls.update();
+  flight.goTo(view.eye,view.target,cameraHasPosition?1.25:0);
+  cameraHasPosition=true;
 }
 function environment(){
   if(!venue)return;
@@ -84,6 +101,8 @@ function rebuild(){
     }
     venue=next;coursePreview=nextPreview;
     coursePicker.hidden=!crypto;
+    $('stadiumFlightDeck').classList.toggle('is-crypto',crypto);
+    for(const button of document.querySelectorAll('[data-flight-course]'))button.hidden=!crypto;
     if(nextPreview)nextPreview.setFocus(courseInput.value==='all'?null:courseInput.value);
     oldPreview?.dispose();previous?.dispose();
     const preset=getStadiumPreset(venueInput.value),stats=venue.getStats();
@@ -136,7 +155,8 @@ if(new URLSearchParams(location.search).get('stadium-qa')==='1'){
       courseStats:coursePreview?.stats||null,
       fog:[scene.fog.near,scene.fog.far],
       renderCalls:renderer.info.render.calls,
-      webgl:renderer.capabilities.isWebGL2 ?? true
+      webgl:renderer.capabilities.isWebGL2 ?? true,
+      flight:flight.state
     })
   });
 }
@@ -144,10 +164,10 @@ function tick(now){
   frame=requestAnimationFrame(tick);
   const dt=Math.min(.05,Math.max(0,(now-lastTime)/1000||0));lastTime=now;
   if(document.hidden)return;
-  venue?.update(dt);controls.update();renderer.render(scene,camera);
+  venue?.update(dt);flight.update(dt);controls.update();renderer.render(scene,camera);
 }
 frame=requestAnimationFrame(tick);
 window.addEventListener('pagehide',()=>{
   cancelAnimationFrame(frame);resizeObserver.disconnect();
-  controls.dispose();coursePreview?.dispose();venue?.dispose();renderer.dispose();
+  flight.dispose();controls.dispose();coursePreview?.dispose();venue?.dispose();renderer.dispose();
 },{once:true});

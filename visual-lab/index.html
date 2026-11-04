@@ -133,6 +133,11 @@ html.tv-embed .dial{right:13px;top:10px}
 html.tv-embed .dial strong{font-size:clamp(23px,4.5vw,44px)}
 html.tv-embed .lowerthird strong{font-size:clamp(12px,2.3vw,22px)}
 html.tv-embed .result-overlay,html.tv-embed .presentation-overlay{max-width:100%}
+html.tv-embed .presentation-overlay,html.tv-embed .result-overlay{max-width:100%;display:flex!important;transition:opacity .7s ease,visibility .7s ease;visibility:visible}
+html.tv-embed .presentation-overlay:not([hidden]){opacity:1;visibility:visible;pointer-events:auto;animation:none}
+html.tv-embed .presentation-overlay[hidden],html.tv-embed .result-overlay[hidden]{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+html.tv-embed .result-overlay.is-visible:not([hidden]){opacity:1;visibility:visible}
+@media(prefers-reduced-motion:reduce){html.tv-embed .presentation-overlay,html.tv-embed .result-overlay{transition:none!important}}
 @media(max-width:570px){
  html.tv-embed .lowerthird{padding:18px 10px 10px}
  html.tv-embed .lowerthird strong{font-size:12px}
