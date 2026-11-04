@@ -46,6 +46,13 @@ Rama aislada: `prep/stadium-world-integration-20261104`.
 - `tests/stadium-course-clearance.mjs` realiza un muestreo de los bordes de las tres pistas para detectar intersecciones obvias. Este muestreo NO certifica ausencia de clipping de todos los triángulos, accesos o modelos 3D ni prueba que el broadcast use esas coordenadas.
 - **Pendiente de integración:** adaptar recorrido, gateras, metas, cámaras y entorno del broadcast al sistema común de coordenadas y probarlo visualmente.
 
+## Hallazgo de CI · bloqueo deportivo previo a la integración
+- Las pruebas de referencia Alpha19 que incorporan el extremo de la semana sintética detectaron `Price volatility outside supported race domain: 1INCH` al usar `createOfficialRace` sobre ciertas carreras. Es un fallo real del contrato de datos/ranking y NO debe esconderse reduciendo el rango de las pruebas.
+- **Hipótesis técnica a confirmar:** `getTripleRaceFixture` obtiene velas mediante `getFixturePrice()` con módulo 7 días, lo que puede empalmar el último minuto del día 7 con los precios del comienzo de la semana sin continuidad de precios. Investigar también el paso día/mes y cambios de jornada.
+- La rama NO modifica `officialRace.js`, ni corrige precios artificialmente; cualquier reparación del dataset requiere verificar que los resultados válidos anteriores no cambian y documentar la semántica de continuidad sintética.
+- QA histórico del estadio detectó también una prueba que exigía 20m de separación entre cintas con distancia real muestreada de 16.8m entre Muybridge y Genesis, sin intersección; se fijó un requisito explícito de más de 10m para no confundir separación estrecha con solape.
+- Una prueba antigua exigía parámetro cache `alpha19-...`; la nueva versión del broadcast conserva ese prefijo. Estado de los demás controles: verificar el CI más reciente, no inferir éxito por una ejecución antigua.
+
 ## Pendientes ordenados para próximos cambios
 1. **P0:** CI de rama y 3 carreras completas en Chromium; comprobar preview, doce modelos, largada, meta, resultado, replay y vuelta a LIVE. Probar versión servida por Hostinger sólo luego de integrar.
 2. **P1:** homologar coordenadas y tangentes de `threeCoursePreview.js` con `trackPoint()`, evitar solapes, gateras y metas propias. Reconciliar vista aérea del recinto con el trazado elegido en broadcast; no duplicar terreno o clima.
