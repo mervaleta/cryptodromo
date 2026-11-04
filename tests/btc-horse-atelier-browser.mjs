@@ -20,13 +20,15 @@ try{
  assert.equal(state.variant,'enhanced');
  assert.ok(state.clips.includes('Gallop'));
  assert.equal(state.hairSystem,null);
- assert.equal(state.heroGroom?.version,'btc-real-hero-v4-20261103');
+ assert.equal(state.heroGroom?.version,'btc-v5-motion-study-20261103');
  assert.equal(state.heroGroom?.oldHairHidden,true);
  assert.equal(state.heroGroom?.gallopPreserved,true);
  assert.ok(state.heroGroom?.vertices>40000);
  assert.ok(state.heroGroom?.sculptedBodyParts>=1);
  assert.equal(state.heroGroom?.animatedHair,true);
  assert.equal(state.heroGroom?.modelPreserved,true);
+ assert.equal(state.heroGroom?.pass,10);
+ assert.equal(state.heroGroom?.motionType,'damped-gallop-coupled-spring');
  assert.equal(new URL(page.url()).searchParams.has('atelier'),false,'BTC hero groom must run on the normal profile');
  assert.equal(state.jockey,false);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
@@ -63,7 +65,7 @@ try{
  await page.locator('#horse-view').screenshot({path:'artifacts/btc-hero-after-rear.png',timeout:60000});
  mkdirSync('artifacts',{recursive:true});
  try{
-  await page.locator('.feature').screenshot({path:'artifacts/btc-real-hero-v4-preview.png',timeout:60000,animations:'disabled'});
+  await page.locator('.feature').screenshot({path:'artifacts/btc-v5-motion-preview.png',timeout:60000,animations:'disabled'});
  }catch(error){console.warn('Screenshot skipped due to software GPU:',error.message);}
  assert.deepEqual(pageErrors,[],pageErrors.join('; '));
  console.log('BTC_ATELIER_OK',JSON.stringify(await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())));
