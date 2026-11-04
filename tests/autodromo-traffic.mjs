@@ -49,6 +49,8 @@ test('twelve car bodies do not overlap while overtaking at 10Hz, including turns
    assert.equal(report.unsafePairs,0,
      'UNSAFE visual body collision on '+session.key+': '+JSON.stringify(report));
    assert.ok(report.closestClearance>=-.01);
+   assert.ok(report.minimumVisualSpeed>=-.05,'No car should jump backwards while passing');
+   assert.ok(report.maximumVisualSpeed<=45,'No impossible forward teleport during a pass');
    laneTransitions+=report.sideChanges;
    for(const time of [0,10,20,40,59.9,60]){
      const positions=trafficAt(session,time);
