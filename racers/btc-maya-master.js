@@ -563,6 +563,10 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    phase=gait;
    groom.update(dt,{wind,speed,phase:gait,running});
   },
+  // Exposed only to the freeze-only QA bridge. Do not animate volume by gait.
+  setHindVolumeStrength(value){
+   anatomy.hindDqStrength.value=clamp(Number(value)||0,0,1);
+  },
   setColor(next){
    if(typeof next==='string'&&/^#[0-9a-f]{6}$/i.test(next))
     groom.setColor(next);
