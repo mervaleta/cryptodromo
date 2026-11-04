@@ -34,7 +34,7 @@ try {
  assert.ok(s.heroGroom.extraTailFacesRemoved>=150,'no second native flesh tail on public BTC');
  assert.ok(s.heroGroom.extraTailFacesRemoved>250,'the old tail free end must be absent without opening the rump');
  assert.ok(s.heroGroom.poweredHindVertices>1000,'hindquarters must be physically fuller in production');
- assert.ok(s.heroGroom.tailDockVertices>=150,'single tail must have closed root');
+ assert.ok(s.heroGroom.integratedDockCapTriangles>=20,'rump opening must be welded inside original Maya mesh');
  assert.ok(s.heroGroom.fineLocks>1100);
  const before=s.hoofPhase;
  await page.waitForTimeout(1100);
