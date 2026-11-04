@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {createMayaGroom} from './btc-maya-groom.js?v=btc-harmony-silhouette-20261104-v2';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-harmony-silhouette-20261104-v2';
+import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-harmony-silhouette-20261104-v2';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 export const BTC_MAYA_RENDER_BUILD='btc-harmony-silhouette-20261104-v2';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -137,28 +138,20 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   // Preserve ground contact and imported gait, including all four fetlocks.
   beveledHoofVertices++;
  }
- // A horse's alert pinnae rise above the poll, not sideways like folded
- // leaves. Modify only the measured 2017 ear-tip vertex cluster.
+ // Retire the huge side-splayed native ear tips in favor of two small
+ // hand-sculpted pinnae. Collapse ONLY their distal tips toward the poll
+ // without removing facial triangles or changing original Head weights.
  let elevatedEarVertices=0;
  for(let i=0;i<positions.length;i+=3){
   const x=positions[i],y=positions[i+1],z=positions[i+2];
-  // The real ear tip lies BEHIND and BELOW its poll root in rest space.
-  // Lift/rotate only that distal ear sheet; previously raising the poll
-  // itself left a broad horizontal donkey ear unchanged.
-  // Fold the original lateral ear sheets inward, then point their outer
-  // tips upward. A recognisable two-pinna silhouette matters more here
-  // than fur pores. Root vertices remain fixed to the poll.
-  const high=smooth((z-.04365)/.00230);
-  const side=smooth((Math.abs(x)-.00105)/.00180);
-  const along=gauss(y,-.0269,.00215);
-  const ear=high*side*along;
-  if(ear<.012)continue;
-  // Keep the points CLOSE above the poll: long splayed tips created
-  // a pair of antennae in the first WebGL pass.
-  const towardMidline=Math.min(.00135*ear,Math.max(0,Math.abs(x)-.00088));
-  positions[i]-=Math.sign(x)*towardMidline;
-  positions[i+1]-=.00180*ear;
-  positions[i+2]+=.00315*ear;
+  const mask=smooth((z-.0443)/.0023)*
+   smooth((Math.abs(x)-.00124)/.00138)*
+   gauss(y,-.0266,.0020);
+  if(mask<.012)continue;
+  const strength=.94*mask;
+  positions[i]+=(Math.sign(x)*.00145-x)*strength;
+  positions[i+1]+=(-.02610-y)*strength;
+  positions[i+2]+=(.04525-z)*strength;
   elevatedEarVertices++;
  }
  // Gentle anatomical correction in the actual supplied mesh, not added
@@ -358,7 +351,8 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  });
  const eyes=makeAnatomicalEyes(best,skinAt,{eyeColor});
  const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions);
-  for(const h of hidden)h.obj.visible=false;
+ const ears=createBTCHarmonyEars(best,{coatColor});
+ for(const h of hidden)h.obj.visible=false;
  // The original plastic eyes are hidden in favor of two inset glossy
  // equine eyes with the same skinned and animated head transform.
  let disposed=false,time=0,phase=0;
@@ -369,7 +363,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    sculptedBodyParts:1,vertices:anatomy.vertices,
    harmonyBuild:BTC_MAYA_RENDER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},
@@ -386,7 +380,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
   dispose(){
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
-   groom.dispose();face.dispose();
+   groom.dispose();face.dispose();ears.dispose();
    eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());
