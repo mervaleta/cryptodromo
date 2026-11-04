@@ -8,7 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-maya-luxe-20261104-v3';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-harmony-silhouette-20261104-v3';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
@@ -25,7 +25,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.01;
+ renderer.toneMappingExposure=1.055;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();
  const camera=new THREE.PerspectiveCamera(33,1,.1,55);
@@ -36,13 +36,13 @@ export function createPreview(canvas,onFailure=()=>{}){
  controls.minDistance=2.7;
  controls.maxDistance=11;
  controls.enablePan=false;
- scene.add(new THREE.HemisphereLight('#dbe8ee','#1b2530',.84));scene.add(new THREE.AmbientLight('#b1c8dc',.12));
- const key=new THREE.DirectionalLight('#fff0dc',2.48);key.position.set(-3,7,6);
+ scene.add(new THREE.HemisphereLight('#e1e6e7','#344035',1.06));scene.add(new THREE.AmbientLight('#d8c8b2',.16));
+ const key=new THREE.DirectionalLight('#ffefd7',2.6);key.position.set(-4,7,6);
  key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0002;key.shadow.normalBias=.012;key.shadow.radius=2.1;scene.add(key);
- const fill=new THREE.DirectionalLight('#a0bddc',.70);fill.position.set(5,5,-6);scene.add(fill);
- const edge=new THREE.DirectionalLight('#f9c99e',1.28);edge.position.set(3,4,5);scene.add(edge);
+ const fill=new THREE.DirectionalLight('#c2d3de',1.12);fill.position.set(5,4,-5);scene.add(fill);
+ const edge=new THREE.DirectionalLight('#ffd39d',1.42);edge.position.set(3,5,5);scene.add(edge);
  // Cool opposing rim lifts the tail off the background without bleaching coat.
- const tailRim=new THREE.DirectionalLight('#afc4d3',.58);
+ const tailRim=new THREE.DirectionalLight('#d6d5c5',.75);
  tailRim.position.set(-5,3,-3);scene.add(tailRim);
  const platformMat=new THREE.MeshStandardMaterial({color:'#1a302c',roughness:.71,metalness:.10});
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,96);
@@ -52,7 +52,7 @@ export function createPreview(canvas,onFailure=()=>{}){
 
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#45312c';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#886149';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
