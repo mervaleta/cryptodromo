@@ -74,7 +74,7 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
   if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
   root.add(mesh);objects.push(mesh);return mesh;
  }
- const rails=[],goldRails=[],railPosts=[],steps=[],seats=[],bodies=[],heads=[],flags=[],planters=[];
+ const rails=[],goldRails=[],railPosts=[],steps=[],seats=[],bodies=[],heads=[],flags=[];
  // Safety rail remains 5.3 m outside the course. Trackside spectator barrier
  // sits at -31.5, leaving a safe 6 m gap behind the rail.
  for(const z of [-25.5,-31.5]){
@@ -116,13 +116,8 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
    heads.push([sx,sy+.49,sz,1,1,1]);
   }
  }
- // Low-planter rhythm fills the visually empty gap between track and stands,
- // while retaining the original rear concourse and VIP circulation.
- for(let x=-380;x<=380;x+=28){
-  if(Math.abs(x)<38)continue; // preserve central VIP / finish vista
-  planters.push([x,.45,-57,7,.9,2.2]);
- }
- instance('Track rail · longitudinal safety beams',cube,M.iron,rails);
+ // Raised planter blocks removed to keep a clear spectator concourse.
+  instance('Track rail · longitudinal safety beams',cube,M.iron,rails);
  instance('Track rail · gold top beam',cube,M.gold,goldRails);
  instance('Track rail · balusters',cube,M.iron,railPosts);
  instance('Stands · stepped apron',cube,M.stone,steps);
@@ -132,7 +127,7 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
  instance('Stands · audience heads',head,M.skin,heads,
   ['#b68b6b','#d8b38e','#96745f','#e1bda0']);
  instance('Stands · pennants',cube,M.gold,flags);
- instance('Concourse · planted separators',cube,M.turf,planters);
+
  scene.add(root);
  function setQuality(next='balanced'){
   // Reduce geometry without rebuilding: hide only secondary scenery in eco.
@@ -142,11 +137,12 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
     mesh.visible=!eco;
   }
  }
+ function setLayout(mode){root.visible=mode==='straight';}
  function dispose(){
   root.removeFromParent();root.clear();
   geos.forEach(g=>g.dispose());mats.forEach(m=>m.dispose());
  }
- return {root,dispose,setQuality,stats:{
+ return {root,dispose,setQuality,setLayout,stats:{
   additiveOnly:true,courseModified:false,horseModified:false,cameraModified:false,
   stands:DENSITY_STANDS.length,instanceGroups:objects.length,
   crowd:bodies.length,seatPieces:seats.length,rails:railPosts.length
