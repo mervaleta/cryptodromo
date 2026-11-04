@@ -1,0 +1,57 @@
+name: Alpha21 Motion and Stadium Polish
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'visual-lab/polish/**'
+      - 'visual-lab/polish-preview/**'
+      - 'tests/alpha21-**'
+      - '.github/workflows/alpha21-motion-polish.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source and contract syntax
+        run: |
+          for file in visual-lab/polish/*.js visual-lab/polish-preview/*.js tests/alpha21-*.mjs; do
+            node --check "$file"
+          done
+      - name: Deterministic gait and geometry contracts
+        run: node --test tests/alpha21-motion-contract.mjs
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install race-side dependencies
+        run: npm ci --prefix race-lab/source --no-audit --no-fund
+      - name: Install Chromium renderer
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Simulate visual staging without touching production
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/alpha21-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/alpha21-motion-browser.mjs
+      - name: Save QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpha21-gallop-and-venue-screens
+          path: artifacts/
+          retention-days: 30
+          if-no-files-found: ignore
