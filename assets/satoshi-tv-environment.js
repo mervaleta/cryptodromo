@@ -86,7 +86,7 @@ export function createTvEnvironmentDeck({frame,root,onShot}={}){
    state.weather='auto';
    touched.add('hour');touched.add('weather');
   }else if(button.hasAttribute('data-tv-cloud')){
-   state.cloud=clamp(state.cloud+(button.dataset.tvCloud==='up'?20:-20),0,100);
+   state.cloud=clamp(Math.round((state.cloud+(button.dataset.tvCloud==='up'?20:-20))/5)*5,0,100);
    touched.add('cloud');
   }else if(button.hasAttribute('data-tv-fog')){
    state.fog=state.fog>100?100:220;touched.add('fog');
