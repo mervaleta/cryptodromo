@@ -254,7 +254,7 @@ export function createBTCHeroV5(root,options={}){
  return {
   get snapshot(){return {...base.snapshot,version:BTC_HERO_V5,pass,passes,
    hairMotion:{mane:m.mane,tail:m.tail,energy:m.energy,time:m.time,gait:m.gait,wind:m.wind},
-   motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,silkTopology:silk?.quality||null,source:'original-skinned-glb',
+   motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,silkTopology:silk?.quality||null,nativeTailBones:silk?.nativeTailBones||0,source:'original-skinned-glb',
    noTextures:true,vertexCount:position.count};},
   update(dt,{wind=1,speed=1,running=true,phase=0}={}){
    if(disposed)return;
