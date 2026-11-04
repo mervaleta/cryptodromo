@@ -79,8 +79,8 @@ export function createBTCHeroV5(root,options={}){
   }else{
    if(pass>=3){
     // Tail bends into an S and transitions from thick root to silky wisps.
-    dy+=t*(.0020+.0010*p);
-    dz+=Math.sin(PI*u)*(.0011+.0005*p)+t*(.0042+.0007*q);
+    dy+=t*(-.0065+.0010*p);
+    dz+=Math.sin(PI*u)*(.0011+.0005*p)+t*(.0072+.0007*q);
     dx+=t*(.0010*p);
     width*=1.30-.35*t;
    }
@@ -135,7 +135,7 @@ export function createBTCHeroV5(root,options={}){
  saveMat(hairMat);
  // Keep the V4 procedural fibers as a translucent detail layer, not a wall
  // of spiky wires. The new silk shells carry the dominant hair silhouette.
- if(pass>=4){hairMat.transparent=true;hairMat.opacity=.34;
+ if(pass>=4){hairMat.transparent=true;hairMat.opacity=.20;
   hairMat.depthWrite=false;hairMat.needsUpdate=true;}
 
  if(pass>=6){
