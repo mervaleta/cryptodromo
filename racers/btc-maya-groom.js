@@ -95,8 +95,8 @@ function createHairMass(source,skinAt,{
    :hero
     ?(.00435+.00165*seed)
    :tail
-    ?(major?.020+.0070*seed:.018+.0075*seed)
-    :(major?.00505+.00155*seed:.00225+.00085*seed))*
+    ?(major?.021+.011*seed:.015+.013*seed)
+    :(major?.0072+.0032*seed:.0040+.0025*seed))*
       size*(tail||forelock||crown||hero?1:(.70+.30*smooth(f/.29))*clamp((-.0038-root[1])/.008,.15,1));
   const breadth=(tail
    ?(major?.00070+.00032*seed:.000100+.000085*seed)
@@ -137,19 +137,19 @@ function createHairMass(source,skinAt,{
     if(ribbon===0)x+=cross*breadth*.55*w;
     else y+=cross*breadth*.35*w;
    }else if(tail){
-    // A live galloping horse streams its tail back from the dock, rather
-    // than suspending a vertical curtain behind the hind legs. Target is
-    // the supplied 212734.mp4 silhouette, never a still frame substitute.
+    // Root-to-tip ballistic shape: long independent wave paths, no rigid fan.
     const flow=t*.68+.32*t2;
-    // Three-dimensional tapered fan: a compact tail dock opens into a
-    // soft plumelike cascade, with deliberate staggered free ends.
-    const fan=(seed-.5)*(.0037*Math.sin(PI*t)+.0043*t2);
-    x=root[0]+fan+.00034*Math.sin(t*TAU+seed*4)*t2;
-    y=root[1]+length*(.62*t+.32*t2)+.00055*Math.sin(PI*t);
-    // Raised tail with an elegant backward sweep rather than limp free ends.
-    z=root[2]-(.0045+.28*length+.0010*crossSeed)*flow
-      +.0040*Math.sin(PI*t)*(.5+.5*seed)
-      +(seed-.5)*(.0041*Math.sin(PI*t)+.0048*t2);
+    const stream=Math.pow(t,1.45);
+    const twist=Math.sin(PI*(2.2*t+.25*seed)+seed*TAU)*stream;
+    const flutter=Math.sin(TAU*(2.1*t+.17*seed))*stream;
+    x=root[0]+(seed-.5)*(.0060*flow+.0075*stream)+
+      (.0007+.0005*crossSeed)*twist;
+    y=root[1]+length*(.70*t+.28*t2)+
+      (.0008+.0005*seed)*Math.sin(PI*t)+.0010*flutter;
+    z=root[2]-(.0029+.43*length)*flow+
+      (.0018+.0020*seed)*Math.sin(PI*t)+
+      (crossSeed-.5)*.008*stream+
+      (.0008+.0012*seed)*flutter;
     if(ribbon===0)x+=cross*breadth*w;
     else z+=cross*breadth*.42*w;
    }else{
@@ -162,14 +162,14 @@ function createHairMass(source,skinAt,{
     // The large, smooth "calligraphic" mane is made of feathered layers:
     // it starts on the poll, flows down the full neck and finishes in
     // overlapping tapered curls. Stronger silhouette, fewer dark wires.
-    const lift=.00118*Math.sin(PI*t)*(.68+.32*seed);
-    const drape=(.00009+.00012*seed)*t2;
-    // Locks sit on the crest; the previous wide sweep detached at the shoulder.
-    const outward=(.00019+.00019*seed)*(.26*rearward+.74*t2);
-    x=root[0]+side*(outward+.00009*Math.sin(PI*t));
-    y=Math.min(-.00455,cy+.00013*Math.sin(PI*t*1.2+seed*2.8)*t2);
-    z=neckZ+.00018+lift-drape+
-       .00019*Math.sin(PI*t*1.7+seed*3)*t2;
+    const lift=(.00135+.00115*seed)*Math.sin(PI*t);
+    const drape=(.00008+.00011*seed)*t2;
+    const outward=(.00018+.00040*seed)*(.25*rearward+.75*t2);
+    const curl=Math.sin(TAU*(1.25*t+.20*seed))*t2;
+    x=root[0]+side*(outward+.00021*Math.sin(PI*t)+.00019*curl);
+    y=Math.min(-.00455,cy+.00024*Math.sin(PI*t*1.2+seed*2.8)*t2);
+    z=neckZ+.00022+lift-drape+
+       (.00032+.00035*seed)*curl;
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
     // Physically trim low fibers: no alpha masking or recoloring.
@@ -250,9 +250,10 @@ function createHairMass(source,skinAt,{
     const across=col/bedWidth*2-1;
     const sideRound=Math.sqrt(Math.max(0,1-across*across));
     const x=across*halfWidth;
-    const z=crest(y)-.00031+
-      (.00023+.00045*fullness)*sideRound+
-      .00005*Math.sin(12*PI*t+across*2)*sideRound;
+    const pollBlend=1-smooth((y+.0250)/.0065);
+    const z=crest(y)-.00036+
+      (.00020+.00048*fullness)*sideRound*pollBlend+
+      .00004*Math.sin(12*PI*t+across*2)*sideRound*pollBlend;
     positions.push(x,y,z);
     colors.push(.96+.06*sideRound,.92+.07*sideRound,.89+.07*sideRound);
     tip.push(0);ids.push(0);region.push(0);
