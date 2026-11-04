@@ -15,7 +15,7 @@ const browser=await chromium.launch({headless:true,args:[
  '--enable-unsafe-swiftshader'
 ]});
 const errors=[];
-const report={build:'btc-hind-pose-volume-20261104-v13',frames:[],views:['profile','rear','front'],source:'actual native Gallop mixer with QA-only fixed frame'};
+const report={build:'btc-hind-skin-continuity-20261104-v13b',frames:[],views:['profile','rear','front'],source:'actual native Gallop mixer with QA-only fixed frame'};
 try{
  const page=await browser.newPage({viewport:{width:1320,height:840},
   deviceScaleFactor:1,reducedMotion:'no-preference'});
@@ -27,15 +27,17 @@ try{
  await page.goto(base+'/racers/?btcFreeze=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
-  return s?.heroGroom?.poseBuild==='btc-hind-pose-volume-dq-20261104-v13'&&
+  return s?.heroGroom?.poseBuild==='btc-hind-skin-continuity-20261104-v13b'&&
    s.drawCalls>0&&typeof window.__cryptodromoBTCAtelierAdvanceFrame==='function';
  },null,{timeout:120000});
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.heroGroom.gallopPreserved,true);
  assert.equal(start.heroGroom.originalRig,true);
  assert.equal(start.heroGroom.hindVolumeConsistent,true);
- assert.equal(start.heroGroom.volumeSkinMethod,'masked-dual-quaternion');
- assert.ok(start.heroGroom.hindVolumeStrength>.9);
+ assert.equal(start.heroGroom.volumeSkinMethod,'side-stabilized-native-linear');
+ assert.ok(start.heroGroom.hindWeightAdjustedVertices>=0);
+ assert.ok(start.heroGroom.hindWrongSideAfter<=start.heroGroom.hindWrongSideBefore+1e-8,
+   'wrong-side joint influence cannot increase after skin stabilization');
  assert.ok(start.clips.includes('Gallop'));
  const step=0.583/16;
  await page.locator('[data-btc-camera="profile"]').click();
@@ -44,7 +46,7 @@ try{
    assert.ok(next&&Number.isFinite(next.phase),'native Gallop pose did not advance');
    const snap=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
    assert.equal(snap.variant,'maya');
-   assert.equal(snap.heroGroom.poseBuild,'btc-hind-pose-volume-dq-20261104-v13');
+   assert.equal(snap.heroGroom.poseBuild,'btc-hind-skin-continuity-20261104-v13b');
    report.frames.push({frame:i,phase:Number(snap.hoofPhase.toFixed(5)),
     skin:snap.heroGroom.volumeSkinMethod,drawCalls:snap.drawCalls});
    const id=String(i).padStart(2,'0');
