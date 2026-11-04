@@ -143,14 +143,18 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  let elevatedEarVertices=0;
  for(let i=0;i<positions.length;i+=3){
   const x=positions[i],y=positions[i+1],z=positions[i+2];
-  const height=smooth((z-.04455)/.00235);
-  const side=smooth((Math.abs(x)-.0010)/.0012);
-  const head=gauss(y,-.0266,.00175);
-  const ear=height*side*head;
-  if(ear<.01)continue;
-  positions[i]+=Math.sign(x)*.00008*ear;
-  positions[i+1]-=.00052*ear;
-  positions[i+2]+=.00220*ear;
+  // The real ear tip lies BEHIND and BELOW its poll root in rest space.
+  // Lift/rotate only that distal ear sheet; previously raising the poll
+  // itself left a broad horizontal donkey ear unchanged.
+  const distal=smooth((y+.02630)/.00265);
+  const high=smooth((z-.04385)/.00145);
+  const outside=smooth((Math.abs(x)-.00105)/.00110);
+  const stop=1-smooth((y+.0228)/.00125);
+  const ear=distal*high*outside*stop;
+  if(ear<.015)continue;
+  positions[i]+=Math.sign(x)*.00014*ear;
+  positions[i+1]-=.00225*ear;
+  positions[i+2]+=.00345*ear;
   elevatedEarVertices++;
  }
  // Gentle anatomical correction in the actual supplied mesh, not added
@@ -232,9 +236,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.66;
+ coat.metalness=0;coat.roughness=.56;
  coat.defines={STANDARD:'',PHYSICAL:''};
- coat.clearcoat=.085;coat.clearcoatRoughness=.78;
+ coat.clearcoat=.16;coat.clearcoatRoughness=.45;
  coat.sheen=.24;coat.sheenColor.set('#9c7258');coat.sheenRoughness=.82;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
@@ -256,7 +260,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
    '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\nfloat coatDirection=sin(vBTCMayaRest.y*13700.+vBTCMayaRest.z*1850.)*sin(vBTCMayaRest.x*7600.-vBTCMayaRest.y*920.);\nfloat coatSalt=fract(sin(dot(floor(vBTCMayaRest*4700.),vec3(17.43,37.2,91.1)))*43758.5453);\nfloat dorsalLight=smoothstep(.027,.041,vBTCMayaRest.z)*.04;\nfloat amberBreak=sin(vBTCMayaRest.y*470.+vBTCMayaRest.z*890.)*sin(vBTCMayaRest.x*340.);\nfloat coatGrain=.97+.045*coatDirection+.05*(coatSalt-.5)+.055*amberBreak+dorsalLight;\ndiffuseColor.rgb*=clamp(coatGrain,.85,1.09);\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.78,.75,.72),crpMuzzle*.67);\nfloat lipCrease=exp(-pow((vBTCMayaRest.y+.0337)/.0012,2.)-pow((vBTCMayaRest.z-.0341)/.00048,2.));\nfloat nostril=exp(-pow((vBTCMayaRest.y+.0335)/.00043,2.)-pow((vBTCMayaRest.z-.0359)/.00040,2.))*smoothstep(.0007,.0021,abs(vBTCMayaRest.x));\nfloat lowLeg=(1.0-smoothstep(.008,.018,vBTCMayaRest.z))*smoothstep(.006,.014,abs(vBTCMayaRest.y));\ndiffuseColor.rgb*=1.0-.10*lipCrease-.44*nostril;\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.49,.37,.32),lowLeg*.68);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
-   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.027*coatDirection+.035*amberBreak,.68,.95);');
+   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.035*coatDirection+.050*amberBreak,.42,.76);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
    '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.004,amberBreak*.003,coatDirection*.003));');
  };
