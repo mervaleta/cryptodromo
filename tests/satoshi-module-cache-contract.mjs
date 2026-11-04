@@ -25,7 +25,7 @@ test('all entry HTML and TV source URLs bust old production caches',()=>{
   assert.ok(read(path).includes(marker),path+' missing cache marker');
  assert.match(read('stadiums/crypto/broadcast/index.html'),/scene\.js\?v=[a-z0-9][\w.-]+/);
  assert.match(read('visual-lab/index.html'),/scene\.js\?v=[a-z0-9][\w.-]+/);
-  assert.ok(read('assets/satoshi-tv-contract.js').includes("build:'"+marker+"'"));
+  assert.ok(read('assets/satoshi-tv-contract.js').includes("build:'satoshi-tv-director-v1-20261104'"));
  assert.ok(read('estadio/index.html').includes('stadium-flight-v1-20261104'));
  assert.ok(read('stadiums/crypto/live/index.html').includes('satoshi-tv-director-v1-20261104'));
  
