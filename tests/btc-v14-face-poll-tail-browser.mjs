@@ -20,7 +20,7 @@ try{
  assert.equal(response?.status(),200);
  await page.waitForFunction(()=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
-  return s?.symbol==='BTC'&&s?.variant==='maya'&&s?.heroGroom?.harmonyBuild==='btc-face-poll-tail-20261104-v14';
+  return s?.symbol==='BTC'&&s?.variant==='maya'&&s?.heroGroom?.harmonyBuild==='btc-face-poll-tail-20261104-v15';
  },null,{timeout:90000,polling:500});
  const initial=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  const hero=initial.heroGroom;
