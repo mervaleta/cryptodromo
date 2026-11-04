@@ -34,13 +34,17 @@ jobs:
             exit 1
           fi
           for file in autodromo/app.js autodromo/traffic.js autodromo/logic.js autodromo/car.js autodromo/circuit.js autodromo/style.css race-lab/source/src/data/officialRace.js; do
-            url="$base/$file?check=20261104"
+            url="$base/$file?verify=traffic-director-v1-20261104"
             status=$(curl -L --connect-timeout 10 --max-time 30 -sS -o /tmp/autodromo-asset -w '%{http_code}' "$url" || true)
             echo "$file: HTTP $status, bytes $(wc -c < /tmp/autodromo-asset)"
             test "$status" = 200 || { echo "::error::$file unavailable"; exit 1; }
           done
           curl -fsSL "$base/autodromo/logic.js?check=20261104" -o /tmp/autodromo-live-logic.js
           grep -q 'createOfficialRace' /tmp/autodromo-live-logic.js
-          curl -fsSL "$base/autodromo/app.js?check=20261104" -o /tmp/autodromo-live-app.js
-          grep -q 'traffic-director-v1' /tmp/autodromo-live-app.js
+          curl -fsSL "$base/autodromo/app.js?v=autodromo-overtake-1" -o /tmp/autodromo-live-app.js
+          if ! grep -q 'traffic-director-v1' /tmp/autodromo-live-app.js; then
+            echo "::error::The browser entrypoint is stale despite the updated HTML"
+            echo "Production app bytes: $(wc -c </tmp/autodromo-live-app.js)"
+            exit 1
+          fi
           echo "AUTODROMO_PUBLIC_OVERTAKING_HTTP_OK"
