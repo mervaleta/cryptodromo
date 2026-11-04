@@ -44,6 +44,13 @@ try {
   undefined,{timeout:60000,polling:400});
  assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain)).surface,'grass');
  await page.selectOption('#btc-terrain-surface','dirt');
+  // Production must serve the **new mesh**, not only the old v12 page.
+ assert.equal(s.heroGroom.harmonyBuild,'btc-master-procedural-hind-groom-20261104-v12-fx2');
+ assert.equal(s.heroGroom.eyeCenterX,.002235,'real cornea depth in canonical BTC fiche');
+ assert.ok(s.heroGroom.pollAnchoredVertices>10,'stable native skinning at skull-crest');
+ assert.ok(s.heroGroom.fineLocks>=1000,'real fine hair density');
+ await page.waitForFunction(()=>Math.abs(window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.tailInertia||0)>.005,
+   null,{timeout:30000});
   assert.equal(s.heroGroom.gallopPreserved,true);
  assert.equal(s.heroGroom.originalRig,true);
  assert.equal(s.heroGroom.sculptedEyes,2);
@@ -78,6 +85,15 @@ try {
  await page.locator('#horse-view').screenshot({
   path:'artifacts/btc-live/public-btc-anatomical.png',timeout:90000
  });
+ // Visual QA of the live Hostinger model, not a generated illustration.
+ for(const angle of ['face','poll']){
+  await page.locator('[data-btc-camera="'+angle+'"]').click();
+  await page.waitForTimeout(260);
+  await page.locator('#horse-canvas').screenshot({
+   path:'artifacts/btc-live/btc-v12-fx2-'+angle+'.png',timeout:90000
+  });
+ }
+ await page.locator('[data-btc-camera="profile"]').click();
  await page.locator('button.runner[data-symbol="ETH"]').click({timeout:20000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='ETH',null,{timeout:90000});
  const eth=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
