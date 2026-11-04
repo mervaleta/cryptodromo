@@ -63,4 +63,26 @@ try{
  }
 }finally{await browser.close();}
 await writeFile('artifacts/production-diagnostics/report.json',JSON.stringify(report,null,2));
-if(report.some(x=>x.pageErrors.length||x.error))process.exitCode=1;
+const failures=[];
+for(const entry of report){
+ if(entry.error)failures.push(entry.path+': '+entry.error);
+ for(const e of entry.pageErrors)failures.push(entry.path+' JS: '+e);
+ const last=entry.after8500||{};
+ if(entry.path.includes('/stadiums/crypto/live/')||entry.path.includes('/stadiums/crypto/broadcast/')){
+  if(!last.raceStatus||/CARGANDO ESCENARIO 3D|ERROR EN ESCENA/.test(last.raceStatus))
+   failures.push(entry.path+' race not ready: '+last.raceStatus);
+  if(last.raceButtonDisabled!==false)failures.push(entry.path+' twelve models did not finish booting');
+  if(!last.raceCanvasSize||last.raceCanvasSize[0]<=300)
+   failures.push(entry.path+' race canvas left at HTML placeholder size');
+ }
+ if(entry.path.includes('/archive/')){
+  if(!last.archiveCount||last.archiveContent?.includes('Preparando archivo sintético'))
+   failures.push(entry.path+' fixture results were never generated');
+ }
+ if(entry.path.startsWith('/estadio/')){
+  if(last.stadiumQA?.courses?.length!==3||last.stadiumQA?.renderCalls<=0)
+   failures.push(entry.path+' three tracks not rendered: '+JSON.stringify(last.stadiumQA||last.stadiumNotice));
+ }
+}
+console.log('PUBLIC_3D_DIAGNOSTIC',JSON.stringify({ok:!failures.length,failures}));
+if(failures.length)process.exitCode=1;
