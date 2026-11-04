@@ -35,7 +35,9 @@ node --check autodromo/car.js
 node --check autodromo/circuit.js
 ```
 
-En el navegador, `window.__cryptodromoAutodromoQA.snapshot()` permite verificar que hay 100 identidades, 12 autos instanciados, pista elegida, fuente sintética y ganador oficial. Los tests de Node comprueban reglas y fixture; **no sustituyen** una revisión visual ni medidas de FPS en desktop y móvil.
+En el navegador, `window.__cryptodromoAutodromoQA.snapshot()` permite verificar que hay 100 identidades, 12 autos instanciados, pista elegida, fuente sintética y ganador oficial.
+
+El workflow `autodromo-browser.yml` monta Chromium con SwiftShader, verifica que existen los doce autos WebGL, cambia las tres pistas, usa la cámara de persecución y ejecuta un replay. Adjunta capturas de cada circuito y de la vista móvil a GitHub Actions. Los tests de Node comprueban reglas y fixture; **no sustituyen** una revisión visual ni medidas de FPS en desktop y móvil.
 
 ## Pendientes antes de promoción
 - Capturas de tres vistas y mediciones reales de FPS/consumo WebGL en Chrome, Firefox y móvil medio.
