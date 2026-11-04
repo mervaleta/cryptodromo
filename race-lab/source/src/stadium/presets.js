@@ -28,7 +28,7 @@ export const STADIUM_PRESETS=Object.freeze({
 /* World editorial venues reuse the same scenic generator. They do not introduce
    a new market engine or claim that thirteen individual course meshes are ready. */
 export const WORLD_STADIUM_PRESETS=Object.freeze({
-  crypto:Object.freeze({...STADIUM_PRESETS.satoshi,id:'crypto',name:'Cryptódromo Central',
+  crypto:Object.freeze({...STADIUM_PRESETS.satoshi,id:'crypto',name:'Estadio Satoshi Nakamoto',
     track:'Pista Eadweard Muybridge',market:'CRIPTO · 24/7'}),
   merval:Object.freeze({
     id:'merval',name:'Estadio MERVAL',track:'Clásico de Palermo',market:'ACCIONES ARGENTINAS',
