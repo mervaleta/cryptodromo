@@ -1,0 +1,44 @@
+name: Site integrity and security checks
+on:
+  pull_request:
+    paths:
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - '404.html'
+      - 'tests/site-integrity.mjs'
+      - '.github/workflows/site-integrity.yml'
+      - 'deploy.php'
+      - 'cryptodromo/deploy.php'
+      - 'prode-bursatil/deploy.php'
+      - 'api/auth.php'
+  push:
+    branches: [main]
+    paths:
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - '404.html'
+      - 'tests/site-integrity.mjs'
+      - '.github/workflows/site-integrity.yml'
+      - 'deploy.php'
+      - 'cryptodromo/deploy.php'
+      - 'prode-bursatil/deploy.php'
+      - 'api/auth.php'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate public routes, retired deploys and site metadata
+        run: node --test tests/site-integrity.mjs
+      - name: Validate PHP public endpoints
+        run: |
+          php -l api/auth.php
+          php -l deploy.php
+          php -l cryptodromo/deploy.php
+          php -l prode-bursatil/deploy.php
