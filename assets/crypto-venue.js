@@ -1,4 +1,5 @@
 import {allLiveTracks,getTrack,TRACK_DEFS} from '/visual-lab/tripleLiveSchedule.js?v=alpha19-live-1';
+import {projectChannelCountdown} from './crypto-channel-countdown.js?v=world-clock-20261104';
 
 const cards=[...document.querySelectorAll('.hub-track[data-track]')];
 const frame=document.getElementById('stadium-broadcast');
@@ -41,12 +42,13 @@ function refresh(){
  for(const data of snapshots){
    const card=cards.find(x=>x.dataset.track===data.trackId);
    if(!card)continue;
-   const phase=data.slotSeconds<60?'race':data.slotSeconds<120?'results':'presentation';
-   card.dataset.phase=phase;
-   card.querySelector('[data-phase-label]').textContent=stateText(phase);
-   card.querySelector('[data-countdown]').textContent=clock(phase==='race'?60-data.slotSeconds:phase==='results'?120-data.slotSeconds:180-data.slotSeconds);
-   card.querySelector('[data-race-label]').textContent='Carrera '+String(data.slot+1).padStart(3,'0')+
-     ' / 480 · largada '+data.label+' UTC−3';
+   const display=projectChannelCountdown(data);
+   card.dataset.phase=display.phase;
+   card.querySelector('[data-phase-label]').textContent=stateText(display.phase);
+   const counter=card.querySelector('[data-countdown]');
+   counter.textContent=clock(display.secondsToNext);
+   counter.setAttribute('aria-label','Próxima largada de '+data.trackName+' en '+clock(display.secondsToNext));
+   card.querySelector('[data-race-label]').textContent=display.label;
  }
 }
 activate(active,false);refresh();
