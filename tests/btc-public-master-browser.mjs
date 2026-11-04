@@ -31,6 +31,7 @@ try {
  assert.equal(s.heroGroom.eyeGlobes,2,'two actual spherical eyes must be present');
  assert.equal(s.heroGroom.crownBridgeLocks,112,'hero mane must be connected across the poll');
  assert.equal(s.heroGroom.heroLocks,56,'the normal public BTC must use raised locks');
+ assert.equal(s.heroGroom.solidRingSides,6,'live horse needs rounded 3D locks instead of hair ribbons');
  assert.equal(s.heroGroom.rootBedVertices,495,'the real public horse must have a continuous sculpted hair root bed');
  assert.equal(s.heroGroom.neckOutliers,0,'no hair vertices outside dorsal neck envelope');
  assert.ok(s.heroGroom.eyeRadius<.0004,'eyes should not protrude out of socket');
@@ -44,7 +45,7 @@ try {
  assert.ok(s.heroGroom.extraTailFacesRemoved>250,'the old tail free end must be absent without opening the rump');
  assert.ok(s.heroGroom.poweredHindVertices>1000,'hindquarters must be physically fuller in production');
  assert.ok(s.heroGroom.integratedDockCapTriangles>=20,'rump opening must be welded inside original Maya mesh');
- assert.ok(s.heroGroom.fineLocks>1100);
+ assert.ok(s.heroGroom.fineLocks>=900,'fewer true 3D hair locks replace hundreds of flat fibers');
  const before=s.hoofPhase;
  await page.waitForTimeout(1100);
  const after=(await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.())).hoofPhase;
