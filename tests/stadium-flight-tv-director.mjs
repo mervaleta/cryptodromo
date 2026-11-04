@@ -44,10 +44,10 @@ test('TV player uses one iframe with 3 immediate channel buttons and 12 camera i
  for(const shot of ['broadcast','rail','aerial','drone','finish','leader','pack','grandstand','orbit'])
   assert.ok(html.includes('data-tv-shot="'+shot+'"'));
  assert.match(controller,/function setShot\(mode\)/);
- assert.match(controller,/requestAnimationFrame\(uncover\)/);
+ assert.match(controller,/requestAnimationFrame\(release\)/);
  assert.match(controller,/await wait\(270\)/);
  assert.match(controller,/button\.dataset\.tvSwitch/);
  assert.match(css,/\.tv-transition/);
  assert.match(css,/transition:opacity 520ms/);
- assert.match(html,/tv-director-params-20261104-v2/);
+ assert.match(html,/tv-fade-watchdog-20261104-v1/);
 });

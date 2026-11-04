@@ -18,6 +18,7 @@ on:
       - 'assets/crypto-archive.js'
       - 'tests/satoshi-tv-player-contract.mjs'
       - 'tests/satoshi-tv-player-browser.mjs'
+      - 'tests/tv-transition-watchdog.mjs'
       - '.github/workflows/satoshi-tv-player.yml'
   workflow_dispatch:
 permissions:
@@ -37,7 +38,7 @@ jobs:
           node --experimental-default-type=module --check assets/satoshi-tv-contract.js
           node --experimental-default-type=module --check visual-lab/scene.js
           node --experimental-default-type=module --check visual-lab/presentationHorse.js
-          node --experimental-default-type=module --test tests/satoshi-tv-player-contract.mjs tests/stadium-flight-tv-director.mjs
+          node --experimental-default-type=module --test tests/satoshi-tv-player-contract.mjs tests/stadium-flight-tv-director.mjs tests/tv-transition-watchdog.mjs
   browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 22

@@ -40,7 +40,7 @@ const params=new URLSearchParams(location.search);
 const selected=getTrack(params.get('track'))||getTrack('muybridge');
 let active=selected.id;
 let replay=readTvReplay(params,active);
-let source=null,serial=0,loadTimer=null;
+let source=null,serial=0,loadTimer=null,framePoller=null,frameReadySerial=-1;
 let sourcePromise=null;
 const format=n=>String(Math.max(0,Math.floor(n))).padStart(2,'0');
 const clock=n=>format(n/60)+':'+format(n%60);
@@ -61,7 +61,7 @@ const setBusy=()=>{
  soundEnabled=false;audioButton.disabled=true;audioButton.setAttribute('aria-pressed','false');audioButton.textContent='🔊 Activar sonido';
 };
 const setError=detail=>{
- clearTimeout(loadTimer);uncover();
+ clearTimeout(loadTimer);clearInterval(framePoller);uncover();
  frame.hidden=true;frame.style.visibility='hidden';loading.hidden=true;errorBox.hidden=false;
  audioButton.disabled=true;
  errorDetail.textContent=detail;
@@ -122,18 +122,48 @@ function showProgramGuide(){
  }
  $('tv-local-time').textContent=localTime.format(new Date())+' UTC−3';
 }
+function signalReady(expectedSerial=serial){
+ if(expectedSerial!==serial||!validFrameDoc())return false;
+ if(frameReadySerial===expectedSerial)return true;
+ frameReadySerial=expectedSerial;
+ clearTimeout(loadTimer);clearInterval(framePoller);
+ frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
+ const release=()=>{if(expectedSerial===serial)uncover();};
+ setTimeout(release,350);
+ requestAnimationFrame(()=>requestAnimationFrame(release));
+ try{
+  audioButton.disabled=!frame.contentDocument?.querySelector('#sound');
+  setShot(activeShot);
+  environmentDeck.apply();
+  parameterDeck.apply();
+ }catch(err){console.warn('Optional TV director settings:',err);}
+ setTimeout(()=>{
+  if(expectedSerial!==serial||!validFrameDoc())return;
+  try{environmentDeck.apply();parameterDeck.apply();}catch(err){
+   console.warn('Late TV director settings:',err);
+  }
+ },1100);
+ try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
+ return true;
+}
 function watchLoad(expectedSerial){
- clearTimeout(loadTimer);
+ clearTimeout(loadTimer);clearInterval(framePoller);
+ framePoller=setInterval(()=>{
+  if(expectedSerial!==serial){clearInterval(framePoller);return;}
+  signalReady(expectedSerial);
+ },250);
  loadTimer=setTimeout(()=>{
   if(expectedSerial!==serial||loading.hidden)return;
+  if(signalReady(expectedSerial))return;
   setError('La señal no terminó de cargar. Probá de nuevo o abrí la carrera directamente.');
- },45000);
+ },75000);
 }
 async function tune(id,requestedReplay=null,changeUrl=true){
  const track=getTrack(id);if(!track)return;
  active=track.id;replay=requestedReplay;
  const current=++serial;
- clearTimeout(loadTimer);
+ clearTimeout(loadTimer);clearInterval(framePoller);
+ frameReadySerial=-1;
  syncPanel();showProgramGuide();
  if(changeUrl)setUrl();
  // Fade out the old channel before releasing its WebGL canvas.
@@ -161,17 +191,7 @@ frame.addEventListener('load',async()=>{
  if(frame.getAttribute('src')==='about:blank'||!source)return;
  try{if(frame.contentWindow.location.href==='about:blank')return;}catch{}
  if(validFrameDoc()){
-  clearTimeout(loadTimer);frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
-  audioButton.disabled=!frame.contentDocument?.querySelector('#sound');
-  setShot(activeShot);
-  environmentDeck.apply();
-  parameterDeck.apply();
-  const loadedSerial=serial;
-  setTimeout(()=>{if(loadedSerial===serial&&validFrameDoc()){environmentDeck.apply();parameterDeck.apply();}},1100);
-  requestAnimationFrame(()=>{requestAnimationFrame(uncover);});
-   // WebGL renderers can throttle animation frames; never strand the overlay.
-   setTimeout(()=>{if(loadedSerial===serial)uncover();},350);
-  try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
+  signalReady(serial);
   return;
  }
  // A hosting rewrite may serve /live/ with status 200 at /broadcast/.
@@ -223,7 +243,7 @@ $('tv-fullscreen').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)showProgramGuide();});
 const ticker=setInterval(showProgramGuide,1000);
-window.addEventListener('pagehide',()=>{clearInterval(ticker);clearTimeout(loadTimer);environmentDeck.dispose();parameterDeck.dispose();frame.src='about:blank';},{once:true});
+window.addEventListener('pagehide',()=>{clearInterval(ticker);clearInterval(framePoller);clearTimeout(loadTimer);environmentDeck.dispose();parameterDeck.dispose();frame.src='about:blank';},{once:true});
 showProgramGuide();
 if(new URLSearchParams(location.search).get('tv-qa')==='1'){
  window.__satoshiTvQA=Object.freeze({
