@@ -42,6 +42,9 @@ try{
  assert.ok(start.heroGroom.hoofMeshVertices>=600,'actual hoof wall geometry required');
  assert.ok(start.heroGroom.elevatedEarVertices>=20,'natural ear silhouette geometry required');
  assert.equal(start.heroGroom.sculptedEars,2,'two fully modeled upright ears required');
+ assert.equal(start.heroGroom.eyeGlobes,2,'both eye sockets require actual 3D spheres');
+ assert.equal(start.heroGroom.irisEditable,true,'published eyeColor drives iris shader');
+ assert.equal(start.heroGroom.blackEquinePupils,true,'pupils must stay black and horizontally elongated');
  assert.ok(start.heroGroom.earTriangles>=800,'ears must be real skinned 3D leaves, not image sprites');
  assert.ok(start.heroGroom.facialSurfaces>=2,'rigged eyelids, nostril contours and tear ducts required');
  assert.ok(start.heroGroom.facialTriangles>140,'facial detail is actual 3D geometry');
