@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
+import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
@@ -23,7 +24,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.00;
+ renderer.toneMappingExposure=.94;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();
  const camera=new THREE.PerspectiveCamera(33,1,.1,55);
@@ -35,10 +36,13 @@ export function createPreview(canvas,onFailure=()=>{}){
  controls.maxDistance=11;
  controls.enablePan=false;
  scene.add(new THREE.HemisphereLight('#dfedf9','#152538',1.12));scene.add(new THREE.AmbientLight('#b1c8dc',.24));
- const key=new THREE.DirectionalLight('#ffddb0',3.6);key.position.set(-3,7,6);
+ const key=new THREE.DirectionalLight('#ffeed0',3.25);key.position.set(-3,7,6);
  key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-4;key.shadow.camera.right=4;key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.0002;key.shadow.normalBias=.012;key.shadow.radius=2.1;scene.add(key);
  const fill=new THREE.DirectionalLight('#91b9ed',1.20);fill.position.set(5,5,-6);scene.add(fill);
- const edge=new THREE.DirectionalLight('#ffb86a',2.35);edge.position.set(3,4,5);scene.add(edge);
+ const edge=new THREE.DirectionalLight('#ffbf88',2.10);edge.position.set(3,4,5);scene.add(edge);
+ // Cool opposing rim lifts the tail off the background without bleaching coat.
+ const tailRim=new THREE.DirectionalLight('#98bddb',.95);
+ tailRim.position.set(-5,3,-3);scene.add(tailRim);
  const platformMat=new THREE.MeshStandardMaterial({color:'#1a302c',roughness:.71,metalness:.10});
  const platformGeo=new THREE.CylinderGeometry(1.85,1.95,.12,96);
  const platform=new THREE.Mesh(platformGeo,platformMat);platform.position.y=-.02;platform.receiveShadow=true;scene.add(platform);
@@ -66,7 +70,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  async function rebuild(){
   const token=selected;if(!token||disposed)return;
   const request=++selection;
-  const candidate=variant==='enhanced'&&token.symbol==='BTC';
+  const candidate=(variant==='enhanced'||variant==='baseline')&&token.symbol==='BTC';
   try{
    const next=await createHorse({
     coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
@@ -79,13 +83,13 @@ export function createPreview(canvas,onFailure=()=>{}){
    try{
     if(candidate){
      next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.40);
-     nextHero=createBTCHeroV5(next.root,{maneSize,tailSize,color:hairColor,pass:btcPass});
+     nextHero=(variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,{maneSize,tailSize,color:hairColor,pass:btcPass});
     }
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHero=hero;
    horse=next;hero=nextHero;frameHeld=false;
-   renderedSymbol=token.symbol;renderedVariant=candidate?'enhanced':'original';
+   renderedSymbol=token.symbol;renderedVariant=candidate?variant:'original';
    prevHero?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
@@ -94,13 +98,13 @@ export function createPreview(canvas,onFailure=()=>{}){
  function select(token){selected=token;return rebuild();}
  function setStage(next){const p=Math.floor(clamp(next,1,10));if(p!==btcPass){btcPass=p;rebuild();}}
  function setVariant(next){
-  if(next!=='original'&&next!=='enhanced')return;
+  if(next!=='original'&&next!=='enhanced'&&next!=='baseline')return;
   if(variant!==next){variant=next;rebuild();}
  }
  function setWind(value){wind=clamp(value,0,2);}
  function setSpeed(value){speed=clamp(value,.5,1.6);}
- function setManeSize(value){maneSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant==='enhanced')rebuild();}
- function setTailSize(value){tailSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant==='enhanced')rebuild();}
+ function setManeSize(value){maneSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original')rebuild();}
+ function setTailSize(value){tailSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original')rebuild();}
  function setHairColor(value){if(/^#[0-9a-f]{6}$/i.test(value)){hairColor=value;hero?.setColor(value);}}
  function pause(value){paused=!!value;horse?.play(paused?'Idle':'Gallop',.2);}
  const clock=new THREE.Clock();
@@ -129,7 +133,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   dispose(){
    if(disposed)return;disposed=true;selection++;
    renderer.setAnimationLoop(null);observer.disconnect();controls.dispose();
-   hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);
+   hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);scene.remove(tailRim);
    pedestalRing.geometry.dispose();pedestalRing.material.dispose();
    platformGeo.dispose();platformMat.dispose();renderer.dispose();
   }
