@@ -296,14 +296,40 @@ function createHairMass(source,skinAt,{
   shader.uniforms.mayaTime=motion.time;
   shader.uniforms.mayaWind=motion.wind;
   shader.uniforms.mayaGait=motion.gait;
+  shader.uniforms.mayaTailSway=motion.tailSway;
+  shader.uniforms.mayaTailLift=motion.tailLift;
+  shader.uniforms.mayaTailFlutter=motion.tailFlutter;
   shader.vertexShader=shader.vertexShader.replace('#include <common>',
-   '#include <common>\nattribute float mayaHairTip;\nattribute float mayaHairId;\nattribute float mayaHairTail;\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;\nuniform float mayaTime;\nuniform float mayaWind;\nuniform float mayaGait;');
+   `#include <common>
+attribute float mayaHairTip;
+attribute float mayaHairId;
+attribute float mayaHairTail;
+varying vec2 vMayaHair;
+varying vec3 vMayaHairRest;
+uniform float mayaTime;
+uniform float mayaWind;
+uniform float mayaGait;
+uniform float mayaTailSway;
+uniform float mayaTailLift;
+uniform float mayaTailFlutter;`);
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-   '#include <begin_vertex>\nvMayaHairRest=position;\nvMayaHair=vec2(mayaHairTip,mayaHairId);\nfloat hairElastic=pow(smoothstep(.03,.97,mayaHairTip),2.0);\nfloat hairWave=sin(mayaTime*mix(4.2,2.6,mayaHairTail)-mayaHairTip*6.8+mayaHairId*.24);\nfloat hairFollow=sin(mayaGait*6.283185307-mix(.6,1.55,mayaHairTail))*mix(.00023,.00057,mayaHairTail);\ntransformed.x+=hairElastic*mayaWind*hairWave*mix(.000095,.00032,mayaHairTail);\ntransformed.y+=hairElastic*(hairFollow+mayaWind*hairWave*.00011);\ntransformed.z+=hairElastic*hairFollow*.28;');
+   `#include <begin_vertex>
+vMayaHairRest=position;
+vMayaHair=vec2(mayaHairTip,mayaHairId);
+float hairElastic=pow(smoothstep(.035,.96,mayaHairTip),2.);
+float hairWave=sin(mayaTime*mix(4.5,3.3,mayaHairTail)-mayaHairTip*6.6+mayaHairId*.31);
+float hairFollow=sin(mayaGait*6.283185307-mix(.55,1.42,mayaHairTail))*mix(.00020,.00031,mayaHairTail);
+transformed.x+=hairElastic*mayaWind*hairWave*mix(.00010,.00024,mayaHairTail);
+transformed.y+=hairElastic*(hairFollow+mayaWind*hairWave*.00013);
+transformed.z+=hairElastic*hairFollow*.27;
+float btcTailElastic=mayaHairTail*pow(smoothstep(.10,1.,mayaHairTip),1.7);
+transformed.x+=btcTailElastic*(.00210*mayaTailSway+.00026*mayaTailFlutter*sin(mayaTime*5.3+mayaHairId*.26));
+transformed.z+=btcTailElastic*(.00138*mayaTailLift+.00019*mayaTailFlutter*cos(mayaTime*6.1+mayaHairId*.17));
+transformed.y+=btcTailElastic*.00027*mayaTailSway*sin(mayaTime*4.7+mayaHairId*.09);`);
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.028*btcCuticle+.012*btcFineCoat,.88,1.10);');
+   '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\nfloat btcFiber=sin(vMayaHairRest.z*23000.+vMayaHair.y*11.3);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.035*btcCuticle+.026*btcFineCoat+.013*btcFiber,.84,1.13);');
  };
  mat.customProgramCacheKey=()=>tail?'btc-damped-spring-tail-v14':'btc-silk-matte-mane-v14';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
