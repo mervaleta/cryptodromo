@@ -26,6 +26,9 @@ on:
       - 'tests/satoshi-three-course-browser.mjs'
       - 'estadio/index.html'
       - 'estadio/estadio.js'
+      - 'estadio/flightControls.js'
+      - 'assets/stadium-flight.css'
+      - 'tests/stadium-flight-tv-director.mjs'
       - 'race-lab/source/src/data/worldRaceRecord.js'
       - 'tests/stadium-world-record.mjs'
       - 'tests/stadium-world-browser-acceptance.mjs'
@@ -51,8 +54,9 @@ jobs:
           node --experimental-default-type=module --check assets/crypto-channel-countdown.js
           node --experimental-default-type=module --check visual-lab/threeCoursePreview.js
           node --experimental-default-type=module --check estadio/estadio.js
+          node --experimental-default-type=module --check estadio/flightControls.js
           node --experimental-default-type=module --check race-lab/source/src/data/tripleRaceFixture.js
-          node --experimental-default-type=module --test tests/satoshi-complete-fixture-week.mjs tests/satoshi-three-course-geometry.mjs tests/satoshi-module-cache-contract.mjs tests/stadium-broadcast-contract.mjs tests/stadium-staggered-countdowns.mjs tests/stadium-world-record.mjs tests/stadium-course-clearance.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs tests/world-fixture-stadium-20261103.mjs tests/stadium-world.mjs
+          node --experimental-default-type=module --test tests/satoshi-complete-fixture-week.mjs tests/satoshi-three-course-geometry.mjs tests/satoshi-module-cache-contract.mjs tests/stadium-flight-tv-director.mjs tests/stadium-broadcast-contract.mjs tests/stadium-staggered-countdowns.mjs tests/stadium-world-record.mjs tests/stadium-course-clearance.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs tests/world-fixture-stadium-20261103.mjs tests/stadium-world.mjs
           node --experimental-default-type=module tests/world-stadium-network.mjs
       - name: Export synthetic fixture audit digest and full 10080-race results
         run: |
