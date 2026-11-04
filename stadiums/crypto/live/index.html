@@ -4,7 +4,7 @@
 <meta name="description" content="Sintonizá en un único reproductor 3D las carreras de Muybridge, Genesis y Vint Cerf, o mirá un replay sintético del archivo.">
 <link rel="icon" href="/favicon.svg">
 <link rel="stylesheet" href="/assets/stadium-hub.css?v=hub-1">
-<link rel="stylesheet" href="/assets/satoshi-tv.css?v=tv-single-20261104">
+<link rel="stylesheet" href="/assets/satoshi-tv.css?v=satoshi-tv-director-v1-20261104">
 </head><body class="hub tv-page">
 <a class="hub-skip" href="#tv-station">Ir directamente a la transmisión</a>
 <header class="hub-head"><div class="hub-shell hub-head-inner"><a class="hub-logo" href="/" aria-label="Cryptódromo, inicio"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a><nav class="hub-nav" aria-label="Navegación"><a href="/">Estadios</a><a href="/stadiums/crypto/">Satoshi Nakamoto</a><a href="/stadiums/crypto/live/">Transmisiones</a><a href="/stadiums/crypto/archive/">Archivo</a><a href="/racers/#BTC">Corredores</a><a href="/estadio/?venue=crypto">Visita 3D</a></nav></div></header>
@@ -21,13 +21,39 @@
  </div>
  <div class="tv-layout">
   <div class="tv-main">
+   <div class="tv-director-bar">
+    <div class="tv-fast-channels" role="group" aria-label="Cambiar de canal">
+      <button type="button" data-tv-switch="muybridge" aria-pressed="true" title="Sintonizar pista Muybridge">📡 CH1 <span>Muybridge</span></button>
+      <button type="button" data-tv-switch="genesis" aria-pressed="false" title="Sintonizar pista Genesis">📡 CH2 <span>Genesis</span></button>
+      <button type="button" data-tv-switch="vint-cerf" aria-pressed="false" title="Sintonizar pista Vint Cerf">📡 CH3 <span>Vint Cerf</span></button>
+    </div>
+   </div>
    <div class="tv-screen" id="tv-player">
+    <div class="tv-transition" id="tv-transition" aria-hidden="true">
+      <div class="tv-transition-brand">CRYPTÓDROMO <span>TV</span><small id="tv-transition-label">CAMBIANDO DE SEÑAL</small></div>
+      <div class="tv-signal-stripes" aria-hidden="true"></div>
+    </div>
     <div class="tv-loading" id="tv-loading" role="status"><span class="tv-spinner" aria-hidden="true"></span><strong>Sintonizando la señal 3D…</strong><small>Buscando un reproductor de carreras, no una página dentro de otra.</small></div>
     <iframe id="stadium-broadcast" title="Carrera 3D de la pista seleccionada" src="about:blank" loading="eager" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="same-origin" hidden></iframe>
     <div class="tv-error" id="tv-error" role="alert" hidden><strong>La señal 3D no respondió.</strong>
      <p id="tv-error-detail">No encontramos el escenario de carreras en el servidor.</p>
      <div class="tv-error-actions"><button type="button" id="tv-retry">Reintentar señal</button><a id="tv-direct-error" href="/visual-lab/index.html?track=muybridge">Abrir carrera directamente</a></div>
     </div>
+   </div>
+   <div class="tv-shotbar" role="toolbar" aria-label="Controles rápidos de cámara del canal">
+    <span class="tv-shot-caption">🎥 CÁMARAS</span>
+    <button data-tv-shot="broadcast" aria-pressed="true" type="button" title="Dirección automática">🎬<small>Auto</small></button>
+    <button data-tv-shot="rail" aria-pressed="false" type="button" title="Cámara a pie de pista">🏇<small>Rail</small></button>
+    <button data-tv-shot="low" aria-pressed="false" type="button" title="Cámara baja">⬇<small>Baja</small></button>
+    <button data-tv-shot="aerial" aria-pressed="false" type="button" title="Vista aérea">🛰️<small>Aérea</small></button>
+    <button data-tv-shot="drone" aria-pressed="false" type="button" title="Dron de seguimiento">🚁<small>Dron</small></button>
+    <button data-tv-shot="overview" aria-pressed="false" type="button" title="Vista panorámica">🌐<small>General</small></button>
+    <button data-tv-shot="startline" aria-pressed="false" type="button" title="Puerta de largada">🚦<small>Largada</small></button>
+    <button data-tv-shot="finish" aria-pressed="false" type="button" title="Foto finish">🏁<small>Meta</small></button>
+    <button data-tv-shot="leader" aria-pressed="false" type="button" title="Seguir al líder">🥇<small>Líder</small></button>
+    <button data-tv-shot="pack" aria-pressed="false" type="button" title="Ver pelotón">🐎<small>Pelotón</small></button>
+    <button data-tv-shot="grandstand" aria-pressed="false" type="button" title="Desde la tribuna">🏟️<small>Tribuna</small></button>
+    <button data-tv-shot="orbit" aria-pressed="false" type="button" title="Órbita del estadio">🔄<small>Órbita</small></button>
    </div>
    <div class="tv-remote" role="group" aria-label="Controles del canal">
     <button type="button" id="tv-live-now" class="tv-live-button" disabled>● ESTÁS EN VIVO</button>
@@ -70,5 +96,5 @@
 </section>
 </main>
 <footer class="hub-footer"><div class="hub-shell"><span>ESTADIO SATOSHI NAKAMOTO · FIxture sintético reproducible · Sin apuestas reales</span><span><a href="/stadiums/">Todos los estadios</a> · <a href="/metodologia.html">Metodología</a> · <a href="/juego-responsable.html">Uso responsable</a></span></div></footer>
-<script type="module" src="/assets/crypto-venue.js?v=satoshi-cachefix-20261104-v3"></script>
+<script type="module" src="/assets/crypto-venue.js?v=satoshi-tv-director-v1-20261104"></script>
 </body></html>
