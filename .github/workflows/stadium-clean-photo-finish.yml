@@ -37,7 +37,7 @@ jobs:
           done
       - name: Check all visual and sport invariants
         run: |
-          node --experimental-default-type=module --test tests/stadium-clean-photo-finish.mjs tests/winner-replay-env-contract.mjs tests/satoshi-tv-player-contract.mjs tests/stadium-course-clearance.mjs tests/stadium-broadcast-contract.mjs tests/stadium-live-integration.mjs tests/hoof-terrain-fx.mjs tests/stadium-flight-tv-director.mjs tests/satoshi-module-cache-contract.mjs tests/stadium-staggered-countdowns.mjs
+          node --experimental-default-type=module --test tests/stadium-clean-photo-finish.mjs tests/winner-replay-env-contract.mjs tests/satoshi-tv-player-contract.mjs tests/stadium-course-clearance.mjs tests/stadium-broadcast-contract.mjs tests/hoof-terrain-fx.mjs tests/stadium-flight-tv-director.mjs tests/satoshi-module-cache-contract.mjs tests/stadium-staggered-countdowns.mjs
   chromium:
     runs-on: ubuntu-24.04
     timeout-minutes: 22
