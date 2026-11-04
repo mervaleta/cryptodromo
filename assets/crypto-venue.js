@@ -34,11 +34,11 @@ const validFrameDoc=()=>{
  }catch{return false;}
 };
 const setBusy=()=>{
- frame.hidden=true;loading.hidden=false;errorBox.hidden=true;
+ frame.hidden=false;frame.style.visibility='hidden';loading.hidden=false;errorBox.hidden=true;
 };
 const setError=detail=>{
  clearTimeout(loadTimer);
- frame.hidden=true;loading.hidden=true;errorBox.hidden=false;
+ frame.hidden=true;frame.style.visibility='hidden';loading.hidden=true;errorBox.hidden=false;
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
 };
@@ -126,7 +126,8 @@ frame.addEventListener('load',async()=>{
  if(frame.getAttribute('src')==='about:blank'||!source)return;
  try{if(frame.contentWindow.location.href==='about:blank')return;}catch{}
  if(validFrameDoc()){
-  clearTimeout(loadTimer);frame.hidden=false;loading.hidden=true;errorBox.hidden=true;
+  clearTimeout(loadTimer);frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
+  try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
   return;
  }
  // A hosting rewrite may serve /live/ with status 200 at /broadcast/.
