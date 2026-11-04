@@ -76,7 +76,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   if(view==='face'&&hero?.focusWorldPoint){
    const p=hero.focusWorldPoint();
    controls.target.set(p.x,p.y,p.z);
-   camera.position.set(p.x+1.08,p.y+.31,p.z+1.03);
+   camera.position.set(p.x+.77,p.y+.18,p.z+.62);
   }else{
    camera.position.set(...CAMERA_POSITIONS[view]);
    controls.target.set(0,1.05,0);
