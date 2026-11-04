@@ -567,7 +567,8 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  });
  const eyes=makeAnatomicalEyes(best,skinAt,{eyeColor});
  const face=createBTCMayaFaceDetails(best,stableSkinAt,anatomy.positions,{
-  coatColor:anatomy.materials[0].color
+  coatColor:anatomy.materials[0].color,
+  anatomyGeometry:anatomy.geometry
  });
  const ears=createBTCHarmonyEars(best,{coatColor});
  for(const h of hidden)h.obj.visible=false;
