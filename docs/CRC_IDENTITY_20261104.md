@@ -109,3 +109,26 @@ El verde financiero se usa **solo** cuando la cifra significa aumento; no codifi
 - [ ] Comparación con el `main` de integración y resolución de conflictos.
 - [ ] Prueba manual de interacción, accesibilidad y performance con carreras completas.
 - [ ] Aprobación explícita del PR por responsable, sin merge automático.
+
+## I. Navegación y ancho uniforme · ampliación solicitada
+**Decisión de arquitectura:** una única navegación global reutiliza `assets/crp-global-nav.js` y `assets/crp-global-nav.css`, en vez de copiar enlaces y handlers en cada pantalla. Se evitó editar el JavaScript canónico porque el PR #55 también lo modifica; así el cambio se fusiona con una sola fuente de verdad. Los menús locales de una sección pueden existir como navegación secundaria, pero nunca sustituir el menú global.
+
+**Geometría compartida:** `--crc-shell-max:1480px`, `--crc-shell-gutter:clamp(16px,2vw,24px)`, `--crc-shell-width:min(1480px,100% - 2×gutter)`. El 1480 surge del `site-shell.css` actual: es una dimensión vigente de Cryptódromo, **no se atribuye al CRC 2024**. Nav y página son hermanos geométricos: mismos límites laterales; el pie usa la misma alineación. En pantallas anchas ningún contenedor exterior supera 1480 px. En móviles se conservan 16 px por lado. Las páginas editoriales pueden conservar un ancho interno legible de 850 px.
+
+**Páginas antes separadas y ahora vinculadas al menú global:**
+- `index.html` portada 2026.
+- `stadiums/crypto/index.html` entrada Satoshi.
+- `stadiums/crypto/archive/index.html` archivo de carreras.
+
+Cada una carga el CSS y JS canónico y expone su `header.hub-head` también como `header.sitebar` para que el script existente lo reemplace. La mejora está limitada a presentación, no a fixture ni reloj. Los demás entrypoints que ya usan `crp-global-nav.js` conservan ese único menú, con nueva alineación CSS en `site-shell.css`, `stadium-hub.css`, `race-site-hub.css` y `crp-global-nav.css`.
+
+**Dependencias explícitas, no se declaran terminadas:**
+- `stadiums/crypto/live/index.html`: PR #79 lo modifica. Integrar las mismas dos referencias `/assets/crp-global-nav.css`, `/assets/crp-global-nav.js` y la clase `sitebar` en su header después de aceptar #79; no editarlo en paralelo por ser un HTML compacto, con alto riesgo de conflicto.
+- `demo-caja/index.html`, `addons/premium-consumer/`: nacerán del PR #67; agregar el JS y la clase de header a las nuevas páginas tras la integración. No se modifica el flujo de cuenta ni saldos.
+- `cryptodromo-gazette/public/`: publicación estática generada por `collector.py`. El CSS general está enlazado, pero la navegación editorial todavía es específica; requiere modificar el generador, no parchear manualmente 38 artículos que se regeneran.
+- `admin/fixture/index.php`: protegido por autenticación y con panel administrativo en evolución; incluir barra y ancho después de coordinación para no interferir con controles, accesibilidad y la seguridad.
+- `race-lab/`, `visual-lab/`, `public/`: módulos de visualización/legacy. Verificar caso a caso antes de introducir una barra que reste altura al viewport WebGL.
+- Páginas institucionales heredadas: PR #35 modifica masivamente sus rutas. Esperar ese merge para hacer el barrido y no solapar diffs.
+- Otros cambios en `assets/crp-global-nav.js` (PR #55): revisar orden, enlaces nuevos y dropdowns antes de cerrar este PR. Evitar fork del código de navegación.
+
+**QA exigido:** `tests/crc-browser-snapshots.mjs` comprueba la existencia del header canónico y compara `left` de navegación y contenido (tolerancia 8 px) en 1440×900 y 390×844, guardando capturas **antes y después** en `artifacts/crc/`; workflow `crc-design-system.yml` sirve un baseline histórico de `main` y la rama mediante servidores locales sin despliegue. Dado que aún no existe un resultado de workflow confirmado, las capturas y sus conclusiones siguen **pendientes**. La ausencia de screenshots verificados prohíbe aprobar merge.
