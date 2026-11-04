@@ -25,6 +25,7 @@ export function initStadiumFlight({THREE,camera,controls,canvas,scene,toolbar,vi
  const buttonState=new Set();
  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false;
  const viewportHint=toolbar.querySelector('[data-flight-hint]');
+ const speedSelect=toolbar.querySelector('[data-flight-speed]');
  const clickButton=toolbar.querySelector('[data-flight-action="click"]');
  const orbitButton=toolbar.querySelector('[data-flight-action="orbit"]');
  const speedSelect=toolbar.querySelector('[data-flight-speed]');
