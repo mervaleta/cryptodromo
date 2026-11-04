@@ -34,6 +34,11 @@ Rama aislada: `prep/stadium-world-integration-20261104`.
 
 **Contabilidad:** 8 sedes, 13 pistas. Una ficha HTML, una escenografía procedural y una programación editorial no son una carrera funcional. La calidad AAA y la física tridimensional integrada siguen pendientes de comparación visual y rendimiento.
 
+## Iteración preparatoria · separación física de tres trazados
+- La maqueta de Satoshi ya contiene Muybridge, Genesis y Vint Cerf en posiciones tridimensionales distintas. Se expuso su transformación existente como `stadiumCoursePoint()` desde `visual-lab/threeCoursePreview.js`, sin alterar mallas, cámaras ni reglas deportivas.
+- `tests/stadium-course-clearance.mjs` realiza un muestreo de los bordes de las tres pistas para detectar intersecciones obvias. Este muestreo NO certifica ausencia de clipping de todos los triángulos, accesos o modelos 3D ni prueba que el broadcast use esas coordenadas.
+- **Pendiente de integración:** adaptar recorrido, gateras, metas, cámaras y entorno del broadcast al sistema común de coordenadas y probarlo visualmente.
+
 ## Pendientes ordenados para próximos cambios
 1. **P0:** CI de rama y 3 carreras completas en Chromium; comprobar preview, doce modelos, largada, meta, resultado, replay y vuelta a LIVE. Probar versión servida por Hostinger sólo luego de integrar.
 2. **P1:** homologar coordenadas y tangentes de `threeCoursePreview.js` con `trackPoint()`, evitar solapes, gateras y metas propias. Reconciliar vista aérea del recinto con el trazado elegido en broadcast; no duplicar terreno o clima.
