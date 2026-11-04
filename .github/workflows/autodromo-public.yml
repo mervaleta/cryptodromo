@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/autodromo-public.yml'
+      - 'autodromo/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,7 +23,7 @@ jobs:
             echo "Attempt $attempt: checking $base/autodromo/"
             status=$(curl -L --connect-timeout 10 --max-time 30 -sS -o /tmp/autodromo-live.html -w '%{http_code}' "$base/autodromo/?check=20261104" || true)
             echo "HTTP $status, bytes $(wc -c < /tmp/autodromo-live.html 2>/dev/null || echo 0)"
-            if [ "$status" = 200 ] && grep -q 'El mercado' /tmp/autodromo-live.html && grep -q 'autodromo-poc-1' /tmp/autodromo-live.html; then
+            if [ "$status" = 200 ] && grep -q 'El mercado' /tmp/autodromo-live.html && grep -q 'autodromo-pole-2' /tmp/autodromo-live.html && grep -q 'id="pole-label"' /tmp/autodromo-live.html; then
               ok=1
               break
             fi
@@ -39,4 +40,4 @@ jobs:
             test "$status" = 200 || { echo "::error::$file unavailable"; exit 1; }
           done
           grep -q 'createOfficialRace' <(curl -fsSL "$base/autodromo/logic.js?check=20261104")
-          echo "AUTODROMO_PUBLIC_HTTP_OK"
+          echo "AUTODROMO_PUBLIC_POLE_GRID_HTTP_OK"

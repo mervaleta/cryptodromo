@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {createFormulaCar} from './car.js';
-import {createCarCircuit} from './circuit.js';
-import {CAR_TRACKS,CAR_ROSTER,carTrack,getCarSession,positionsAt,resultsAtFinish} from './logic.js';
+import {createCarCircuit} from './circuit.js?v=autodromo-pole-2';
+import {CAR_TRACKS,CAR_ROSTER,carTrack,getCarSession,positionsAt,resultsAtFinish} from './logic.js?v=autodromo-pole-2';
 import {tripleLiveSlot} from '../visual-lab/tripleLiveSchedule.js';
 
 const $=id=>document.getElementById(id);
@@ -12,7 +12,7 @@ const params=new URLSearchParams(location.search);
 let selected=carTrack(params.get('track'))?.id||CAR_TRACKS[0].id;
 let mode='program',demoElapsed=0,session=null,scene,renderer,camera,circuit;
 let cars=[],lastFrame=0,lastUI=-1,oldSessionKey='',disposed=false,frameId=0;
-let frameReady=false,sceneError='',lastClock=null;
+let frameReady=false,sceneError='',lastClock=null,stagingGrid=false;
 let hemi,sun;
 
 function pretty(seconds){
@@ -52,12 +52,14 @@ function setSession(next){
   for(let i=0;i<session.fixture.entries.length;i++){
    const entry=session.fixture.entries[i],car=carFor(entry);
    scene.add(car.root);
-   cars.push({symbol:entry.symbol,lane:i,car,lastMeters:null});
+   cars.push({symbol:entry.symbol,car,lastMeters:null});
   }
  }
  $('race-name').textContent=carTrack(selected).name;
+ const pole=session.grid[0];
+ $('pole-label').textContent='POLE · '+pole.symbol+' · '+(pole.qualifyingPct>=0?'+':'')+pole.qualifyingPct.toFixed(3)+'% (3 min previos)';
  $('race-count').textContent='Jornada '+session.fixture.day+' / carrera '+session.fixture.trackRaceNumber+
-   ' · 12 tokens · tanda de 3 minutos';
+   ' · 12 autos · grilla 2×6 · 12 dosis / 5 s';
  $('source-label').textContent='Fuente: synthetic-v1 · '+session.fixture.fixtureVersion+' · sin precios reales';
 }
 function currentSession(date){
@@ -116,7 +118,7 @@ function showStandings(seconds){
   const row=element('li'),pos=element('span','pos',i+1),
     swatch=element('i','color'),symbol=element('b','symbol',value.symbol),
     name=element('span','name',value.name),
-    metres=element('span','meters',finished?'FINAL':value.meters.toFixed(1)+' m');
+    metres=element('span','meters',finished?'FINAL':seconds<1?'P'+value.gridPosition:value.meters.toFixed(1)+' m');
   swatch.style.background=value.color;
   row.append(pos,swatch,symbol,name,metres);fragment.append(row);
  });
@@ -125,15 +127,17 @@ function showStandings(seconds){
  $('entries-count').textContent=standings.length+' monoplazas';
  $('classification-note').textContent=finished
   ?'Llegada definitiva: clasificación del motor oficial CRP-DOSE-FAIR-V1; esta demo usa precios sintéticos.'
-  :'Clasificación provisional por distancia oficial, con los mismos 12 coeficientes por auto y una carrera de 60 s.';
+  :(seconds<1
+    ?'Grilla de partida: pole calculada con las variaciones sintéticas de los 3 minutos anteriores. Seis filas escalonadas de dos autos.'
+    :'Orden de pista basado en las doce dosis de cinco segundos y la posición de grilla. Las distancias oficiales y el ganador nunca se modifican.');
 }
 function updateBroadcast(seconds,clock){
  const finished=seconds>=60;
  $('track-label').textContent=carTrack(selected).name.toUpperCase();
  $('live-tag').textContent=mode==='test'?'PRUEBA REPRODUCIBLE':'PROGRAMACIÓN SINTÉTICA';
  $('phase-label').textContent=mode==='test'
-   ?(finished?'RESULTADO OFICIAL':'CARRERA DE PRUEBA')
-   :(clock.slotSeconds<60?'EN CARRERA':'PRÓXIMA LARGADA');
+   ?(finished?'RESULTADO OFICIAL':seconds<1?'GRILLA · POLE POSITION':'CARRERA DE PRUEBA')
+   :(stagingGrid?'FORMACIÓN · POLE POSITION':clock.slotSeconds<60?'EN CARRERA':'PRÓXIMA LARGADA');
  $('clock').textContent=mode==='test'
    ?pretty(seconds)
    :(clock.slotSeconds<60?pretty(60-clock.slotSeconds):pretty(clock.secondsToNext));
@@ -141,14 +145,17 @@ function updateBroadcast(seconds,clock){
 function renderCarPositions(seconds,delta){
  if(!circuit||!session||!cars.length)return;
  const rows=positionsAt(session,seconds);
- const meters=new Map(rows.map(r=>[r.symbol,r.meters]));
+ const places=new Map(rows.map(r=>[r.symbol,r]));
  for(const actor of cars){
-  const d=meters.get(actor.symbol)||0;
-  const point=circuit.pose(d,actor.lane);
+  const row=places.get(actor.symbol);
+  if(!row)continue;
+  // Camera and geometry consume only the visual projection; ranking stays official.
+  const point=circuit.pose(row.visualMeters,row.sideMeters);
   actor.car.root.position.set(point.x,point.y,point.z);
   actor.car.root.rotation.y=point.heading;
-  if(actor.lastMeters!==null&&d>=actor.lastMeters)actor.car.updateWheelRotation(d-actor.lastMeters);
-  actor.lastMeters=d;
+  if(actor.lastMeters!==null&&row.meters>=actor.lastMeters)
+    actor.car.updateWheelRotation(row.meters-actor.lastMeters);
+  actor.lastMeters=row.meters;
  }
  const leading=rows[0],leaderActor=cars.find(c=>c.symbol===leading?.symbol);
  const target=leaderActor?.car.root.position||new THREE.Vector3(0,0,0);
@@ -164,9 +171,18 @@ function renderCarPositions(seconds,delta){
   camera.position.lerp(wanted,Math.min(1,delta*2.1));
   camera.lookAt(target);
  }else{
-  const p=circuit.pose(185,6),wanted=new THREE.Vector3(p.x+87,58,p.z+87);
-  camera.position.lerp(wanted,Math.min(1,delta*2.1));
-  camera.lookAt(target.clone().add(new THREE.Vector3(0,2,0)));
+  if(seconds<10||stagingGrid){
+   // Reveal the actual 2-by-6 starting grid, not twelve cars abreast.
+   const p=circuit.pose(-42,0),direction=new THREE.Vector3(Math.cos(p.heading),0,-Math.sin(p.heading));
+   const right=new THREE.Vector3(-direction.z,0,direction.x);
+   const focus=new THREE.Vector3(p.x,1.6,p.z);
+   const wanted=focus.clone().addScaledVector(right,82).addScaledVector(direction,-49).add(new THREE.Vector3(0,36,0));
+   camera.position.lerp(wanted,Math.min(1,delta*3.8));camera.lookAt(focus);
+  }else{
+   const p=circuit.pose(185,6),wanted=new THREE.Vector3(p.x+87,58,p.z+87);
+   camera.position.lerp(wanted,Math.min(1,delta*2.1));
+   camera.lookAt(target.clone().add(new THREE.Vector3(0,2,0)));
+  }
  }
 }
 function initThree(){
@@ -200,9 +216,16 @@ function animate(time){
  const now=new Date(),clock=tripleLiveSlot(now,selected);
  lastClock=clock;
  let seconds;
+ stagingGrid=false;
  if(mode==='test'){
   demoElapsed=Math.min(60,demoElapsed+delta*Number($('replay-speed').value));
   seconds=demoElapsed;
+ }else if(clock.slotSeconds>=170){
+  // Last ten seconds of the slot: display the NEXT race's 2x6 starting grid.
+  const nextDate=new Date(now.getTime()+(clock.secondsToNext+0.2)*1000);
+  const upcoming=currentSession(nextDate);
+  if(upcoming.key!==oldSessionKey)setSession(upcoming);
+  seconds=0;stagingGrid=true;
  }else{
   const clockKey=clock.dayIndex+':'+clock.minuteOfDay+':'+selected;
   if(clockKey!==oldSessionKey)setSession(currentSession(now));
@@ -243,7 +266,9 @@ window.__cryptodromoAutodromoQA={
     carCount:cars.length,rosterCount:CAR_ROSTER.length,sessionKey:oldSessionKey,
     elapsed:mode==='test'?demoElapsed:lastClock?.slotSeconds||0,
     fixtureVersion:session?.fixture.fixtureVersion,trackNames:CAR_TRACKS.map(x=>x.name),
-    winner:session?.official[0]?.entry.symbol,synthetic:true})
+    winner:session?.official[0]?.entry.symbol,pole:session?.grid[0]?.symbol,stagingGrid,
+    grid:session?.grid.map(g=>({symbol:g.symbol,position:g.position,row:g.row,column:g.column,backMeters:g.backMeters})),
+    synthetic:true})
 };
 showGarage();initThree();setSession(currentSession(new Date()));
 frameId=requestAnimationFrame(animate);

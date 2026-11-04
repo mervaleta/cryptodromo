@@ -3,6 +3,7 @@
  * Visual geometry only. Official distances/ranking stay in logic.js.
  */
 import * as THREE from 'three';
+import {GRID_LEAD_BACK_METERS,GRID_ROW_GAP_METERS,GRID_COLUMN_STAGGER_METERS} from './logic.js?v=autodromo-pole-2';
 
 const POINTS={
   speed:[[-245,0],[-215,-111],[-155,-149],[175,-149],[229,-107],[250,0],[228,112],[168,148],[-173,148],[-233,108]],
@@ -72,7 +73,7 @@ export function createCarCircuit(track){
       }
     }
   }
-  // A real start/finish line, perpendicular to the centreline, 12 grid spaces wide.
+  // Start/finish chequer line (NOT twelve starting positions abreast).
   const start=curve.getPointAt(0),startDir=curve.getTangentAt(0);
   const startYaw=-Math.atan2(startDir.z,startDir.x);
   for(let i=0;i<12;i++){
@@ -127,10 +128,30 @@ export function createCarCircuit(track){
     box(140,7,30,mRoof,0,18,0);
     box(110,10,16,mStand,0,9,0);
   }
-  function pose(meters,lane=0){
+  // Two-column qualifying grid: 6 staggered rows, all behind the finish line.
+  // These are markings, not an alternative timing or scoring engine.
+  for(let i=0;i<12;i++){
+    const row=Math.floor(i/2),col=i%2;
+    const behind=GRID_LEAD_BACK_METERS+row*GRID_ROW_GAP_METERS+
+      col*GRID_COLUMN_STAGGER_METERS;
+    const lateral=col===0?-6:6;
+    const p=pose(-behind,lateral);
+    const gridMark=own(new THREE.BoxGeometry(9.6,.022,.13));
+    const shortMark=own(new THREE.BoxGeometry(.13,.022,5.4));
+    for(const x of [-4.8,4.8]){
+      const mark=new THREE.Mesh(shortMark,mWhite);
+      mark.position.set(p.x+Math.cos(p.heading)*x,.018,p.z-Math.sin(p.heading)*x);
+      mark.rotation.y=p.heading;root.add(mark);
+    }
+    for(const z of [-2.7,2.7]){
+      const mark=new THREE.Mesh(gridMark,i===0?mBlue:mWhite);
+      mark.position.set(p.x+Math.sin(p.heading)*z,.018,p.z+Math.cos(p.heading)*z);
+      mark.rotation.y=p.heading;root.add(mark);
+    }
+  }
+  function pose(meters,lateralMeters=0){
     const u=((meters/1000)%1+1)%1,p=curve.getPointAt(u),t=curve.getTangentAt(u);
-    const side=(lane-5.5)*3.75;
-    return {x:p.x-t.z*side,z:p.z+t.x*side,y:.3,heading:-Math.atan2(t.z,t.x)};
+    return {x:p.x-t.z*lateralMeters,z:p.z+t.x*lateralMeters,y:.3,heading:-Math.atan2(t.z,t.x)};
   }
   function dispose(){
     root.parent?.remove(root);

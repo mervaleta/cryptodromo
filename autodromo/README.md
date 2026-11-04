@@ -18,6 +18,15 @@ Son identidades visuales del segundo estadio; los IDs que reciben la programaci�
 
 El código de `autodromo/car.js` genera chasis, nosecone, alerones, halo, ruedas y texturas/ticker por Canvas. No usa archivos de coches externos, fotos, escuderías oficiales, marcas de F1 ni assets cuya licencia no se haya validado. Los tres trazados son mallas construidas con `CatmullRomCurve3`. El único requisito runtime es Three.js 0.187.0, versión del proyecto, cargada desde el mismo CDN utilizado en `grandes-premios/replay-3d/`.
 
+## Pole position, grilla y adelantamientos
+
+- **Clasificación previa:** al anunciar cada carrera, se calcula para los 12 seleccionados la variación porcentual entre el cierre sintético del minuto inmediatamente previo a la largada y el cierre de hasta **tres minutos antes**, ambos ya conocidos. Mayor variación previa = mejor lugar de salida; empate por ticker alfabético. No se consultan las dos velas que decidirán la carrera. Si la cinta semanal empieza antes de contar con 3 minutos, se usa todo el histórico anterior disponible.
+- **Grilla real 2 × 6:** pole (P1) en columna izquierda, P2 en derecha y cinco filas adicionales; filas separadas **15 m**, con segunda columna **5 m** retrasada y los dos carriles a **±6 m** respecto del eje de pista.
+- **Presentación:** en los **10 segundos anteriores** a la siguiente carrera, las cámaras muestran la formación; en la largada, los doce autos parten desde esas posiciones diferentes. La preferencia de grilla se atenúa a cero antes del segundo **45** y nunca modifica la distancia oficial ni la clasificación definitiva.
+- **Adelantamientos:** `createOfficialRace()` sigue asignando nueve dosis para los primeros 45 s y tres para los últimos 15 s, con los coeficientes exactos del motor original. `positionAt(profile,t)` genera su movimiento; la posición provisional ordena la distancia descontando temporalmente la diferencia de grilla. Para que no se superpongan doce modelos 3D grandes cuando los datos de mercado producen distancias muy próximas, `visualMeters` introduce una separación suave que **preserva el orden** de `trackMeters`. Es sólo visual y no alimenta el resultado.
+- **Ganador inmutable:** `officialRanking(createOfficialRace(entries))` ordena `finishTime` y no recibe ni grid, ni `visualMeters`, ni clima, ni carril. La fórmula original sigue siendo `D=1000*(1+(91*input1+120*input2)/1200)`. El arreglo de las dosis cambia los adelantamientos, no sus sumas.
+- **Fuente:** semana `synthetic-v1`, repetible. La pole es una **clasificación derivada del pasado sintético**, no una sesión real de clasificación ni datos de mercado en vivo.
+
 ## Cómo probar
 1. Abrir `/autodromo/` mediante un servidor HTTP estático que sirva la raíz del repositorio.
 2. Elegir Vector / Delta / Neón. Cada pista tiene un reloj real del fixture, no un fixture propio.
@@ -37,7 +46,7 @@ node --check autodromo/circuit.js
 
 En el navegador, `window.__cryptodromoAutodromoQA.snapshot()` permite verificar que hay 100 identidades, 12 autos instanciados, pista elegida, fuente sintética y ganador oficial.
 
-El workflow `autodromo-browser.yml` monta Chromium con SwiftShader, verifica que existen los doce autos WebGL, cambia las tres pistas, usa la cámara de persecución y ejecuta un replay. Adjunta capturas de cada circuito y de la vista móvil a GitHub Actions. Los tests de Node comprueban reglas y fixture; **no sustituyen** una revisión visual ni medidas de FPS en desktop y móvil.
+El workflow `autodromo-browser.yml` monta Chromium con SwiftShader, verifica que existen los doce autos WebGL, cambia las tres pistas, usa la cámara de persecución y ejecuta un replay. Adjunta capturas de cada circuito, de la grilla de pole y de la vista móvil a GitHub Actions. Los tests de Node comprueban reglas y fixture; **no sustituyen** una revisión visual ni medidas de FPS en desktop y móvil.
 
 ## Pendientes antes de promoción
 - Capturas de tres vistas y mediciones reales de FPS/consumo WebGL en Chrome, Firefox y móvil medio.

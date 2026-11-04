@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/autodromo-live-browser.yml'
+      - 'autodromo/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,6 +40,11 @@ jobs:
             assert.equal(state.frameReady,true,'WebGL should run on Hostinger');
             assert.equal(state.carCount,12);
             assert.equal(state.rosterCount,100);
+            assert.equal(state.grid.length,12,'Must expose twelve distinct pole positions');
+            assert.equal(state.grid[0].row,1);
+            assert.equal(state.grid[1].row,1);
+            assert.equal(state.grid[1].column,1);
+            assert.match(await page.locator('#pole-label').innerText(),/POLE/);
             assert.equal(await page.locator('#garage-grid .car-card').count(),100);
             assert.equal(await page.locator('#standings li').count(),12);
             await page.screenshot({path:'/tmp/autodromo-live.png'});

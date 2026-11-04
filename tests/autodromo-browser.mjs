@@ -35,10 +35,25 @@ try{
   await page.locator('#return-live').click();
   state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
   assert.equal(state.mode,'program');
+  assert.equal(state.grid.length,12);
+  assert.equal(state.grid[0].position,1);
+  assert.equal(state.grid[0].row,1);
+  assert.equal(state.grid[0].column,0);
+  assert.equal(state.grid[1].row,1);
+  assert.equal(state.grid[1].column,1);
+  assert.match(await page.locator('#pole-label').innerText(),/POLE/);
   await page.setViewportSize({width:390,height:844});
   await page.waitForTimeout(350);
   assert.equal(await page.locator('#standings li').count(),12);
   await page.screenshot({path:'/tmp/autodromo-mobile.png'});
+  await page.setViewportSize({width:1440,height:900});
+  // At XX:03:20 America/Argentina/Buenos_Aires, Muybridge is 10s from the next start.
+  await page.clock.setFixedTime(new Date('2026-11-04T18:03:20.000Z'));
+  await page.waitForFunction(()=>window.__cryptodromoAutodromoQA.snapshot().stagingGrid===true,null,{timeout:15000});
+  state=await page.evaluate(()=>window.__cryptodromoAutodromoQA.snapshot());
+  assert.equal(state.carCount,12);
+  // Do not capture after overriding Chromium's clock: GPU screenshots can hang.
+  // The pre-start lineup is asserted via the scene snapshot and pole overlay.
   assert.deepEqual(errors,[],'No uncaught browser errors');
   console.log('AUTODROMO_BROWSER_OK',JSON.stringify({
     cars:state.carCount,garage:100,circuits:3,program:'180s',test:'60s'
