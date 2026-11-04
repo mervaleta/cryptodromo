@@ -9,7 +9,6 @@ import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {createMayaGroom} from './btc-maya-groom.js?v=btc-harmony-silhouette-20261104-v1';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-harmony-silhouette-20261104-v1';
-import {createBTCSculptedHooves} from './btc-maya-hooves.js?v=btc-harmony-silhouette-20261104-v1';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 export const BTC_MAYA_RENDER_BUILD='btc-harmony-silhouette-20261104-v1';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -154,9 +153,12 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const along=gauss(y,-.0269,.00215);
   const ear=high*side*along;
   if(ear<.012)continue;
-  positions[i]-=Math.sign(x)*.00078*ear;
-  positions[i+1]-=.00345*ear;
-  positions[i+2]+=.00525*ear;
+  // Keep the points CLOSE above the poll: long splayed tips created
+  // a pair of antennae in the first WebGL pass.
+  const towardMidline=Math.min(.00135*ear,Math.max(0,Math.abs(x)-.00088));
+  positions[i]-=Math.sign(x)*towardMidline;
+  positions[i+1]-=.00180*ear;
+  positions[i+2]+=.00315*ear;
   elevatedEarVertices++;
  }
  // Gentle anatomical correction in the actual supplied mesh, not added
@@ -277,13 +279,13 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  };
  coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-harmony-sculpt-face-v1';
  const hoof=new THREE.MeshStandardMaterial({
-  name:'BTC hidden source hoof geometry, replaced by sculpted hoof shells',
-  color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#39302a',
-  roughness:.84,metalness:0,side:THREE.FrontSide
+  name:'BTC original Maya four integrated hoof walls',
+  color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#694937',
+  roughness:.80,metalness:0,side:THREE.FrontSide
  });
- // The source mesh previously drew broad, rounded hooves beneath the new
- // hoof shells, producing double contours and cartoon-like blobs.
- hoof.visible=false;
+ // The original Maya hoof and pastern are one continuous skinned surface.
+ // Do not cover it with independent cylinders: that read as four loose boots.
+ hoof.visible=true;
  // Keratin is layered, semi-matte horn. A subtle coronet/capsule transition,
  // vertical horn growth and low-angle bounce replaces the single dark blob.
  hoof.onBeforeCompile=shader=>{
@@ -356,8 +358,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  });
  const eyes=makeAnatomicalEyes(best,skinAt,{eyeColor});
  const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions);
- const hoofShells=createBTCSculptedHooves(best,skinAt,{hoofColor});
- for(const h of hidden)h.obj.visible=false;
+  for(const h of hidden)h.obj.visible=false;
  // The original plastic eyes are hidden in favor of two inset glossy
  // equine eyes with the same skinned and animated head transform.
  let disposed=false,time=0,phase=0;
@@ -368,7 +369,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    sculptedBodyParts:1,vertices:anatomy.vertices,
    harmonyBuild:BTC_MAYA_RENDER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:hoofShells.hooves,hoofMeshVertices:hoofShells.vertices,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},
@@ -385,7 +386,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
   dispose(){
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
-   groom.dispose();face.dispose();hoofShells.dispose();
+   groom.dispose();face.dispose();
    eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());
