@@ -81,7 +81,7 @@ try{
  assert.equal(splitState.preset,'quarters');
  assert.equal(stage.horses,12);
  assert.ok(stage.clouds&&stage.fog&&stage.quality);
- assert.match(stage.script||'',/scene\\.js\\?v=alpha(?:18|19|20)-[a-z0-9-]+/);
+ assert.match(stage.script||'',/scene\\.js\\?v=hoof-fx-public-20261104-v2/);
  assert.equal(faults.length,0,'3D runtime faults '+faults.join('; ').slice(0,800));
  // Alpha16 is a separate contemplative path: never replaces LIVE.
  faults.length=0;
