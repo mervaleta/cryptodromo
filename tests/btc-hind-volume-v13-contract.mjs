@@ -9,7 +9,7 @@ test('different Gallop poses keep side-specific joint ownership without cross-le
  const positions=new Float32Array([
   .004,.012,.018,-.004,.012,.018,
   .004,.012,.002,.004,-.012,.018,
-  .004,.012,.035
+  .004,.012,.040
  ]);
  const jointNames=['Body','BackLeg.L','BackLeg.R','FrontUpperLeg.L','Tail1'];
  const bone=new Uint16Array([
@@ -40,7 +40,7 @@ test('different Gallop poses keep side-specific joint ownership without cross-le
   'front limb, hoof and rump outside mask must remain intact');
  assert.equal(skin.hindSkinRegion(.004,.012,.002),0,'fetlock outside stabilizer');
  assert.equal(skin.hindSkinRegion(.004,-.012,.018),0,'front limb outside stabilizer');
- assert.equal(skin.hindSkinRegion(.004,.012,.035),0,'top croup outside stabilizer');
+ assert.equal(skin.hindSkinRegion(.004,.012,.040),0,'top croup outside stabilizer');
 });
 
 test('BTC production keeps real LBS and original Gallop rather than rejected DQS',()=>{
