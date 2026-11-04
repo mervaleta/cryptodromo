@@ -1,0 +1,19 @@
+/* Cryptodromo: inventory-led direct sponsorship placements. No external ad SDK. */
+.crp-ad-slot{box-sizing:border-box;position:relative;isolation:isolate;display:flex;align-items:center;justify-content:space-between;gap:20px;width:min(1320px,calc(100% - 32px));min-height:112px;margin:24px auto;padding:20px 24px;border:1px dashed rgba(132,199,160,.35);border-radius:12px;color:#deefe6;background:linear-gradient(106deg,rgba(21,47,39,.95),rgba(9,23,18,.94));box-shadow:0 10px 35px rgba(0,0,0,.12);font:inherit;line-height:1.45}
+.crp-ad-slot:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:#45ce9e;border-radius:12px 0 0 12px}
+.crp-ad-slot,.crp-ad-slot *{box-sizing:border-box}
+.crp-ad-slot__eyebrow{display:flex;align-items:center;gap:8px;flex:0 0 auto;color:#87bda7;font:800 10px/1.3 Inter,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.crp-ad-slot__eyebrow span{color:#dbb77e}
+.crp-ad-slot__copy{flex:1 1 auto;min-width:0}
+.crp-ad-slot__copy strong{display:block;margin-bottom:4px;color:#f3f7f2;font:700 clamp(14px,1.5vw,18px)/1.3 Inter,system-ui,sans-serif}
+.crp-ad-slot__copy p{margin:0!important;color:#9db8ab;font:12px/1.5 Inter,system-ui,sans-serif}
+.crp-ad-slot__cta{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:12px 15px;border:1px solid rgba(101,224,169,.6);border-radius:7px;color:#6ae5ad!important;background:rgba(21,67,47,.4);text-decoration:none!important;white-space:nowrap;font:750 12px/1.2 Inter,system-ui,sans-serif}
+.crp-ad-slot__cta:hover,.crp-ad-slot__cta:focus-visible{background:#236d4e;color:white!important;outline-offset:3px}
+.crp-ad-slot--incontent{min-height:104px;margin:32px auto}
+.crp-ad-slot--afterrace{margin:18px auto 30px;width:100%;max-width:none}
+.crp-ad-slot--footer{margin-top:42px;margin-bottom:30px}
+.crp-ad-slot--top{margin-top:18px;margin-bottom:18px}
+.crp-ad-slot[data-crp-status="reserved"]{display:none}
+@media(max-width:720px){.crp-ad-slot{flex-wrap:wrap;min-height:105px;gap:10px 12px;padding:16px;margin:18px auto;width:calc(100% - 28px)}.crp-ad-slot__eyebrow{width:100%;font-size:9px}.crp-ad-slot__copy{min-width:180px}.crp-ad-slot__copy strong{font-size:15px}.crp-ad-slot__copy p{font-size:11px}.crp-ad-slot__cta{font-size:11px;padding:10px 12px}.crp-ad-slot--afterrace{width:100%}}
+@media(prefers-reduced-motion:reduce){.crp-ad-slot *{transition:none!important}}
+@media print{.crp-ad-slot{display:none!important}}

@@ -3,7 +3,7 @@
 const groups=[
  {label:'Explorar',icon:'◈',items:[['/stadiums/','Estadios del mundo'],['/stadiums/fixture/','Fixture mundial'],['/estadio/','Estadio 3D'],['/parade/','Modo Parade'],['/visual-lab/','Visual Lab'],['/laboratorio/','Laboratorio'],['/estadisticas/','Estadísticas']]},
  {label:'Comunidad',icon:'♧',items:[['/comunidad/','Jugadores e insignias'],['/stables/','Escuderías'],['/championship/','Campeonatos'],['/cronicas/','Crónicas'],['/apuestas/','Favoritos · demo'],['/eventos.html','Eventos']]},
- {label:'Proyecto',icon:'▤',items:[['/institucional/','Presentación'],['/como-funciona.html','Cómo funciona'],['/contacto.html','Contacto'],['/preguntas.html','Ayuda']]}
+ {label:'Proyecto',icon:'▤',items:[['/institucional/','Presentación'],['/como-funciona.html','Cómo funciona'],['/contacto.html','Contacto'],['/marketing/','Publicidad y sponsors'],['/preguntas.html','Ayuda']]}
 ];
 const main=[['/','Carrera'],['/racers/','Corredores'],['/fixture/','Fixture'],['/resultados/','Resultados'],['/grandes-premios/','Grandes Premios']];
 const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text)x.textContent=text;return x};
@@ -40,3 +40,6 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
+
+/* Shared advertising placements: presentation-only. */
+(function(){if(document.querySelector('script[src*="/assets/ad-inventory.js"]'))return;var s=document.createElement('script');s.src='/assets/ad-inventory.js?v=1';s.defer=true;document.head.appendChild(s)})();
