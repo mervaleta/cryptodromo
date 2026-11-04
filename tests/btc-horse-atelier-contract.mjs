@@ -6,11 +6,11 @@ test('normal BTC card loads anatomical master and retains explicit rollback',()=
  const racers=read('racers/racers.js'),html=read('racers/index.html');
  assert.match(racers,/atelierMode==='btc'/);
  assert.match(racers,/atelierMode!=='off'&&selected\.symbol==='BTC'/);
- assert.match(racers,/btc-maya-luxe-20261104-v3/);
+ assert.match(racers,/btc-harmony-silhouette-20261104-v1/);
  assert.match(racers,/horse-preview\.js\?v=alpha18-gaitmane-1/);
  assert.match(html,/id="btc-atelier-panel"[^>]*hidden/);
  assert.match(html,/href="\?atelier=btc#BTC"/);
- assert.match(html,/btc-maya-luxe-20261104-v3/);
+ assert.match(html,/btc-harmony-silhouette-20261104-v1/);
 });
 test('V4 visibly alters REAL 3D geometry and streams motion while retaining Gallop',()=>{
  const pilot=read('racers/btc-atelier-preview.js'),v4=read('racers/btc-hero-v5.js');
