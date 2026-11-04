@@ -92,7 +92,7 @@ function createHairMass(source,skinAt,{
     const fan=(seed-.5)*(.0031*Math.sin(PI*t)+.0014*t2);
     x=root[0]+fan+.00042*Math.sin(t*TAU+seed*4)*t2;
     y=root[1]+length*flow+.00045*Math.sin(PI*t);
-    z=root[2]-(.0044+.0020*crossSeed)*flow
+    z=root[2]-(.0090+.0026*crossSeed)*flow
       +.00095*Math.sin(PI*t)*(.5+.5*seed);
     if(ribbon===0)x+=cross*breadth*w;
     else z+=cross*breadth*.42*w;
