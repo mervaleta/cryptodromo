@@ -94,7 +94,7 @@ function showProgramGuide(){
 function watchLoad(expectedSerial){
  clearTimeout(loadTimer);
  loadTimer=setTimeout(()=>{
-  if(expectedSerial!==serial||!loading.hidden===false)return;
+  if(expectedSerial!==serial||loading.hidden)return;
   setError('La señal no terminó de cargar. Probá de nuevo o abrí la carrera directamente.');
  },45000);
 }
@@ -123,6 +123,7 @@ async function tune(id,requestedReplay=null,changeUrl=true){
 }
 frame.addEventListener('load',async()=>{
  if(frame.getAttribute('src')==='about:blank'||!source)return;
+ try{if(frame.contentWindow.location.href==='about:blank')return;}catch{}
  if(validFrameDoc()){
   clearTimeout(loadTimer);frame.hidden=false;loading.hidden=true;errorBox.hidden=true;
   return;
@@ -131,7 +132,7 @@ frame.addEventListener('load',async()=>{
  // Never display or recursively load that page inside the player.
  if(source===RACE_PLAYER_SOURCES[0]){
   const last=serial;
-  sourcePromise=probe();
+  sourcePromise=Promise.resolve(RACE_PLAYER_SOURCES[1]);
   source=RACE_PLAYER_SOURCES[1];
   const fallback=buildTvPlayerUrl(source,active,replay);
   const response=await fetch(source,{cache:'no-store'}).catch(()=>null);
