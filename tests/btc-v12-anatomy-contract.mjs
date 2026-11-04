@@ -56,10 +56,10 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  const files=['racers/index.html','racers/racers.js','racers/btc-atelier-preview.js'];
  for(const file of files){
    const content=read(file);
-   assert.ok(content.includes('hoof-btc-fiche-20261104-v1'),'FX public build not used by '+file);
+   assert.ok(content.includes('btc-eye-nape-hair-20261104-v1'),'FX public build not used by '+file);
    assert.ok(!content.includes('btc-master-solid-groom-20261104-v11'),file+' still stale');
  }
- assert.match(read('racers/btc-maya-master.js'),/btc-master-procedural-hind-groom-20261104-v12-fx1/);
+ assert.match(read('racers/btc-maya-master.js'),/btc-master-procedural-hind-groom-20261104-v12-fx2/);
  assert.match(read('racers/btc-maya-master.js'),/btc-master-procedural-hind-groom-20261104-v12/);
  assert.match(read('racers/btc-atelier-preview.js'),/createBTCTerrainStage/);
  const master=read('racers/btc-maya-master.js');
@@ -70,13 +70,26 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.match(master,/createMayaGroom/);
  assert.match(master,/gallopPreserved:true/);
  const groom=read('racers/btc-maya-groom.js');
- assert.match(groom,/majorCount:112,fineCount:48/);
+ assert.match(groom,/majorCount:112,fineCount:240/);
  assert.match(groom,/looseNeckFibers/);
  assert.match(groom,/btcCuticle/);
  assert.match(groom,/solidRingSides:SIDES/);
  assert.doesNotMatch(groom,/TextureLoader|\.jpg|\.png|\.webp|PlaneGeometry/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- assert.equal(manifest.buildId,build+'-fx1');
+ assert.equal(manifest.buildId,build+'-fx2');
  assert.equal(manifest.status,'pending_deploy');
  assert.equal(module.BTC_HINDQUARTER_BUILD,'btc-hindquarters-rump-gaskin-20261104-v12');
+});
+
+test('BTC FX2 repair is real geometry and native poll skinning, not an image',()=>{
+ const master=read('racers/btc-maya-master.js'),face=read('racers/btc-maya-face-details.js'),groom=read('racers/btc-maya-groom.js');
+ assert.match(master,/pollAnchoredVertices/);
+ assert.match(master,/headIndex=best\.skeleton\.bones\.findIndex/);
+ assert.match(master,/side\*\.002235\+x/);
+ assert.match(face,/symmetric lower eyelid contours/);
+ assert.doesNotMatch(face,/anatomical tear ducts/);
+ assert.match(groom,/tailInertia/);
+ assert.match(groom,/tailVelocity/);
+ assert.match(groom,/fineCount:320/);
+ for(const text of [master,face,groom])assert.doesNotMatch(text,/\.png|\.jpeg|TextureLoader|ImageLoader/);
 });
