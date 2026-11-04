@@ -1,0 +1,23 @@
+name: Satoshi TV · fast public source check
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/satoshi-tv-public-static.mjs'
+      - '.github/workflows/satoshi-tv-public-static.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check actual Hostinger content without installing browsers
+        env:
+          CRP_BASE_URL: https://race.cryptodromo.com
+        run: node tests/satoshi-tv-public-static.mjs
