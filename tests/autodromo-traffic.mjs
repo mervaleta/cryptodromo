@@ -40,6 +40,12 @@ test('twelve car bodies do not overlap while overtaking at 10Hz, including turns
  for(const time of TIMES)for(const track of CAR_TRACKS){
    const session=getCarSession(track.id,time);
    const report=trafficAudit(session,.1);
+   console.log('TRAFFIC_DIAGNOSTIC',JSON.stringify({
+     session:session.key,unsafePairs:report.unsafePairs,
+     minSpeed:Number(report.minimumVisualSpeed.toFixed(2)),
+     maxSpeed:Number(report.maximumVisualSpeed.toFixed(2)),
+     sideChanges:report.sideChanges,closest:Number(report.closestClearance.toFixed(2))
+   }));
    assert.equal(report.unsafePairs,0,
      'UNSAFE visual body collision on '+session.key+': '+JSON.stringify(report));
    assert.ok(report.closestClearance>=-.01);
