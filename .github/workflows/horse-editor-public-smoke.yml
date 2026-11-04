@@ -1,0 +1,44 @@
+name: Horse Atelier live deployment check
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/horse-editor-public-smoke.yml'
+      - 'admin/horses/**'
+      - 'api/horse-*.php'
+      - 'racers/racers.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-public-horse-editor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check public Hostinger endpoints and private admin auth
+        shell: bash
+        env:
+          ORIGIN: https://race.cryptodromo.com
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 15); do
+            public_status=$(curl -LsS --connect-timeout 6 --max-time 15 -o /tmp/horse-profiles.json -w '%{http_code}' "$ORIGIN/api/horse-profiles.php?audit=$GITHUB_SHA" || true)
+            racer_status=$(curl -LsS --connect-timeout 6 --max-time 15 -o /tmp/racers.js -w '%{http_code}' "$ORIGIN/racers/racers.js?audit=$GITHUB_SHA" || true)
+            admin_status=$(curl -LsS --connect-timeout 6 --max-time 15 -o /tmp/horse-admin.txt -w '%{http_code}' "$ORIGIN/admin/horses/" || true)
+            echo "Attempt $attempt: profiles=$public_status racers=$racer_status admin=$admin_status"
+            if [[ "$public_status" == 200 && "$racer_status" == 200 ]] \
+              && grep -q 'cryptodromo-horses-v1' /tmp/horse-profiles.json \
+              && grep -q 'fetchPublishedHorseProfiles' /tmp/racers.js \
+              && [[ "$admin_status" == 401 ]]; then
+                echo 'PASS: published public profile API, racer integration and protected editor on Hostinger.'
+                exit 0
+            fi
+            if [[ "$public_status" == 200 && "$racer_status" == 200 ]] \
+              && grep -q 'cryptodromo-horses-v1' /tmp/horse-profiles.json \
+              && [[ "$admin_status" == 503 ]]; then
+                echo 'Hostinger PHP files deployed, but admin credentials are not configured.'
+            fi
+            sleep 12
+          done
+          echo 'Live editor deployment could not be verified. Check Hostinger sync, PHP and admin credentials.'
+          exit 1
