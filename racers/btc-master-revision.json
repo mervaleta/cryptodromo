@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-hindquarters-20261104-v5",
-  "status": "needs_fix",
-  "statusLabel": "Modelo en revisión · defectos visibles pendientes",
+  "buildId": "btc-master-spherical-eyes-20261104-v8",
+  "status": "pending_deploy",
+  "statusLabel": "Ojos esféricos Three.js con iris configurable · QA pendiente",
   "updatedAt": "2026-11-04",
-  "note": "Registro inicial de comparación: no se modificó el modelo en esta iteración.",
+  "note": "Iteración 3: ambos ojos usan geometría esférica real skinned a Head con sombreado separado de iris eyeColor y pupila horizontal negra; pendientes capturas e inspección pública.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Pelos largos colgantes bajo la crin en el lateral del cuello",
-    "Separación excesiva entre los mechones laterales de la crin",
-    "Posible hueco/transparencia detrás de las orejas",
-    "Globo ocular y pupila equina grande; iris editable desde EyeColor"
+    "Validar visibilidad del globo ocular e iris desde ambos perfiles y en Gallop",
+    "Revisar cierre de orejas con cámaras superiores y posteriores",
+    "Validar recorte y continuidad natural de la crin",
+    "Pulido de proporciones y rendimiento de doce caballos"
   ],
   "nextPhase": {
     "status": "blocked",
