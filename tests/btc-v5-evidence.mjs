@@ -88,6 +88,7 @@ try{
   assert.equal(state.heroGroom.source,'original-skinned-glb');
   assert.ok(state.heroGroom.silkLocks>=140,'V5 lock topology not updated');
   assert.ok(state.heroGroom.silkShellVertices>=60000,'V5 silk masses not updated');
+  assert.equal(state.heroGroom.nativeTailBones,7,'V5 tail must use seven native Gallop bones');
   console.log('BTC_V5_VS_V4_RENDER',view,JSON.stringify(score));
  }
  writeFileSync(out+'/v4-v5-pixel-comparison.json',JSON.stringify(result,null,2));
