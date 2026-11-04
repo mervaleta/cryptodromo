@@ -11,8 +11,7 @@ const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
 ]});
 const context=await browser.newContext({
- viewport:{width:1390,height:920},deviceScaleFactor:1,reducedMotion:'no-preference',
- recordVideo:{dir:root,size:{width:1390,height:920}}
+ viewport:{width:1160,height:780},deviceScaleFactor:1,reducedMotion:'no-preference'
 });
 const page=await context.newPage();
 const errors=[];
@@ -70,8 +69,5 @@ try{
  assert.equal(await page.evaluate(()=>Boolean(window.__cryptodromoBTCAtelierQA)),false);
  assert.deepEqual(errors,[],errors.join('; '));
  console.log('BTC_V5_MOTION_PIXELS_AND_ROLLBACK_OK');
- // Record REAL moving Gallop. Retains GLB and V5 hair, unlike generated illustration.
- await page.goto('http://127.0.0.1:8799/racers/?btcPass=10#BTC',{waitUntil:'domcontentloaded'});
- await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.pass===10,null,{timeout:100000});
- await page.waitForTimeout(2400);
+ // A separate public browser workflow records the final moving video.
 }finally{await page.close();await context.close();await browser.close();}
