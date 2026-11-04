@@ -6,7 +6,7 @@
  */
 import * as THREE from 'three';
 const PI=Math.PI;
-const EYE={x:.002235,y:-.02814,z:.04257,radius:.000385};
+const EYE={x:.00185,y:-.02831,z:.04268,radius:.000385};
 function eyelid(source,head,coatColor,upper){
  const geometry=new THREE.BufferGeometry(),positions=[],joints=[],weights=[],tints=[],indices=[];
  const SEG=48,ROWS=3,arc=upper?0:PI;
@@ -19,8 +19,8 @@ function eyelid(source,head,coatColor,upper){
     // Soft, elliptical skin fold at the globe edge. Both parts follow the
     // exact same Head transform and use a single continuous radial strip.
     const yy=Math.cos(a),zz=Math.sin(a);
-    const ry=.000345+.000195*t,rz=.000307+.000184*t;
-    const outer=EYE.x+.000245-.000038*t;
+    const ry=.000635+.000245*t,rz=.000710+.000230*t;
+    const outer=EYE.x+.000495-.000055*t;
     const sculpt=(1-Math.cos(a*2))*.000019*(1-t);
     const x=side*(outer+sculpt);
     const y=EYE.y+ry*yy;
