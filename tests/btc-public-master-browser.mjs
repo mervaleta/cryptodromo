@@ -21,7 +21,7 @@ try {
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.symbol==='BTC'&&s?.variant==='maya'&&
     s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
-    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.facialSurfaces>=2&&
+    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.integratedEyeRims===2&&
     s?.clips?.includes('Gallop')&&s?.drawCalls>0;
  },null,{timeout:120000});
  const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
@@ -47,6 +47,7 @@ try {
   // Production must serve the **new mesh**, not only the old v12 page.
  assert.equal(s.heroGroom.harmonyBuild,'btc-master-procedural-hind-groom-20261104-v12-fx2');
  assert.equal(s.heroGroom.eyeCenterX,.00185,'real cornea depth in canonical BTC fiche');
+ assert.equal(s.heroGroom.facialSurfaces,0,'real eyelids must not be detached pieces');
  assert.ok(s.heroGroom.pollAnchoredVertices>10,'stable native skinning at skull-crest');
  assert.ok(s.heroGroom.fineLocks>=1000,'real fine hair density');
  await page.waitForFunction(()=>Math.abs(window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.tailInertia||0)>.005,
