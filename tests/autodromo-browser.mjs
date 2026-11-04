@@ -16,6 +16,27 @@ try{
   assert.equal(state.carCount,12);assert.equal(state.rosterCount,100);
   assert.equal(state.synthetic,true);
   assert.equal(await page.locator('#garage-grid .car-card').count(),100);
+  assert.equal(state.overtakingSystem,'traffic-director-v1');
+  // World coordinates, not merely scoreboard metrics: no more ghosting bodies.
+  const geometrical=await page.evaluate(()=>{
+    const qa=window.__cryptodromoAutodromoQA;
+    const audit=qa.auditTraffic(.1);
+    let closest=Infinity;
+    const checks=[0,1,4,8,12,17,23,29,36,44,51,58,60];
+    for(const sec of checks){
+      const positions=qa.inspectTraffic(sec);
+      for(let i=0;i<positions.length;i++)for(let j=i+1;j<positions.length;j++){
+        const a=positions[i].world,b=positions[j].world;
+        if(!a||!b)throw new Error('Missing circuit projection');
+        const distance=Math.hypot(a.x-b.x,a.z-b.z);
+        closest=Math.min(distance,closest);
+      }
+    }
+    return {audit,closest};
+  });
+  assert.equal(geometrical.audit.unsafePairs,0,'No body intersections through interpolated passing');
+  assert.ok(geometrical.audit.sideChanges>0,'Must change lanes during a race');
+  assert.ok(geometrical.closest>6.0,'No world-space center collision on sampled turns: '+JSON.stringify(geometrical));
   assert.equal(await page.locator('#standings li').count(),12);
   await page.screenshot({path:'/tmp/autodromo-vector-desktop.png'});
   for(const trackId of ['genesis','vint-cerf','muybridge']){

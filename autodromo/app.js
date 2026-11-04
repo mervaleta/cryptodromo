@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {createFormulaCar} from './car.js';
 import {createCarCircuit} from './circuit.js?v=autodromo-pole-2';
+import {trafficAt,trafficAudit,getTrafficPlan} from './traffic.js?v=autodromo-overtake-1';
 import {CAR_TRACKS,CAR_ROSTER,carTrack,getCarSession,positionsAt,resultsAtFinish} from './logic.js?v=autodromo-pole-2';
 import {tripleLiveSlot} from '../visual-lab/tripleLiveSchedule.js';
 
@@ -48,6 +49,8 @@ function setSession(next){
  if(!next||next.key===oldSessionKey)return;
  releaseCars();
  session=next;oldSessionKey=next.key;lastUI=-1;
+ // Build immutable, frame-rate-independent traffic paths for this one race.
+ getTrafficPlan(session);
  if(scene){
   for(let i=0;i<session.fixture.entries.length;i++){
    const entry=session.fixture.entries[i],car=carFor(entry);
@@ -144,7 +147,7 @@ function updateBroadcast(seconds,clock){
 }
 function renderCarPositions(seconds,delta){
  if(!circuit||!session||!cars.length)return;
- const rows=positionsAt(session,seconds);
+ const rows=trafficAt(session,seconds);
  const places=new Map(rows.map(r=>[r.symbol,r]));
  for(const actor of cars){
   const row=places.get(actor.symbol);
@@ -152,7 +155,8 @@ function renderCarPositions(seconds,delta){
   // Camera and geometry consume only the visual projection; ranking stays official.
   const point=circuit.pose(row.visualMeters,row.sideMeters);
   actor.car.root.position.set(point.x,point.y,point.z);
-  actor.car.root.rotation.y=point.heading;
+  // The visual nose gently points into its lane change, rather than strafing.
+  actor.car.root.rotation.y=point.heading+row.steering;
   if(actor.lastMeters!==null&&row.meters>=actor.lastMeters)
     actor.car.updateWheelRotation(row.meters-actor.lastMeters);
   actor.lastMeters=row.meters;
@@ -268,7 +272,14 @@ window.__cryptodromoAutodromoQA={
     fixtureVersion:session?.fixture.fixtureVersion,trackNames:CAR_TRACKS.map(x=>x.name),
     winner:session?.official[0]?.entry.symbol,pole:session?.grid[0]?.symbol,stagingGrid,
     grid:session?.grid.map(g=>({symbol:g.symbol,position:g.position,row:g.row,column:g.column,backMeters:g.backMeters})),
-    synthetic:true})
+    overtakingSystem:'traffic-director-v1',
+    synthetic:true}),
+ inspectTraffic:(seconds)=>session?trafficAt(session,seconds).map(r=>({
+   symbol:r.symbol,trackMeters:r.trackMeters,visualMeters:r.visualMeters,
+   sideMeters:r.sideMeters,steering:r.steering,
+   world:circuit?circuit.pose(r.visualMeters,r.sideMeters):null
+ })):[],
+ auditTraffic:(step=.2)=>session?trafficAudit(session,step):null
 };
 showGarage();initThree();setSession(currentSession(new Date()));
 frameId=requestAnimationFrame(animate);

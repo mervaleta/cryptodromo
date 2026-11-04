@@ -23,7 +23,7 @@ jobs:
             echo "Attempt $attempt: checking $base/autodromo/"
             status=$(curl -L --connect-timeout 10 --max-time 30 -sS -o /tmp/autodromo-live.html -w '%{http_code}' "$base/autodromo/?check=20261104" || true)
             echo "HTTP $status, bytes $(wc -c < /tmp/autodromo-live.html 2>/dev/null || echo 0)"
-            if [ "$status" = 200 ] && grep -q 'El mercado' /tmp/autodromo-live.html && grep -q 'autodromo-pole-2' /tmp/autodromo-live.html && grep -q 'id="pole-label"' /tmp/autodromo-live.html; then
+            if [ "$status" = 200 ] && grep -q 'El mercado' /tmp/autodromo-live.html && grep -q 'autodromo-overtake-1' /tmp/autodromo-live.html && grep -q 'id="pole-label"' /tmp/autodromo-live.html; then
               ok=1
               break
             fi
@@ -33,11 +33,12 @@ jobs:
             echo "::error::Hostinger is NOT serving the new autódromo HTML; GitHub merge does not imply deployment."
             exit 1
           fi
-          for file in autodromo/app.js autodromo/logic.js autodromo/car.js autodromo/circuit.js autodromo/style.css race-lab/source/src/data/officialRace.js; do
+          for file in autodromo/app.js autodromo/traffic.js autodromo/logic.js autodromo/car.js autodromo/circuit.js autodromo/style.css race-lab/source/src/data/officialRace.js; do
             url="$base/$file?check=20261104"
             status=$(curl -L --connect-timeout 10 --max-time 30 -sS -o /tmp/autodromo-asset -w '%{http_code}' "$url" || true)
             echo "$file: HTTP $status, bytes $(wc -c < /tmp/autodromo-asset)"
             test "$status" = 200 || { echo "::error::$file unavailable"; exit 1; }
           done
           grep -q 'createOfficialRace' <(curl -fsSL "$base/autodromo/logic.js?check=20261104")
-          echo "AUTODROMO_PUBLIC_POLE_GRID_HTTP_OK"
+          grep -q 'traffic-director-v1' <(curl -fsSL "$base/autodromo/app.js?check=20261104")
+          echo "AUTODROMO_PUBLIC_OVERTAKING_HTTP_OK"
