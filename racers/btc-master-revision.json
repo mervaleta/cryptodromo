@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-procedural-hind-groom-20261104-v12",
-  "status": "needs_fix",
-  "statusLabel": "v12 publicado y verificado en Hostinger · crin corregida; articulación posterior aún requiere refinamiento",
+  "buildId": "btc-hind-pose-volume-20261104-v13",
+  "status": "pending_deploy",
+  "statusLabel": "v13 · volumen del muslo estabilizado durante Gallop con doble cuaternión · pendiente QA y despliegue",
   "updatedAt": "2026-11-04",
-  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final.",
+  "note": "v13: corrige el adelgazamiento del muslo trasero en determinadas poses del Gallop. Se mantiene la escultura y el pelaje procedural v12, pero se sustituye la deformación sinusoidal de piel por skinning de doble cuaternión (DQS) enmascarado exclusivamente a muslos y músculos posteriores; el resto continúa con el skinning original. El clip Gallop, huesos, cuatro cascos, colores de BTC y los 99 corredores restantes no se modifican. Pendiente validar 16 fases del ciclo en navegador y producción.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Revisar especialmente la transición anatómica muslo-corvejón en todas las fases del Gallop; aún se ven estrechamientos y siluetas poco naturales en perfil",
-    "Cotejar fase a fase con la referencia 212734.mp4 antes de modificar el rig o las curvas de animación de manera coordinada",
-    "Validar proporción, sombreado y continuidad de patas desde cámaras laterales y posteriores en alta resolución",
-    "Mantener crin compacta sin volver a introducir filamentos colgantes y garantizar rendimiento en 12 corredores"
+    "Revisar las 16 capturas del ciclo Gallop desde perfil para confirmar volumen y articulación del muslo constantes",
+    "Comprobar 4 fases adicionales de frente y desde atrás para excluir abultamientos anómalos",
+    "Cotejar continuidad visual en unión muslo-corvejón y ausencia de hundimientos en la cadera",
+    "Validar en Hostinger el build v13 y repetición correcta del ciclo antes de marcar verified"
   ],
   "nextPhase": {
     "status": "blocked",
