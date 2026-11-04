@@ -1,10 +1,7 @@
 /**
- * BTC Maya groom: continuous root-to-tip curved ribbon locks on the user's
- * sculpted 2017 horse, skinned to the unchanged real Gallop skeleton.
- *
- * A crossover of directional ribbons gives a three-dimensional hair silhouette
- * at all camera angles, without tubular 'spaghetti' geometry. Major overlapping
- * locks form the primary shape; hairline-fine overlapping cards soften the edge.
+ * BTC Maya groom: rounded procedural strands + scalp bed on the original
+ * 2017 Maya skinned horse. Shorter rooted crest removes loose neck filaments;
+ * procedural cuticle grain restores detail without hundreds of dangling fibers.
  */
 import * as THREE from 'three';
 const PI=Math.PI,TAU=2*PI;
@@ -95,10 +92,10 @@ function createHairMass(source,skinAt,{
    :crown
     ?(major?.00255+.00125*seed:.00210+.00105*seed)
    :hero
-    ?(.0071+.0041*seed)
+    ?(.00435+.00165*seed)
    :tail
     ?(major?.020+.0070*seed:.018+.0075*seed)
-    :(major?.0083+.0028*seed:.0064+.0031*seed))*
+    :(major?.00505+.00155*seed:.00225+.00085*seed))*
       size*(tail||forelock||crown||hero?1:(.70+.30*smooth(f/.29))*clamp((-.0038-root[1])/.008,.15,1));
   const breadth=(tail
    ?(major?.00070+.00032*seed:.000100+.000085*seed)
@@ -122,9 +119,9 @@ function createHairMass(source,skinAt,{
     // Every guide has a different arch and a naturally tapering lifted tip.
     const flow=t*.72+.28*t2;
     const cy=Math.min(-.00455,root[1]+length*flow);
-    const arch=(.00265+.00125*seed)*Math.sin(PI*t);
-    const tipRise=.00065*t2*t2*(.7+.3*seed);
-    x=root[0]+side*(.00030+(.00130+.00050*seed)*t2);
+    const arch=(.00130+.00048*seed)*Math.sin(PI*t);
+    const tipRise=.00018*t2*t2*(.7+.3*seed);
+    x=root[0]+side*(.00010+(.00046+.00018*seed)*t2);
     y=cy+.00015*Math.sin(PI*t)*(seed-.5);
     z=crest(cy)+.00016+arch+tipRise+
       .00023*Math.sin(PI*2.5*t+seed*5)*t2;
@@ -164,10 +161,10 @@ function createHairMass(source,skinAt,{
     // The large, smooth "calligraphic" mane is made of feathered layers:
     // it starts on the poll, flows down the full neck and finishes in
     // overlapping tapered curls. Stronger silhouette, fewer dark wires.
-    const lift=.00128*Math.sin(PI*t)*(.68+.32*seed);
-    const drape=(.00042+.00030*seed)*t2;
+    const lift=.00118*Math.sin(PI*t)*(.68+.32*seed);
+    const drape=(.00009+.00012*seed)*t2;
     // Locks sit on the crest; the previous wide sweep detached at the shoulder.
-    const outward=(.00048+.00071*seed)*(.20*rearward+.80*t2);
+    const outward=(.00019+.00019*seed)*(.26*rearward+.74*t2);
     x=root[0]+side*(outward+.00009*Math.sin(PI*t));
     y=Math.min(-.00455,cy+.00013*Math.sin(PI*t*1.2+seed*2.8)*t2);
     z=neckZ+.00018+lift-drape+
@@ -175,7 +172,7 @@ function createHairMass(source,skinAt,{
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
     // Physically trim low fibers: no alpha masking or recoloring.
-    z=Math.max(z,crest(y)-.00047);
+    z=Math.max(z,crest(y)+.000035);
    }
    return [x,y,z];
   }
@@ -299,24 +296,24 @@ function createHairMass(source,skinAt,{
   shader.uniforms.mayaWind=motion.wind;
   shader.uniforms.mayaGait=motion.gait;
   shader.vertexShader=shader.vertexShader.replace('#include <common>',
-   '#include <common>\nattribute float mayaHairTip;\nattribute float mayaHairId;\nattribute float mayaHairTail;\nvarying vec2 vMayaHair;\nuniform float mayaTime;\nuniform float mayaWind;\nuniform float mayaGait;');
+   '#include <common>\nattribute float mayaHairTip;\nattribute float mayaHairId;\nattribute float mayaHairTail;\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;\nuniform float mayaTime;\nuniform float mayaWind;\nuniform float mayaGait;');
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-   '#include <begin_vertex>\nvMayaHair=vec2(mayaHairTip,mayaHairId);\nfloat hairElastic=pow(smoothstep(.03,.97,mayaHairTip),2.0);\nfloat hairWave=sin(mayaTime*mix(4.2,2.6,mayaHairTail)-mayaHairTip*6.8+mayaHairId*.24);\nfloat hairFollow=sin(mayaGait*6.283185307-mix(.6,1.55,mayaHairTail))*mix(.00023,.00057,mayaHairTail);\ntransformed.x+=hairElastic*mayaWind*hairWave*mix(.000095,.00032,mayaHairTail);\ntransformed.y+=hairElastic*(hairFollow+mayaWind*hairWave*.00011);\ntransformed.z+=hairElastic*hairFollow*.28;');
+   '#include <begin_vertex>\nvMayaHairRest=position;\nvMayaHair=vec2(mayaHairTip,mayaHairId);\nfloat hairElastic=pow(smoothstep(.03,.97,mayaHairTip),2.0);\nfloat hairWave=sin(mayaTime*mix(4.2,2.6,mayaHairTail)-mayaHairTip*6.8+mayaHairId*.24);\nfloat hairFollow=sin(mayaGait*6.283185307-mix(.6,1.55,mayaHairTail))*mix(.00023,.00057,mayaHairTail);\ntransformed.x+=hairElastic*mayaWind*hairWave*mix(.000095,.00032,mayaHairTail);\ntransformed.y+=hairElastic*(hairFollow+mayaWind*hairWave*.00011);\ntransformed.z+=hairElastic*hairFollow*.28;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
-   '#include <common>\nvarying vec2 vMayaHair;');
+   '#include <common>\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\ndiffuseColor.rgb*=hairRootShade+hairCuticle;');
+   '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.028*btcCuticle+.012*btcFineCoat,.88,1.10);');
  };
- mat.customProgramCacheKey=()=>tail?'btc-hero-solid-tail-v11b':'btc-hero-solid-mane-v11b';
+ mat.customProgramCacheKey=()=>tail?'btc-hero-solid-tail-v12':'btc-compact-sculpted-mane-cuticle-v12';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
- return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112,heroLocks:tail?0:56,rootBedVertices,solidRingSides:SIDES};
+ return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112,heroLocks:tail?0:56,rootBedVertices,solidRingSides:SIDES,looseNeckFibers:tail?0:neckOutliers,proceduralHairTexture:!tail};
 }
 
 export function createMayaGroom(source,skinAt,{
  maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e'
 }={}){
  const motion={time:{value:0},wind:{value:1},gait:{value:0}};
- const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:272,
+ const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:48,
   size:clamp(maneSize,.6,1.9),color:maneColor,motion});
  const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:192,
   size:clamp(tailSize,.6,1.9),color:tailColor,motion});
@@ -329,6 +326,8 @@ export function createMayaGroom(source,skinAt,{
   heroLocks:mane.heroLocks,
   solidRingSides:mane.solidRingSides,
   rootBedVertices:mane.rootBedVertices,
+  looseNeckFibers:mane.looseNeckFibers,
+  proceduralHairTexture:mane.proceduralHairTexture,
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
    motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
