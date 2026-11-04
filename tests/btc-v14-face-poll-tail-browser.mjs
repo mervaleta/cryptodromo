@@ -25,8 +25,8 @@ try{
  const initial=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  const hero=initial.heroGroom;
  assert.equal(hero.eyeGlobes,2);
- assert.equal(hero.eyeGeometry,'shared-eye-lid-frame-v14');
- assert.equal(hero.faceContinuity,'single-eye-frame-head-skinned-v14');
+ assert.equal(hero.eyeGeometry,'native-eleven-edge-socket-v15');
+ assert.equal(hero.faceContinuity,'native-11-edge-closed-orbits-v15');\n assert.equal(hero.eyeSocketVertices,22);\n assert.ok(hero.eyeRecess>.0002);
  assert.ok(hero.pollStabilizedVertices>15,'Native Head->Neck3 must actually reweight the nape');
  assert.ok(hero.hairFinish.maneRoughness>=.78);
  assert.ok(hero.hairFinish.maneSheen<=.20);
