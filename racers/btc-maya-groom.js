@@ -75,8 +75,8 @@ function createHairMass(source,skinAt,{
   // Physically plausible hair: shorter layered crest, tapered fine fibers and
   // a weighted tail fan. Previous groom was an oversized solid brown curtain.
   const length=(tail
-   ?(major?.019+.0045*seed:.0155+.006*seed)
-   :(major?.0053+.00215*seed:.0038+.00255*seed))*size;
+   ?(major?.019+.0050*seed:.015+.007*seed)
+   :(major?.0048+.00215*seed:.0036+.00265*seed))*size;
   const breadth=(tail
    ?(major?.00027+.00013*seed:.000065+.000075*seed)
    :(major?.00039+.00015*seed:.000048+.000067*seed));
@@ -85,23 +85,30 @@ function createHairMass(source,skinAt,{
    const t2=smooth(t),w=Math.pow(1-t,.81)*(0.72+0.28*Math.sin(PI*t));
    let x,y,z;
    if(tail){
-    const naturalFall=t*.80+.20*t2;
-    const fan=(seed-.5)*(.0034*Math.sin(PI*t)+.0016*t2);
-    x=root[0]+fan+.00045*Math.sin(t*TAU+seed*4)*t2;
-    y=root[1]+.00055*Math.sin(PI*t)+(.0008+.0008*crossSeed)*t2;
-    z=root[2]-length*naturalFall+.00042*Math.sin(PI*t*1.35+seed)*t2;
+    // A live galloping horse streams its tail back from the dock, rather
+    // than suspending a vertical curtain behind the hind legs. Target is
+    // the supplied 212734.mp4 silhouette, never a still frame substitute.
+    const flow=t*.84+.16*t2;
+    const fan=(seed-.5)*(.0031*Math.sin(PI*t)+.0014*t2);
+    x=root[0]+fan+.00042*Math.sin(t*TAU+seed*4)*t2;
+    y=root[1]+length*flow+.00045*Math.sin(PI*t);
+    z=root[2]-(.0044+.0020*crossSeed)*flow
+      +.00095*Math.sin(PI*t)*(.5+.5*seed);
     if(ribbon===0)x+=cross*breadth*w;
-    else y+=cross*breadth*.48*w;
+    else z+=cross*breadth*.42*w;
    }else{
-    // The mane lies against the crest instead of spreading into a huge
-    // shoulder-length veil; root motion stays zero.
-    const outflow=(.0021+.0009*seed)*(t*.47+.53*t2);
-    x=root[0]+side*(outflow+.00024*Math.sin(PI*t));
-    y=root[1]+(.00035+.00065*crossSeed)*t2;
-    z=root[2]-length*(.48*t+.52*t2)
-      +(.00018+.00010*seed)*Math.sin(PI*t);
-    if(ribbon===0)y+=cross*breadth*w;
-    else x+=side*cross*breadth*.33*w;
+    // A true swept crest: hairs grow backward along the mane, close to
+    // the neck. They do not fall vertically over the cheek and shoulders.
+    const rearward=t*.78+.22*t2;
+    const cy=root[1]+length*rearward;
+    const neckZ=crest(cy);
+    const lift=.00052*Math.sin(PI*t)*(.65+.35*seed);
+    const outward=(.00042+.00037*seed)*rearward;
+    x=root[0]+side*(outward+.00018*Math.sin(PI*t));
+    y=cy;
+    z=neckZ-.00066+lift-(.00036+.00034*crossSeed)*t2;
+    if(ribbon===0)z+=cross*breadth*w;
+    else x+=side*cross*breadth*.50*w;
    }
    return [x,y,z];
   }
