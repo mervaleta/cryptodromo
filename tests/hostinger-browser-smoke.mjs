@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const url='https://race.cryptodromo.com/';
+const url='https://race.cryptodromo.com/stadiums/crypto/broadcast/?track=muybridge';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl']});
 let errors=[];
 try {
