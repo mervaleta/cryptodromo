@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test gate contracts and choreography
-        run: node --test tests/alpha20-gates.mjs tests/alpha20-gate-choreography.mjs tests/alpha20-scene-integration.mjs
+        run: node --test tests/alpha20-gates.mjs tests/alpha20-gate-choreography.mjs tests/alpha20-scene-integration.mjs tests/alpha20-gate-logos.mjs
       - name: Parse source as modules
         run: |
           cp visual-lab/broadcastGates.js /tmp/crp-broadcast-gates.mjs
