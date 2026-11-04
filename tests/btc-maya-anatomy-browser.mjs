@@ -47,7 +47,7 @@ try{
  assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
  assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must remain anatomically sized');
   assert.equal(start.heroGroom.eyeCenterX,.00185,'cornea must be visible beyond the Maya socket');
-  assert.equal(start.heroGroom.eyeAssembly,'concentric-skinned-palpebra-v14');
+  assert.equal(start.heroGroom.eyeAssembly,'integrated-maya-eyelid-shading-v15');
   assert.equal(start.heroGroom.eyeApertureBorders,22);
   assert.equal(start.heroGroom.eyeApertureCenters,2);
   assert.equal(start.heroGroom.integratedEyeApertureTriangles,22);
@@ -62,8 +62,9 @@ try{
  assert.equal(start.heroGroom.irisEditable,true,'published eyeColor drives iris shader');
  assert.equal(start.heroGroom.blackEquinePupils,true,'pupils must stay black and horizontally elongated');
  assert.ok(start.heroGroom.earTriangles>=800,'ears must be real skinned 3D leaves, not image sprites');
- assert.ok(start.heroGroom.facialSurfaces>=2,'rigged eyelids, nostril contours and tear ducts required');
- assert.ok(start.heroGroom.facialTriangles>=280,'symmetrical skinned upper/lower eyelids must exist');
+ assert.equal(start.heroGroom.facialSurfaces,0,'external floating eyelid strips are forbidden');
+  assert.equal(start.heroGroom.integratedEyeRims,2,'both lids are shaded on native Maya face');
+ assert.equal(start.heroGroom.facialTriangles,0,'no detached eyelid geometry may remain');
  assert.ok(start.heroGroom.fineLocks>=650,'full layered mane and tail required');
  assert.equal(start.heroGroom.modelPreserved,true);
  assert.equal(start.heroGroom.gallopPreserved,true);
