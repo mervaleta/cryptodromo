@@ -50,7 +50,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const pedestalRing=new THREE.Mesh(new THREE.TorusGeometry(1.86,.009,6,128),new THREE.MeshBasicMaterial({color:'#b9a268',toneMapped:false}));
  pedestalRing.rotation.x=Math.PI/2;pedestalRing.position.y=.043;scene.add(pedestalRing);
 
- let horse=null,hero=null,selected=null,selection=0,disposed=false,variant='enhanced',renderedSymbol=null,renderedVariant=null,frameHeld=false;
+ let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#45312c';
  const resize=()=>{
