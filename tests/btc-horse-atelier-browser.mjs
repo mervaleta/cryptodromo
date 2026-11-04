@@ -34,7 +34,7 @@ try{
  assert.equal(state.heroGroom?.animatedHair,true);
  assert.equal(state.heroGroom?.modelPreserved,true);
  assert.equal(state.heroGroom?.heroHooves,4);
- assert.equal(state.heroGroom?.motionType,'original-gallop-bones-plus-spring-fine-ribbons');
+ assert.equal(state.heroGroom?.motionType,'original-gallop-bones-plus-vertex-spring-solid-locks');
  assert.equal(new URL(page.url()).searchParams.has('atelier'),false,'BTC hero groom must run on the normal profile');
  assert.equal(state.jockey,false);
  assert.equal(await page.locator('#btc-atelier-panel').isVisible(),true);
