@@ -7,6 +7,7 @@ import {reframeCamera,countdownVisibility} from './cameraRig.js?v=alpha17-1';
 import {bindCameraPanel} from './cameraPanel.js?v=alpha17-1';
 import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
+import {createWinnerSlowMotion} from './winnerSlowMotion.js?v=winner-slowmo-20261104-v1';
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
@@ -375,6 +376,43 @@ let maneWind=.55; // matches stadium cloud wind; never affects the race engine
 let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
 let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
 const finishController=createFinishOrchestrator({holdAfterLast:2.4,maxVisualSeconds:19});
+const winnerReplay=createWinnerSlowMotion();
+const winnerReplayOverlay=document.getElementById('winner-replay');
+const winnerReplayName=document.getElementById('winner-replay-name');
+const winnerReplayProgress=document.getElementById('winner-replay-progress');
+let finishGateElapsed=0;
+function startWinnerReplay(){
+ if(finishController.state.crossedCount!==12||winnerReplay.state.phase!=='idle')return false;
+ const first=officialRanking(profiles)[0];
+ const index=horses.findIndex(h=>h.entry.symbol===first.entry.symbol);
+ if(!winnerReplay.begin(index,first.entry.symbol))return false;
+ winnerReplayName.textContent=first.entry.symbol;
+ winnerReplayOverlay.hidden=false;
+ winnerReplayProgress.style.width='0%';
+ finishCelebration.hidden=true;
+ status.textContent='🎞 REPETICIÓN DEL GANADOR · CÁMARA LENTA';
+ msg.textContent='El último corredor cruzó · repetimos al primero antes del acta oficial';
+ speakBroadcast('Cruzó el último caballo. Repetimos en cámara lenta la llegada del ganador.');
+ return true;
+}
+function renderWinnerReplay(){
+ const replay=winnerReplay.state;
+ if(!replay.active)return;
+ const finishMeters=officialRanking(profiles)[0].distanceAt60;
+ for(const horse of horses){
+  const meters=broadcastPosition(broadcastProfiles[horse.index],replay.sampleTime);
+  const progress=meters/finishMeters;
+  horse.progress=progress;
+  const p=trackPoint(layoutMode,progress,horse.index);
+  horse.model.root.position.set(p.x,0,p.z);
+  horse.model.root.rotation.y=p.heading;
+  horse.model.setBank?.(0);
+  horse.model.root.visible=true;
+  horse.visualSpeed=.6;
+ }
+ winnerReplayProgress.style.width=Math.round(replay.progress*100)+'%';
+ clockEl.textContent='0.5×';
+}
 const tvDirector=createBroadcastDirector({minDwell:5.5});
 let selectedTvShot='pack',lastDirectorUpdate=-Infinity;
 const biographyStats=buildRosterStats();
@@ -387,8 +425,9 @@ function showBiography(token){
    ' · mejor puesto: '+stats.bestPlace+' · '+stats.winRatePct.toFixed(1)+'% de victorias.';
 }
 function showOfficialResult(){
- if(finishShown)return;
+ if(finishShown||winnerReplay.state.active)return;
  finishShown=true;finished=true;
+ winnerReplayOverlay.hidden=true;
  splitPanel.update(Math.max(60,elapsed),{finishAuthorized:true});
  const stats=raceStatistics(profiles);officialSnapshot=stats;
  resultList.replaceChildren(...stats.entries.map(row=>{
@@ -454,6 +493,7 @@ function setRace(index){
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
  lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
  lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
+ winnerReplay.reset();finishGateElapsed=0;winnerReplayOverlay.hidden=true;
  finishController.reset();tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
  finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();hoofFX.reset();
@@ -606,7 +646,7 @@ function updateLiveProgram(){
     running=true;elapsed=Math.max(elapsed,now.slotSeconds);
   }
   else{
-   running=false;elapsed=60+RUNOUT_SECONDS;
+   running=winnerReplay.state.active;elapsed=60+RUNOUT_SECONDS;
    // A spectator may tune in AFTER the last horse has already crossed.
    // Verify the complete synthetic runout deterministically instead of
    // leaving an empty result overlay or fabricating an unobserved finish.
@@ -627,7 +667,7 @@ function updateLiveProgram(){
    }
    // Never publish an acta unless all 12 have actually crossed.
    const finishState=finishController.state;
-   if(finishState.revealed&&!finishShown){
+   if(finishState.revealed&&!finishShown&&!winnerReplay.state.active){
     showOfficialResult();
     for(const h of horses){h.model.root.visible=false;h.model.play('Idle');}
    }else if(!finishState.revealed)status.textContent='ESPERANDO CRUCE DE TODOS LOS CORREDORES';
@@ -944,6 +984,20 @@ applyLightingControls();
 const target=new THREE.Vector3(),goal=new THREE.Vector3(),cameraFocus=new THREE.Vector3();
 let cameraFocusReady=false;
 function adjustCamera(dt){
+ if(winnerReplay.state.active){
+  const replay=winnerReplay.state,horse=horses[replay.winnerIndex];
+  if(horse){
+   const p=trackPoint(layoutMode,horse.progress,horse.index);
+   goal.set(p.x-p.tangentX*16+p.sideX*12,4.7,p.z-p.tangentZ*16+p.sideZ*12);
+   target.set(p.x+p.tangentX*8,2.0,p.z+p.tangentZ*8);
+   const easing=1-Math.exp(-Math.max(.016,dt)*3.6);
+   camera.position.lerp(goal,easing);
+   cameraFocus.lerp(target,easing);
+   camera.lookAt(cameraFocus);
+   return;
+  }
+ }
+
  const avg=horses.length?horses.reduce((a,h)=>a+Math.min(1.12,h.progress),0)/horses.length:0;
  const point=trackPoint(layoutMode,avg,5.5);
  const tx=point.tangentX,tz=point.tangentZ,nx=point.sideX,nz=point.sideZ;
@@ -1141,8 +1195,11 @@ function animate(now,draw=true){
   }
   if(inRunout){
    if(!finished){finished=true;updateStandings();}
+   // Keep official-gate time monotonic while the picture replays its last seconds.
+   finishGateElapsed=Math.max(finishGateElapsed,elapsed,
+    (lastCrossedAt??elapsed)+(winnerReplay.state.active?winnerReplay.state.elapsed:0));
    const gate=finishController.update({
-     elapsed,distances:horses.map(h=>h.visualMeters),finishDistance:leaderMeters
+     elapsed:finishGateElapsed,distances:horses.map(h=>h.visualMeters),finishDistance:leaderMeters
    });
    const count=gate.crossedCount;
    if(count>previousCrossCount){previousCrossCount=count;finishCrossCount.textContent=count+' / 12';}
@@ -1153,16 +1210,27 @@ function animate(now,draw=true){
      msg.textContent='Esperamos el cruce del último corredor para mostrar el acta.';
      soundtrack.celebrate?.();
    }
-   if(gate.allCrossed&&lastCrossedAt===null)lastCrossedAt=gate.lastCrossAt;
-   if(gate.showOfficialResult)showOfficialResult();
+   if(gate.allCrossed&&lastCrossedAt===null){
+    lastCrossedAt=gate.lastCrossAt;
+    startWinnerReplay();
+   }
+   if(winnerReplay.state.active){
+    winnerReplay.advance(realSeconds);
+    renderWinnerReplay();
+    if(winnerReplay.state.complete){
+     winnerReplayOverlay.hidden=true;
+     if(finishController.state.revealed)showOfficialResult();
+    }
+   }
+   if(gate.showOfficialResult&&!winnerReplay.state.active)showOfficialResult();
    if(gate.overdue)status.textContent='ALERTA: VERIFICAR EL CRUCE DEL ÚLTIMO CABALLO';
    soundtrack.update(elapsed,weatherSelect.value,.65,trackType.value);
-   if(elapsed>=60+RUNOUT_SECONDS){
-    // Fail closed: never reveal the official overlay based on time alone.
+   if(elapsed>=60+RUNOUT_SECONDS&&!winnerReplay.state.active){
     if(finishController.state.revealed&&!finishShown)showOfficialResult();
-    running=false;
-    // The animals leave the shot; never leave twelve idle horses on the finish.
-    for(const h of horses){h.model.root.visible=false;h.model.play('Idle');}
+    if(finishShown){
+     running=false;
+     for(const h of horses){h.model.root.visible=false;h.model.play('Idle');}
+    }
    }
   }
  }
@@ -1206,6 +1274,21 @@ setInterval(()=>{
  const now=performance.now();
  if(running&&now-last>140)animate(now,false);
 },85);
+if(new URLSearchParams(location.search).get('winner-replay-qa')==='1'){
+ window.__winnerReplayQA=Object.freeze({
+  snapshot:()=>({replay:winnerReplay.state,gate:finishController.state,
+   officialVisible:!resultsOverlay.hidden,active:running,
+   finishCount:previousCrossCount,runnerCount:horses.length,
+   winner:officialRanking(profiles)[0]?.entry.symbol}),
+  seekLastCross(){
+   if(horses.length!==12)return false;
+   liveFollowing=false;syncControlMode();setRace(raceIndex);
+   elapsed=60+RUNOUT_SECONDS-.32;running=true;
+   horses.forEach(h=>h.model.play('Gallop'));
+   return true;
+  }
+ });
+}
 // Opt-in QA seek for deterministic replay verification. Only present with
 // ?finish-qa=alpha06 and never changes official prices, doses or ranking.
 // Opt-in staging-only diagnostics. Never activates without the query token.
