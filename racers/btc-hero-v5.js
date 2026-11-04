@@ -10,7 +10,7 @@ export const BTC_HERO_V5='btc-v5-motion-study-20261103';
 const PI=Math.PI,TAU=PI*2;
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,Number(v)||0));
 const smooth=v=>{const x=clamp(v,0,1);return x*x*(3-2*x);};
-const gauss=(v,c,r)=>Math.exp(-((v-c)/r)**2);
+const gauss=(v,c,r)=>Math.exp(-Math.pow((v-c)/r,2));
 
 export function createBTCHeroV5(root,options={}){
  const pass=Math.floor(clamp(options.pass??10,1,10));
