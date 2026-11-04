@@ -1,0 +1,17 @@
+/* Scoped cashier polish. No real payment or money operations. */
+.cash{--acc-panel:#101e18;--acc-line:#385746;--acc-text:#f3f8f4;--acc-muted:#b2cabb;--acc-mint:#71edba;--acc-gold:#e8c58c}
+.cash .panel,.cash .stat{background:linear-gradient(153deg,#162e23,#0d1a14)!important;border:1px solid var(--acc-line)!important;border-radius:14px!important;box-shadow:0 12px 32px #0003}
+.cash .stats{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.cash .stat{min-width:0;overflow-wrap:anywhere}
+.cash .stat b{font-variant-numeric:tabular-nums;letter-spacing:-.035em;color:var(--acc-gold)!important;font-size:clamp(21px,2.2vw,32px)!important}
+.cash .tabs{gap:8px!important;padding:8px;border-radius:12px;border:1px solid #355743;background:#0d2017}
+.cash .tabs button{border-radius:8px!important;min-height:46px!important;flex:1 1 155px}
+.cash button:focus-visible,.cash input:focus-visible,.cash select:focus-visible,.cash a:focus-visible{outline:3px solid var(--acc-gold)!important;outline-offset:3px!important}
+.cash button.primary{background:var(--acc-mint)!important;color:#081d12!important;border-color:#9ff9d0!important}
+.cash input,.cash select{background:#07130f!important;border-color:#526d5b!important;color:var(--acc-text)!important;min-height:46px!important;font-size:16px!important}
+.cash .micro{color:var(--acc-muted)!important}
+.cash table{font-variant-numeric:tabular-nums}
+.cash th{color:#d5e7d7}
+.cash .notice{border-radius:8px;background:#2c281d!important;color:#f1e3cc!important}
+@media(max-width:1100px){.cash .stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:530px){.cash{padding-inline:14px!important}.cash .stats{grid-template-columns:1fr 1fr!important;gap:8px!important}.cash .stat{padding:12px!important}.cash .grid{grid-template-columns:1fr!important}.cash .panel{padding:14px!important}}

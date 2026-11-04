@@ -1,0 +1,22 @@
+name: Premium consumer MVP
+on:
+  pull_request:
+    paths:
+      - 'addons/premium-consumer/**'
+      - 'index.html'
+      - 'demo-caja/index.html'
+      - 'tests/premium-consumer-contract.mjs'
+      - '.github/workflows/premium-consumer.yml'
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate browser module syntax
+        run: node --check addons/premium-consumer/consumer.js
+      - name: Consumer isolation and UX contracts
+        run: node --test tests/premium-consumer-contract.mjs

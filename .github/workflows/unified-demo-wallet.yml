@@ -1,0 +1,30 @@
+name: Unified demo wallet
+on:
+  pull_request:
+    paths:
+      - 'api/demo-wallet*.php'
+      - 'api/stables.php'
+      - 'demo-caja/**'
+      - 'tests/unified-wallet-api.mjs'
+      - '.github/workflows/unified-demo-wallet.yml'
+  push:
+    branches: ['feat/unified-demo-wallet-20261103']
+jobs:
+  wallet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP and SQLite
+        run: |
+          php -v
+          php -m | grep -i sqlite
+          php -l api/demo-wallet-core.php
+          php -l api/demo-wallet.php
+          php -l api/stables.php
+      - name: Node integration against PHP sandbox
+        run: node --test tests/unified-wallet-api.mjs
+      - name: Existing sports API compatibility
+        run: node --test tests/stables-api.mjs
+      - name: Source syntax of cashier
+        run: node --check demo-caja/demo.js
