@@ -333,6 +333,7 @@ export function createMayaGroom(source,skinAt,{
   rootBedVertices:mane.rootBedVertices,
   looseNeckFibers:mane.looseNeckFibers,
   proceduralHairTexture:mane.proceduralHairTexture,
+  get tailInertia(){return motion.tailInertia.value;},
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
    motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
