@@ -63,7 +63,7 @@ function renderBTCRevision(){
 }
 async function loadBTCRevision(){
  try{
-  const response=await fetch('/racers/btc-master-revision.json?v=btc-master-procedural-hind-groom-20261104-v12',{cache:'no-store'});
+  const response=await fetch('/racers/btc-master-revision.json?v=btc-hind-pose-volume-20261104-v13',{cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
@@ -144,7 +144,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-master-procedural-hind-groom-20261104-v12':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-hind-pose-volume-20261104-v13':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -187,6 +187,8 @@ import(previewModule).then(({createPreview})=>{
   preview.setHairColor($('#btc-hair-color').value);
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
+  if(new URLSearchParams(location.search).get('btcFreeze')==='1')
+   window.__cryptodromoBTCAtelierAdvanceFrame=step=>preview?.debugAdvance?.(1,step)||null;
  }
  $('#preview-state').textContent=btcAtelier?'BTC · CABALLO ANATÓMICO · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
