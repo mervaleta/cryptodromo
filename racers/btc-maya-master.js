@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {createMayaGroom} from './btc-maya-groom.js';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
@@ -197,8 +198,22 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  };
  coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-maya-muzzle-v2';
  const hoof=new THREE.MeshStandardMaterial({
-  name:'BTC sculpted keratin',color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#39302a',roughness:.78,metalness:0
+  name:'BTC sculpted keratin with growth rings',color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#39302a',
+  roughness:.84,metalness:0,side:THREE.FrontSide
  });
+ // Keratin is layered, semi-matte horn. A subtle coronet/capsule transition,
+ // vertical horn growth and low-angle bounce replaces the single dark blob.
+ hoof.onBeforeCompile=shader=>{
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+   '#include <common>\nvarying vec3 vBTCHoofRest;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+   '#include <begin_vertex>\nvBTCHoofRest=position;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+   '#include <common>\nvarying vec3 vBTCHoofRest;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
+   '#include <color_fragment>\nfloat coronet=exp(-pow((vBTCHoofRest.z-.0025)/.00035,2.));\nfloat hornStriae=sin(vBTCHoofRest.y*48000.+vBTCHoofRest.x*8000.)*sin(vBTCHoofRest.x*39000.);\nfloat toeTone=smoothstep(.0005,.0027,vBTCHoofRest.z);\ndiffuseColor.rgb*=mix(.66,1.13,toeTone)*(1.0+.050*hornStriae+.075*coronet);');
+ };
+ hoof.customProgramCacheKey=()=> 'btc-maya-hoof-growth-and-coronet-v3';
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
@@ -257,6 +272,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
   maneSize,tailSize,maneColor:color,tailColor:color
  });
  const eyes=makeAnatomicalEyes(best,skinAt);
+ const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions);
  for(const h of hidden)h.obj.visible=false;
  // The original plastic eyes are hidden in favor of two inset glossy
  // equine eyes with the same skinned and animated head transform.
@@ -267,7 +283,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    originalRig:true,source:'supplied-Maya-2017-sculpt',
    sculptedBodyParts:1,vertices:anatomy.vertices,
    triangles:anatomy.triangles,oldHairHidden:!best.visible,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},
@@ -284,7 +300,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
   dispose(){
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
-   groom.dispose();
+   groom.dispose();face.dispose();
    eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());
