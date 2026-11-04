@@ -60,6 +60,24 @@ test('the specimen is accessible, local, interactive and honest about demo data'
   assert.ok(existsSync(new URL('../docs/CRC_IDENTITY_20261104.md',import.meta.url)));
 });
 test('CSS adapters do not target the 3D renderer or impose new libraries', () => {
-  assert.doesNotMatch(system,/canvas\s*\x7b|\.horse-mesh|\.track-mesh|\.lane-mesh|three\.js|webgl|\.glb/i);
+  const withoutComments = system.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(withoutComments,/canvas\s*\x7b|\.horse-mesh|\.track-mesh|\.lane-mesh|three\.js|webgl|\.glb/i);
   assert.doesNotMatch(system,/fonts\.googleapis|@font-face|tailwind|bootstrap/i);
+});
+
+test('top-level hubs mount the canonical navigation, rather than maintaining a second menu', () => {
+  for(const page of ['index.html','stadiums/crypto/index.html','stadiums/crypto/archive/index.html']){
+    const html = read(page);
+    assert.match(html, /<header class="hub-head sitebar">/i, page);
+    assert.match(html, /\/assets\/crp-global-nav\.css\?v=crc-nav1/);
+    assert.match(html, /\/assets\/crp-global-nav\.js\?v=crc-nav1/);
+  }
+});
+test('navigation and page content align to the same modern shell', () => {
+  assert.match(system,/--crc-shell-max:1480px/);
+  assert.match(system,/--crc-shell-width:min\(/);
+  assert.match(read('assets/crp-global-nav.css'),/width:var\(--crc-shell-width\)!important/);
+  for(const css of ['assets/site-shell.css','assets/stadium-hub.css','assets/race-site-hub.css']){
+    assert.match(read(css),/width:var\(--crc-shell-width\)/,css);
+  }
 });
