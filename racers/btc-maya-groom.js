@@ -358,6 +358,14 @@ export function createMayaGroom(source,skinAt,{
   looseNeckFibers:mane.looseNeckFibers,
   proceduralHairTexture:mane.proceduralHairTexture,
   get dynamics(){return spring.state;},
+  get hairFinish(){return {
+   maneRoughness:mane.mat.roughness,
+   maneSheen:mane.mat.sheen,
+   tailRoughness:tail.mat.roughness,
+   tailSheen:tail.mat.sheen,
+   maneStrands:mane.locks,
+   tailStrands:tail.locks
+  };},
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
    motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
