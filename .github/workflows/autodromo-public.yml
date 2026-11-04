@@ -39,6 +39,8 @@ jobs:
             echo "$file: HTTP $status, bytes $(wc -c < /tmp/autodromo-asset)"
             test "$status" = 200 || { echo "::error::$file unavailable"; exit 1; }
           done
-          grep -q 'createOfficialRace' <(curl -fsSL "$base/autodromo/logic.js?check=20261104")
-          grep -q 'traffic-director-v1' <(curl -fsSL "$base/autodromo/app.js?check=20261104")
+          curl -fsSL "$base/autodromo/logic.js?check=20261104" -o /tmp/autodromo-live-logic.js
+          grep -q 'createOfficialRace' /tmp/autodromo-live-logic.js
+          curl -fsSL "$base/autodromo/app.js?check=20261104" -o /tmp/autodromo-live-app.js
+          grep -q 'traffic-director-v1' /tmp/autodromo-live-app.js
           echo "AUTODROMO_PUBLIC_OVERTAKING_HTTP_OK"
