@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createStadiumVenue} from '/race-lab/source/src/stadium/venue.js';
-import {getStadiumPreset,WORLD_STADIUM_IDS} from '/race-lab/source/src/stadium/presets.js';
-import {buildThreeCoursePreview} from '/visual-lab/threeCoursePreview.js?v=satoshi-master-v2-20261104';
+import {createStadiumVenue} from '/race-lab/source/src/stadium/venue.js?v=satoshi-cachefix-20261104-v3';
+import {getStadiumPreset,WORLD_STADIUM_IDS} from '/race-lab/source/src/stadium/presets.js?v=satoshi-cachefix-20261104-v3';
+import {buildThreeCoursePreview} from '/visual-lab/threeCoursePreview.js?v=satoshi-cachefix-20261104-v3';
 // The stadium museum is independent from the alpha14 live race and its horse/camera pipeline.
 
 const $=id=>document.getElementById(id);
