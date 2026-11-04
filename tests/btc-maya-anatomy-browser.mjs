@@ -27,6 +27,9 @@ try{
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
+ assert.equal(start.heroGroom.heroHooves,4,'four visible, articulated hoof shells required');
+ assert.ok(start.heroGroom.hoofMeshVertices>=600,'actual hoof wall geometry required');
+ assert.ok(start.heroGroom.elevatedEarVertices>=20,'natural ear silhouette geometry required');
  assert.ok(start.heroGroom.facialSurfaces>=4,'rigged eyelids, nostril contours and tear ducts required');
  assert.ok(start.heroGroom.facialTriangles>200,'facial detail is actual 3D geometry');
  assert.ok(start.heroGroom.fineLocks>=900,'full layered mane and tail required');
