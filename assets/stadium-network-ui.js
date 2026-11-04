@@ -1,4 +1,4 @@
-import {STADIUMS,STADIUM_SLUGS,range,makeDay,getRoster} from '/assets/stadium-network-engine.js?v=world2';
+import {STADIUMS,STADIUM_SLUGS,range,makeDay,getRoster} from '/assets/stadium-network-engine.js?v=world3';
 (function worldApp(){
 'use strict';
 const root=document.getElementById('world-app');if(!root)return;
