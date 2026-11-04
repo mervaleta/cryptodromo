@@ -152,11 +152,26 @@ function buildPlan(session){
        assigned.push({index:row.index,target,side:states[row.index].side});
        states[row.index].target=target;
      }
+     // Predictive lane reservation includes the swept car body. Do not
+     // merge laterally into a neighbour before there is longitudinal room.
      for(const state of states){
        const difference=state.target-state.side;
        const step=MAX_LATERAL_RATE_METERS_PER_SECOND*TRAFFIC_STEP_SECONDS;
-       state.side+=clamp(difference,-step,step);
-       state.side=clamp(state.side,-21,21);
+       const proposed=clamp(state.side+clamp(difference,-step,step),-21,21);
+       let blocked=false;
+       for(const other of states){
+         if(other.index===state.index)continue;
+         const previousDistance=Math.abs(previous[state.index].visualMeters-
+           previous[other.index].visualMeters);
+         const currentSideGap=Math.abs(state.side-other.side);
+         const proposedSideGap=Math.abs(proposed-other.side);
+         if(proposedSideGap>=SAFE_LATERAL_METERS||proposedSideGap>=currentSideGap)continue;
+         const needed=SAFE_LONGITUDINAL_METERS*Math.sqrt(
+           1-(proposedSideGap/SAFE_LATERAL_METERS)**2
+         );
+         if(previousDistance<needed+3)blocked=true;
+       }
+       if(!blocked)state.side=proposed;
      }
    }
    const placed=safeVisualPlacement(rows,states,previous);
