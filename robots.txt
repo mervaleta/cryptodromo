@@ -1,0 +1,10 @@
+# Cryptódromo: indexar la demo pública, no interfaces privadas ni fuentes técnicas.
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /data/
+Disallow: /docs/
+Disallow: /market-fixture-v1/
+Disallow: /cryptodromo-gazette/private/
+Sitemap: https://race.cryptodromo.com/sitemap.xml
