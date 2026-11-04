@@ -137,3 +137,15 @@ html body:not(.hub) :is(.site-nav a,.navlinks a):focus-visible{outline:2px solid
 @media(max-width:900px){.crc-ui .crc-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:600px){.crc-ui .crc-grid{grid-template-columns:1fr;}.crc-ui .crc-card{padding:16px;}.crc-ui .crc-title{font-size:clamp(26px,8vw,36px);}.crc-ui .crc-table{font-size:12px;}.crc-ui .crc-table th,.crc-ui .crc-table td{padding:9px 10px;}.crc-ui .crc-button{min-height:44px;}}
 @media(prefers-reduced-motion:reduce){.crc-ui :is(*,::before,::after){scroll-behavior:auto;transition-duration:.01ms;animation-duration:.01ms;animation-iteration-count:1;}}
+
+/* Legacy stylesheet variable bridge, scoped to the document body; does not redefine runner colors. */
+html body:not(.hub){--bg:var(--crc-black);--panel:var(--crc-panel);--line:var(--crc-support-line);--ink:var(--crc-support-text);--muted:var(--crc-support-muted);--lime:var(--crc-green);--green:var(--crc-green);--mint:var(--crc-support-hover);background-color:var(--crc-black);color:var(--crc-support-text);}
+html body:not(.hub) .navlinks a[aria-current=page]{color:var(--crc-green);}
+html body:not(.hub) :is(.topline,.section,.metric,.faq details){border-color:var(--crc-support-line);}
+html body:not(.hub) :is(.panel,.card,.hub-card) :is(p,small){line-height:1.55;}
+/* Explicitly opt-in an adapted demo ledger and clock rather than changing all tables. */
+.crc-ui .crc-race-clock{font:750 clamp(30px,4vw,54px)/1 var(--crc-ticker-font);font-variant-numeric:tabular-nums;letter-spacing:-.025em;}
+.crc-ui .crc-standings{display:grid;gap:1px;background:var(--crc-support-line);border:1px solid var(--crc-support-line);}
+.crc-ui .crc-standing{display:grid;grid-template-columns:32px minmax(90px,1fr) minmax(80px,110px);gap:12px;align-items:center;background:var(--crc-surface);padding:9px 12px;font-size:13px;}
+.crc-ui .crc-standing [data-numeric]{text-align:right;font-variant-numeric:tabular-nums;}
+@media(max-width:600px){.crc-ui .crc-standing{gap:7px;padding:9px 8px;grid-template-columns:28px minmax(65px,1fr) minmax(70px,86px);}}
