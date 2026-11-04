@@ -11,12 +11,12 @@ import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-luxe-20261104-v3';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-luxe-20261104-v3';
 import {createBTCSculptedHooves} from './btc-maya-hooves.js?v=btc-maya-luxe-20261104-v3';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
-export const BTC_MAYA_RENDER_BUILD='btc-maya-luxe-20261104-v3';
+export const BTC_MAYA_RENDER_BUILD='btc-harmony-silhouette-20261104-v1';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
 const TAU=Math.PI*2;
-const shade=new THREE.Color('#32231d');
+const shade=new THREE.Color('#463126');
 function fromBase64(s){
  const binary=atob(s),out=new Uint8Array(binary.length);
  for(let i=0;i<binary.length;i++)out[i]=binary.charCodeAt(i);
@@ -146,15 +146,17 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   // The real ear tip lies BEHIND and BELOW its poll root in rest space.
   // Lift/rotate only that distal ear sheet; previously raising the poll
   // itself left a broad horizontal donkey ear unchanged.
-  const distal=smooth((y+.02630)/.00265);
-  const high=smooth((z-.04385)/.00145);
-  const outside=smooth((Math.abs(x)-.00105)/.00110);
-  const stop=1-smooth((y+.0228)/.00125);
-  const ear=distal*high*outside*stop;
-  if(ear<.015)continue;
-  positions[i]+=Math.sign(x)*.00014*ear;
-  positions[i+1]-=.00225*ear;
-  positions[i+2]+=.00345*ear;
+  // Fold the original lateral ear sheets inward, then point their outer
+  // tips upward. A recognisable two-pinna silhouette matters more here
+  // than fur pores. Root vertices remain fixed to the poll.
+  const high=smooth((z-.04365)/.00230);
+  const side=smooth((Math.abs(x)-.00105)/.00180);
+  const along=gauss(y,-.0269,.00215);
+  const ear=high*side*along;
+  if(ear<.012)continue;
+  positions[i]-=Math.sign(x)*.00078*ear;
+  positions[i+1]-=.00345*ear;
+  positions[i+2]+=.00525*ear;
   elevatedEarVertices++;
  }
  // Gentle anatomical correction in the actual supplied mesh, not added
@@ -167,11 +169,20 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const brow=gauss(y,-.0280,.0027)*gauss(z,.0433,.0021);
   const eyeSocket=gauss(y,-.02815,.00085)*gauss(z,.0425,.00074);
   const withers=gauss(y,-.014,.006)*gauss(z,.034,.005);
-  // The jaw is fuller, muzzle rounded and orbital ridge legible in profile.
-  const volume=1+.092*cheek+.068*masseter+.083*muzzle+.025*brow-.020*eyeSocket;
+  // Refined thoroughbred silhouette: a light throat, defined cheek plane,
+  // refined muzzle and a gentle S-curve rising from withers to poll.
+  const refinedMuzzle=gauss(y,-.0331,.00265)*gauss(z,.0360,.0040);
+  const poll=gauss(y,-.0264,.0036)*gauss(z,.0442,.00265);
+  const neck=gauss(y,-.016,.0077)*smooth((z-.028)/.009);
+  const throat=gauss(y,-.0245,.0048)*gauss(z,.032,.004);
+  const flank=gauss(y,.0053,.009)*gauss(z,.022,.009);
+  const belly=gauss(y,.001,.010)*gauss(z,.018,.006);
+  const volume=1+.075*cheek+.056*masseter-.033*refinedMuzzle+
+    .025*brow-.025*eyeSocket-.055*neck+.022*flank-.025*belly;
   positions[i]=x*volume;
-  positions[i+1]=y-.00024*muzzle-.00005*masseter;
-  positions[i+2]=z+.00016*brow+.00017*withers;
+  positions[i+1]=y+.00077*refinedMuzzle-.00006*masseter;
+  positions[i+2]=z+.00030*brow+.00050*withers+
+    .00052*poll+.00050*neck+.00026*belly-.00024*throat;
  }
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
@@ -243,9 +254,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
- const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#54382d');
+ const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#65402e');
  const accent=new THREE.Color(/^#[0-9a-f]{6}$/i.test(brandAccent||'')?brandAccent:'#f7931a');
- coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.10));
+ coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.055));
  coat.flatShading=false;coat.side=THREE.FrontSide;
  const prior=coat.onBeforeCompile;
  const cacheKey=coat.customProgramCacheKey?.bind(coat);
@@ -294,7 +305,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const vertices=[],bone=[],weights=[],faces=[];
- const sides=20,rings=7;
+ const sides=28,rings=8;
  // Eye position and dimensions measured against the user's Maya 2017 eye
  // surfaces, not estimated from a cartoon face.
  for(const side of [-1,1]){
@@ -305,9 +316,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
    for(let i=0;i<sides;i++){
     const theta=i*TAU/sides,radius=Math.sin(Math.PI*.5*u);
     vertices.push(
-     side*(.00202+.00013*(1-u*u)),
-     center[1]+.00051*radius*Math.cos(theta),
-     center[2]+.00030*radius*Math.sin(theta)
+     side*(.00212+.00015*(1-u*u)),
+     center[1]+.00066*radius*Math.cos(theta),
+     center[2]+.00036*radius*Math.sin(theta)
     );
     for(let k=0;k<4;k++){bone.push(sk.joints[k]);weights.push(sk.weights[k]);}
    }
@@ -325,8 +336,8 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
  geometry.computeVertexNormals();
  const material=new THREE.MeshPhysicalMaterial({
-  name:'BTC dark glossy iris from Maya eye sockets',color:/^#[0-9a-f]{6}$/i.test(eyeColor)?eyeColor:'#271910',
-  roughness:.27,metalness:0,clearcoat:.46,clearcoatRoughness:.21,
+  name:'BTC expressive dark amber eye in almond socket',color:/^#[0-9a-f]{6}$/i.test(eyeColor)?eyeColor:'#422517',
+  roughness:.19,metalness:0,clearcoat:.72,clearcoatRoughness:.15,
   side:THREE.DoubleSide
  });
  const mesh=new THREE.SkinnedMesh(geometry,material);
@@ -355,6 +366,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    version:BTC_MAYA_MASTER,modelPreserved:true,gallopPreserved:true,
    originalRig:true,source:'supplied-Maya-2017-sculpt',
    sculptedBodyParts:1,vertices:anatomy.vertices,
+   harmonyBuild:BTC_MAYA_RENDER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:hoofShells.hooves,hoofMeshVertices:hoofShells.vertices,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
