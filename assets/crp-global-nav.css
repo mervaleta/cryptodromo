@@ -20,3 +20,15 @@
 @media(max-width:600px){.crp-unified .sitebar-inner{width:calc(100% - 24px)!important}.crp-unified .site-brand{flex-basis:150px!important}.crp-unified .crp-nav-link,.crp-unified .crp-nav-toggle{font-size:11px!important}.crp-unified .site-action{padding:0 10px!important}}
 /* Shared outer alignment, without changing reading-column widths. */
 body>.shell,body>main.shell,body>main.sports,body>main.comm,body>main.page{max-width:var(--crp-site-max)!important;margin-inline:auto!important}
+
+
+/* CRC single-column contract: exactly the same outer width as each page shell. */
+.crp-unified .sitebar-inner{
+  width:var(--crc-shell-width)!important;
+  max-width:var(--crc-shell-max)!important;
+  min-width:0!important;
+}
+@media(max-width:600px){
+  .crp-unified .sitebar-inner{width:var(--crc-shell-width)!important;}
+  .crp-unified .crp-unified-nav{max-width:100%!important;scroll-padding-inline:8px;}
+}
