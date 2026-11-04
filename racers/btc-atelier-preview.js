@@ -84,7 +84,15 @@ export function createPreview(canvas,onFailure=()=>{}){
    try{
     if(candidate){
      next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.40);
-     nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,{maneSize,tailSize,color:hairColor,pass:btcPass});
+     const profile=token.mayaAppearance||{};
+     const coatOptions=variant==='maya'?{
+      coatColor:profile.coatColor,brandMode:profile.brandMode||'natural_coat',
+      brandAccent:token.color,hoofColor:profile.hoofColor,
+      maneSize:maneSize*(profile.maneScale??1),
+      tailSize:tailSize*(profile.tailScale??1),
+      color:profile.maneColor||hairColor
+     }:{maneSize,tailSize,color:hairColor,pass:btcPass};
+     nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,coatOptions);
     }
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
