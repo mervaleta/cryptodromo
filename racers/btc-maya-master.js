@@ -7,11 +7,11 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-ear-root-seal-20261104-v7';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-ear-root-seal-20261104-v7';
-import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-ear-root-seal-20261104-v7';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-spherical-eyes-20261104-v8';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-spherical-eyes-20261104-v8';
+import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-spherical-eyes-20261104-v8';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
-export const BTC_MAYA_RENDER_BUILD='btc-master-ear-root-seal-20261104-v7';
+export const BTC_MAYA_RENDER_BUILD='btc-master-spherical-eyes-20261104-v8';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -431,48 +431,61 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
 }
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
- const vertices=[],bone=[],weights=[],faces=[];
- const sides=28,rings=8;
- // Eye position and dimensions measured against the user's Maya 2017 eye
- // surfaces, not estimated from a cartoon face.
+ // Actual Three.js spheres, embedded in the existing sculpted eye sockets.
+ // A single skinned mesh renders both eyes; no flat iris disk or billboard.
+ const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
+ if(headJoint<0)throw Error('BTC eye globes require native Head joint');
+ const radius=.000445,template=new THREE.SphereGeometry(radius,36,24);
+ const xyz=[],normals=[],local=[],sides=[],bones=[],weights=[],indices=[];
+ const point=template.getAttribute('position'),normal=template.getAttribute('normal');
+ const tris=template.getIndex();
  for(const side of [-1,1]){
-  const center=[side*.00205,-.0282,.04260],sk=skinAt(...center);
-  const start=vertices.length/3;
-  for(let row=0;row<=rings;row++){
-   const u=row/rings;
-   for(let i=0;i<sides;i++){
-    const theta=i*TAU/sides,radius=Math.sin(Math.PI*.5*u);
-    vertices.push(
-     side*(.00212+.00015*(1-u*u)),
-     center[1]+.00066*radius*Math.cos(theta),
-     center[2]+.00036*radius*Math.sin(theta)
-    );
-    for(let k=0;k<4;k++){bone.push(sk.joints[k]);weights.push(sk.weights[k]);}
-   }
+  const base=xyz.length/3;
+  for(let i=0;i<point.count;i++){
+   const x=point.getX(i),y=point.getY(i),z=point.getZ(i);
+   xyz.push(side*.002085+x,-.02820+y,.04260+z);
+   normals.push(normal.getX(i),normal.getY(i),normal.getZ(i));
+   local.push(x/radius,y/radius,z/radius);
+   sides.push(side);
+   bones.push(headJoint,0,0,0);
+   weights.push(1,0,0,0);
   }
-  for(let row=0;row<rings;row++)for(let i=0;i<sides;i++){
-   const a=start+row*sides+i,b=start+row*sides+(i+1)%sides;
-   const c=a+sides,d=b+sides;
-   faces.push(a,c,b,b,c,d);
-  }
+  for(let i=0;i<tris.count;i++)indices.push(base+tris.getX(i));
  }
+ template.dispose();
  const geometry=new THREE.BufferGeometry();
- geometry.setIndex(faces);
- geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
- geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bone,4));
+ geometry.setIndex(indices);
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
+ geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+ geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
  geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
- geometry.computeVertexNormals();
+ geometry.setAttribute('eyeRest',new THREE.Float32BufferAttribute(local,3));
+ geometry.setAttribute('eyeSide',new THREE.Float32BufferAttribute(sides,1));
+ geometry.computeBoundingSphere();
+ const chosen=/^#[0-9a-f]{6}$/i.test(eyeColor)?eyeColor:'#422517';
+ const irisColor=new THREE.Color(chosen);
  const material=new THREE.MeshPhysicalMaterial({
-  name:'BTC expressive dark amber eye in almond socket',color:/^#[0-9a-f]{6}$/i.test(eyeColor)?eyeColor:'#422517',
-  roughness:.19,metalness:0,clearcoat:.72,clearcoatRoughness:.15,
-  side:THREE.DoubleSide
+  name:'BTC natural spherical eyeballs with independent iris and pupil',
+  color:'#281b19',metalness:0,roughness:.19,
+  clearcoat:.82,clearcoatRoughness:.11,side:THREE.FrontSide
  });
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.btcIrisColor={value:irisColor};
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+   '#include <common>\\nattribute vec3 eyeRest;\\nattribute float eyeSide;\\nvarying vec3 vBTCEyeRest;\\nvarying float vBTCEyeSide;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+   '#include <begin_vertex>\\nvBTCEyeRest=eyeRest;\\nvBTCEyeSide=eyeSide;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+   '#include <common>\\nvarying vec3 vBTCEyeRest;\\nvarying float vBTCEyeSide;\\nuniform vec3 btcIrisColor;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
+   '#include <color_fragment>\\nfloat btcEyeFront=vBTCEyeRest.x*vBTCEyeSide;\\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\\nvec3 btcEyeIrisShading=btcIrisColor*mix(.72,1.12,smoothstep(.22,1.,btcEyeIrisRadius));\\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
+ };
+ material.customProgramCacheKey=()=> 'btc-three-spherical-eyes-20261104-v1';
  const mesh=new THREE.SkinnedMesh(geometry,material);
- mesh.name='BTC inset sculpted bilateral equine eyes';
+ mesh.name='BTC bilateral embedded spherical eyes on native Head joint';
  applySkin(mesh,source);
- return {mesh,geometry,material};
+ return {mesh,geometry,material,globes:2,irisEditable:true,blackEquinePupils:true};
 }
-
 
 /**
  * Heal the circular rump opening left by the old polygon tail. Rather than
@@ -550,6 +563,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
+   eyeGlobes:eyes.globes,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,neckOutliers:groom.neckOutliers,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
