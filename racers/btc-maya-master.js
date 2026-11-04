@@ -197,6 +197,50 @@ function makeAnatomy(source,skinAt){
  applySkin(mesh,source);
  return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions};
 }
+
+function makeAnatomicalEyes(source,skinAt){
+ const vertices=[],bone=[],weights=[],faces=[];
+ const sides=20,rings=7;
+ // Eye position and dimensions measured against the user's Maya 2017 eye
+ // surfaces, not estimated from a cartoon face.
+ for(const side of [-1,1]){
+  const center=[side*.00205,-.0282,.04260],sk=skinAt(...center);
+  const start=vertices.length/3;
+  for(let row=0;row<=rings;row++){
+   const u=row/rings;
+   for(let i=0;i<sides;i++){
+    const theta=i*TAU/sides,radius=Math.sin(Math.PI*.5*u);
+    vertices.push(
+     side*(.00202+.00025*(1-u*u)),
+     center[1]+.00047*radius*Math.cos(theta),
+     center[2]+.00037*radius*Math.sin(theta)
+    );
+    for(let k=0;k<4;k++){bone.push(sk.joints[k]);weights.push(sk.weights[k]);}
+   }
+  }
+  for(let row=0;row<rings;row++)for(let i=0;i<sides;i++){
+   const a=start+row*sides+i,b=start+row*sides+(i+1)%sides;
+   const c=a+sides,d=b+sides;
+   faces.push(a,c,b,b,c,d);
+  }
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setIndex(faces);
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bone,4));
+ geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+ geometry.computeVertexNormals();
+ const material=new THREE.MeshPhysicalMaterial({
+  name:'BTC dark glossy iris from Maya eye sockets',color:'#21120b',
+  roughness:.19,metalness:0,clearcoat:.64,clearcoatRoughness:.12,
+  side:THREE.DoubleSide
+ });
+ const mesh=new THREE.SkinnedMesh(geometry,material);
+ mesh.name='BTC inset sculpted bilateral equine eyes';
+ applySkin(mesh,source);
+ return {mesh,geometry,material};
+}
+
 // Silk RIBBONS, not the V4/V5 tubes or spiky cylinders. Roots are placed
 // directly on the anatomically correct Maya topline and tail dock.
 function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}){
@@ -301,9 +345,10 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  const skinAt=makeSkinTransfer(best);
  const anatomy=makeAnatomy(best,skinAt);
  const groom=makeGroom(best,skinAt,anatomy,{maneSize,tailSize,color});
+ const eyes=makeAnatomicalEyes(best,skinAt);
  for(const h of hidden)h.obj.visible=false;
- // EYE primitives stay available: eye sockets, pupils and head motion follow
- // the same original, animated head bone.
+ // The original plastic eyes are hidden in favor of two inset glossy
+ // equine eyes with the same skinned and animated head transform.
  let disposed=false,time=0,phase=0;
  return {
   get snapshot(){return {
@@ -311,7 +356,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    originalRig:true,source:'supplied-Maya-2017-sculpt',
    sculptedBodyParts:1,vertices:anatomy.vertices,
    triangles:anatomy.triangles,oldHairHidden:!best.visible,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},
@@ -331,6 +376,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
    groom.mesh.removeFromParent();groom.geo.dispose();groom.material.dispose();
+   eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());
   }
