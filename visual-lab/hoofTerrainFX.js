@@ -119,6 +119,8 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     particleGeometry.setDrawRange(0,maxLive());
     // Do not rescale existing official positioning on a quality switch.
     if(particleCursor>=maxLive())particleCursor=0;
+    markCursor%=QUALITY[preset].imprints;
+    marks.count=Math.min(marks.count,QUALITY[preset].imprints);
   }
   function setWetness(n){
     wetness=clamp(n,0,1);
