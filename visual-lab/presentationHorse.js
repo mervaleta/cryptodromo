@@ -2,11 +2,23 @@ import * as THREE from 'three';
 import {createHorse} from '/race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 /** Dedicated preview; reuses Racers horse rig, never touches race horses or clocks. */
 export function mountPresentationHorse(container){
+ // The presenter is optional: an unavailable preview must never stop the race engine.
+ const noop=()=>{};
+ if(!container){
+  console.warn('Presentation horse mount #present-horse-3d is missing; broadcast continues');
+  return {show:noop,dispose:noop};
+ }
  const scene=new THREE.Scene();
  const camera=new THREE.PerspectiveCamera(34,1,.1,80);camera.position.set(6,3.2,7);camera.lookAt(0,1.3,0);
  scene.add(new THREE.HemisphereLight(0xe5f5ff,0x253b31,2.4));
  const key=new THREE.DirectionalLight(0xffe8c2,3);key.position.set(-4,9,5);scene.add(key);
- const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
+ let renderer;
+ try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});}
+ catch(error){
+  container.dataset.preview='unavailable';
+  console.warn('Presentation horse preview disabled; broadcast continues:',error);
+  return {show:noop,dispose:noop};
+ }
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
  container.append(renderer.domElement);
  let horse=null,serial=0,active=true,previous=performance.now();
