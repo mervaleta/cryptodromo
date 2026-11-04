@@ -26,8 +26,13 @@ function makeProjector(positions) {
 function detailMesh(source,skinAt,positions,{name,color,metalness=0,roughness=.72,sheen=0},build) {
  const xyz=[],joints=[],weights=[],idx=[],colorRGB=[];
  const face={xyz,idx};
+ // Face details sit on the rigid authored Head joint. Interpolating
+ // nearest-body weights independently at each detail vertex tore mouths and
+ // nostrils into floating wires during Gallop.
+ const headBone=source.skeleton.bones.findIndex(b=>b.name==='Head');
+ if(headBone<0)throw Error('BTC Maya facial details require native Head joint');
  function vert(x,y,z,tint=1){
-  const skin=skinAt(x,y,z);
+  const skin={joints:[headBone,0,0,0],weights:[1,0,0,0]};
   xyz.push(x,y,z);
   const weightSum=skin.weights.reduce((sum,w)=>sum+w,0)||1;
   for(let k=0;k<4;k++){
@@ -108,7 +113,7 @@ export function createBTCMayaFaceDetails(source,skinAt,positions) {
   name:'BTC Maya two inset nostril cavities',color:'#241911',roughness:.92
  },ctx=>{
   for(const side of [-1,1]){
-   const cy=-.0348,cz=.0358,rx=.00052,rz=.00035,N=24;
+   const cy=-.0335,cz=.0359,rx=.00036,rz=.00025,N=24;
    const x=project(side,cy,cz,.00135).x+side*.00009;
    const center=ctx.vert(x,cy,cz,.72),rim=[];
    for(let i=0;i<N;i++){
@@ -125,28 +130,13 @@ export function createBTCMayaFaceDetails(source,skinAt,positions) {
   name:'BTC Maya nostril fleshy folded rims',color:'#78523f',roughness:.86
  },ctx=>{
   for(const side of [-1,1]){
-   loopRibbon(ctx,project,side,-.0348,.0358,.00057,.00041,.000062);
+   loopRibbon(ctx,project,side,-.0335,.0359,.00038,.00029,.000037);
   }
  }));
- // Lip seam follows both sides of the natural lower muzzle.
- components.push(detailMesh(source,skinAt,positions,{
-  name:'BTC Maya mouth seam on lower muzzle',color:'#43291e',roughness:.87
- },ctx=>{
-  for(const side of [-1,1]){
-   const N=24,start=ctx.face.xyz.length/3;
-   for(let i=0;i<=N;i++){
-    const t=i/N, y=-.0363+.0022*t;
-    const z=.03355-.00026*sin(Math.PI*t)+.00012*t;
-    const x=project(side,y,z,.0012).x+side*.00008;
-    const width=.000055*(.25+.75*sin(Math.PI*t));
-    ctx.vert(x,y,z+width);
-    ctx.vert(x+side*.00001,y,z-width);
-   }
-   for(let i=0;i<N;i++){
-    const a=start+i*2;ctx.idx.push(a,a+2,a+1,a+1,a+2,a+3);
-   }
-  }
- }));
+ // Mouth seam is implemented in the coat's fragment shader, following
+ // the actual skinned Maya muzzle surface. Added standalone strips looked
+ // disconnected at the nostril and must never reappear.
+
  return {
   surfaces:components.length,
   triangles:components.reduce((n,c)=>n+c.geometry.index.count/3,0),
