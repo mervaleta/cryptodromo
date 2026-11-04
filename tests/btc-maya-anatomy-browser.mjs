@@ -27,7 +27,7 @@ try{
   'Maya horse must retain full body topology but remove duplicate appendages');
  assert.ok(start.heroGroom.nativeEarFacesRemoved>=150,'legacy horns must be culled');
  assert.ok(start.heroGroom.extraTailFacesRemoved>=150,'second flesh-colored tail must be culled');
- assert.ok(start.heroGroom.extraTailFacesRemoved>350,'remove the entire flesh-tail root, not only its tip');
+ assert.ok(start.heroGroom.extraTailFacesRemoved>250,'retire the old skin-tail free end while preserving croup skin');
  assert.ok(start.heroGroom.poweredHindVertices>1000,'croup and hind thighs must be resculpted, not repainted');
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.originalRig,true);
