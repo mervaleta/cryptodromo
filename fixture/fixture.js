@@ -23,11 +23,12 @@ $('rows').addEventListener('error',event=>{
  placeholder.textContent=symbol.slice(0,2);
  img.replaceWith(placeholder);
 },true);
-const now=liveSlot();let day=now.dayIndex,offset=Math.floor(now.slot/24)*24;
+let now=liveSlot();let day=now.dayIndex,offset=Math.floor(now.slot/24)*24;
 $('day').value=String(day);
 $('hour').innerHTML=Array.from({length:24},(_,h)=>'<option value="'+h+'">'+String(h).padStart(2,'0')+':00</option>').join('');
 $('hour').value=String(Math.floor(now.slot/20));
 function render(){
+ now=liveSlot();
  const query=$('search').value.trim().toLocaleLowerCase('es');
  const filtered=[];
  for(let i=0;i<RACES_PER_DAY;i++){
@@ -47,7 +48,9 @@ function render(){
 }
 $('day').addEventListener('change',()=>{day=Number($('day').value);offset=0;render();});
 $('search').addEventListener('input',()=>{offset=0;render();});
-$('hour').addEventListener('change',()=>{offset=Number($('hour').value)*20;render();});
+$('hour').addEventListener('change',()=>{offset=Math.floor(Number($('hour').value)*20/24)*24;render();});
 $('previous').addEventListener('click',()=>{offset=Math.max(0,offset-24);render();});
 $('following').addEventListener('click',()=>{offset+=24;render();});
 render();
+// Keep race status aligned with Buenos Aires time while the fixture tab stays open.
+setInterval(render,15000);
