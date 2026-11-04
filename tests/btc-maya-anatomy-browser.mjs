@@ -22,7 +22,7 @@ try{
  },null,{timeout:120000});
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.variant,'maya');
- assert.equal(start.heroGroom.vertices,5409,'original anatomical surface with tail and both ear-root caps');
+ assert.equal(start.heroGroom.vertices,5411,'original anatomical surface with tail and both ear-root caps');
  assert.ok(start.heroGroom.triangles>9500&&start.heroGroom.triangles<10500,
   'Maya horse must retain full body topology but remove duplicate appendages');
  assert.ok(start.heroGroom.nativeEarFacesRemoved>=150,'legacy horns must be culled');
@@ -46,8 +46,11 @@ try{
  assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
  assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
  assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must remain anatomically sized');
-  assert.equal(start.heroGroom.eyeCenterX,.002235,'cornea must be visible beyond the Maya socket');
+  assert.equal(start.heroGroom.eyeCenterX,.00185,'cornea must be visible beyond the Maya socket');
   assert.equal(start.heroGroom.eyeAssembly,'concentric-skinned-palpebra-v14');
+  assert.equal(start.heroGroom.eyeApertureBorders,22);
+  assert.equal(start.heroGroom.eyeApertureCenters,2);
+  assert.equal(start.heroGroom.integratedEyeApertureTriangles,22);
   assert.ok(start.heroGroom.pollAnchoredVertices>10,'poll must inherit smooth Head weighting');
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
