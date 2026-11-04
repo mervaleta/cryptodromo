@@ -162,7 +162,7 @@ export function trafficAt(session,seconds){
  const left=clamp(Math.floor(scaled),0,SAMPLE_COUNT),right=Math.min(SAMPLE_COUNT,left+1);
  const fraction=clamp(scaled-left,0,1);
  const rows=positionsAt(session,seconds);
- return rows.map(row=>{
+ const frame=rows.map(row=>{
    const from=plan.samples[left][row.index];
    const to=plan.samples[right][row.index];
    return {...row,
@@ -171,6 +171,21 @@ export function trafficAt(session,seconds){
      steering:lerp(from.steering,to.steering,fraction)
    };
  });
+ // The between-keyframe safety pass is essential: interpolating two valid
+ // 0.2s pictures is not automatically safe when the official ranking changes.
+ // Enforce a safe body envelope at the exact render timestamp.
+ const fixed=[];
+ for(const row of frame){
+   let allowed=row.visualMeters;
+   for(const ahead of fixed){
+     const lateralRatio=Math.abs(row.sideMeters-ahead.sideMeters)/SAFE_LATERAL_METERS;
+     if(lateralRatio>=1)continue;
+     const safeGap=SAFE_LONGITUDINAL_METERS*Math.sqrt(1-lateralRatio*lateralRatio);
+     allowed=Math.min(allowed,ahead.visualMeters-safeGap);
+   }
+   fixed.push({...row,visualMeters:allowed});
+ }
+ return fixed;
 }
 /** Rigorous, side-effect-free race inspection for automated regressions. */
 export function trafficAudit(session,stepSeconds=0.2){
