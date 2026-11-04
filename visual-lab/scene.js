@@ -763,6 +763,14 @@ function setTrackType(type){
  earthBaseColor=earth.color.clone();earthBaseRough=earth.roughness;
  earth.needsUpdate=true;
 }
+// Satoshi channels inherit only a course-specific surface from the 3D plan.
+// The model still uses its independent official price / scoring inputs.
+if(tripleMode){
+ const courseSurfaces={muybridge:'dirt',genesis:'synthetic','vint-cerf':'grass'};
+ trackType.value=courseSurfaces[selectedTrack.id]||'dirt';
+ trackType.disabled=true;
+ trackType.title='Superficie asignada a '+selectedTrack.name;
+}
 trackType.addEventListener('change',()=>setTrackType(trackType.value));
 setTrackType(trackType.value);
 // Quality changes affect ONLY rendering resources. Official time and scoring
