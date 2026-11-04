@@ -45,7 +45,7 @@ try{
  assert.equal(start.heroGroom.heroLocks,56,'sculpted swept hero locks must actually render');
  assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
  assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
- assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must sit within the sockets');
+ assert.equal(start.heroGroom.eyeSocketVertices,22,'both real Maya eye holes are sewn to the lid');\n assert.ok(start.heroGroom.eyeRecess>.0002,'true eye geometry is seated behind orbital plane');
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
  assert.equal(start.heroGroom.heroHooves,4,'four visible, articulated hoof shells required');
