@@ -1,6 +1,7 @@
 import {allLiveTracks,getTrack} from '/visual-lab/tripleLiveSchedule.js?v=alpha19-live-1';
 import {buildTvPlayerUrl,findRacePlayerSource,readTvReplay,RACE_PLAYER_SOURCES} from './satoshi-tv-contract.js?v=winner-slowmo-env-20261104-v1';
 import {createTvEnvironmentDeck} from './satoshi-tv-environment.js?v=winner-slowmo-env-20261104-v1';
+import {createTvParameterMenus} from './satoshi-tv-submenus.js?v=tv-director-params-20261104-v2';
 
 /**
  * One active WebGL feed at a time. The parent is the station and the iframe
@@ -32,6 +33,7 @@ function setShot(mode){
  }
 }
 const environmentDeck=createTvEnvironmentDeck({frame,root:$('tv-env-deck'),onShot:setShot});
+const parameterDeck=createTvParameterMenus({frame,root:$('tv-control-detail')});
 let soundEnabled=false;
 const cards=[...document.querySelectorAll('.hub-track[data-track]')];
 const params=new URLSearchParams(location.search);
@@ -163,8 +165,9 @@ frame.addEventListener('load',async()=>{
   audioButton.disabled=!frame.contentDocument?.querySelector('#sound');
   setShot(activeShot);
   environmentDeck.apply();
+  parameterDeck.apply();
   const loadedSerial=serial;
-  setTimeout(()=>{if(loadedSerial===serial&&validFrameDoc())environmentDeck.apply();},1100);
+  setTimeout(()=>{if(loadedSerial===serial&&validFrameDoc()){environmentDeck.apply();parameterDeck.apply();}},1100);
   requestAnimationFrame(()=>{requestAnimationFrame(uncover);});
   try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
   return;
@@ -218,12 +221,12 @@ $('tv-fullscreen').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)showProgramGuide();});
 const ticker=setInterval(showProgramGuide,1000);
-window.addEventListener('pagehide',()=>{clearInterval(ticker);clearTimeout(loadTimer);environmentDeck.dispose();frame.src='about:blank';},{once:true});
+window.addEventListener('pagehide',()=>{clearInterval(ticker);clearTimeout(loadTimer);environmentDeck.dispose();parameterDeck.dispose();frame.src='about:blank';},{once:true});
 showProgramGuide();
 if(new URLSearchParams(location.search).get('tv-qa')==='1'){
  window.__satoshiTvQA=Object.freeze({
   snapshot:()=>({track:active,shot:activeShot,transition:screen.classList.contains('is-switching'),
-   src:frame.getAttribute('src'),ready:validFrameDoc(),environment:environmentDeck.snapshot()}),
+   src:frame.getAttribute('src'),ready:validFrameDoc(),environment:environmentDeck.snapshot(),parameters:parameterDeck.snapshot()}),
   shot:setShot
  });
 }
