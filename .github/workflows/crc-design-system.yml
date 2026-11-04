@@ -1,0 +1,68 @@
+name: CRC visual system · contracts and responsive evidence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'design/**'
+      - 'assets/crp-global-nav.css'
+      - 'assets/site-shell.css'
+      - 'assets/race-site-hub.css'
+      - 'assets/stadium-hub.css'
+      - 'assets/institutional.css'
+      - 'cryptodromo-gazette/public/assets/style.css'
+      - 'admin/horses/editor.css'
+      - 'index.html'
+      - 'stadiums/crypto/index.html'
+      - 'stadiums/crypto/archive/index.html'
+      - 'tests/crc-*.mjs'
+      - '.github/workflows/crc-design-system.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-contracts:
+    name: Legacy source and CSS integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate CRC CSS, routes, components and shell widths
+        run: node --test tests/crc-design-system.test.mjs
+  responsive-visual:
+    name: Browser snapshots before/after
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out unmodified main baseline, without changing production
+        uses: actions/checkout@v4
+        with:
+          ref: 47ab154cf8eddfbd55577a430f7b4c5d537c0f7b
+          path: baseline
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install ephemeral browser test tools only (not app runtime)
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Capture local 1440 × 900 and 390 × 844 screenshots
+        run: |
+          python3 -m http.server 8798 --bind 127.0.0.1 --directory baseline >/tmp/crc-baseline.log 2>&1 &
+          BEFORE_PID=$!
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/crc-after.log 2>&1 &
+          AFTER_PID=$!
+          trap 'kill "$BEFORE_PID" "$AFTER_PID" || true' EXIT
+          sleep 3
+          node tests/crc-browser-snapshots.mjs
+      - name: Retain evidence even if an interface fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crc-visual-comparison
+          path: artifacts/crc/
+          retention-days: 14
+          if-no-files-found: warn
