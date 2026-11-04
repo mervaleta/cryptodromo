@@ -30,10 +30,12 @@ export function sculptBTCHindquarters(positions) {
     const jointSafe=smooth((z-.0062)/.0048);
     const muscle=lateral*jointSafe*(.12*rump+.20*glute+.24*upperThigh+.135*gaskin);
     if(muscle<.004)continue;
-    // Grow the actual contiguous skin surface; no floating spheres/tubes.
+    // Genuine cross-section AND side-profile volume: the previous pass
+    // broadened only X, invisible in a lateral camera. Sagittal Y mass
+    // now thickens thigh and gaskin gradually about the same joint centre.
+    const sagittal=lateral*jointSafe*(.17*rump+.27*glute+.36*upperThigh+.28*gaskin);
     positions[i]=x*(1+muscle);
-    positions[i+1]=y+.00040*rump*lateral+
-      (y-.0109)*(.11*glute+.085*upperThigh)*lateral*jointSafe;
+    positions[i+1]=.0109+(y-.0109)*(1+sagittal)+.00050*rump*lateral;
     positions[i+2]=z+(.00032*rump+.00011*glute)*lateral*jointSafe;
     maximumExpansion=Math.max(maximumExpansion,muscle);
     affected++;
@@ -83,4 +85,20 @@ export function hindLimbSkinNeighborWeight(restY,restZ,self){
   const hinge=smooth((restY-.0048)/.004)*smooth((.023-restZ)/.006)*
     smooth((restZ-.0045)/.0045);
   return self?2+8*hinge:1-.40*hinge;
+}
+
+/**
+ * GPU secondary flesh correction tied to the *existing* native Gallop phase.
+ * No leg bone rotations are changed. The limb skin gently compresses near
+ * stifle/gaskin during contact, recovering in suspension. The deformation
+ * vanishes well before the hocks/hooves and cannot detach keratin surfaces.
+ */
+export function addBTCHindquarterGaitShader(shader,gaitUniform) {
+  if(!shader?.vertexShader?.includes('#include <begin_vertex>'))
+    throw Error('BTC gait corrective requires the Three.js vertex hook');
+  shader.uniforms.btcHindGait=gaitUniform;
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+    '#include <common>\\nuniform float btcHindGait;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+    '#include <begin_vertex>\\nfloat btcHindPhase=sin(btcHindGait*6.283185307);\\nfloat btcStifle=smoothstep(.006,.010,position.y)*(1.0-smoothstep(.021,.028,position.z))*smoothstep(.008,.013,position.z);\\ntransformed.x+=sign(position.x)*btcStifle*btcHindPhase*.00015;\\ntransformed.y+=btcStifle*btcHindPhase*.000055;');
 }
