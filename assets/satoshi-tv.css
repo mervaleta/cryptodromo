@@ -1,0 +1,70 @@
+/* Satoshi TV: one active WebGL feed; channel cards are an electronic program guide. */
+.tv-page{background:radial-gradient(ellipse 80% 65% at 80% -12%,#204a35 0,#08140d 60%,#070b09 100%)}
+.tv-page .hub-head{position:relative}
+.tv-intro{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:32px 0 27px}
+.tv-intro h1{font-size:clamp(40px,4.6vw,75px);line-height:1;letter-spacing:-.065em;margin:13px 0 14px}
+.tv-intro h1 em{font-family:Georgia,serif;color:#aeeac5;font-weight:400}
+.tv-intro p{max-width:760px;color:#b6cabc;line-height:1.6;margin:0;font-size:clamp(13px,1.2vw,17px)}
+.tv-airing-stamp{flex:0 0 auto;display:grid;gap:8px;text-align:right;border-right:2px solid #78e9a0;padding-right:18px}
+.tv-airing-stamp span{color:#94f4b1;font-size:10px;font-weight:900;letter-spacing:.16em}
+.tv-airing-stamp strong{font-size:23px;letter-spacing:-.04em}
+.tv-airing-stamp small{color:#88a995;font-size:11px}
+.tv-station{margin:0 0 52px}
+.tv-onair-bar{background:linear-gradient(120deg,#132319,#0d1913);border:1px solid #3a5b46;border-bottom:0;border-radius:12px 12px 0 0;padding:13px 17px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.tv-brand{display:flex;gap:12px;align-items:center;min-width:0;flex-wrap:wrap}
+.tv-brand strong{font-size:12px;letter-spacing:.13em;white-space:nowrap}
+.tv-brand #active-channel{font-weight:800;color:#e0f3e6;font-size:14px;white-space:normal}
+.tv-red-dot{display:inline-block;width:10px;height:10px;background:#f8545c;border-radius:50%;box-shadow:0 0 0 5px #e63e4b21,0 0 18px #e63759}
+.tv-brand.is-replay .tv-red-dot{background:#e1b971;box-shadow:0 0 0 5px #d9b57b22}
+.tv-meta{display:flex;gap:14px;align-items:center;font-size:11px;color:#b3cabc;font-variant-numeric:tabular-nums}
+.tv-meta #tv-current-race{font-weight:800;color:#dff1e2}
+.tv-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(255px,320px);gap:0;align-items:stretch;border:1px solid #365641;border-radius:0 0 12px 12px;overflow:hidden;background:#050a08}
+.tv-main{min-width:0;display:flex;flex-direction:column;background:#050a08}
+.tv-screen{position:relative;width:100%;aspect-ratio:16/9;min-height:380px;overflow:hidden;background:#07120e;isolation:isolate}
+.tv-screen:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#0c2d1d,#020504 80%);pointer-events:none}
+.tv-screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#081510}
+.tv-screen iframe[hidden]{display:none}
+.tv-loading,.tv-error{position:absolute;z-index:3;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;padding:24px;background:radial-gradient(ellipse at center,#132e1fa8,#07100fe9)}
+.tv-loading[hidden],.tv-error[hidden]{display:none}
+.tv-loading strong,.tv-error strong{font-size:18px}
+.tv-loading small,.tv-error p{font-size:12px;line-height:1.6;color:#acccba;max-width:480px;margin:0}
+.tv-spinner{height:32px;width:32px;border:2px solid #435f4d;border-top-color:#90efae;border-radius:50%;animation:tv-spin .95s linear infinite}
+@keyframes tv-spin{to{transform:rotate(360deg)}}
+.tv-error-actions{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.tv-error-actions button,.tv-error-actions a{background:#1b3828;color:#dcf8e3;text-decoration:none;border:1px solid #639975;padding:11px 15px;border-radius:7px;font-size:12px;font-weight:750;cursor:pointer}
+.tv-remote{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;min-height:58px;border-top:1px solid #254334;background:#0a1510}
+.tv-remote button,.tv-remote a{border:1px solid #395d46;background:#152c1e;color:#e0f6e9;min-height:36px;border-radius:6px;font-size:12px;padding:8px 12px;text-decoration:none;font-weight:800;cursor:pointer;display:inline-flex;align-items:center}
+.tv-remote button:hover,.tv-remote a:hover{border-color:#9be4af}
+.tv-remote button:disabled{cursor:default;border-color:#526a55;color:#95c5a0;opacity:.8}
+.tv-remote .tv-live-button:not(:disabled){border-color:#e55f69;color:#ffe1e3;background:#4c1d23}
+.tv-remote-note{font-size:10px;color:#799585;margin-left:auto}
+.tv-guide{display:flex;flex-direction:column;border-left:1px solid #345343;background:#102017;min-width:0;padding:16px 13px 13px}
+.tv-guide-title{padding:3px 5px 14px}
+.tv-guide h2{font-size:clamp(21px,2.3vw,30px);line-height:1.12;margin:7px 0;letter-spacing:-.045em}
+.tv-guide-title p{margin:0;color:#9fb9a6;font-size:11px;line-height:1.45}
+.tv-guide .hub-livegrid{display:grid;grid-template-columns:1fr;gap:9px}
+.tv-channel{padding:12px 13px;border-radius:8px;gap:7px;background:linear-gradient(125deg,#163124,#102219);transition:border-color .18s,background .18s}
+.tv-channel[data-selected=true]{border-color:#8fe6ad;box-shadow:inset 0 0 0 1px #8fe6ad33;background:linear-gradient(125deg,#204632,#10251a)}
+.tv-channel:hover{border-color:#80be99}
+.tv-channel-head{display:flex;align-items:center;justify-content:space-between}
+.tv-channel-light{color:#5d866b;font-size:11px}
+.tv-channel[data-phase=race] .tv-channel-light{color:#ef5f69}
+.tv-channel h3{font-size:16px;margin:0}
+.tv-channel p{font-size:11px}
+.tv-channel .hub-flag{font-size:9px;letter-spacing:.04em}
+.tv-channel-count{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.tv-channel-count>span{font-size:9px;letter-spacing:.07em;color:#7fb291;font-weight:850}
+.tv-channel-count strong{font-size:22px;color:#f6efd1;font-variant-numeric:tabular-nums}
+.tv-channel small{font-size:10px;line-height:1.4}
+.tv-channel .hub-track-actions{margin-top:1px;align-items:center}
+.tv-tune{flex:1;border:1px solid #518b65;background:#22452f;color:#d5f4dd;padding:9px 12px;border-radius:5px;font-weight:850;font-size:11px;cursor:pointer}
+.tv-tune:hover{background:#336e46}
+.tv-tune[aria-pressed=true]{background:#8ae0a6;color:#0b2815}
+.tv-channel .hub-track-actions a{font-size:11px}
+.tv-bottomline{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding:19px 0}
+.tv-bottomline span{max-width:720px;font-size:11px;line-height:1.6;color:#91ad9b}
+.tv-bottomline .hub-button{min-height:38px;font-size:11px;padding:9px 12px}
+@media(max-width:1150px){.tv-layout{grid-template-columns:1fr}.tv-guide{border-left:0;border-top:1px solid #345343}.tv-guide .hub-livegrid{grid-template-columns:repeat(3,minmax(0,1fr))}.tv-guide-title{display:flex;align-items:center;gap:18px}.tv-guide-title p{margin-left:auto}}
+@media(max-width:760px){.tv-intro{padding:22px 0;display:block}.tv-airing-stamp{display:none}.tv-guide .hub-livegrid{grid-template-columns:1fr}.tv-guide-title{display:block}.tv-screen{min-height:300px;aspect-ratio:16/10}.tv-remote-note{margin-left:0;width:100%}.tv-meta{width:100%;justify-content:space-between}}
+@media(max-width:420px){.tv-screen{min-height:275px}.tv-remote button,.tv-remote a{font-size:11px;padding:7px 9px}.tv-intro h1{font-size:43px}}
+@media(prefers-reduced-motion:reduce){.tv-spinner{animation:none}.tv-channel{transition:none}}

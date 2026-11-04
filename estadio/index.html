@@ -8,7 +8,7 @@
   <link rel="icon" href="/assets/cryptodromo-logo.png">
   <title>Estadios de Cryptódromo | Recorrido 3D</title>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
-  <script type="module" src="/estadio/estadio.js?v=world3d-2"></script>
+  <script type="module" src="/estadio/estadio.js?v=satoshi-master-v2-20261104"></script>
   <link rel="stylesheet" href="/race-lab/source/src/style.css">
   <style>
     .stadium-page{max-width:1480px;margin:auto;padding:26px clamp(16px,3vw,42px) 60px}
@@ -45,7 +45,7 @@
   <main class="stadium-page" id="main-content">
     <div class="stadium-eyebrow">La casa de las carreras del mercado</div>
     <h1>UN UNIVERSO, <span>OCHO ESTADIOS</span></h1>
-    <p class="stadium-lead">Explorá en 3D las ocho sedes financieras de Cryptódromo World. Cada estadio comparte un motor procedural y tiene arquitectura, señalética y ambiente propios. El óvalo visual es una maqueta de recorrido común: las trece pistas deportivas definitivas siguen en desarrollo. Ninguna visita modifica los resultados de carrera.</p>
+    <p class="stadium-lead">Explorá las ocho sedes de Cryptódromo World. Satoshi Nakamoto ya dispone de tres recorridos 3D diferenciados: Muybridge (óvalo), Genesis (recta diagonal) y Vint Cerf (circuito interior en S). Los restantes mercados conservan sedes y calendarios de demostración; sus pistas especializadas todavía están en desarrollo. Ninguna visita modifica los resultados deportivos.</p>
     <section class="stadium-panel" aria-label="Explorador 3D del estadio">
       <div class="stadium-controls">
         <label for="venue-select">Sede <select id="venue-select" aria-label="Elegir estadio">
@@ -71,6 +71,12 @@
           <option value="paddock">Paddock y caballerizas</option>
           <option value="side">Vista lateral</option>
         </select></label>
+        <label for="course-select" id="course-picker">Pista Satoshi <select id="course-select" aria-label="Enfocar una de las tres pistas" title="Enfocar la pista en el complejo 3D">
+          <option value="all">Complejo completo</option>
+          <option value="muybridge">01 · Muybridge · óvalo principal</option>
+          <option value="genesis">02 · Genesis · recta diagonal</option>
+          <option value="vint-cerf">03 · Vint Cerf · circuito en S</option>
+        </select></label>
         <label for="lighting">Hora <select id="lighting">
           <option value="17.5">Atardecer</option><option value="12">Mediodía</option>
           <option value="22">Noche</option><option value="7">Amanecer</option>
@@ -90,7 +96,7 @@
     <div class="stadium-copy">
       <article><h2>Ocho identidades mundiales</h2><p>Buenos Aires, Nueva York, Tokio, Londres, commodities, divisas, cripto y la arena de campeones reciben arquitectura y materiales generados por código.</p></article>
       <article><h2>Complejo deportivo</h2><p>Tribunas, clubhouse, acceso, boleterías, paseo gastronómico, caballerizas, paddock, servicios, jardines, luminarias y vías técnicas.</p></article>
-      <article><h2>Construcción procedural</h2><p>Geometría compartida, públicos y vegetación instanciados, luz y clima regulables. Las vistas 3D representan las sedes; las trece pistas especializadas son una fase posterior.</p></article>
+      <article><h2>Satoshi · tres trazados físicos</h2><p>Muybridge rodea el circuito Vint Cerf en el infield; Genesis ocupa la explanada diagonal norte. Cada pista tiene barandas, doce carriles, largada, meta, iluminación y cartelería. El resultado deportivo sigue siendo independiente de la escenografía.</p></article>
     </div>
     <a class="stadium-back" href="/">← Volver a la carrera</a>
   </main>
