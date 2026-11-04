@@ -2,6 +2,7 @@
 
 **Fecha:** 4 de noviembre de 2026  
 **Rama aislada:** `feat/hoof-terrain-fx-20261104`  
+**Sincronización:** merge desde `main` `5b68519218bebe86e7b93f6eaa9eda85b29b45df` en `b09bbe438b66b711269f0e2e68d0fa3c981797d0`. Se respetaron los importadores `satoshi-cachefix-20261104-v3`.  
 **Estado:** implementación y pruebas de lógica preparadas; **NO** fusionar ni anunciar como AAA validado sin pruebas visuales con el maestro anatómico definitivo. `main` y Hostinger no se modifican.
 
 ## Qué se solucionó
@@ -10,9 +11,11 @@ La carrera anterior emitía polvo desde una nube regenerada constantemente detr�
 
 El módulo nuevo usa cuatro eventos de apoyo diferenciados por caballo, sobre una secuencia de galope transverso: posterior exterior, posterior interior, anterior exterior, anterior interior y suspensión. El liderazgo de la mano podrá configurarse cuando el rig definitivo lo exponga. En el motor de carrera actual, el GLB ofrece `hoofPhase` y la fase sincroniza esos eventos. También hay un modo **prioritario** de colisión real que acepta coordenadas mundiales de las cuatro suelas.
 
+**QA verificado en Chromium:** Three.js normaliza puntos y otros separadores de los nombres de nodos del GLB. El archivo exportado utiliza `BackLowerLeg.L_end` y `FrontLowerLeg.L_end`, pero los nodos en escena se llaman `BackLowerLegL_end` y `FrontLowerLegL_end`. Esa diferencia provocaba que el detector usara `phase` en vez de los marcadores. Resuelto en commit `c66c8ebd335731837e89da8e0adaea1b62d759ef`. **Acción `Hoof Terrain FX | Contacts and Regression` [#41907517908](https://github.com/mervaleta/cryptodromo/actions/runs/41907517908): `hoof-terrain` y `browser-qa` SUCCESS.** Hay capturas de tierra, arena y césped en el artefacto `hoof-fx-three-surfaces-btc`. No son prueba de FPS móvil ni de acabado AAA final.
+
 **Mejora añadida durante el QA:** en el GLB actual, los nodos animados
-`BackLowerLeg.L_end`, `BackLowerLeg.R_end`,
-`FrontLowerLeg.L_end` y `FrontLowerLeg.R_end` permiten calcular
+`BackLowerLegL_end`, `BackLowerLegR_end`,
+`FrontLowerLegL_end` y `FrontLowerLegR_end` permiten calcular
 la posición de cada punta de casco a través de la cinemática real del
 esqueleto (en orden LH/RH/LF/RF). Se emplea un desplazamiento vertical
 provisional de 0,22 m calibrado para el caballo de 2,85 m. Esto habilita
