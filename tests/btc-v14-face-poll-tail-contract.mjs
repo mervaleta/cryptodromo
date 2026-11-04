@@ -9,9 +9,9 @@ const spring=await pure('racers/btc-maya-tail-spring.js');
 
 test('both eyes share one symmetric cornea and lid landmark without surface-snap seams',()=>{
  const a=eyes.BTC_EYE_LAYOUT;
- assert.ok(a.x>.0020&&a.x<.0025);
- assert.ok(a.radiusX>.00030&&a.radiusX<.0004);
- assert.ok(a.radiusY>a.radiusX,'naturally elongated equine eye');
+ assert.ok(Math.abs(a.x-.001421597)<1e-8,'center from original 11-edge Maya socket');
+ assert.ok(a.radiusX>.00058&&a.radiusX<.00070,'globe supports original opening');
+ assert.ok(Math.abs(a.radiusY-a.radiusX)<.00008,'near-spherical globe with oblique eye angle');
  for(const angle of [0,.2,1.2,2.7,Math.PI,4.2,6.2]){
   const l=eyes.eyeFrame(-1,angle,.875),r=eyes.eyeFrame(1,angle,.875);
   assert.ok(Math.abs(l.x+r.x)<1e-12,'bilateral mirror');
@@ -19,7 +19,7 @@ test('both eyes share one symmetric cornea and lid landmark without surface-snap
   assert.ok(l.x<0&&r.x>0&&Number.isFinite(l.z));
  }
  const source=read('racers/btc-maya-face-details.js');
- assert.match(source,/eyeFrame\(side,a,/);
+ assert.match(source,/makeOrbitAnnulus\(source,positions/);\n assert.match(source,/boundary\.left/);
  assert.doesNotMatch(source,/makeProjector|project\(side,y,z/);
  assert.match(source,/skin\.bind|mesh\.bind\(source\.skeleton/);
 });
