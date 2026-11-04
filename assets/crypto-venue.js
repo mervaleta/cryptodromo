@@ -11,7 +11,8 @@ const $=id=>document.getElementById(id);
 const frame=$('stadium-broadcast'),screen=$('tv-player'),loading=$('tv-loading');
 const errorBox=$('tv-error'),errorDetail=$('tv-error-detail'),directError=$('tv-direct-error');
 const modeBadge=$('tv-mode-badge'),activeLabel=$('active-channel');
-const liveButton=$('tv-live-now'),directLink=$('tv-direct');
+const liveButton=$('tv-live-now'),directLink=$('tv-direct'),audioButton=$('tv-audio');
+let soundEnabled=false;
 const cards=[...document.querySelectorAll('.hub-track[data-track]')];
 const params=new URLSearchParams(location.search);
 const selected=getTrack(params.get('track'))||getTrack('muybridge');
@@ -35,10 +36,12 @@ const validFrameDoc=()=>{
 };
 const setBusy=()=>{
  frame.hidden=false;frame.style.visibility='hidden';loading.hidden=false;errorBox.hidden=true;
+ soundEnabled=false;audioButton.disabled=true;audioButton.setAttribute('aria-pressed','false');audioButton.textContent='🔊 Activar sonido';
 };
 const setError=detail=>{
  clearTimeout(loadTimer);
  frame.hidden=true;frame.style.visibility='hidden';loading.hidden=true;errorBox.hidden=false;
+ audioButton.disabled=true;
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
 };
@@ -127,6 +130,7 @@ frame.addEventListener('load',async()=>{
  try{if(frame.contentWindow.location.href==='about:blank')return;}catch{}
  if(validFrameDoc()){
   clearTimeout(loadTimer);frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
+  audioButton.disabled=!frame.contentDocument?.querySelector('#sound');
   try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
   return;
  }
@@ -152,6 +156,21 @@ for(const card of cards){
 liveButton.addEventListener('click',()=>tune(active,null));
 $('tv-replay-again').addEventListener('click',()=>{if(replay)tune(active,replay,false);});
 $('tv-retry').addEventListener('click',()=>{sourcePromise=null;source=null;tune(active,replay,false);});
+audioButton.addEventListener('click',()=>{
+ if(audioButton.disabled)return;
+ const doc=frame.contentDocument;
+ const ambience=doc?.getElementById('sound'),voice=doc?.getElementById('voice');
+ if(!ambience)return;
+ const desired=!soundEnabled;
+ for(const button of [ambience,voice]){
+  if(!button)continue;
+  const pressed=button.getAttribute('aria-pressed')==='true';
+  if(pressed!==desired)button.click();
+ }
+ soundEnabled=[ambience,voice].some(button=>button?.getAttribute('aria-pressed')==='true');
+ audioButton.setAttribute('aria-pressed',String(soundEnabled));
+ audioButton.textContent=soundEnabled?'🔇 Silenciar transmisión':'🔊 Activar sonido';
+});
 $('tv-fullscreen').addEventListener('click',()=>{
  if(document.fullscreenElement)document.exitFullscreen();
  else if(screen.requestFullscreen)screen.requestFullscreen();
