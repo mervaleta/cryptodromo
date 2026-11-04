@@ -29,7 +29,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   // The GLB's authored Gallop already swishes the tail aggressively.
   // Transfer only part of that motion from the seven native joints;
   // the stable back anchor avoids the vertical tail-flip artifact.
-  const rigInfluence=.22+.16*smooth(u);
+  const rigInfluence=.13+.12*smooth(u);
   return {bones:[1,tailBones[i],tailBones[i+1],0],
    weights:[1-rigInfluence,rigInfluence*(1-blend),rigInfluence*blend,0]};
  }
@@ -53,7 +53,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   const length=(mane?
     (.0130+.0042*Math.sin(PI*f))*(.88+.26*seed)*maneSize:
     (.0255+.0060*seed)*tailSize)*(isMain?1:.80);
-  const vWidth=(mane?.00094:.00113)*(isMain?1:.48)*(.79+.30*seed);
+  const vWidth=(mane?.00073:.00091)*(isMain?1:.50)*(.79+.30*seed);
   const dWidth=vWidth*(mane?.52:.58);
   if(mane){if(isMain)quality.majorMane++;else quality.detailMane++;}
   else{if(isMain)quality.majorTail++;else quality.detailTail++;}
@@ -73,7 +73,10 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
    const curl=(mane?.00062:.00125)*t*Math.sin(u*TAU*1.05+seed*PI);
    const cy=rootY+length*(u+.080*Math.sin(PI*u))+
     .00055*t*Math.sin(id*.73);
-   const cz=rootZ+lift+curl+wave;
+   // Rest-pose tail follows a descending arc, rather than flaring upward.
+   // Match the original GLB tail's downward sweep while the native tail rig
+   // provides secondary swish through limited, distributed skin weights.
+   const cz=rootZ+lift+curl+wave-(mane?.00080*t*t:.0086*t);
    const cx=mane?
     flank*(.00018+.00047*belly+.00112*t*t)*(tier===0?1:.78):
     (secondary-.5)*(.0014+.0045*belly)+
@@ -121,9 +124,9 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
  geometry.setAttribute('silkStrand',new THREE.Float32BufferAttribute(ids,1));
  geometry.computeVertexNormals();geometry.computeBoundingSphere();
  const material=new THREE.MeshPhysicalMaterial({
-  color,vertexColors:true,roughness:pass>=6?.42:.61,
-  sheen:pass>=6?1.0:.86,metalness:0,
-  sheenColor:new THREE.Color('#b88a70'),sheenRoughness:.39,
+  color,vertexColors:true,roughness:pass>=6?.55:.65,
+  sheen:pass>=6?.76:.70,metalness:0,
+  sheenColor:new THREE.Color('#a98168'),sheenRoughness:.57,
   clearcoat:.055,clearcoatRoughness:.69,
   side:THREE.DoubleSide,shadowSide:THREE.DoubleSide
  });
