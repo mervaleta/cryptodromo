@@ -1,0 +1,36 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08110f">
+<meta name="description" content="Archivo verificable de las temporadas sintéticas completadas del Cryptódromo. Trofeos históricos y registros reproducibles.">
+<title>Temporadas · Palmarés histórico · Cryptódromo</title>
+<link rel="icon" href="/assets/cryptodromo-logo.png"><link rel="stylesheet" href="/assets/race-site-hub.css?v=a14">
+<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script>
+<style>
+:root{color-scheme:dark}body{background:radial-gradient(ellipse at top,#143929,#07110e 68%);color:#edf4ed}
+.season{max-width:1480px;margin:auto;padding:30px clamp(15px,3vw,50px) 80px}
+.season h1{font:400 clamp(38px,5.5vw,68px) Georgia,serif;margin:8px 0 15px}.season h1 em{color:#e1c381}
+.season h2{font:400 26px Georgia,serif;margin:5px 0 13px}.season p{line-height:1.55}
+.season .eyebrow{color:#7ae3b7;font-size:11px;font-weight:800;letter-spacing:.2em}
+.season .intro{max-width:800px;color:#b8cec0}
+.season .warning{padding:14px 18px;border-left:4px solid #d8b77a;background:#29221a;border-radius:6px;color:#f2dcb0;margin:20px 0}
+.season .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.season .panel{padding:20px;border:1px solid #3c5c46;background:#0e2319;border-radius:10px;margin:15px 0;min-width:0}
+.season .kpi b{font-size:28px;display:block;color:#f0d6a0}.season .kpi small,.season .muted{font-size:12px;color:#a4c0ac}
+.season .scroll{overflow-x:auto}.season table{width:100%;min-width:580px;border-collapse:collapse}
+.season th,.season td{padding:11px;text-align:left;border-bottom:1px solid #38563d;font-size:13px}.season th{color:#bbd5b9;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.season a{color:#a3e0b9}.season .data-row{border-bottom:1px solid #3a5b45;padding:14px 0}.season .data-row strong{display:block}
+.season code{overflow-wrap:anywhere;color:#e9d0a0}.season .notice{color:#bcd1c2}
+@media(max-width:650px){.season .grid{grid-template-columns:1fr}}
+</style></head><body>
+<header class="sitebar"><div class="sitebar-inner"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO</a><nav class="site-nav" aria-label="Navegación"><a href="/">Carrera</a><a href="/grandes-premios/">Grandes Premios</a><a href="/clubes/">Clubes</a><a href="/temporadas/" aria-current="page">Temporadas</a><a href="/comunidad/">Comunidad</a></nav></div></header>
+<main class="season">
+<div class="eyebrow">ARCHIVO DEPORTIVO · SEGUIMIENTO DE CICLOS</div>
+<h1>Palmarés <em>histórico</em></h1>
+<p class="intro">Acumulamos trofeos en registros semanales inmutables y verificables. Cada archivo se genera al cerrar el ciclo calendario y deriva de los resultados del mismo motor oficial de las carreras.</p>
+<div class="warning"><strong>Archivo de simulación, no de transmisiones observadas.</strong> El fixture synthetic-v1 se repite idéntico cada siete días. No se usan cotizaciones reales ni se certifica que cada carrera haya sido emitida. Un checksum detecta cambios accidentales, pero no prueba autenticidad externa.</div>
+<section class="grid" aria-label="Resumen de temporadas">
+<div class="panel kpi"><b id="season-count">0</b><small>Semanas sintéticas archivadas</small></div>
+<div class="panel kpi"><b id="trophy-count">0</b><small>Trofeos del archivo</small></div>
+<div class="panel kpi"><b id="season-cycle">—</b><small>Inicio del ciclo semanal actual (Argentina)</small></div>
+</section>
+<div class="panel"><h2>Semanas conservadas</h2><p class="muted">Cada registro tiene un resumen SHA-256 y no se sobrescribe al generarlo nuevamente.</p><p id="season-status" role="status" class="notice">Buscando archivos…</p><div id="season-list"></div></div>
+<div class="panel"><h2>Trofeos acumulados</h2><p class="muted">Tabla deportiva, sin puntos monetarios. Solo cuenta las temporadas que tienen un archivo válido.</p><div class="scroll"><table><thead><tr><th>#</th><th>Corredor</th><th>Semanas</th><th>Trofeos</th><th>Victorias</th><th>Puntos</th></tr></thead><tbody id="season-ranks"><tr><td colspan="6">Todavía sin temporadas archivadas.</td></tr></tbody></table></div></div>
+<p class="muted">Para continuar la experiencia: <a href="/grandes-premios/">Grandes Premios</a> · <a href="/clubes/">Clubes de afición</a> · <a href="/metodologia.html">Metodología del juego</a>.</p>
+</main><script type="module" src="./temporadas.js?v=archive-v1"></script></body></html>

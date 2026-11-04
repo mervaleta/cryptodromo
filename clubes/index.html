@@ -1,0 +1,56 @@
+<!doctype html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08110f">
+<meta name="description" content="Clubes de aficionados de los 100 caballos del Cryptódromo. Perfil deportivo y favoritos guardados solo en este navegador.">
+<title>Clubes de aficionados · Cryptódromo</title>
+<link rel="icon" href="/assets/cryptodromo-logo.png"><link rel="stylesheet" href="/assets/race-site-hub.css?v=a14">
+<link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha18-nav1"></script>
+<style>
+:root{color-scheme:dark}body{background:radial-gradient(ellipse at top,#173a2b,#07120e 65%);color:#eff6ed}
+.fan{max-width:1480px;margin:auto;padding:30px clamp(15px,3vw,52px) 85px}
+.fan h1{font:400 clamp(37px,5vw,67px)/1.1 Georgia,serif;margin:8px 0 14px}.fan h1 em{color:#e6c486}
+.fan h2{font:400 26px Georgia,serif;margin:0 0 13px}.fan p{line-height:1.55}
+.fan a{color:#a1e6bd}.fan .eyebrow{font-size:11px;color:#75e6b3;letter-spacing:.18em;font-weight:800}
+.fan .intro{color:#b4c9ba;max-width:850px}
+.fan .warning{padding:14px 17px;background:#2a241b;border-left:4px solid #d7b579;color:#efdeb9;border-radius:5px;margin:24px 0}
+.fan .layout{display:grid;grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr);gap:17px}
+.fan .panel{background:#0c2118;border:1px solid #375c46;border-radius:10px;padding:19px;min-width:0}
+.fan .panel h3{font-size:16px;margin:16px 0 9px}.fan .tools{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.fan input,.fan button{font:inherit;border:1px solid #52785b;background:#15382a;color:#f1f7f0;border-radius:5px;padding:11px 13px;min-height:41px}
+.fan button{cursor:pointer}.fan button:disabled{opacity:.5;cursor:not-allowed}.fan button.primary{background:#d6b778;color:#101b13;border-color:#d6b778;font-weight:800}
+.fan button:focus-visible,.fan input:focus-visible{outline:2px solid #e7c980;outline-offset:3px}
+.fan #club-search{width:100%}.fan .roster{max-height:610px;overflow-y:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:4px}
+.fan .club-card{text-align:left;display:flex;align-items:center;gap:8px;min-width:0}
+.fan .club-card[aria-pressed=true]{border-color:#d6b778;background:#30513b}
+.fan .club-card i,.fan .swatch{display:inline-block;width:10px;height:23px;border-radius:4px;flex:none}
+.fan .club-card strong,.fan .club-card small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fan .club-card small{font-size:10px;color:#bfd0bc}.fan .club-card strong{font-size:14px}
+.fan .identity{display:flex;gap:14px;align-items:center}.fan .identity .swatch{width:28px;height:63px}.fan .identity strong{font:400 30px Georgia,serif}.fan .identity small{display:block;color:#aac6ad}
+.fan .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:18px 0}
+.fan .metrics div{background:#132f20;padding:12px;border:1px solid #325343;border-radius:8px}.fan .metrics b{font-size:22px;display:block}.fan .metrics span{font-size:11px;color:#b8d2bd}
+.fan .list{padding:0;list-style:none}.fan .list li{padding:9px 0;border-bottom:1px solid #31513b;font-size:13px}
+.fan .muted{color:#a9beaf;font-size:12px}.fan .pill{display:inline-block;padding:6px 9px;margin:2px;background:#183f2b;border:1px solid #4d7756;border-radius:20px;font-size:12px}
+.fan .place{display:inline-block;background:#1e4832;padding:4px 7px;border-radius:4px;margin:2px;font-weight:700;font-size:12px}
+.fan .notes{font-size:12px;color:#bad0bd}.fan #notice{min-height:24px}
+@media(max-width:850px){.fan .layout{grid-template-columns:1fr}.fan .roster{max-height:350px}}
+@media(max-width:500px){.fan .metrics{grid-template-columns:repeat(2,1fr)}.fan .roster{grid-template-columns:repeat(2,1fr)}}
+</style></head><body>
+<header class="sitebar"><div class="sitebar-inner"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO</a><nav class="site-nav" aria-label="Navegación"><a href="/">Carrera</a><a href="/racers/">Corredores</a><a href="/grandes-premios/">Grandes Premios</a><a href="/comunidad/">Comunidad</a><a href="/clubes/" aria-current="page">Clubes</a></nav></div></header>
+<main class="fan">
+<div class="eyebrow">TRIBUNAS Y AFICIÓN · 100 IDENTIDADES</div>
+<h1>Los clubes del <em>Cryptódromo</em></h1>
+<p class="intro">Cada caballo puede tener su tribuna. Elegí a quién seguir, explorá su palmarés y descubrí rivales. Ser aficionado no altera el mercado ni la carrera.</p>
+<div class="warning"><strong>Demo local.</strong> La elección de club y los clubes fijados se guardan en este dispositivo. No hay membresías públicas, conteos de seguidores, cuentas verificadas ni recompensas económicas. Las estadísticas son de la simulación synthetic-v1.</div>
+<div class="layout">
+<section class="panel" aria-label="Directorio de clubes"><h2>Las cien tribunas</h2>
+<label for="club-search">Buscar club o criptomoneda</label><input id="club-search" type="search" placeholder="BTC, Ethereum, Solana…">
+<p class="muted" id="club-count">100 clubes</p><div id="club-roster" class="roster"></div></section>
+<div><section class="panel"><div class="identity" id="club-identity"></div>
+<div class="tools"><button id="make-primary" type="button" class="primary">Elegir mi club</button><button id="pin-club" type="button">Fijar favorito</button><a id="club-horse" href="/racers/">Ver caballo 3D</a></div>
+<p id="notice" class="notes" role="status"></p><div class="metrics" id="club-metrics"></div>
+<h3>Forma reciente</h3><div id="club-form"></div>
+<h3>Palmarés del ciclo</h3><ul class="list" id="club-trophies"></ul>
+<h3>Próximos Grandes Premios del fixture</h3><ul class="list" id="club-next"></ul>
+<h3>Rivalidades deportivas</h3><ul class="list" id="club-rivals"></ul>
+<p class="muted">No se atribuyen usuarios a un club. El campeonato se reinicia con cada ciclo semanal sintético y no prueba transmisiones observadas.</p>
+</section>
+<section class="panel"><h2>Mi tribuna local</h2><p id="my-club" class="notes">Sin club favorito</p><div id="pinned-list"></div><div class="tools"><button type="button" id="clear-main">Abandonar club</button><button type="button" id="export-local">Exportar mi preferencia</button></div><p class="muted">Los favoritos del módulo Comunidad permanecen separados. <a href="/comunidad/">Volver a mi perfil comunitario</a> · <a href="/temporadas/">Archivo de temporadas</a>.</p></section></div>
+</div></main><script type="module" src="./clubes.js?v=club-v1"></script></body></html>
