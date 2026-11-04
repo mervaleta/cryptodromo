@@ -15,7 +15,7 @@ export function createBTCTailSpring(){
    const targetSway=drive*(.77*Math.sin(cycle-.90)+.18*Math.sin(cycle*2-1.65))+
     Math.min(2,Math.max(0,wind))*.12*energy;
    const targetLift=drive*(.38+.55*Math.sin(cycle-1.1)+.13*Math.sin(cycle*2+.3));
-   const freq=drive?33:24,damping=drive?9.8:12.5;
+   const freq=drive?72:24,damping=drive?14:12.5;
    swayV+=(freq*(targetSway-sway)-damping*swayV)*step;
    sway+=swayV*step;
    liftV+=(freq*(targetLift-lift)-damping*liftV)*step;
