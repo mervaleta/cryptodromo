@@ -27,6 +27,12 @@ async function requirePlayer(page,track){
  },track,{timeout:100000});
  const player=page.frameLocator('#stadium-broadcast');
  await player.locator('#raceCanvas').waitFor({state:'visible',timeout:20000});
+ await page.waitForFunction(()=>{
+  const child=document.querySelector('#stadium-broadcast')?.contentDocument;
+  return !!child&&child.querySelector('#start')?.disabled===false&&
+   child.querySelector('#raceCanvas')?.width>300&&
+   !/CARGANDO ESCENARIO 3D|ERROR EN ESCENA/.test(child.querySelector('#status')?.textContent||'');
+ },null,{timeout:110000});
  const body=await player.locator('body').evaluate(el=>({
   embed:document.documentElement.classList.contains('tv-embed'),
   stage:document.querySelector('#stage').getBoundingClientRect().toJSON(),
