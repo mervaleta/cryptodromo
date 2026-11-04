@@ -29,8 +29,8 @@ function imprintTexture(){
   map.anisotropy=4;return map;
 }
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number.isFinite(n)?n:a));
-const QUALITY={eco:{particles:220,rate:.36,imprints:450},balanced:{particles:740,rate:.75,imprints:950},
-  cinematic:{particles:1350,rate:1,imprints:1700}};
+const QUALITY={eco:{particles:160,rate:.22,imprints:450},balanced:{particles:480,rate:.46,imprints:950},
+  cinematic:{particles:760,rate:.58,imprints:1700}};
 export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='dirt',seed=12585}={}){
   const solver=createHoofContactSolver({lanes,soleThreshold:.07,releaseThreshold:.18});
   // Original Quaternius GLB contains four animated lower-leg end bones.
@@ -174,10 +174,10 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     velocities[p]=vx;velocities[p+1]=vy;velocities[p+2]=vz;
     ages[i]=.00001;
     const isGrain=kind==='grain',isWet=kind==='wet',isGrass=kind==='grass';
-    lifetimes[i]=isGrain?.29+random()*.36:isWet?.22+random()*.28:isGrass?.35+random()*.28:.62+random()*.62;
+    lifetimes[i]=isGrain?.29+random()*.36:isWet?.22+random()*.28:isGrass?.35+random()*.28:.37+random()*.37;
     gravity[i]=isGrain?8.0:isWet?9.2:isGrass?5.2:.36;
-    baseSize[i]=isGrain?.12+random()*.11:isWet?.12+random()*.17:isGrass?.11+random()*.10:.49+random()*.71;
-    baseAlpha[i]=isGrain?.79:isWet?.73:isGrass?.82:.28+random()*.24;
+    baseSize[i]=isGrain?.12+random()*.11:isWet?.12+random()*.17:isGrass?.11+random()*.10:.26+random()*.34;
+    baseAlpha[i]=isGrain?.58:isWet?.55:isGrass?.57:.10+random()*.10;
     sizes[i]=baseSize[i];alpha[i]=baseAlpha[i];kinds[i]=(isGrain||isWet||isGrass)?1:0;
     if(isWet)color.set('#94a9a2');
     else color.set(profile().pigment);
@@ -188,7 +188,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
   function impact(event,heading=0){
     impacts++;renderPrint(event);
     const cfg=profile(),wetScale=Math.max(.08,1-wetness*.86);
-    const units=Math.max(0,Math.min(16,Math.round(cfg.dust*QUALITY[preset].rate*event.pressure*wetScale)));
+    const units=Math.max(0,Math.min(9,Math.round(cfg.dust*QUALITY[preset].rate*event.pressure*wetScale)));
     const fx=Math.cos(heading),fz=-Math.sin(heading),sx=-fz,sz=fx;
     for(let j=0;j<units;j++){
       const lateral=(random()-.5)*cfg.spread,back=.10+random()*.62;
@@ -268,8 +268,8 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
       xyz[p]+=step*(velocities[p]+wind*.14);
       xyz[p+1]=Math.max(groundY+.01,xyz[p+1]+velocities[p+1]*step);
       xyz[p+2]+=step*velocities[p+2];
-      sizes[i]=baseSize[i]*(1+t*.55);
-      alpha[i]=baseAlpha[i]*Math.pow(1-t,1.35);
+      sizes[i]=baseSize[i]*(1+t*.28);
+      alpha[i]=baseAlpha[i]*Math.pow(1-t,2.6);
     }
     for(const key of ['position','aSize','aAlpha','aKind'])particleGeometry.attributes[key].needsUpdate=true;
     // Colors change on contact only; one upload per render is inexpensive.
