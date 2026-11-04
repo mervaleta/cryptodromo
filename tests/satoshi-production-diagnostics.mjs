@@ -41,8 +41,8 @@ try{
        childTitle:child?.title,
        childBody:child?.body?.innerText.slice(0,700),
        raceStatus:child?.querySelector('#status')?.innerText||q('#status')?.innerText,
-       raceButton:child?.querySelector('#start')?.textContent,
-       raceButtonDisabled:child?.querySelector('#start')?.disabled,
+       raceButton:child?.querySelector('#start')?.textContent||q('#start')?.textContent,
+       raceButtonDisabled:child?.querySelector('#start')?.disabled ?? q('#start')?.disabled,
        raceCanvasSize:c?[c.width,c.height]:null,
        raceCanvasRect:c?{w:c.getBoundingClientRect().width,h:c.getBoundingClientRect().height}:null,
        glVersion:gl?gl.getParameter(gl.VERSION):null,
@@ -56,7 +56,9 @@ try{
     }).catch(e=>({evaluationError:e.message}));
     entry['after'+delay]=snap;
    }
-   await page.screenshot({path:'artifacts/production-diagnostics/screen-'+i+'.png',timeout:25000,animations:'disabled'});
+   try{
+    await page.screenshot({path:'artifacts/production-diagnostics/screen-'+i+'.png',timeout:15000});
+   }catch(e){entry.screenshotWarning=e.message;}
   }catch(e){entry.error=String(e);}
   console.log('DIAG',JSON.stringify(entry).slice(0,15000));
   await page.close();
