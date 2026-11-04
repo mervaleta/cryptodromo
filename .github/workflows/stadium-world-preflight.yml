@@ -46,7 +46,7 @@ jobs:
           node --experimental-default-type=module --check visual-lab/threeCoursePreview.js
           node --experimental-default-type=module --check estadio/estadio.js
           node --experimental-default-type=module --check race-lab/source/src/data/tripleRaceFixture.js
-          node --experimental-default-type=module --test tests/satoshi-complete-fixture-week.mjs tests/satoshi-three-course-geometry.mjs node --experimental-default-type=module --test tests/stadium-broadcast-contract.mjs tests/stadium-staggered-countdowns.mjs tests/stadium-world-record.mjs tests/stadium-course-clearance.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs tests/world-fixture-stadium-20261103.mjs tests/stadium-world.mjs
+          node --experimental-default-type=module --test tests/satoshi-complete-fixture-week.mjs tests/satoshi-three-course-geometry.mjs tests/stadium-broadcast-contract.mjs tests/stadium-staggered-countdowns.mjs tests/stadium-world-record.mjs tests/stadium-course-clearance.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs tests/world-fixture-stadium-20261103.mjs tests/stadium-world.mjs
           node --experimental-default-type=module tests/world-stadium-network.mjs
       - name: Export synthetic fixture audit digest and full 10080-race results
         run: |
