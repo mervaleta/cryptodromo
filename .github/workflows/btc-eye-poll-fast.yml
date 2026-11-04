@@ -1,0 +1,45 @@
+name: BTC Eye + Poll · real WebGL closeup fast
+on:
+  pull_request:
+    paths:
+      - 'racers/btc-maya-*'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - 'tests/btc-eyes-fast-browser.mjs'
+      - '.github/workflows/btc-eye-poll-fast.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  orbital-webgl:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check anatomy and genuine source
+        run: |
+          node --check racers/btc-maya-master.js
+          node --check racers/btc-maya-face-details.js
+          node --check racers/btc-maya-groom.js
+          node --test tests/btc-v12-anatomy-contract.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Photograph actual eyes, crest and full profile
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/crp-eye-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-eyes-fast-browser.mjs
+      - name: Save the actual WebGL screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-ocular-poll-closeup-real-webgl
+          path: artifacts/btc-ocular-fast/
+          if-no-files-found: warn
