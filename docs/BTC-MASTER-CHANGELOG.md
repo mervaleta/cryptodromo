@@ -130,3 +130,8 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - **Diagnóstico real:** nueva cámara de seguimiento `Ojos y nuca · acercamiento` en el visor estándar BTC, métricas de ojos/poll y rugosidad de pelo en `window.__cryptodromoBTCAtelierQA`.
 - **No modifica:** el caballo de los otros 99 tokens, la física oficial de clasificación, el resultado de carrera, el GLB original, el fixture, apuestas o los parámetros financieros. Los trabajos de músculo y patas traseras de PR #89 v13b se mantienen independientes.
 - **Estado:** `pending_deploy`. Verificar **capturas y fases reales de Chromium en la ficha**, test de ojo/poll/cola, y publicación efectiva de Hostinger antes de marcarlo `verified`.
+
+### v15 · reparación topológica de las dos órbitas del Maya 2017
+- Una inspección directa de `racers/btc-maya-body-data.js` (5406 vértices, 10790 triángulos) encontró **dos contornos oculares abiertos de 11 vértices**; centros en reposo `x=±0.001421597,y=-0.028309381,z=0.042705430`.
+- El ojo previo se colocaba fuera del verdadero agujero y dejaba una cavidad oscura junto a una esfera flotante. `btc-maya-eye-layout.js` mide centros y normales oblicuas de cada órbita; `btc-maya-face-details.js` une un anillo de piel skinned a los 11 vértices originales de cada borde. `btc-maya-master.js` sitúa el globo detrás del reborde con orientación anatómica.
+- No se usan imágenes generadas ni se toca el clip `Gallop`. Mantener pendiente de publicación hasta examinar en Chromium las cinco cámaras y dos fases de galope. Construcción `btc-face-poll-tail-20261104-v15`.
