@@ -47,6 +47,7 @@ try{
  assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
  assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must remain anatomically sized');
   assert.equal(start.heroGroom.eyeCenterX,.002235,'cornea must be visible beyond the Maya socket');
+  assert.equal(start.heroGroom.eyeAssembly,'concentric-skinned-palpebra-v14');
   assert.ok(start.heroGroom.pollAnchoredVertices>10,'poll must inherit smooth Head weighting');
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
@@ -67,7 +68,7 @@ try{
  await page.waitForTimeout(600);
  const after=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.ok(Math.abs(after.hoofPhase-before)>.001,'Original Gallop must animate sculpted model');
- for(const angle of ['profile','front','rear','detail','threeQuarter','top','face','poll']){
+ for(const angle of ['face','poll','profile','front','rear','detail','threeQuarter','top']){
   await page.evaluate(angle=>document.querySelector('[data-btc-camera="'+angle+'"]').click(),angle);
   await page.waitForTimeout(350);
   await page.locator('#horse-view').screenshot({path:dir+'/'+angle+'.png',timeout:70000});
