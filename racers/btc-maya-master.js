@@ -7,9 +7,9 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-procedural-hind-groom-20261104-v12';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-eye-nape-hair-20261104-v1';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-procedural-hind-groom-20261104-v12';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-eye-nape-hair-20261104-v1';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
