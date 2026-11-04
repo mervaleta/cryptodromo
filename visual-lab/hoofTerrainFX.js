@@ -45,7 +45,7 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     let entry=sensorCache.get(model);
     if(entry===undefined){
       const bones=soleNames.map(n=>model.root?.getObjectByName(n));
-      entry=bones.every(b=>b?.isBone)?{
+      entry=bones.every(b=>b?.isObject3D)?{
         bones,vectors:bones.map(()=>new THREE.Vector3()),
         soles:bones.map(()=>({x:0,y:0,z:0}))
       }:null;
