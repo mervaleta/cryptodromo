@@ -10,6 +10,10 @@
 .btc-atelier-panel label{display:grid;gap:5px;font-size:11px;color:#d4e2d3}
 .btc-atelier-panel input{width:100%;accent-color:#d2b47c}
 .btc-atelier-panel a{color:#edcd8d;font-size:11px;text-decoration:underline}
+.btc-terrain-controls{display:grid;gap:11px;padding:13px;border:1px solid #66806a;background:#152c21;border-radius:6px}
+.btc-terrain-controls h4{font-size:11px;letter-spacing:.13em;color:#e6d49f;margin:0}
+.btc-terrain-controls select{width:100%;min-height:38px;background:#0d211a;color:#e6eadd;border:1px solid #67836c;border-radius:5px;padding:9px}
+.btc-terrain-controls .btc-terrain-impact-readout{color:#a9d8b1;font-size:11px;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
 body.btc-hair-preview #horse-view{height:620px}
 body.btc-hair-preview .stage{height:690px;min-height:0;align-self:start;overflow:hidden;background:radial-gradient(ellipse at 47% 42%,#223348 0%,#0c1a2d 55%,#050b17 100%);box-shadow:0 26px 84px #000b,inset 0 0 90px #02071366}
 @media(max-width:700px){body.btc-hair-preview #horse-view{height:410px}body.btc-hair-preview .stage{height:480px}}
@@ -36,6 +40,20 @@ body.btc-hair-preview .stage{height:690px;min-height:0;align-self:start;overflow
 <input id="btc-hair-color" aria-label="Color de la melena" type="color" value="#29232a"></label>
 <label>Velocidad del galope · <output id="btc-speed-value">1.00×</output>
 <input id="btc-speed" aria-label="Velocidad del galope" type="range" min=".5" max="1.6" step=".05" value="1"></label>
+<div class="btc-terrain-controls" role="group" aria-label="Simulación de pisadas y polvareda del BTC">
+<h4>CONTACTO DE PEZUÑAS · PISTAS EN VIVO</h4>
+<p>Ahora las cuatro pezuñas dejan huellas y levantan material al tocar el piso. Cambiá la pista sin cambiar el galope ni la anatomía.</p>
+<label>Superficie
+<select id="btc-terrain-surface" aria-label="Elegir pista del caballo BTC">
+<option value="dirt" selected>Tierra · polvo y terrones</option>
+<option value="sand">Arena · granos y polvareda</option>
+<option value="grass">Césped · briznas y compresión</option>
+<option value="off">Tarima original · sin efectos</option>
+</select></label>
+<label>Humedad del terreno · <output id="btc-terrain-wetness-value">0%</output>
+<input id="btc-terrain-wetness" aria-label="Humedad del terreno" type="range" min="0" max="100" step="5" value="0"></label>
+<output id="btc-terrain-impact-readout" class="btc-terrain-impact-readout" aria-live="off">FX pezuñas · preparando contactos 3D</output>
+</div>
 <div class="btc-buttons" role="group" aria-label="Ángulo de cámara">
 <button type="button" data-btc-camera="profile">Perfil</button>
 <button type="button" data-btc-camera="front">Frente</button>
