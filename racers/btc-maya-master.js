@@ -129,7 +129,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  };
  const tailVertex=id=>{
   const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
-  return y>.0155&&Math.abs(x)<.00155&&z>.016&&z<.0355;
+  return y>.01315&&Math.abs(x)<.00245&&z>.019&&z<.0355;
  };
  for(let t=0;t<originalIndices.length;t+=3){
   const tri=[originalIndices[t],originalIndices[t+1],originalIndices[t+2]];
@@ -203,6 +203,27 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   positions[i+1]=y+.00077*refinedMuzzle-.00006*masseter;
   positions[i+2]=z+.00030*brow+.00050*withers+
     .00052*poll+.00050*neck+.00026*belly-.00024*throat;
+ }
+ // Strengthen the hindquarter silhouette: the supplied Maya body was
+ // transfer-skinned correctly but its thighs and gaskins read skeletal
+ // during the stretched phase of Gallop. Shape the *same* skinned surface,
+ // not attached tubes or independent muscle ornaments.
+ let poweredHindVertices=0;
+ for(let i=0;i<positions.length;i+=3){
+  const x=positions[i],y=positions[i+1],z=positions[i+2];
+  const lateral=smooth((Math.abs(x)-.0012)/.0021);
+  const croup=gauss(y,.0093,.0068)*gauss(z,.028,.0078);
+  const thigh=gauss(y,.0108,.0058)*gauss(z,.0180,.0081);
+  const gaskin=gauss(y,.0114,.0038)*gauss(z,.0101,.0056);
+  const muscle=lateral*(.14*croup+.29*thigh+.11*gaskin);
+  if(muscle<.006)continue;
+  // Radial expansion widens the top of both hind legs and rounds their
+  // front/back contour without thickening the cannon bone or hoof.
+  positions[i]=x*(1+muscle);
+  positions[i+1]=y+(y-.0104)*(.18*thigh+.10*gaskin)
+    +.00048*croup*lateral;
+  positions[i+2]=z+.00023*croup*lateral+.00009*thigh*lateral;
+  poweredHindVertices++;
  }
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
@@ -320,7 +341,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,...removed};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,poweredHindVertices,...removed};
 }
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
@@ -388,6 +409,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    sculptedBodyParts:1,vertices:anatomy.vertices,
    harmonyBuild:BTC_MAYA_RENDER_BUILD,
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
+   poweredHindVertices:anatomy.poweredHindVertices,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
