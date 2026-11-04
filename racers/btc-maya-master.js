@@ -7,11 +7,11 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-hindquarters-20261104-v5';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-hindquarters-20261104-v5';
-import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-hindquarters-20261104-v5';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-neck-cleanup-20261104-v6';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-neck-cleanup-20261104-v6';
+import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-neck-cleanup-20261104-v6';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
-export const BTC_MAYA_RENDER_BUILD='btc-master-hindquarters-20261104-v5';
+export const BTC_MAYA_RENDER_BUILD='btc-master-neck-cleanup-20261104-v6';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -502,7 +502,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,neckOutliers:groom.neckOutliers,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},
