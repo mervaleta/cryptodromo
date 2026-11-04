@@ -66,6 +66,6 @@ test('the normal real BTC card loads refined 3D resources, with rollback and all
  assert.match(master,/btc-maya-face-details\.js\?v=btc-face-poll-tail-20261104-v14/);
  assert.match(master,/createBTCHeroMaya/);
  assert.match(preview,/createBTCTerrainStage/);
- assert.match(preview,/variant==='original'/);
+ assert.match(preview,/next!=='original'/);
  assert.doesNotMatch(master,/new THREE\.Sprite|TextureLoader|jockey:true/);
 });
