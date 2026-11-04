@@ -12,7 +12,7 @@ test('world pages use Hostinger-compatible .js modules, watchdog and valid HTML'
  for(const path of routes){
   const html=read(path);
   if(path==='stadiums/crypto/index.html'){
-   assert.match(html,/crypto-venue\.js\?v=[\w.-]+/);
+   assert.match(html,/crypto-stadium-clocks\.js\?v=[\w.-]+/);
    assert.match(html,/\/stadiums\/crypto\/live\//);
    assert.match(html,/\/stadiums\/crypto\/archive\//);
    continue;
