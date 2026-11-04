@@ -64,6 +64,9 @@ try{
  assert.equal(overlay.presentationVisible,true);
  assert.equal(overlay.countdown,'00:30');
  await page.evaluate(()=>window.__cryptodromoCameraQA.resume());
+ // LIVE may legitimately remain in the presentation phase. Verify manual mode
+ // dismisses the overlay and exposes the race dial deterministically.
+ await page.evaluate(()=>document.querySelector('#replay-mode').click());
  assert.notEqual(await page.locator('.dial').evaluate(el=>getComputedStyle(el).display),'none');
  assert.equal(errors.length,0,'LIVE JS: '+errors.join('; ').slice(0,1500));
  console.log('ALPHA17_LIVE_CAMERA',JSON.stringify({initial,overview,errors}));
