@@ -1,0 +1,40 @@
+name: BTC hind thigh · five DQS vs LBS same-pose comparisons
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/btc-maya-pose-volume.js'
+      - 'tests/btc-hind-volume-ab-browser.mjs'
+      - '.github/workflows/btc-hind-volume-ab.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ab-thigh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Chromium for WebGL
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Render five strengths on the exact same native Gallop pose
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-ab.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-hind-volume-ab-browser.mjs
+      - name: Keep A/B proof and source phase report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-hind-muscle-five-way-ab
+          path: artifacts/btc-hind-volume-ab/
+          if-no-files-found: warn
