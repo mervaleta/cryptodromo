@@ -23,6 +23,9 @@ jobs:
           node --check racers/btc-atelier-preview.js
           node --check racers/btc-hair-v15.js
           node --check racers/btc-hero-v4.js
+          node --check racers/btc-maya-master.js
+          node --check racers/btc-maya-groom.js
+          node --check racers/btc-maya-body-data.js
           node --check racers/btc-coat-look-v2.js
           node --check racers/racers.js
           node --test tests/btc-horse-atelier-contract.mjs tests/btc-hair-v15-contract.mjs
@@ -41,9 +44,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-real-hero-v4-browser-evidence
+          name: btc-maya-live-profile-visual-evidence
           path: |
-            artifacts/btc-real-hero-v4-preview.png
+            artifacts/btc-maya-hero-browser-preview.png
             artifacts/btc-original-before.png
             artifacts/btc-hero-after-profile.png
             artifacts/btc-hero-after-rear.png

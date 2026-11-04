@@ -1,0 +1,51 @@
+name: BTC sculpted anatomy · real Gallop browser
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-maya-*'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - 'tests/btc-maya-anatomy-browser.mjs'
+      - '.github/workflows/btc-maya-master.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: btc-maya-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+jobs:
+  maya-master:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check original rig contract and real-source geometry
+        run: |
+          node --check racers/btc-maya-master.js
+          node --check racers/btc-maya-groom.js
+          node --check racers/btc-maya-body-data.js
+          node --check racers/btc-atelier-preview.js
+          node --check tests/btc-maya-anatomy-browser.mjs
+          node --test tests/btc-horse-atelier-contract.mjs
+      - name: Install real Chromium and WebGL software path
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Run live Three.js WebGL anatomical and rollback acceptance
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-maya-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-maya-anatomy-browser.mjs
+      - name: Archive diagnostic stills only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-maya-internal-visual-qa
+          path: artifacts/btc-maya-internal-qa/**
+          if-no-files-found: warn
