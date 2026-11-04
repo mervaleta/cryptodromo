@@ -8,7 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-master-procedural-hind-groom-20261104-v12';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-hind-skin-continuity-20261104-v13b';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
@@ -136,6 +136,19 @@ export function createPreview(canvas,onFailure=()=>{}){
  });
  return {
   select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,
+  // Deterministic visual QA only: ?btcFreeze=1 keeps the rendered pose stationary
+  // while a test explicitly advances the original AnimationMixer. Not exposed on LIVE.
+  debugAdvance(frames=1,step=.583/16){
+   if(!fixedFrame||!horse||!hero||selected?.symbol!=='BTC')return null;
+   const count=Math.min(32,Math.max(1,Math.floor(frames)));
+   for(let i=0;i<count;i++){
+    horse.update(step,1);
+    hero.update(step,{wind:0,speed:1,running:false,phase:horse.hoofPhase||0});
+   }
+   controls.update();
+   renderer.render(scene,camera);
+   return {phase:horse.hoofPhase||0,frames:count};
+  },
   snapshot:()=>({
    symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
    originalAsset:true,jockey:false,maneEnabled:!!hero,

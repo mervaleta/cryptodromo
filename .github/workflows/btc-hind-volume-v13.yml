@@ -1,0 +1,61 @@
+name: BTC v13 · stable hind-muscle volume across Gallop
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-maya-pose-volume.js'
+      - 'racers/btc-maya-hindquarters.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - 'racers/btc-master-revision.json'
+      - 'tests/btc-hind-volume-v13-*.mjs'
+      - '.github/workflows/btc-hind-volume-v13.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: btc-hind-v13-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+jobs:
+  limb-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check procedural rig and tests
+        run: |
+          node --check racers/btc-maya-master.js
+          node --check racers/btc-maya-pose-volume.js
+          node --check racers/btc-atelier-preview.js
+          node --check tests/btc-hind-volume-v13-browser.mjs
+          node --test tests/btc-hind-volume-v13-contract.mjs tests/btc-v12-anatomy-contract.mjs tests/btc-horse-atelier-contract.mjs
+  sixteen-phase-webgl:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install ephemeral Playwright browser only
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Run 16 real frame captures, plus front and rear
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-v13-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-hind-volume-v13-browser.mjs
+      - name: Archive 16-frame filmstrip and phase report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-hind-volume-16-frame-v13
+          path: artifacts/btc-hind-volume-v13/
+          if-no-files-found: warn
+          retention-days: 14
