@@ -66,7 +66,7 @@ export function createBTCMayaFaceDetails(source,skinAt,positions,{coatColor='#9e
  if(!source?.skeleton||!BTC_EYE_LAYOUT)throw Error('BTC Maya face requires intact original rig');
  const components=[
   eyelidRing(source,{color:coatColor}),
-  eyelidRing(source,{color:'#593829',topOnly:true})
+  eyelidRing(source,{color:'#704633',topOnly:true})
  ];
  return {
   surfaces:components.length,
