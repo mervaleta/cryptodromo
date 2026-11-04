@@ -8,7 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=hoof-btc-fiche-20261104-v1';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-face-poll-tail-20261104-v15';
 import {createBTCTerrainStage} from './btc-terrain-stage.js?v=hoof-btc-fiche-20261104-v1';
 
 const CAMERA_POSITIONS={
@@ -16,6 +16,7 @@ const CAMERA_POSITIONS={
  front:[3.85,2.12,.13],
  rear:[-3.52,1.78,1.70],
  detail:[1.64,2.16,2.89],
+ face:[1.15,2.05,1.2],
  threeQuarter:[2.85,2.18,2.75],
  top:[1.02,4.55,1.12]
 };
@@ -72,8 +73,16 @@ export function createPreview(canvas,onFailure=()=>{}){
  function setCamera(view){
   if(!(view in CAMERA_POSITIONS))return;
   cameraView=view;
-  camera.position.set(...CAMERA_POSITIONS[view]);
-  controls.target.set(0,1.05,0);controls.update();
+  if(view==='face'&&hero?.focusWorldPoint){
+   const p=hero.focusWorldPoint();
+   controls.target.set(p.x,p.y,p.z);
+   camera.position.set(p.x+.77,p.y+.18,p.z+.62);
+  }else{
+   camera.position.set(...CAMERA_POSITIONS[view]);
+   controls.target.set(0,1.05,0);
+  }
+  controls.minDistance=view==='face'?.55:2.7;
+  controls.update();
  }
  async function rebuild(){
   const token=selected;if(!token||disposed)return;
@@ -110,6 +119,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    terrain.reset();
    terrain.setVisible(token.symbol==='BTC'&&terrainSurface!=='off');
    renderedSymbol=token.symbol;renderedVariant=candidate?variant:'original';
+   if(cameraView==='face')setCamera('face');
    prevHero?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
@@ -148,6 +158,11 @@ export function createPreview(canvas,onFailure=()=>{}){
    }
    hero?.update(dt,{wind,speed,running:!paused,phase:horse?.hoofPhase||0});
    terrain.update({horse,dt,running:!paused&&!fixedFrame&&selected?.symbol==='BTC',speed,wind});
+  }
+  if(cameraView==='face'&&hero?.focusWorldPoint){
+   const p=hero.focusWorldPoint(),target=new THREE.Vector3(p.x,p.y,p.z);
+   const delta=target.sub(controls.target).multiplyScalar(.18);
+   controls.target.add(delta);camera.position.add(delta);
   }
   controls.update();renderer.render(scene,camera);
  });

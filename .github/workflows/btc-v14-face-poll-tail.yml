@@ -1,0 +1,54 @@
+name: BTC v14 · Eye, poll and inertial tail real WebGL
+on:
+  push:
+    branches: ['feat/btc-eyes-poll-hair-polish-20261104']
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-maya-*.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/btc-master-revision.json'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - 'tests/btc-v14-*.mjs'
+      - '.github/workflows/btc-v14-face-poll-tail.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  geometry-and-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax and 2017 Maya original Gallop invariants
+        run: |
+          for file in racers/btc-maya-*.js racers/btc-atelier-preview.js; do node --check "$file"; done
+          node --test tests/btc-v14-face-poll-tail-contract.mjs tests/btc-v12-anatomy-contract.mjs tests/btc-horse-atelier-contract.mjs
+  real-btc-card-chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Real WebGL from actual BTC fiche, never static concept images
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/cryptodromo-btc-v14.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-v14-face-poll-tail-browser.mjs
+      - name: Save close face/neck and moving tail captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-v14-five-real-webgl-views
+          path: artifacts/btc-v14/*.png
+          if-no-files-found: warn

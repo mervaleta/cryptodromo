@@ -58,7 +58,8 @@ try {
   assert.equal(s.heroGroom.hindGaitCorrective,true);
   assert.ok(s.heroGroom.hindMaxExpansion>.10);
   assert.equal(s.heroGroom.neckOutliers,0,'no hair vertices outside dorsal neck envelope');
- assert.ok(s.heroGroom.eyeRadius<.0004,'eyes should not protrude out of socket');
+ assert.equal(s.heroGroom.eyeSocketVertices,22,'public eyes must close the original two 11-edge holes');
+ assert.ok(s.heroGroom.eyeRecess>.0002,'public eye globe must sit behind skin-level orbital plane');
  assert.equal(s.heroGroom.irisEditable,true,'the public iris must accept eyeColor');
  assert.equal(s.heroGroom.blackEquinePupils,true);
  assert.equal(s.heroGroom.sculptedEars,2,'stylized pinnae should appear on the public horse');
