@@ -49,7 +49,7 @@ test('Groom, bone weights and coat texture remain procedural rather than images'
  module.addBTCHindquarterGaitShader(vertexShader,phase);
  assert.strictEqual(vertexShader.uniforms.btcHindGait,phase);
  assert.match(vertexShader.vertexShader,/btcStifle/);
- assert.match(vertexShader.vertexShader,/transformed\\.x/);
+ assert.ok(vertexShader.vertexShader.includes('transformed.x'),'GPU gait corrective must deform the hindquarter skin, not the rig');
  assert.ok(vertexShader.vertexShader.includes(String.fromCharCode(10)+'float btcHindPhase'),'shader inserts a real newline before muscle motion');
 });
 test('canonical BTC chain picks new groom and body modules; 99 other horses unchanged',()=>{
