@@ -247,10 +247,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.56;
+ coat.metalness=0;coat.roughness=.62;
  coat.defines={STANDARD:'',PHYSICAL:''};
- coat.clearcoat=.16;coat.clearcoatRoughness=.45;
- coat.sheen=.24;coat.sheenColor.set('#9c7258');coat.sheenRoughness=.82;
+ coat.clearcoat=.115;coat.clearcoatRoughness=.55;
+ coat.sheen=.28;coat.sheenColor.set('#ac805b');coat.sheenRoughness=.78;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
@@ -269,13 +269,13 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCMayaRest;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\nfloat coatDirection=sin(vBTCMayaRest.y*13700.+vBTCMayaRest.z*1850.)*sin(vBTCMayaRest.x*7600.-vBTCMayaRest.y*920.);\nfloat coatSalt=fract(sin(dot(floor(vBTCMayaRest*4700.),vec3(17.43,37.2,91.1)))*43758.5453);\nfloat dorsalLight=smoothstep(.027,.041,vBTCMayaRest.z)*.04;\nfloat amberBreak=sin(vBTCMayaRest.y*470.+vBTCMayaRest.z*890.)*sin(vBTCMayaRest.x*340.);\nfloat coatGrain=.97+.045*coatDirection+.05*(coatSalt-.5)+.055*amberBreak+dorsalLight;\ndiffuseColor.rgb*=clamp(coatGrain,.85,1.09);\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.78,.75,.72),crpMuzzle*.67);\nfloat lipCrease=exp(-pow((vBTCMayaRest.y+.0337)/.0012,2.)-pow((vBTCMayaRest.z-.0341)/.00048,2.));\nfloat nostril=exp(-pow((vBTCMayaRest.y+.0335)/.00043,2.)-pow((vBTCMayaRest.z-.0359)/.00040,2.))*smoothstep(.0007,.0021,abs(vBTCMayaRest.x));\nfloat lowLeg=(1.0-smoothstep(.008,.018,vBTCMayaRest.z))*smoothstep(.006,.014,abs(vBTCMayaRest.y));\ndiffuseColor.rgb*=1.0-.10*lipCrease-.44*nostril;\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.49,.37,.32),lowLeg*.68);');
+   '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\nfloat coatDirection=sin(vBTCMayaRest.y*13700.+vBTCMayaRest.z*1850.)*sin(vBTCMayaRest.x*7600.-vBTCMayaRest.y*920.);\nfloat coatSalt=fract(sin(dot(floor(vBTCMayaRest*4700.),vec3(17.43,37.2,91.1)))*43758.5453);\nfloat dorsalLight=smoothstep(.027,.041,vBTCMayaRest.z)*.04;\nfloat amberBreak=sin(vBTCMayaRest.y*470.+vBTCMayaRest.z*890.)*sin(vBTCMayaRest.x*340.);\nfloat coatGrain=.99+.020*coatDirection+.025*(coatSalt-.5)+.032*amberBreak+dorsalLight;\ndiffuseColor.rgb*=clamp(coatGrain,.85,1.09);\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.69,.59,.52),crpMuzzle*.55);\nfloat lipCrease=exp(-pow((vBTCMayaRest.y+.0337)/.0012,2.)-pow((vBTCMayaRest.z-.0341)/.00048,2.));\nfloat nostril=exp(-pow((vBTCMayaRest.y+.0335)/.00043,2.)-pow((vBTCMayaRest.z-.0359)/.00040,2.))*smoothstep(.0007,.0021,abs(vBTCMayaRest.x));\nfloat lowLeg=(1.0-smoothstep(.008,.018,vBTCMayaRest.z))*smoothstep(.006,.014,abs(vBTCMayaRest.y));\ndiffuseColor.rgb*=1.0-.10*lipCrease-.44*nostril;\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.54,.44,.35),lowLeg*.28);\nfloat foreheadStar=exp(-pow(vBTCMayaRest.x/.00047,2.))*exp(-pow((vBTCMayaRest.y+.0295)/.00165,2.))*smoothstep(.040,.043,vBTCMayaRest.z);\nfloat earVelvet=exp(-pow((abs(vBTCMayaRest.x)-.0013)/.0007,2.))*exp(-pow((vBTCMayaRest.y+.0258)/.0015,2.))*smoothstep(.044,.047,vBTCMayaRest.z);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.69,.53,.39),foreheadStar*.24);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.58,.31,.27),earVelvet*.20);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
-   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.035*coatDirection+.050*amberBreak,.42,.76);');
+   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.020*coatDirection+.030*amberBreak,.50,.82);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
-   '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.004,amberBreak*.003,coatDirection*.003));');
+   '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.002,amberBreak*.0017,coatDirection*.0015));');
  };
- coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-maya-muzzle-v2';
+ coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-harmony-sculpt-face-v1';
  const hoof=new THREE.MeshStandardMaterial({
   name:'BTC hidden source hoof geometry, replaced by sculpted hoof shells',
   color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#39302a',
