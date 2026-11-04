@@ -26,7 +26,9 @@ import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedura
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
 import {applyGateStaging} from './gateChoreography.js?v=alpha20-1';
-import {getRaceFixture,RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
+import {getRaceFixture as getLegacyRaceFixture,RACES_PER_DAY as LEGACY_RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
+import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-live-1';
+import {tripleLiveSlot,getTrack} from './tripleLiveSchedule.js?v=alpha19-live-1';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
 import {mountTrackSplitsPanel} from './trackSplitsPanel.js?v=alpha15-splits-1';
@@ -37,6 +39,19 @@ const VISUAL_START_X=-390,VISUAL_FINISH_X=390,VISUAL_SPAN=VISUAL_FINISH_X-VISUAL
 // Alpha 03: a real XZ-plane, Y-up stadium, not a vertical XY theater.
 // Visual effects and frame rate are deliberately isolated from the finance engine.
 const canvas=document.getElementById('raceCanvas'), stage=document.getElementById('stage');
+const broadcastQuery=new URLSearchParams(location.search);
+const selectedTrack=getTrack(broadcastQuery.get('track'));
+const tripleMode=Boolean(selectedTrack);
+const RACES_PER_DAY=tripleMode?TRIPLE_RACES_PER_DAY:LEGACY_RACES_PER_DAY;
+const trackSchedule=date=>tripleMode?tripleLiveSlot(date,selectedTrack.id):liveSlot(date);
+const raceFor=(index,day)=>tripleMode?getTripleRaceFixture(index,day):getLegacyRaceFixture(index,day);
+const nextRaceIndex=index=>index+(tripleMode?3:1);
+const replayMinute=Number(broadcastQuery.get('replayMinute'));
+const replayDay=Number(broadcastQuery.get('replayDay'));
+const hasReplay=tripleMode&&broadcastQuery.has('replayMinute')&&broadcastQuery.has('replayDay')
+  &&Number.isInteger(replayMinute)&&replayMinute>=0&&replayMinute<1440
+  &&replayMinute%3===selectedTrack.minuteOffset
+  &&Number.isInteger(replayDay)&&replayDay>=0&&replayDay<7;
 const horseEngineMode=selectedHorseRenderer(location.search);
 const horseEngineControl=document.querySelector('#horse-engine');
 if(horseEngineControl){
@@ -311,7 +326,7 @@ const stadiumDensity=createStadiumDensity({THREE,scene,quality:softwareGPU||mobi
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
-let layoutMode='straight';
+let layoutMode=selectedTrack?.layout||'straight';
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
 // Dust particles when running; no effect on outcomes.
 const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
@@ -325,11 +340,11 @@ const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,siz
 rain.visible=false;scene.add(rain);
 
 const initialQa=new URLSearchParams(location.search).get('finish-qa')==='alpha06';
-const initialLiveSlot=liveSlot(new Date());
-const initialRaceIndex=initialQa?0:
+const initialLiveSlot=trackSchedule(new Date());
+const initialRaceIndex=hasReplay?replayDay*RACES_PER_DAY+replayMinute:initialQa?0:
  broadcastPhase(initialLiveSlot.slotSeconds).phase===PHASES.PRESENTATION?
  initialLiveSlot.next.index:initialLiveSlot.index;
-let raceIndex=initialRaceIndex,race=getRaceFixture(initialRaceIndex%RACES_PER_DAY,Math.floor(initialRaceIndex/RACES_PER_DAY)),
+let raceIndex=initialRaceIndex,race=raceFor(initialRaceIndex%RACES_PER_DAY,Math.floor(initialRaceIndex/RACES_PER_DAY)),
     profiles=createOfficialRace(race.entries);
 let broadcastProfiles=buildBroadcastProfiles(profiles);
 const gateKit=createBroadcastGates({THREE,entries:race.entries,startX:VISUAL_START_X,quality:softwareGPU?'eco':mobile?'balanced':'high'});
@@ -427,7 +442,7 @@ async function bootHorses(){
 }
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
- race=getRaceFixture(raceIndex%RACES_PER_DAY,Math.floor(raceIndex/RACES_PER_DAY));
+ race=raceFor(raceIndex%RACES_PER_DAY,Math.floor(raceIndex/RACES_PER_DAY));
  gateKit.setEntries(race.entries);gateLabels.setEntries(race.entries);
  profiles=createOfficialRace(race.entries);
  broadcastProfiles=buildBroadcastProfiles(profiles);
@@ -438,7 +453,8 @@ function setRace(index){
  finishController.reset();tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
  finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
- clockEl.textContent='00:00';document.getElementById('raceName').textContent='GRAN PREMIO CRIPTO · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
+ clockEl.textContent='00:00';document.getElementById('raceName').textContent=(tripleMode?'SATOSHI NAKAMOTO · '+selectedTrack.name.toUpperCase():'GRAN PREMIO CRIPTO')+
+ ' · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
  if(horses.length){
   horses.forEach((h,i)=>{
    const e=race.entries[i];h.entry=e;h.progress=0;h.visualMeters=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
@@ -479,14 +495,14 @@ start.addEventListener('click',()=>{
  if(!horses.length)return;
  activateBroadcastAudio();
  if(liveFollowing){liveFollowing=false;liveNowButton.textContent='● SINTONIZAR LIVE';}
- if(finished){setRace(raceIndex+1);resultsOverlay.hidden=true;}
+ if(finished){setRace(nextRaceIndex(raceIndex));resultsOverlay.hidden=true;}
  running=!running;for(const h of horses)h.model.play(running?'Gallop':'Idle');
  if(running&&elapsed===0)speakBroadcast(narrateEvent({type:'start'}));
  start.textContent=running?'Ⅱ PAUSAR':'▶ CONTINUAR';
  status.textContent=running?'CARRERA EN CURSO · DOS INPUTS DE PRECIO':'EN PAUSA';
 });
 resetButton.addEventListener('click',()=>{liveFollowing=false;setRace(raceIndex);});
-nextButton.addEventListener('click',()=>{liveFollowing=false;setRace(raceIndex+1);});
+nextButton.addEventListener('click',()=>{liveFollowing=false;setRace(nextRaceIndex(raceIndex));});
 const livePrevious=document.querySelector('#live-previous'),liveCurrent=document.querySelector('#live-current'),
       liveNextLabel=document.querySelector('#live-next-label'),liveCountdown=document.querySelector('#live-countdown'),
       liveState=document.querySelector('#live-state'),liveNowButton=document.querySelector('#live-now');
@@ -497,7 +513,7 @@ const presentation=document.querySelector('#presentation-overlay'),presentRoster
       presentCountdown=document.querySelector('#present-countdown');
 const presentationHorse=mountPresentationHorse(document.querySelector('#present-horse-3d'));
 const finishCelebration=document.querySelector('#finish-celebration'),finishCrossCount=document.querySelector('#finish-cross-count');
-const qaManual=initialQa;
+const qaManual=initialQa||hasReplay;
 let liveFollowing=!qaManual,lastLiveIndex=-1,lastPhase='',lastPresented=-1;
 function syncControlMode(){
  const manual=!liveFollowing;
@@ -537,14 +553,14 @@ function buildPresentRoster(entries){
  presentRoster.replaceChildren(...cards);lastPresented=-1;
 }
 function updateLiveProgram(){
- const now=liveSlot(new Date()),phase=broadcastPhase(now.slotSeconds);
+ const now=trackSchedule(new Date()),phase=broadcastPhase(now.slotSeconds);
  livePrevious.textContent=now.previous.label;liveCurrent.textContent=now.label;
  liveNextLabel.textContent=now.next.label;
  liveCountdown.textContent=formatCountdown(now.secondsToNext);
  const label=phase.phase===PHASES.RACE?'EN PISTA · '+Math.ceil(phase.secondsLeft)+' s':
    phase.phase===PHASES.RESULTS?'LLEGADA / ACTA OFICIAL':'PRESENTACIÓN Y CUENTA REGRESIVA';
  liveState.textContent='DÍA '+(now.dayIndex+1)+' / 7 · CARRERA '+String(now.slot+1).padStart(3,'0')+
-  ' / 480 · '+label+' · REPLAY SINTÉTICO UTC−3';
+  ' / '+(tripleMode?'480 · '+selectedTrack.name:'480')+' · '+label+' · REPLAY SINTÉTICO UTC−3';
  if(!liveFollowing||!horses.length)return;
  if(now.index!==lastLiveIndex){
   lastLiveIndex=now.index;lastPhase='';
@@ -631,7 +647,7 @@ replayButton.addEventListener('click',()=>{
 for(const [id,offset] of [['#live-prev',-1],['#live-next',1]]){
  document.querySelector(id).addEventListener('click',()=>{
   enterManualMode();
-  const now=liveSlot(new Date()),slot=offset===-1?now.previous:now.next;
+  const now=trackSchedule(new Date()),slot=offset===-1?now.previous:now.next;
   setRace(slot.index);
  });
 }
@@ -724,6 +740,14 @@ function setLayout(mode){
  if(horses.length){setRace(raceIndex);if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}}
 }
 layoutSelect.addEventListener('change',()=>setLayout(layoutSelect.value));
+if(tripleMode){
+ layoutSelect.value=layoutMode;
+ setLayout(layoutMode);
+ // Each channel has a dedicated course; spectators change channels, not course geometry.
+ layoutSelect.disabled=true;
+ layoutSelect.title='Pista asignada a '+selectedTrack.name;
+ document.getElementById('raceName').textContent='ESTADIO SATOSHI NAKAMOTO · '+selectedTrack.name.toUpperCase();
+}
 function setTrackType(type){
  if(type==='grass'){
   earth.map=grassTexture;earth.bumpMap=grassTexture;earth.bumpScale=.023;earth.color.set('#bfd09f');earth.roughness=.90;
