@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-neck-cleanup-20261104-v6",
+  "buildId": "btc-master-ear-root-seal-20261104-v7",
   "status": "pending_deploy",
-  "statusLabel": "Corrección de crin Three.js pendiente de validación visual y despliegue",
+  "statusLabel": "Huecos de nuca/orejas cerrados en geometría Three.js · sin QA público",
   "updatedAt": "2026-11-04",
-  "note": "Iteración 1: trayectoria de crin limitada a la línea dorsal del cuello, falta comparar capturas y publicación Hostinger.",
+  "note": "Iteración 2: cerradas dos aberturas del contorno anatómico original con triangulación conectada a la misma malla skinned; pendiente comparación de ángulos y producción.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Validar eliminación de filamentos bajos del cuello con Gallop y cámaras",
-    "Continuidad de ambos mechones laterales pendiente de aprobación visual",
-    "Posible hueco/transparencia detrás de las orejas",
-    "Ojos con globo tridimensional, pupila equina e iris editable"
+    "Revisar capturas WebGL del cierre de las orejas durante Gallop y desde atrás",
+    "Validar crin en reposo y Gallop tras iteración 1",
+    "Reconstruir globos oculares con iris editable y pupila equina",
+    "Revisar proporciones anatómicas y rendimiento"
   ],
   "nextPhase": {
     "status": "blocked",
