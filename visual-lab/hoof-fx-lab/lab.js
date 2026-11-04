@@ -151,6 +151,7 @@ function draw(now){
 if(new URLSearchParams(location.search).get('qa')==='1'){
  window.__cryptodromoHoofLabQA=Object.freeze({snapshot:()=>Object.freeze({
   ready:!!horse,master:!!hero,failed,running,horseX,surface:$('surface').value,
+  nodes:(()=>{const names=[];horse?.root?.traverse(o=>{if(/Leg|Hoof|hoof|end/.test(o.name))names.push({name:o.name,type:o.type});});return names.slice(0,55);})(),
   wetness,stats:fx.stats,drawCalls:renderer.info.render.calls
  })});
 }
