@@ -29,10 +29,10 @@ jobs:
               if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "${ORIGIN}/${module}?deploy=${GITHUB_SHA}" -o "/tmp/btc-${module}"; then ok=false; break; fi
             done
             if [[ "$ok" == true ]] &&
-              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-index.html &&
-              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-racers.js &&
-              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-btc-atelier-preview.js &&
-              grep -q 'btc-master-procedural-hind-groom-20261104-v12-fx1' /tmp/btc-btc-maya-master.js &&
+              grep -q 'btc-eye-nape-hair-20261104-v1' /tmp/btc-index.html &&
+              grep -q 'btc-eye-nape-hair-20261104-v1' /tmp/btc-racers.js &&
+              grep -q 'btc-eye-nape-hair-20261104-v1' /tmp/btc-btc-atelier-preview.js &&
+              grep -q 'btc-master-procedural-hind-groom-20261104-v12-fx2' /tmp/btc-btc-maya-master.js &&
               grep -q 'createHoofTerrainFX' /tmp/btc-btc-terrain-stage.js &&
               grep -q 'neckOutliers' /tmp/btc-btc-maya-groom.js &&
               grep -q 'createBTCMayaFaceDetails' /tmp/btc-btc-maya-face-details.js &&
