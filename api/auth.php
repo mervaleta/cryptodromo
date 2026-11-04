@@ -1,101 +1,144 @@
 <?php
+declare(strict_types=1);
 /**
- * RNGMarketDriven.com - User Authentication & Session API
- * Handles Google OAuth / Email Registration and stores user profiles in MySQL (or SQLite fallback).
+ * Cryptodromo demo identity endpoint.
+ * SECURITY: never trust email/google_id supplied by the browser.
+ * A verified Google ID token and configured OAuth client ID are mandatory.
  */
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: no-referrer');
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
+function respond(int $code, array $body): void {
+    http_response_code($code);
+    echo json_encode($body, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Configuración de Base de Datos (MySQL Hostinger con fallback a SQLite)
-$db_host = getenv('DB_HOST') ?: 'localhost';
-$db_user = getenv('DB_USER') ?: '';
-$db_pass = getenv('DB_PASS') ?: '';
-$db_name = getenv('DB_NAME') ?: '';
-
-$pdo = null;
-
-if (!empty($db_user) && !empty($db_name)) {
-    try {
-        $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]);
-    } catch (Exception $e) {
-        // Fallback below
-    }
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($method === 'GET') {
+    respond(200, ['status' => 'ready', 'service' => 'Cryptodromo Auth API', 'mode' => 'verified-google-id-token']);
+}
+if ($method !== 'POST') {
+    header('Allow: GET, POST');
+    respond(405, ['status' => 'error', 'message' => 'Método no permitido']);
+}
+if (($_GET['action'] ?? '') !== 'login_google') {
+    respond(404, ['status' => 'error', 'message' => 'Acción desconocida']);
+}
+if (!str_starts_with(strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0])), 'application/json')) {
+    respond(415, ['status' => 'error', 'message' => 'Se requiere JSON']);
 }
 
-if (!$pdo) {
-    // Usar SQLite local si MySQL no está configurado aún en Hostinger
-    $sqlite_file = __DIR__ . '/../../data/users_db.sqlite';
-    if (!file_exists(dirname($sqlite_file))) {
-        @mkdir(dirname($sqlite_file), 0755, true);
-    }
-    $pdo = new PDO("sqlite:$sqlite_file");
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            google_id TEXT,
-            name TEXT NOT NULL,
-            avatar_url TEXT,
-            balance_credits REAL DEFAULT 1000.0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_login DATETIME DEFAULT CURRENT_TIMESTAMP
+$clientId = trim((string) getenv('GOOGLE_OAUTH_CLIENT_ID'));
+if ($clientId === '') {
+    respond(503, ['status' => 'error', 'message' => 'Inicio de sesión no configurado']);
+}
+$body = file_get_contents('php://input', false, null, 0, 8193);
+if ($body === false || strlen($body) > 8192) {
+    respond(413, ['status' => 'error', 'message' => 'Solicitud demasiado grande']);
+}
+$input = json_decode($body, true);
+$idToken = is_array($input) ? ($input['id_token'] ?? '') : '';
+if (!is_string($idToken) || strlen($idToken) > 6000 || strlen($idToken) < 32) {
+    respond(400, ['status' => 'error', 'message' => 'Token de identidad requerido']);
+}
+
+// Exchange no personal data with user-controlled URLs: fixed Google verification endpoint.
+if (!function_exists('curl_init')) {
+    respond(503, ['status' => 'error', 'message' => 'Verificador no disponible']);
+}
+$ch = curl_init('https://oauth2.googleapis.com/tokeninfo?id_token=' . rawurlencode($idToken));
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CONNECTTIMEOUT => 3,
+    CURLOPT_TIMEOUT => 6,
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_SSL_VERIFYHOST => 2,
+    CURLOPT_HTTPHEADER => ['Accept: application/json'],
+]);
+$verification = curl_exec($ch);
+$status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+curl_close($ch);
+if (!is_string($verification) || $status !== 200) {
+    respond(401, ['status' => 'error', 'message' => 'Token inválido']);
+}
+$claims = json_decode($verification, true);
+if (!is_array($claims) ||
+    !hash_equals($clientId, (string) ($claims['aud'] ?? '')) ||
+    !in_array((string) ($claims['iss'] ?? ''), ['accounts.google.com', 'https://accounts.google.com'], true) ||
+    !in_array($claims['email_verified'] ?? null, ['true', true, 1, '1'], true) ||
+    !ctype_digit((string) ($claims['exp'] ?? '')) ||
+    (int) $claims['exp'] <= time() ||
+    !is_string($claims['sub'] ?? null) || $claims['sub'] === '') {
+    respond(401, ['status' => 'error', 'message' => 'Identidad no verificada']);
+}
+$email = filter_var($claims['email'] ?? '', FILTER_VALIDATE_EMAIL);
+if (!$email) respond(401, ['status' => 'error', 'message' => 'Correo no verificado']);
+$googleId = $claims['sub'];
+$rawName = trim((string) ($claims['name'] ?? 'Usuario'));
+$name = function_exists('mb_substr') ? mb_substr($rawName, 0, 120, 'UTF-8') : substr($rawName, 0, 120);
+$avatar = filter_var($claims['picture'] ?? '', FILTER_VALIDATE_URL) ?: '';
+if ($avatar !== '' && parse_url($avatar, PHP_URL_SCHEME) !== 'https') $avatar = '';
+
+$dbUser = getenv('DB_USER') ?: '';
+$dbName = getenv('DB_NAME') ?: '';
+try {
+    if ($dbUser !== '' && $dbName !== '') {
+        $pdo = new PDO(
+            'mysql:host=' . (getenv('DB_HOST') ?: 'localhost') . ';dbname=' . $dbName . ';charset=utf8mb4',
+            $dbUser, getenv('DB_PASS') ?: '',
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
         );
-    ");
-}
-
-$action = $_GET['action'] ?? 'status';
-
-if ($action === 'login_google' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    $email = filter_var($input['email'] ?? '', FILTER_VALIDATE_EMAIL);
-    $name = trim($input['name'] ?? 'Usuario');
-    $google_id = trim($input['google_id'] ?? '');
-    $avatar = trim($input['avatar_url'] ?? '');
-
-    if (!$email) {
-        http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'Email inválido']);
-        exit;
-    }
-
-    // Buscar o insertar usuario
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($user) {
-        $update = $pdo->prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP, name = ? WHERE id = ?");
-        $update->execute([$name, $user['id']]);
     } else {
-        $insert = $pdo->prepare("INSERT INTO users (email, google_id, name, avatar_url, balance_credits) VALUES (?, ?, ?, ?, 1000.00)");
-        $insert->execute([$email, $google_id, $name, $avatar]);
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        // No automatic private-data fallback inside an accidentally public web directory.
+        $sqlitePath = getenv('CRP_AUTH_SQLITE_PATH') ?: '';
+        if ($sqlitePath === '' || !is_file($sqlitePath)) {
+            respond(503, ['status' => 'error', 'message' => 'Base de usuarios no configurada']);
+        }
+        $pdo = new PDO('sqlite:' . $sqlitePath);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
-
-    echo json_encode([
-        'status' => 'success',
-        'user' => [
-            'id' => $user['id'],
-            'email' => $user['email'],
-            'name' => $user['name'],
-            'avatar_url' => $user['avatar_url'],
-            'balance_credits' => floatval($user['balance_credits'])
-        ]
-    ]);
-    exit;
+    $pdo->beginTransaction();
+    $get = $pdo->prepare('SELECT * FROM users WHERE google_id = ?');
+    $get->execute([$googleId]);
+    $user = $get->fetch(PDO::FETCH_ASSOC);
+    if (!$user) {
+        $getEmail = $pdo->prepare('SELECT * FROM users WHERE email = ?');
+        $getEmail->execute([$email]);
+        if ($getEmail->fetch(PDO::FETCH_ASSOC)) {
+            $pdo->rollBack();
+            respond(409, ['status' => 'error', 'message' => 'La cuenta existente requiere vinculación verificada']);
+        }
+        $create = $pdo->prepare('INSERT INTO users (email, google_id, name, avatar_url, balance_credits) VALUES (?, ?, ?, ?, 1000)');
+        $create->execute([$email, $googleId, $name, $avatar]);
+        $get->execute([$googleId]);
+        $user = $get->fetch(PDO::FETCH_ASSOC);
+    } else {
+        $update = $pdo->prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP, name = ?, avatar_url = ? WHERE id = ?');
+        $update->execute([$name, $avatar, $user['id']]);
+    }
+    $pdo->commit();
+} catch (Throwable $e) {
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+    error_log('Cryptodromo auth storage failure');
+    respond(503, ['status' => 'error', 'message' => 'Acceso temporalmente no disponible']);
 }
 
-echo json_encode(['status' => 'ready', 'service' => 'RNGMarketDriven Auth API']);
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+session_start();
+session_regenerate_id(true);
+$_SESSION['user_id'] = (int) $user['id'];
+$_SESSION['google_sub'] = $googleId;
+respond(200, ['status' => 'success', 'user' => [
+    'id' => (int) $user['id'], 'email' => $email, 'name' => $name, 'avatar_url' => $avatar,
+    'balance_credits' => (float) ($user['balance_credits'] ?? 0)
+]]);
