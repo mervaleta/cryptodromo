@@ -75,26 +75,57 @@ function chooseLane(vehicle,processed,current,predicted,states){
  }
  return best;
 }
-function safeVisualPlacement(rows,states){
+/**
+ * Forward-only visual vehicle motion. The old transform recomputed rank offsets
+ * every keyframe, so even collision-free pictures could cause a 200m/s
+ * teleport as two cars exchanged order. Here each car carries its previous
+ * position into the next keyframe and can only advance a physically bounded
+ * distance. In same-lane traffic the follower must brake until a pass is free.
+ */
+function safeVisualPlacement(rows,states,previous){
+ const ordered=previous
+   ?[...rows].sort((a,b)=>previous[b.index].visualMeters-previous[a.index].visualMeters||a.index-b.index)
+   :rows;
  const placed=[];
  const mapped=Array(rows.length);
- for(const row of rows){ // sorted by official progress, not by rendered positions
-   const state=states[row.index];
-   let visual=row.visualMeters;
-   // Under heavy bunching we do not allow same-lane car models to overlap.
-   // The follower waits behind the leader; the official order is untouched.
+ for(const row of ordered){
+   const state=states[row.index],last=previous?.[row.index];
+   const officialVelocity=last?Math.max(0,(row.meters-last.meters)/TRAFFIC_STEP_SECONDS):0;
+   const trackingError=last?row.visualMeters-last.visualMeters:0;
+   const targetVelocity=last
+     ?clamp(officialVelocity+trackingError*.85,0,39)
+     :0;
+   // No backward movement and no instant long jump from ranking changes.
+   let visual=last
+     ?last.visualMeters+targetVelocity*TRAFFIC_STEP_SECONDS
+     :row.visualMeters;
    for(const ahead of placed){
      const other=states[ahead.index];
-     const lat=state.side-other.side;
-     const latRatio=Math.abs(lat)/SAFE_LATERAL_METERS;
+     const latRatio=Math.abs(state.side-other.side)/SAFE_LATERAL_METERS;
      if(latRatio>=1)continue;
-     const required=SAFE_LONGITUDINAL_METERS*Math.sqrt(1-latRatio*latRatio);
-     visual=Math.min(visual,ahead.visualMeters-required);
+     const gap=SAFE_LONGITUDINAL_METERS*Math.sqrt(1-latRatio*latRatio);
+     visual=Math.min(visual,ahead.visualMeters-gap);
    }
+   // The lane director anticipates conflicts. A newly occupied lane must
+   // never force a car to physically move backwards.
+   if(last)visual=Math.max(last.visualMeters,visual);
    const result={index:row.index,symbol:row.symbol,
      meters:row.meters,trackMeters:row.trackMeters,
      visualMeters:visual,sideMeters:state.side,steering:0};
    placed.push(result);mapped[row.index]=result;
+ }
+ // Rare side-by-side merges can increase the minimum required spacing.
+ // Resolve by nudging the front car FORWARD, never by reversing a follower.
+ for(let i=placed.length-1;i>=0;i--){
+   const behind=placed[i];
+   for(let j=i-1;j>=0;j--){
+     const front=placed[j];
+     const latRatio=Math.abs(behind.sideMeters-front.sideMeters)/SAFE_LATERAL_METERS;
+     if(latRatio>=1)continue;
+     const gap=SAFE_LONGITUDINAL_METERS*Math.sqrt(1-latRatio*latRatio);
+     if(front.visualMeters<behind.visualMeters+gap)
+       front.visualMeters=behind.visualMeters+gap;
+   }
  }
  return mapped;
 }
@@ -128,7 +159,7 @@ function buildPlan(session){
        state.side=clamp(state.side,-21,21);
      }
    }
-   const placed=safeVisualPlacement(rows,states);
+   const placed=safeVisualPlacement(rows,states,previous);
    if(previous){
      for(let i=0;i<placed.length;i++){
        const moved=placed[i],before=previous[i];
