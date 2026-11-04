@@ -15,7 +15,7 @@ export function readTvReplay(query,trackId){
  const p=query instanceof URLSearchParams?query:new URLSearchParams(query);
  if(!Object.hasOwn(TV_TRACKS,trackId))return null;
  const day=p.get('replayDay'),minute=p.get('replayMinute');
- if(day===null||minute===null||!/^[0-6]$/.test(day)||!/^(0|[1-9]\\d{0,3})$/.test(minute))return null;
+ if(day===null||minute===null||!/^[0-6]$/.test(day)||!/^(0|[1-9]\d{0,3})$/.test(minute))return null;
  const d=Number(day),m=Number(minute);
  if(m>=1440||m%3!==TV_TRACKS[trackId].offset)return null;
  return Object.freeze({day:d,minute:m,trackId});
@@ -33,9 +33,9 @@ export function buildTvPlayerUrl(source,trackId,replay=null){
  return source+'?'+q.toString();
 }
 export function isRaceDocument(html){
- return typeof html==='string'&&/<canvas\\s[^>]*\\bid=['"]raceCanvas['"]/.test(html)&&
-  /\\bid=['"]stage['"]/.test(html)&&
-  !/\\bid=['"]stadium-broadcast['"]/.test(html);
+ return typeof html==='string'&&/<canvas\s[^>]*\bid=['"]raceCanvas['"]/.test(html)&&
+  /\bid=['"]stage['"]/.test(html)&&
+  !/\bid=['"]stadium-broadcast['"]/.test(html);
 }
 export async function findRacePlayerSource(fetchHtml){
  for(const path of RACE_PLAYER_SOURCES){
