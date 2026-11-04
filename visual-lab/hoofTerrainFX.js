@@ -32,7 +32,33 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number.isFinite(n)?n:a));
 const QUALITY={eco:{particles:220,rate:.36,imprints:450},balanced:{particles:740,rate:.75,imprints:950},
   cinematic:{particles:1350,rate:1,imprints:1700}};
 export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='dirt',seed=12585}={}){
-  const solver=createHoofContactSolver({lanes});
+  const solver=createHoofContactSolver({lanes,soleThreshold:.07,releaseThreshold:.18});
+  // Original Quaternius GLB contains four animated lower-leg end bones.
+  // Track the rig endpoints until the BTC master publishes true sole markers.
+  // The .22 sole offset is calibrated at the current race horse height (2.85m).
+  // It is a provisional contact approximation, not collision-mesh physics.
+  const sensorCache=new WeakMap(),soleNames=[
+    'BackLowerLeg.L_end','BackLowerLeg.R_end',
+    'FrontLowerLeg.L_end','FrontLowerLeg.R_end'
+  ];
+  function readAnimatedSoles(model){
+    let entry=sensorCache.get(model);
+    if(entry===undefined){
+      const bones=soleNames.map(n=>model.root?.getObjectByName(n));
+      entry=bones.every(b=>b?.isBone)?{
+        bones,vectors:bones.map(()=>new THREE.Vector3()),
+        soles:bones.map(()=>({x:0,y:0,z:0}))
+      }:null;
+      sensorCache.set(model,entry);
+    }
+    if(!entry)return null;
+    for(let i=0;i<4;i++){
+      const v=entry.bones[i].getWorldPosition(entry.vectors[i]);
+      const p=entry.soles[i];
+      p.x=v.x;p.y=v.y-.22;p.z=v.z;
+    }
+    return entry.soles;
+  }
   const maxMarks=1700,maxParticles=1350;
   const texture=imprintTexture();
   const printGeometry=new THREE.PlaneGeometry(.69,.77);
@@ -190,7 +216,9 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     const heading=root.rotation.y||0,x=root.position.x,z=root.position.z;
     const rawPhase=model.hoofPhase;
     const phase=Number.isFinite(rawPhase)?rawPhase:null;
-    const soles=typeof model.getHoofContactPoints==='function'?model.getHoofContactPoints():null;
+    // The final master's world-space sole API has priority over GLB bone tips.
+    const trueSoles=typeof model.getHoofContactPoints==='function'?model.getHoofContactPoints():null;
+    const soles=Array.isArray(trueSoles)&&trueSoles.length===4?trueSoles:readAnimatedSoles(model);
     const events=solver.sample({lane,x,z,heading,phase,dt,speed,enabled:running,soles,groundY});
     if(running)for(const e of events)impact(e,e.heading);
     if(!running){for(let i=0;i<4;i++){const idx=lane*4+i;dummy.position.set(0,-99,0);dummy.scale.setScalar(.001);dummy.updateMatrix();shadows.setMatrixAt(idx,dummy.matrix);}shadows.count=lanes*4;shadows.instanceMatrix.needsUpdate=true;return;}
