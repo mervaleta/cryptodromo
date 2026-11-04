@@ -5,6 +5,8 @@ on:
       - 'stadiums/crypto/broadcast/index.html'
       - 'visual-lab/scene.js'
       - 'visual-lab/presentationHorse.js'
+      - 'visual-lab/threeCoursePreview.js'
+      - 'tests/stadium-course-clearance.mjs'
       - 'tests/stadium-broadcast-contract.mjs'
       - 'race-lab/source/src/data/worldRaceRecord.js'
       - 'tests/stadium-world-record.mjs'
@@ -27,7 +29,7 @@ jobs:
         run: |
           node --experimental-default-type=module --check visual-lab/scene.js
           node --experimental-default-type=module --check visual-lab/presentationHorse.js
-          node --experimental-default-type=module --test tests/stadium-broadcast-contract.mjs tests/stadium-world-record.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs
+          node --experimental-default-type=module --test tests/stadium-broadcast-contract.mjs tests/stadium-world-record.mjs tests/stadium-course-clearance.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs
   chromium:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
