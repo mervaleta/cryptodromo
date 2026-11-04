@@ -3,7 +3,7 @@
  * Visual geometry only. Official distances/ranking stay in logic.js.
  */
 import * as THREE from 'three';
-import {GRID_LEAD_BACK_METERS,GRID_ROW_GAP_METERS,GRID_COLUMN_STAGGER_METERS} from './logic.js';
+import {GRID_LEAD_BACK_METERS,GRID_ROW_GAP_METERS,GRID_COLUMN_STAGGER_METERS} from './logic.js?v=autodromo-pole-2';
 
 const POINTS={
   speed:[[-245,0],[-215,-111],[-155,-149],[175,-149],[229,-107],[250,0],[228,112],[168,148],[-173,148],[-233,108]],
