@@ -33,7 +33,12 @@ try {
  assert.equal(s.heroGroom.heroLocks,56,'the normal public BTC must use raised locks');
  assert.equal(s.heroGroom.solidRingSides,6,'live horse needs rounded 3D locks instead of hair ribbons');
  assert.equal(s.heroGroom.rootBedVertices,495,'the real public horse must have a continuous sculpted hair root bed');
- assert.equal(s.heroGroom.neckOutliers,0,'no hair vertices outside dorsal neck envelope');
+ assert.equal(s.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
+  assert.equal(s.heroGroom.proceduralHairTexture,true);
+  assert.equal(s.heroGroom.hindTextureGenerated,true);
+  assert.equal(s.heroGroom.hindGaitCorrective,true);
+  assert.ok(s.heroGroom.hindMaxExpansion>.10);
+  assert.equal(s.heroGroom.neckOutliers,0,'no hair vertices outside dorsal neck envelope');
  assert.ok(s.heroGroom.eyeRadius<.0004,'eyes should not protrude out of socket');
  assert.equal(s.heroGroom.irisEditable,true,'the public iris must accept eyeColor');
  assert.equal(s.heroGroom.blackEquinePupils,true);
