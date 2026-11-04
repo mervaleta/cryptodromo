@@ -20,6 +20,8 @@ try{
  let state=await page.evaluate(()=>window.__cryptodromoHoofLabQA.snapshot());
  assert.equal(state.failed,false);
  assert.equal(state.surface,'dirt');
+ assert.ok(['skeleton','master'].includes(state.stats.contactSource),
+  'Expected animated hoof bones/sole markers, not phase proxy: '+state.stats.contactSource);
  await page.waitForFunction(()=>window.__cryptodromoHoofLabQA.snapshot().stats.impacts>=3,
   undefined,{timeout:55000,polling:350});
  for(const [type,name] of [['dirt','01-earth'],['sand','02-sand'],['grass','03-grass']]){
