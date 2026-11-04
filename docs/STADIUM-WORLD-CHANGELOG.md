@@ -1,7 +1,31 @@
 # Cryptódromo World · bitácora de preparación (sin desplegar)
 Corte de integración: `main` en `7c28e14afa418767a0b56fde1f62cbe55b611d88` (04-11-2026).  
 Rama aislada: `prep/stadium-world-integration-20261104`.  
-**Estado general: IMPLEMENTADO EN RAMA; PENDIENTE DE CI, REVISIÓN Y HOSTINGER.** No confundir un archivo nuevo con una función comprobada en vivo.
+**Estado general: IMPLEMENTADO EN RAMA; 47 pruebas de contratos aprobadas en GitHub Actions (SHA `3689badc`), pendiente de revisión del HEAD y aprobación visual en Chromium/Hostinger.** No se fusionó ni desplegó.
+
+## 2026-11-04 · SATOSHI v2 · fixture semanal íntegro + tres recorridos 3D
+**Esta entrada actualiza el estado de los hallazgos y pendientes históricos descritos más abajo.**
+
+### Fixture corregido, trazabilidad y archivo
+- `race-lab/source/src/data/raceFixture.js` añade `getContinuousFixturePrice(symbol, absoluteMinute)` sin reescribir los 10.080 precios de minuto originales por activo. En el borde de la semana, continúa desde el precio final en vez de regresar abruptamente al precio inicial.
+- `tripleRaceFixture.js` consume esta lectura continua y expone `TRIPLE_FIXTURE_VERSION='alpha19-triple-v2-continuous-week'`, `trackRaceNumber` (1–480 por pista) y `venueRaceNumber` (1–1.440 por jornada), preservando `number` para compatibilidad.
+- El defecto afectaba la continuidad de las dos últimas carreras de la jornada 7 (minutos 1438 y 1439, Genesis y Vint Cerf). No se alteran ganadores válidos anteriores, algoritmos de ranking, coeficientes ni fixtures Alpha18.
+- `worldRaceRecord.js` conserva las referencias legadas y propaga la versión explícita del fixture Alpha19.
+- `tests/satoshi-complete-fixture-week.mjs` recorre exactamente 7 × 1.440 = **10.080 carreras, 120.960 participaciones y tres conjuntos de 3.360 carreras**; valida precios, límites de volatilidad, roster, horas y clasificación oficial.
+- `scripts/audit-satoshi-week.mjs` exporta resultados de toda la semana (CSV), resumen por pista y SHA-256 del manifiesto. Es demostración reproducible, no cotización real ni base apta para apuestas.
+
+### Tres pistas físicas · museo 3D
+- **Muybridge:** óvalo principal de tierra, con perímetro visible y largada/meta común.
+- **Genesis:** recta diagonal independiente al norte, de superficie sintética, gradas propias y conexión por paseo exterior.
+- **Vint Cerf:** trazado en S sobre césped, dentro del infield de Muybridge, desplazado de la tribuna histórica para evitar que la pista atraviese edificios.
+- `visual-lab/threeCoursePreview.js` centraliza la transformación espacial, añade seis mallas de banda de pista, barandas/postes, once separadores de carril por trazado, marcas de salida/meta, arcos rotulados, torres de iluminación, caminos y gradas Genesis; calidad variable y liberación explícita de recursos.
+- `estadio/index.html` y `estadio/estadio.js` presentan selección y cámara de enfoque de las tres pistas, telemetría QA y actualización de caché. En el broadcast, `visual-lab/scene.js` vincula automáticamente Muybridge→tierra, Genesis→sintética y Vint→césped, sin cambiar datos deportivos.
+- Muestreo geométrico exige al menos 10 m de separación entre bordes modelados; **no sustituye** revisión humana de texturas, cámara, accesibilidad o clipping 3D de toda la escenografía. El broadcast sigue utilizando una única pista renderizada por canal, sin montar tres WebGL simultáneos.
+
+### Calidad verificada y pendiente
+- **Validado en GitHub Actions:** contrato deportivo de semana completa, compatibilidad con Alpha18/Alpha19, diseño geométrico y 47 pruebas de Node sobre el SHA `3689badc`; resultado 47/47.
+- **Pendiente de corroboración en el HEAD definitivo:** Chromium con Three.js y capturas de cada pista/estado; prueba completa del canal seleccionado y de vuelta a LIVE; empaquetado del manifiesto CSV; revisión de desempeño móvil y conformidad estética AAA.
+- **No publicado:** Hostinger todavía puede servir versiones previas. No activar apuestas reales sobre resultados sintéticos conocidos por adelantado.
 
 ## Iteración P0 · Satoshi broadcast
 - **Origen:** falta `#present-horse-3d` en `stadiums/crypto/broadcast/index.html`, aunque `visual-lab/scene.js` lo exige. Error conocido: `Cannot read properties of null (reading 'append')`.
@@ -46,7 +70,7 @@ Rama aislada: `prep/stadium-world-integration-20261104`.
 - `tests/stadium-course-clearance.mjs` realiza un muestreo de los bordes de las tres pistas para detectar intersecciones obvias. Este muestreo NO certifica ausencia de clipping de todos los triángulos, accesos o modelos 3D ni prueba que el broadcast use esas coordenadas.
 - **Pendiente de integración:** adaptar recorrido, gateras, metas, cámaras y entorno del broadcast al sistema común de coordenadas y probarlo visualmente.
 
-## Hallazgo de CI · bloqueo deportivo previo a la integración
+## Hallazgo histórico de CI · corregido en SATOSHI v2
 - Las pruebas de referencia Alpha19 que incorporan el extremo de la semana sintética detectaron `Price volatility outside supported race domain: 1INCH` al usar `createOfficialRace` sobre ciertas carreras. Es un fallo real del contrato de datos/ranking y NO debe esconderse reduciendo el rango de las pruebas.
 - **Hipótesis técnica a confirmar:** `getTripleRaceFixture` obtiene velas mediante `getFixturePrice()` con módulo 7 días, lo que puede empalmar el último minuto del día 7 con los precios del comienzo de la semana sin continuidad de precios. Investigar también el paso día/mes y cambios de jornada.
 - La rama NO modifica `officialRace.js`, ni corrige precios artificialmente; cualquier reparación del dataset requiere verificar que los resultados válidos anteriores no cambian y documentar la semántica de continuidad sintética.
