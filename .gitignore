@@ -1,4 +1,7 @@
 # Environment & Secrets
+.ssh_pass
+.ssh_pass.*
+*.private-key
 .env
 *.env.*
 *.key
