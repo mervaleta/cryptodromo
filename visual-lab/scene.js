@@ -411,7 +411,10 @@ function renderWinnerReplay(){
   horse.visualSpeed=.6;
  }
  winnerReplayProgress.style.width=Math.round(replay.progress*100)+'%';
- clockEl.textContent='0.5×';
+ winnerReplayName.textContent=replay.postHold?
+  replay.winnerSymbol+' · FOTO FINISH · ACTA EN '+Math.ceil(replay.holdAfter-replay.holdElapsed)+' S':
+  replay.winnerSymbol+' · CÁMARA LATERAL DE META';
+ clockEl.textContent=replay.speed.toFixed(2)+'×';
 }
 const tvDirector=createBroadcastDirector({minDwell:5.5});
 let selectedTvShot='pack',lastDirectorUpdate=-Infinity;
@@ -990,12 +993,15 @@ const target=new THREE.Vector3(),goal=new THREE.Vector3(),cameraFocus=new THREE.
 let cameraFocusReady=false;
 function adjustCamera(dt){
  if(winnerReplay.state.active){
+  // True side-on photo-finish view. The finish line never follows the winner:
+  // the nose crosses a stationary frame, perpendicular to racing direction.
   const replay=winnerReplay.state,horse=horses[replay.winnerIndex];
   if(horse){
-   const p=trackPoint(layoutMode,horse.progress,horse.index);
-   goal.set(p.x-p.tangentX*16+p.sideX*12,4.7,p.z-p.tangentZ*16+p.sideZ*12);
-   target.set(p.x+p.tangentX*8,2.0,p.z+p.tangentZ*8);
-   const easing=1-Math.exp(-Math.max(.016,dt)*3.6);
+   const line=trackPoint(layoutMode,1,horse.index);
+   goal.set(line.x+line.sideX*24-line.tangentX*.65,3.25,
+     line.z+line.sideZ*24-line.tangentZ*.65);
+   target.set(line.x+line.tangentX*.75,2.05,line.z+line.tangentZ*.75);
+   const easing=1-Math.exp(-Math.max(.016,dt)*3.9);
    camera.position.lerp(goal,easing);
    cameraFocus.lerp(target,easing);
    camera.lookAt(cameraFocus);
