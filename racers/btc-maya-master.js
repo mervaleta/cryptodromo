@@ -33,7 +33,7 @@ function sourceBody(root){
   if(!obj.isSkinnedMesh)return;
   const materials=[obj.material].flat(),name=materials[0]?.name;
   if(name==='Main'&&obj.geometry?.getAttribute('position')?.count>3000)best=obj;
-  if(['Main','Main_Dark','Muzzle','Hooves','Main_Light','Hair'].includes(name))
+  if(['Main','Main_Dark','Muzzle','Hooves','Main_Light','Hair','Eye_Black','Eye_White'].includes(name))
    hidden.push({obj,visible:obj.visible});
  });
  if(!best?.skeleton||!best.geometry.getAttribute('skinIndex')||!best.geometry.getAttribute('skinWeight'))
@@ -65,26 +65,26 @@ function makeSkinTransfer(source){
     for(const i of list){
      const v=coords[i],dx=x-v[0],dy=y-v[1],dz=z-v[2];
      const dist=dx*dx+dy*dy+dz*dz;
-     if(nearest.length<4||dist<nearest[nearest.length-1].dist){
+     if(nearest.length<12||dist<nearest[nearest.length-1].dist){
       nearest.push({i,dist});nearest.sort((a,b)=>a.dist-b.dist);
-      if(nearest.length>4)nearest.length=4;
+      if(nearest.length>12)nearest.length=12;
      }
     }
    }
-   if(nearest.length>=4&&ring>=1)break;
+   if(nearest.length>=12&&ring>=1)break;
   }
   if(!nearest.length){
    for(let i=0;i<coords.length;i++){
     const v=coords[i],dx=x-v[0],dy=y-v[1],dz=z-v[2],dist=dx*dx+dy*dy+dz*dz;
-    if(nearest.length<4||dist<nearest[nearest.length-1].dist){
+    if(nearest.length<12||dist<nearest[nearest.length-1].dist){
      nearest.push({i,dist});nearest.sort((a,b)=>a.dist-b.dist);
-     if(nearest.length>4)nearest.length=4;
+     if(nearest.length>12)nearest.length=12;
     }
    }
   }
   const contributions=new Map();
   for(const {i,dist} of nearest){
-   const proximity=1/(dist+.00000006);
+   const proximity=Math.exp(-dist/(2*.0021*.0021));
    for(let j=0;j<4;j++){
     const weight=weights.getComponent(i,j);
     if(weight<.00001)continue;
@@ -121,25 +121,53 @@ function makeAnatomy(source,skinAt){
    bone[(i/3)*4+k]=skin.joints[k];weights[(i/3)*4+k]=skin.weights[k];
   }
  }
- const skinIndex=[],hoofIndex=[],muIndex=[];
+ // Stabilize skin weights across neighboring vertices of the supplied Maya
+ // anatomy; nearest-source weights alone tore the hocks during Gallop.
+ const nVerts=positions.length/3;
+ const adjacency=Array.from({length:nVerts},()=>new Set());
+ for(let i=0;i<indices.length;i+=3){
+  const a=indices[i],b=indices[i+1],c=indices[i+2];
+  adjacency[a].add(b);adjacency[a].add(c);
+  adjacency[b].add(a);adjacency[b].add(c);
+  adjacency[c].add(a);adjacency[c].add(b);
+ }
+ for(let iteration=0;iteration<2;iteration++){
+  const freshB=new Uint16Array(bone.length),freshW=new Float32Array(weights.length);
+  for(let v=0;v<nVerts;v++){
+   const sums=new Map();
+   for(const neighbor of [v,...adjacency[v]]){
+    const factor=neighbor===v?2:1;
+    for(let k=0;k<4;k++){
+     const w=weights[neighbor*4+k];
+     if(w<.00001)continue;
+     const joint=bone[neighbor*4+k];
+     sums.set(joint,(sums.get(joint)||0)+w*factor);
+    }
+   }
+   const top=[...sums].sort((a,b)=>b[1]-a[1]).slice(0,4);
+   const total=top.reduce((v,p)=>v+p[1],0)||1;
+   for(let k=0;k<4;k++){
+    freshB[v*4+k]=top[k]?.[0]||0;
+    freshW[v*4+k]=(top[k]?.[1]||0)/total;
+   }
+  }
+  bone.set(freshB);weights.set(freshW);
+ }
+ const skinIndex=[],hoofIndex=[];
  for(let i=0;i<indices.length;i+=3){
   const a=indices[i],b=indices[i+1],c=indices[i+2];
   const z=(positions[a*3+2]+positions[b*3+2]+positions[c*3+2])/3;
-  const y=(positions[a*3+1]+positions[b*3+1]+positions[c*3+1])/3;
-  const target=z<.00335?hoofIndex:
-   (y<-.0315&&z>.0320&&z<.040?muIndex:skinIndex);
-  target.push(a,b,c);
+  (z<.00265?hoofIndex:skinIndex).push(a,b,c);
  }
  const all=new Uint16Array(indices.length);all.set(skinIndex);
- all.set(muIndex,skinIndex.length);all.set(hoofIndex,skinIndex.length+muIndex.length);
+ all.set(hoofIndex,skinIndex.length);
  const geo=new THREE.BufferGeometry();
  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bone,4));
  geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
  geo.setIndex(new THREE.BufferAttribute(all,1));
  geo.addGroup(0,skinIndex.length,0);
- geo.addGroup(skinIndex.length,muIndex.length,1);
- geo.addGroup(skinIndex.length+muIndex.length,hoofIndex.length,2);
+ geo.addGroup(skinIndex.length,hoofIndex.length,1);
  geo.computeVertexNormals();geo.computeBoundingSphere();
  // Important: unlike V5's procedural wax, the Maya sculpt's REAL modeled
  // cheeks, muzzle, shoulder landmarks, fetlocks and hoof forms carry light.
@@ -147,16 +175,27 @@ function makeAnatomy(source,skinAt){
  coat.name='BTC Maya natural sculpted coat';
  coat.metalness=0;coat.roughness=.83;
  coat.flatShading=false;coat.side=THREE.FrontSide;
- const muzzle=new THREE.MeshStandardMaterial({
-  name:'BTC sculpted muzzle pigment',color:'#816452',roughness:.91,metalness:0
- });
+ const prior=coat.onBeforeCompile;
+ const cacheKey=coat.customProgramCacheKey?.bind(coat);
+ coat.onBeforeCompile=function(shader,renderer){
+  prior?.call(this,shader,renderer);
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+   '#include <common>\nvarying vec3 vBTCMayaRest;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+   '#include <begin_vertex>\nvBTCMayaRest=position;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+   '#include <common>\nvarying vec3 vBTCMayaRest;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
+   '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\ndiffuseColor.rgb*=mix(vec3(1.0),vec3(.76,.73,.71),crpMuzzle*.78);');
+ };
+ coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-maya-muzzle-v2';
  const hoof=new THREE.MeshStandardMaterial({
-  name:'BTC sculpted keratin',color:'#342d29',roughness:.74,metalness:0
+  name:'BTC sculpted keratin',color:'#39302a',roughness:.78,metalness:0
  });
- const mesh=new THREE.SkinnedMesh(geo,[coat,muzzle,hoof]);
+ const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,muzzle,hoof],vertices:positions.length/3,triangles:indices.length/3,positions};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions};
 }
 // Silk RIBBONS, not the V4/V5 tubes or spiky cylinders. Roots are placed
 // directly on the anatomically correct Maya topline and tail dock.
