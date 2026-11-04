@@ -10,6 +10,9 @@ on:
       - 'visual-lab/presentationHorse.js'
       - 'assets/stadium-hub.css'
       - 'assets/satoshi-tv.css'
+      - 'estadio/flightControls.js'
+      - 'assets/stadium-flight.css'
+      - 'tests/stadium-flight-tv-director.mjs'
       - 'assets/satoshi-tv-contract.js'
       - 'assets/crypto-venue.js'
       - 'assets/crypto-archive.js'
@@ -34,7 +37,7 @@ jobs:
           node --experimental-default-type=module --check assets/satoshi-tv-contract.js
           node --experimental-default-type=module --check visual-lab/scene.js
           node --experimental-default-type=module --check visual-lab/presentationHorse.js
-          node --experimental-default-type=module --test tests/satoshi-tv-player-contract.mjs
+          node --experimental-default-type=module --test tests/satoshi-tv-player-contract.mjs tests/stadium-flight-tv-director.mjs
   browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 22

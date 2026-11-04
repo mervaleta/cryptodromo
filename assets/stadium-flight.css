@@ -1,0 +1,46 @@
+/* A small flight deck that floats above the canvas without capturing the sky. */
+#stadiumView{isolation:isolate}
+#stadiumCanvas{touch-action:none;cursor:crosshair;outline-offset:-5px}
+#stadiumCanvas:focus-visible{outline:2px solid #a6f3bf}
+.flight-deck{position:absolute;z-index:5;inset:9px 12px auto 12px;display:grid;gap:7px;pointer-events:none;font-family:Inter,system-ui,sans-serif}
+.flight-deck button,.flight-deck a,.flight-deck select{pointer-events:auto}
+.flight-quick,.flight-navigation,.flight-info{display:flex;gap:5px;align-items:center;flex-wrap:wrap;width:fit-content;max-width:100%;border:1px solid #639c7585;border-radius:9px;padding:5px;background:#071510e6;box-shadow:0 8px 28px #0005;backdrop-filter:blur(10px)}
+.flight-deck button{min-width:34px;min-height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 7px;border:1px solid #335d44;border-radius:6px;background:#173025;color:#eef8ee;font:800 17px/1 system-ui;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.flight-deck button:hover,.flight-deck button:focus-visible{border-color:#a2efb4;background:#275b3a}
+.flight-deck button[aria-pressed="true"]{border-color:#9de9b1;background:#2a7048;color:#fff}
+.flight-deck button:active{transform:scale(.95)}
+.flight-deck button small{font:700 9px/1.1 system-ui;white-space:nowrap;color:#a4e8b9}
+.flight-navigation button{font-size:20px}
+.flight-navigation label{color:#b6d7c0;font:700 10px/1.2 system-ui;display:flex;align-items:center;gap:5px;padding:0 5px}
+.flight-navigation select{border:1px solid #47765a;background:#183226;color:#e0f6e7;border-radius:5px;font-size:11px;padding:7px 4px;max-width:95px}
+.flight-info{padding:6px 9px;justify-content:space-between;gap:12px}
+.flight-info [data-flight-hint]{color:#b4dec3;font:600 10px/1.4 system-ui;max-width:390px}
+.flight-tv-links{display:flex;align-items:center;gap:5px}
+.flight-tv-links a{display:inline-flex;align-items:center;min-height:27px;gap:3px;padding:4px 6px;border:1px solid #4e8963;border-radius:4px;text-decoration:none;background:#19402b;color:#deffe5;font-size:10px;font-weight:900;white-space:nowrap}
+.flight-tv-links a:hover{background:#2e7345}
+.flight-deck [hidden]{display:none!important}
+#stadiumNotice{z-index:4;max-width:calc(100% - 28px);pointer-events:none}
+@media(min-width:1100px){
+ .flight-quick{padding:6px}
+ .flight-navigation{max-width:800px}
+}
+@media(max-width:770px){
+ .flight-deck{inset:7px 6px auto;gap:5px}
+ .flight-quick,.flight-navigation{padding:4px;gap:4px}
+ .flight-deck button{min-width:30px;min-height:30px;padding:5px;font-size:15px}
+ .flight-deck button small{font-size:8px}
+ .flight-navigation button{font-size:18px}
+ .flight-info{max-width:100%;font-size:9px}
+ .flight-info [data-flight-hint]{max-width:250px}
+ #stadiumNotice{font-size:9px!important}
+}
+@media(max-width:520px){
+ .flight-quick{width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+ .flight-quick button{flex:0 0 auto}
+ .flight-navigation{max-width:100%;flex-wrap:wrap}
+ .flight-navigation label{font-size:9px}
+ .flight-info{width:100%;display:block}
+ .flight-tv-links{margin-top:5px}
+ #stadiumNotice{inset:auto 6px 6px auto!important;font-size:8px!important;padding:5px 7px!important}
+}
+@media(prefers-reduced-motion:reduce){.flight-deck button{transition:none}}

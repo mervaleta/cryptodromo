@@ -55,14 +55,28 @@ try{
  assert.equal(await page.locator('.tv-channel').count(),3);
  assert.equal(await page.locator('iframe').count(),1);
  assert.equal(await page.locator('#tv-error').isVisible(),false);
- await page.locator('[data-tv-tune="genesis"]').click();
+ assert.equal(await page.locator('[data-tv-shot]').count(),12);
+ assert.equal(await page.locator('[data-tv-switch]').count(),3);
+ await page.locator('[data-tv-shot="drone"]').click();
+ await page.waitForFunction(()=>{
+  const f=document.querySelector('#stadium-broadcast');
+  return f?.contentDocument?.querySelector('#camera')?.value==='drone';
+ },null,{timeout:15000});
+ assert.equal(await page.locator('[data-tv-shot="drone"]').getAttribute('aria-pressed'),'true');
+ await page.screenshot({path:'artifacts/satoshi-tv/director-drone-shot.png'});
+ 
+ await page.locator('[data-tv-switch="genesis"]').click();
+ assert.equal(await page.locator('#tv-player').getAttribute('class'),'tv-screen is-switching');
  await requirePlayer(page,'genesis');
  assert.match(new URL(page.url()).searchParams.get('track'),/^genesis$/);
  assert.equal(await page.locator('[data-tv-tune="genesis"]').getAttribute('aria-pressed'),'true');
  await page.screenshot({path:'artifacts/satoshi-tv/live-genesis.png'});
- await page.locator('[data-tv-tune="vint-cerf"]').click();
+ await page.locator('[data-tv-switch="vint-cerf"]').click();
  await requirePlayer(page,'vint-cerf');
  await page.screenshot({path:'artifacts/satoshi-tv/live-vint-cerf.png'});
+ await page.waitForFunction(()=>!document.querySelector('#tv-player').classList.contains('is-switching'),
+  null,{timeout:12000});
+ assert.equal(await page.locator('[data-tv-switch="vint-cerf"]').getAttribute('aria-pressed'),'true');
  await desktop.close();
 
  // Replay navigation from actual archive must open the SAME single player.
