@@ -36,10 +36,12 @@ try{
   assert.ok(s.heroGroom.vertexCount>40000);
   await page.locator('[data-btc-camera="profile"]').click();
   await page.waitForTimeout(420);
-  await page.screenshot({path:dir+'/profile.png',timeout:60000});
+  await page.evaluate(()=>document.querySelector('.feature')?.scrollIntoView({block:'start',behavior:'instant'}));
+ await page.screenshot({path:dir+'/profile.png',timeout:60000});
   await page.locator('[data-btc-camera="rear"]').click();
   await page.waitForTimeout(260);
-  await page.screenshot({path:dir+'/rear.png',timeout:60000});
+  await page.evaluate(()=>document.querySelector('.feature')?.scrollIntoView({block:'start',behavior:'instant'}));
+ await page.screenshot({path:dir+'/rear.png',timeout:60000});
   writeFileSync(dir+'/notes.json',JSON.stringify(s.heroGroom,null,2));
   console.log('BTC_V5_PASS_OK',stage,s.heroGroom.passes.length,s.heroGroom.vertexCount);
  }
@@ -50,10 +52,12 @@ try{
   el.value='1.85';el.dispatchEvent(new Event('input',{bubbles:true}));
  });
  await page.waitForTimeout(300);
- const before=await page.screenshot({path:root+'/frozen-hair-t0.png'});
+ const before=await page.evaluate(()=>document.querySelector('.feature')?.scrollIntoView({block:'start',behavior:'instant'}));
+ await page.screenshot({path:root+'/frozen-hair-t0.png'});
  const a=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  await page.waitForTimeout(1200);
- const after=await page.screenshot({path:root+'/frozen-hair-t1.png'});
+ const after=await page.evaluate(()=>document.querySelector('.feature')?.scrollIntoView({block:'start',behavior:'instant'}));
+ await page.screenshot({path:root+'/frozen-hair-t1.png'});
  const b=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.notDeepEqual(before,after,'Hair must visibly move while original Gallop pose remains frozen');
  assert.ok(Math.abs(b.heroGroom.hairMotion.mane-a.heroGroom.hairMotion.mane)>0.000001 ||
