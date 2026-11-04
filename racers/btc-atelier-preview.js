@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-maya-anatomy-20261104';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
@@ -63,7 +64,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  async function rebuild(){
   const token=selected;if(!token||disposed)return;
   const request=++selection;
-  const candidate=variant==='enhanced'&&token.symbol==='BTC';
+  const candidate=(variant==='enhanced'||variant==='baseline')&&token.symbol==='BTC';
   try{
    const next=await createHorse({
     coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
@@ -76,13 +77,25 @@ export function createPreview(canvas,onFailure=()=>{}){
    try{
     if(candidate){
      next.setVisualQuality?.('cinematic');next.setCoatFinish?.(.40);
-     nextHero=createBTCHeroV4(next.root,{maneSize,tailSize,color:hairColor});
+     const profile=token.mayaAppearance||{};
+     const options={
+      maneSize:maneSize*(profile.maneScale??1),
+      tailSize:tailSize*(profile.tailScale??1),
+      color:profile.maneColor||hairColor,
+      coatColor:profile.coatColor,
+      brandMode:profile.brandMode||'natural_coat',
+      brandAccent:token.color,
+      hoofColor:profile.hoofColor
+     };
+     nextHero=variant==='baseline'?
+      createBTCHeroV4(next.root,{maneSize,tailSize,color:hairColor}):
+      createBTCHeroMaya(next.root,options);
     }
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHero=hero;
    horse=next;hero=nextHero;
-   renderedSymbol=token.symbol;renderedVariant=candidate?'enhanced':'original';
+   renderedSymbol=token.symbol;renderedVariant=candidate?variant:'original';
    prevHero?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
@@ -90,13 +103,13 @@ export function createPreview(canvas,onFailure=()=>{}){
  }
  function select(token){selected=token;return rebuild();}
  function setVariant(next){
-  if(next!=='original'&&next!=='enhanced')return;
+  if(next!=='original'&&next!=='enhanced'&&next!=='baseline')return;
   if(variant!==next){variant=next;rebuild();}
  }
  function setWind(value){wind=clamp(value,0,2);}
  function setSpeed(value){speed=clamp(value,.5,1.6);}
- function setManeSize(value){maneSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant==='enhanced')rebuild();}
- function setTailSize(value){tailSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant==='enhanced')rebuild();}
+ function setManeSize(value){maneSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original')rebuild();}
+ function setTailSize(value){tailSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original')rebuild();}
  function setHairColor(value){if(/^#[0-9a-f]{6}$/i.test(value)){hairColor=value;hero?.setColor(value);}}
  function pause(value){paused=!!value;horse?.play(paused?'Idle':'Gallop',.2);}
  const clock=new THREE.Clock();
@@ -106,7 +119,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   if(!document.hidden){
    horse?.update(dt,speed);
 
-   hero?.update(dt,{wind,speed,running:!paused});
+   hero?.update(dt,{wind,speed,running:!paused,phase:horse?.hoofPhase||0});
   }
   controls.update();renderer.render(scene,camera);
  });
