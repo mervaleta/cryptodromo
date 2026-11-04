@@ -32,6 +32,8 @@ try {
  assert.equal(s.heroGroom.integratedMayaHooves,true);
  assert.ok(s.heroGroom.nativeEarFacesRemoved>=150,'no extra horn geometry on public BTC');
  assert.ok(s.heroGroom.extraTailFacesRemoved>=150,'no second native flesh tail on public BTC');
+ assert.ok(s.heroGroom.extraTailFacesRemoved>350,'the entire extra flesh tail must be absent in production');
+ assert.ok(s.heroGroom.poweredHindVertices>1000,'hindquarters must be physically fuller in production');
  assert.ok(s.heroGroom.fineLocks>1100);
  const before=s.hoofPhase;
  await page.waitForTimeout(1100);
