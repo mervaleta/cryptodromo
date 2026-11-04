@@ -32,6 +32,7 @@ try{
  assert.ok(start.heroGroom.tailDockBorderEdges>=20,'identify tail-root cut boundary');
  assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges,'close every exposed dock edge with skinned Maya triangles');
  assert.ok(start.heroGroom.fineLocks>=500);
+ assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
  assert.equal(start.heroGroom.heroHooves,4,'four visible, articulated hoof shells required');
