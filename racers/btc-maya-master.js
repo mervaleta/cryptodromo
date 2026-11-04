@@ -7,9 +7,9 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-luxe-20261104-v3';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-luxe-20261104-v3';
-import {createBTCSculptedHooves} from './btc-maya-hooves.js?v=btc-maya-luxe-20261104-v3';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-harmony-silhouette-20261104-v1';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-harmony-silhouette-20261104-v1';
+import {createBTCSculptedHooves} from './btc-maya-hooves.js?v=btc-harmony-silhouette-20261104-v1';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 export const BTC_MAYA_RENDER_BUILD='btc-harmony-silhouette-20261104-v1';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
