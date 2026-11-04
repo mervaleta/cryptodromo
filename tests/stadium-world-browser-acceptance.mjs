@@ -14,7 +14,7 @@ const routes=[
  {track:'vint-cerf',minute:2}
 ];
 const browser=await chromium.launch({
- headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl']
+ headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']
 });
 await mkdir('artifacts/stadium-world',{recursive:true});
 const failures=[];
@@ -48,7 +48,12 @@ try{
    assert.equal(init.count,12,track+' runners not initialized');
    assert.doesNotMatch(init.status,/CARGANDO ESCENARIO 3D|ERROR EN ESCENA/);
    await page.screenshot({path:'artifacts/stadium-world/'+track+'-ready.png'});
+   const before=await page.evaluate(()=>window.__cryptodromoQA.state().positions);
    await page.locator('#start').click();
+   await page.waitForFunction(original=>{
+    const current=window.__cryptodromoQA?.state()?.positions;
+    return current?.length===12&&current.every((v,i)=>Number.isFinite(v)&&Math.abs(v-original[i])>.02);
+   },before,{timeout:30000,polling:200});
    await page.waitForFunction(()=>document.querySelector('#clock')?.textContent!=='00:00',
     null,{timeout:15000});
    const clock=await page.locator('#clock').innerText();
@@ -65,6 +70,10 @@ try{
       .map(row=>row.entry.symbol);
    },minute);
    assert.deepEqual(actual,expected,track+' broadcast differs from official fixture');
+   const crossing=await page.evaluate(()=>window.__cryptodromoQA.state());
+   assert.equal(crossing.crossed,12,track+' official overlay before twelve crossings');
+   assert.ok(crossing.lastCrossedAt!==null&&crossing.elapsed-crossing.lastCrossedAt>=1.6,
+    track+' official overlay was revealed before the finish hold');
    await page.screenshot({path:'artifacts/stadium-world/'+track+'-result.png'});
    await page.locator('#live-now').click();
    const mode=await page.locator('#replay-mode').innerText();
