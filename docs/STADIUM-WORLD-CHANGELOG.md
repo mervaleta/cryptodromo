@@ -11,6 +11,13 @@ Rama aislada: `prep/stadium-world-integration-20261104`.
 - **Pruebas nuevas:** `tests/stadium-broadcast-contract.mjs` revisa las referencias DOM del motor; `tests/stadium-world-browser-acceptance.mjs` ejecuta tres canales en Chromium, carrera/replay, llegada, resultados y capturas.
 - **Estado de publicación:** NO PUBLICADO. **Estado verificable:** sólo lectura y edición de la rama, sin evidencias de Hostinger.
 
+## Corrección adicional · relojes escalonados de las tres pistas
+- **Defecto confirmado en la presentación del hub:** `assets/crypto-venue.js` mostraba el tiempo restante de la fase actual (`race/results/presentation`), que se reinicia cada 60 s. Como las tres pistas están desfasadas precisamente 60 s, los tres contadores mostraban el mismo valor aunque los ciclos ya eran independientes.
+- **Corrección aislada:** `assets/crypto-channel-countdown.js` transforma el estado de cada canal en tiempo hasta **su próxima largada** mediante `secondsToNext`. `assets/crypto-venue.js` muestra ese tiempo y usa `next.label` y `next.slot` en lugar del turno actual. `stadiums/crypto/live/index.html` invalida la caché de ese script.
+- **Ejemplo reproducible:** 2026-11-04 14:42:14 (Buenos Aires) debe mostrar Muybridge 00:16, Genesis 01:16, Vint Cerf 02:16; siguientes largadas 14:42:30, 14:43:30 y 14:44:30 respectivamente. Las tres pueden denominarse carrera 295/480, ya que el número es por pista.
+- **Prueba:** `tests/stadium-staggered-countdowns.mjs`, con casos de fases, límites de largada, medianoche y diferencia constante de 60 s. **Estado: implementado en la rama; NO publicado ni validado todavía en Hostinger.**
+- No se alteraron `tripleLiveSchedule.js`, `raceFixture.js`, `tripleRaceFixture.js`, posiciones ni resultado oficial.
+
 ## Iteración preparatoria · contrato deportivo
 - **Problema:** Alpha18 (480 carreras diarias) y Alpha19 (tres pistas × 480 = 1.440) coexisten con URL, índices y semánticas diferentes.
 - **Implementación aislada:** `race-lab/source/src/data/worldRaceRecord.js` expone `resolveWorldRace({family,dayIndex,slot,trackId?})` para obtener clave única, versión de fixture, participantes, cotizaciones sintéticas usadas, hora local, pista, clasificación oficial, ganador, podio y URL de replay cuando está disponible.
