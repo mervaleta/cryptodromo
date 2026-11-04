@@ -22,14 +22,15 @@ try{
  },null,{timeout:120000});
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.variant,'maya');
- assert.equal(start.heroGroom.vertices,5406);
+ assert.equal(start.heroGroom.vertices,5407,'native Maya topology plus one integrated tail-root cap center');
  assert.ok(start.heroGroom.triangles>9500&&start.heroGroom.triangles<10500,
   'Maya horse must retain full body topology but remove duplicate appendages');
  assert.ok(start.heroGroom.nativeEarFacesRemoved>=150,'legacy horns must be culled');
  assert.ok(start.heroGroom.extraTailFacesRemoved>=150,'second flesh-colored tail must be culled');
  assert.ok(start.heroGroom.extraTailFacesRemoved>250,'retire the old skin-tail free end while preserving croup skin');
  assert.ok(start.heroGroom.poweredHindVertices>1000,'croup and hind thighs must be resculpted, not repainted');
- assert.ok(start.heroGroom.tailDockVertices>=150,'tail root must be closed by native-rig sculpt');
+ assert.ok(start.heroGroom.tailDockBorderEdges>=20,'identify tail-root cut boundary');
+ assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges,'close every exposed dock edge with skinned Maya triangles');
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
