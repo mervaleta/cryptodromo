@@ -248,40 +248,43 @@ function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}
  const TWIST=Math.PI*.6,SEG=15;
  let locks=0;
  const rand=x=>{const t=Math.sin(x*92.371+14.91)*52817.7;return t-Math.floor(t);};
+ // Anatomical topline measured directly in the supplied high-resolution Maya
+ // body. Smooth spline sampling avoids disconnected hedgehog-like roots.
+ const crestKeys=[[-.027,.04555],[-.023,.04475],[-.019,.04220],[-.015,.03955],
+  [-.011,.03690],[-.007,.03540],[-.003,.03380]];
  function crest(y){
-  let result=-Infinity;
-  const p=body.positions;
-  for(let i=0;i<p.length;i+=3){
-   if(Math.abs(p[i])<.00090&&Math.abs(p[i+1]-y)<.00090&&p[i+2]>.027)
-    result=Math.max(result,p[i+2]);
+  for(let k=1;k<crestKeys.length;k++)if(y<=crestKeys[k][0]){
+   const a=crestKeys[k-1],b=crestKeys[k],t=smooth((y-a[0])/(b[0]-a[0]));
+   return a[1]*(1-t)+b[1]*t;
   }
-  return Number.isFinite(result)?result:.0402;
+  return crestKeys[crestKeys.length-1][1];
  }
- const add=(tail,n,count,side=1)=>{
+ const add=(tail,n,count,side=1,major=false)=>{
   const a=rand(n*2.27+tail*133+side*17),b=rand(n*4.07+tail*5.11+side*29),f=(n+.28+.37*a)/count;
   const id=locks++;
   let root;
   if(!tail){
    const y=-.026+.020*f;
-   root=[side*.00011,y,crest(y)-.00017];
+   root=[side*.00017,y,crest(y)-.00035];
   }else{
-   root=[(a-.5)*.00035,.0149+.00065*b,.0318-.00065*a];
+   root=[(a-.5)*.0004,.0152+.00055*b,.0314-.00075*a];
   }
   const sk=skinAt(...root);
-  const length=(tail?(.014+.009*a)*tailSize:(.0036+.0046*b)*maneSize);
-  const width=(tail?(.00011+.00011*b):(.00009+.00009*a));
+  const length=(tail?(major?.0125+.0045*a:.0115+.0065*a)*tailSize:
+   (major?.0060+.0030*b:.0032+.0043*b)*maneSize);
+  const width=major?(tail?.00025+.00012*b:.00031+.00013*a):(tail?.00007+.00008*b:.000065+.000085*a);
   const start=positions.length/3;
   for(let i=0;i<=SEG;i++){
    const t=i/SEG,e=smooth(t),fall=Math.pow(1-t,.85),r=Math.sin(t*Math.PI);
    let center;
    if(tail){
     center=[
-     root[0]+(a-.5)*(.0033*r+.0025*e),
-     root[1]+.0011*r+.0035*e,
+     root[0]+(a-.5)*(.0026*r+.0023*e),
+     root[1]+.0009*r+.0031*e,
      root[2]-length*(t*.92+.08*Math.sin(t*Math.PI))];
    }else{
     center=[
-     root[0]+side*(.0005*r+.0017*e)*(0.7+0.3*a),
+     root[0]+side*(.00043*r+.00175*e)*(0.7+0.3*a),
      root[1]+(.0015+.0010*a)*e,
      root[2]-(length*(.52*t+.48*e))];
    }
@@ -299,8 +302,11 @@ function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}
    indices.push(a,c,b,b,c,d);
   }
  };
- // Multiple fine overlapping natural locks instead of massive plastic ropes.
+ // Main silhouette: satin ribbon clumps integrated into the neck, then many
+ // narrow wisps for texture; tail hangs down rather than floating backwards.
+ for(let i=0;i<32;i++){add(0,i,32,-1,true);add(0,i,32,1,true);}
  for(let i=0;i<142;i++){add(0,i,142,-1);add(0,i,142,1);}
+ for(let i=0;i<40;i++)add(1,i,40,1,true);
  for(let i=0;i<290;i++)add(1,i,290);
  const geo=new THREE.BufferGeometry();
  geo.setIndex(indices);
@@ -314,8 +320,8 @@ function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}
  geo.computeVertexNormals();
  const material=new THREE.MeshPhysicalMaterial({
   name:'BTC Maya rooted fine-ribbon hair',
-  color,metalness:0,roughness:.75,sheen:.47,
-  sheenColor:new THREE.Color('#8b6550'),sheenRoughness:.78,
+  color,metalness:0,roughness:.79,sheen:.40,
+  sheenColor:new THREE.Color('#82614e'),sheenRoughness:.84,
   side:THREE.DoubleSide,shadowSide:THREE.DoubleSide
  });
  const uniforms={clock:{value:0},wind:{value:.7},gait:{value:0}};
