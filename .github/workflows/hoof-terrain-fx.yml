@@ -1,0 +1,65 @@
+name: Hoof Terrain FX | Contacts and Regression
+on:
+  pull_request:
+    paths:
+      - 'visual-lab/hoofContactSolver.js'
+      - 'visual-lab/hoofTerrainFX.js'
+      - 'visual-lab/hoof-fx-lab/**'
+      - 'racers/btc-terrain-stage.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/proceduralGround.js'
+      - 'tests/hoof-terrain-fx.mjs'
+      - 'tests/hoof-terrain-browser.mjs'
+      - 'tests/hoof-btc-ficha-browser.mjs'
+      - '.github/workflows/hoof-terrain-fx.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hoof-terrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check of procedural VFX and broadcast
+        run: |
+          for f in visual-lab/hoofContactSolver.js visual-lab/hoofTerrainFX.js visual-lab/hoof-fx-lab/lab.js visual-lab/scene.js visual-lab/proceduralGround.js racers/btc-terrain-stage.js racers/btc-atelier-preview.js racers/racers.js; do
+            node --experimental-default-type=module --check "$f"
+          done
+      - name: All hoof event, safety and 12-horse regression tests
+        run: node --experimental-default-type=module --test tests/hoof-terrain-fx.mjs tests/btc-horse-atelier-contract.mjs tests/btc-v12-anatomy-contract.mjs
+      - name: Existing race-result invariants
+        run: node --experimental-default-type=module --test tests/official-race.mjs tests/alpha20-gates.mjs
+  browser-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless Chromium for independent terrain QA
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Visual smoke on branch files, NOT on production
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/hoof-fx-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/hoof-terrain-browser.mjs
+          node tests/hoof-btc-ficha-browser.mjs
+      - name: Upload ground-contact comparison frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoof-fx-three-surfaces-btc
+          path: artifacts/hoof-*.png
+          retention-days: 30
+          if-no-files-found: ignore

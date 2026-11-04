@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cryptódromo | Laboratorio de pezuñas y terreno</title>
+<meta name="description" content="Laboratorio aislado para comparar huellas, levantamiento de suelo y apoyo de pezuñas con el maestro BTC.">
+<style>
+:root{font:14px/1.5 system-ui;background:#09130f;color:#f0eddf;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0}main{max-width:1500px;margin:auto;padding:18px}
+header{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}
+header a{color:#b5dbb7;text-decoration:none}h1{font-size:clamp(22px,3vw,35px);margin:10px 0}
+small,.sub{color:#b5c4b6}.stage{height:min(67vh,740px);min-height:380px;position:relative;border:1px solid #688371;border-radius:9px;overflow:hidden;background:#9eafae}
+canvas{width:100%;height:100%;display:block}.hud{position:absolute;left:16px;top:14px;padding:10px 13px;background:#07130fdd;border:1px solid #637869;border-radius:4px;font:12px/1.6 ui-monospace,monospace;max-width:80%}
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:end;padding:17px 0}
+label{display:grid;gap:6px;color:#dedcc7;font-size:12px}select,input,button{padding:9px 11px;border-radius:4px;border:1px solid #52735f;background:#1b3027;color:#e7e8d8;font:inherit;min-height:42px}input{accent-color:#b9d69b}
+button{cursor:pointer}button:hover{background:#35543f}
+.notice{border-left:3px solid #d3b877;padding:8px 14px;background:#16251d;color:#b7c7b9}
+@media(max-width:600px){.hud{font-size:10px}.stage{height:500px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+</head><body><main><header><div><small>CRYPTÓDROMO · LABORATORIO 3D · RAMA INDEPENDIENTE</small><h1>Pezuña / suelo / impacto</h1></div>
+<a href="/racers/#BTC">Ver maestro BTC</a></header>
+<p class="sub">El maestro anatómico se superpone al galope original. La simulación visual no calcula posiciones deportivas, precios ni resultados. Girá la cámara arrastrando sobre el modelo.</p>
+<div class="stage" id="stage"><canvas id="canvas" aria-label="Prueba tridimensional de contacto de pezuñas"></canvas><div class="hud" id="hud">Inicializando caballo maestro...</div></div>
+<div class="controls">
+<label>PISTA<select id="surface"><option value="dirt">Tierra compactada</option><option value="sand">Arena profunda</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
+<label>MODELO<select id="horse-model"><option value="maya">BTC Maya (master en desarrollo)</option><option value="legacy">GLB original + galope</option></select></label>
+<label>VELOCIDAD <output id="speed-value">1.0×</output><input id="speed" type="range" min=".6" max="2.2" step=".1" value="1"></label>
+<label>HUMEDAD <output id="wet-value">0%</output><input id="wet" type="range" min="0" max="100" value="0" step="5"></label>
+<label>CALIDAD<select id="quality"><option value="eco">Eco</option><option value="balanced">Equilibrada</option><option value="cinematic" selected>Cinematográfica</option></select></label>
+<button id="pause">Pausar caballo</button><button id="restart">Limpiar pista</button>
+</div>
+<p class="notice">Comparación técnica. Los contactos sincronizados con el ciclo del GLB son aproximados. Cuando el maestro exponga las coordenadas mundiales de las cuatro suelas, el detector cambiará automáticamente a colisión geométrica real; no requiere rehacer las partículas.</p>
+<script type="module" src="./lab.js?v=hoof-fx-1"></script></main></body></html>

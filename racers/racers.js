@@ -63,7 +63,7 @@ function renderBTCRevision(){
 }
 async function loadBTCRevision(){
  try{
-  const response=await fetch('/racers/btc-master-revision.json?v=btc-master-procedural-hind-groom-20261104-v12',{cache:'no-store'});
+  const response=await fetch('/racers/btc-master-revision.json?v=hoof-btc-fiche-20261104-v1',{cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
@@ -144,7 +144,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-master-procedural-hind-groom-20261104-v12':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=hoof-btc-fiche-20261104-v1':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -173,6 +173,24 @@ if(btcAtelier){
   });
  }
  $('#btc-hair-color').addEventListener('input',event=>preview?.setHairColor?.(event.target.value));
+ // The BTC detail card now runs the same animated-hoof and terrain FX as the stadium.
+ $('#btc-terrain-surface')?.addEventListener('change',event=>{
+  preview?.setTerrainSurface?.(event.target.value);
+ });
+ $('#btc-terrain-wetness')?.addEventListener('input',event=>{
+  const level=Number(event.target.value);
+  $('#btc-terrain-wetness-value').textContent=level+'%';
+  preview?.setTerrainWetness?.(level/100);
+ });
+ setInterval(()=>{
+  if(selected?.symbol!=='BTC')return;
+  const state=preview?.snapshot?.().terrain;
+  const el=$('#btc-terrain-impact-readout');
+  if(!state||!el)return;
+  el.textContent=state.visible?'APOYOS '+state.impacts+' · HUELLAS '+state.imprints+
+   ' · PARTÍCULAS '+state.particles+' · '+(state.contactSource==='skeleton'?'RIG 3D':state.contactSource==='master'?'SUELAS REALES':'FASE'):
+   'Tarima original sin efectos';
+ },450);
  document.querySelectorAll('[data-btc-camera]').forEach(button=>
   button.addEventListener('click',()=>preview?.setCamera?.(button.dataset.btcCamera)));
  changeVariant(atelierVariant);
@@ -185,10 +203,12 @@ import(previewModule).then(({createPreview})=>{
   preview.setWind(Number($('#btc-wind').value));
   preview.setSpeed(Number($('#btc-speed').value));
   preview.setHairColor($('#btc-hair-color').value);
+  preview.setTerrainSurface?.($('#btc-terrain-surface')?.value||'dirt');
+  preview.setTerrainWetness?.(Number($('#btc-terrain-wetness')?.value||0)/100);
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
  }
- $('#preview-state').textContent=btcAtelier?'BTC · CABALLO ANATÓMICO · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · CONTACTO DE PEZUÑAS · TIERRA / ARENA / CÉSPED':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;
