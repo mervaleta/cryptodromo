@@ -4,6 +4,7 @@ on:
     paths:
       - 'autodromo/**'
       - 'tests/autodromo.mjs'
+      - 'tests/autodromo-traffic.mjs'
       - 'race-lab/source/src/data/**'
       - 'visual-lab/tripleLiveSchedule.js'
       - '.github/workflows/autodromo.yml'
@@ -30,5 +31,6 @@ jobs:
           node --check autodromo/car.js
           node --check autodromo/circuit.js
           node --check autodromo/logic.js
+          node --check autodromo/traffic.js
       - name: Official fixture and motorsport contract
-        run: node --experimental-default-type=module --test tests/autodromo.mjs
+        run: node --experimental-default-type=module --test tests/autodromo.mjs tests/autodromo-traffic.mjs
