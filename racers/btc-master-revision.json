@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-procedural-hind-groom-20261104-v12-fx1",
+  "buildId": "btc-face-poll-tail-20261104-v14",
   "status": "pending_deploy",
-  "statusLabel": "BTC v12 · nuevo visor de contacto de pezuñas y terrenos, pendiente de despliegue; anatomía sin cambios",
+  "statusLabel": "BTC v14 · ojos, unión de nuca y dinámica de crin/cola corregidas en rama · pendiente de prueba visual y publicación",
   "updatedAt": "2026-11-04",
-  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final. | V12-FX1: la ficha 3D integra un suelo visible con tierra, arena y césped, partículas por los cuatro contactos animados y control de humedad. No cambia la geometría ni los huesos del caballo, ni resuelve todavía el defecto muslo-corvejón; el registro de efectos queda pendiente de validación del Hostinger público.",
+  "note": "v14 trabaja sobre el MISMO caballo Maya 2017 y su Gallop original. Ojos y párpados comparten landmarks y Head skinning, evitando fragmentos sueltos; unión de nuca pintada suavemente sobre Head/Neck3 y redondeada en la malla; melena y cola 3D con mechones más finos y PBR mate; cola con inercia amortiguada propia y raíz fija. No se reemplaza el modelo con imágenes. Su despliegue y el cotejo visual fase a fase siguen pendientes. El agente de BTC v13b conserva su PR anatómico independiente.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Revisar especialmente la transición anatómica muslo-corvejón en todas las fases del Gallop; aún se ven estrechamientos y siluetas poco naturales en perfil",
-    "Cotejar fase a fase con la referencia 212734.mp4 antes de modificar el rig o las curvas de animación de manera coordinada",
-    "Validar proporción, sombreado y continuidad de patas desde cámaras laterales y posteriores en alta resolución",
-    "Mantener crin compacta sin volver a introducir filamentos colgantes y garantizar rendimiento en 12 corredores"
+    "Revisar las cuatro cámaras reales de la ficha y comprobar ojos/párpados sin clipping ni fragmentos oscuros",
+    "Medir silueta de nuca en diferentes momentos del Gallop, no solamente en pose quieta",
+    "Comprobar en capturas reales si la crin tiene suficiente volumen natural y no parece un manojo de cables",
+    "Revisar movimiento libre y retorno amortiguado de la cola, y rendimiento de 12 corredores",
+    "Coordinar integración con PR #89 sobre volumen anatómico de patas traseras"
   ],
   "nextPhase": {
     "status": "blocked",
