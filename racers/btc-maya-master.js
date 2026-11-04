@@ -148,9 +148,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const head=gauss(y,-.0266,.00175);
   const ear=height*side*head;
   if(ear<.01)continue;
-  positions[i]+=Math.sign(x)*.00016*ear;
-  positions[i+1]+=.00043*ear;
-  positions[i+2]+=.00130*ear;
+  positions[i]+=Math.sign(x)*.00008*ear;
+  positions[i+1]-=.00052*ear;
+  positions[i+2]+=.00220*ear;
   elevatedEarVertices++;
  }
  // Gentle anatomical correction in the actual supplied mesh, not added
@@ -233,12 +233,13 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
  coat.metalness=0;coat.roughness=.66;
+ coat.defines={STANDARD:'',PHYSICAL:''};
  coat.clearcoat=.085;coat.clearcoatRoughness=.78;
  coat.sheen=.24;coat.sheenColor.set('#9c7258');coat.sheenRoughness=.82;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
- const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#6f4935');
+ const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#54382d');
  const accent=new THREE.Color(/^#[0-9a-f]{6}$/i.test(brandAccent||'')?brandAccent:'#f7931a');
  coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.10));
  coat.flatShading=false;coat.side=THREE.FrontSide;
