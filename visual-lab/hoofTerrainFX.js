@@ -38,8 +38,8 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
   // The .22 sole offset is calibrated at the current race horse height (2.85m).
   // It is a provisional contact approximation, not collision-mesh physics.
   const sensorCache=new WeakMap(),soleNames=[
-    'BackLowerLeg.L_end','BackLowerLeg.R_end',
-    'FrontLowerLeg.L_end','FrontLowerLeg.R_end'
+    'BackLowerLegL_end','BackLowerLegR_end',
+    'FrontLowerLegL_end','FrontLowerLegR_end'
   ];
   function readAnimatedSoles(model){
     let entry=sensorCache.get(model);
