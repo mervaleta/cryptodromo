@@ -13,6 +13,22 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
  const positions=[],indices=[],skins=[],weights=[],colors=[],tips=[],regions=[],ids=[];
  const SIDES=10,STEPS=38;
  const quality={majorMane:0,detailMane:0,majorTail:0,detailTail:0};
+ // The GLB already carries a fully animated seven-bone tail rig. The old
+ // procedural groom accidentally weighted EVERY tail strand to Back (joint 1).
+ // Follow the actual authored Tail1..Tail7 chain instead: the imported
+ // Gallop's tail swing now propagates gradually through the new hair masses.
+ const tailBones=Array.from({length:7},(_,index)=>
+  source.skeleton.bones.findIndex(b=>b.name==='Tail'+(index+1)));
+ if(tailBones.some(index=>index<0))
+  throw new Error('BTC V5 requires original GLB Tail1..Tail7 skin joints');
+ function bindTail(u){
+  // Blend two adjacent joints to prevent a hinge between each pair.
+  // Smoothstep delays influence near the dock, keeping roots anchored.
+  const a=smooth(u)*5.99999;
+  const i=Math.min(5,Math.floor(a)),blend=a-i;
+  return {bones:[tailBones[i],tailBones[i+1],0,0],
+   weights:[1-blend,blend,0,0]};
+ }
  function bindMane(s){
   const a=smooth((s-.06)/.53),b=smooth((s-.4)/.57);
   const j5=.48*b,j8=.18*(1-smooth(s/.27)),j7=.60*(1-a);
@@ -27,7 +43,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   const isMain=tier===0;
   const rootY=mane?(-.0291+.0172*f):(.0188+.0009*(seed-.5));
   const rootZ=mane?(.0411-.0053*f):(.0320+.0005*(secondary-.5));
-  const sk=mane?bindMane(f):{bones:[1,0,0,0],weights:[1,0,0,0]};
+  const maneSkin=mane?bindMane(f):null;
   // A deliberate silhouette change: full athletic crest and a long weighted
   // tail, rather than the short V5 tubes. All lengths remain in GLB rest space.
   const length=(mane?
@@ -41,6 +57,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   const id=index*1.91+tier*74.0+(mane?0:200);
   for(let n=0;n<=STEPS;n++){
    const u=n/STEPS,t=smooth(u);
+   const sk=mane?maneSkin:bindTail(u);
    const belly=Math.pow(Math.max(0,Math.sin(PI*u)),.72);
    // Shared flowing S silhouette: a full, rounded root and feathered tips.
    // Root anchoring is exact; successive sections gather into coherent locks.
@@ -143,6 +160,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
  let disposed=false;
  return {
   vertexCount:positions.length/3,lockCount:quality.majorMane+quality.detailMane+quality.majorTail+quality.detailTail,
+  nativeTailBones:tailBones.length,
   quality,
   setColor(value){if(!disposed&&/^#[0-9a-f]{6}$/i.test(value))material.color.set(value);},
   dispose(){if(disposed)return;disposed=true;mesh.removeFromParent();geometry.dispose();material.dispose();}
