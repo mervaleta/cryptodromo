@@ -294,7 +294,7 @@ const finishGlow=new THREE.PointLight(0xffd68a,0,95,1.8);scene.add(finishGlow);
 function updateFinishBurst(){
  const t=elapsed-60,active=running&&t>=0&&t<18.5&&!finishShown;
  finishBurst.visible=active;
- cheerFlags.visible=active;
+ cheerFlags.visible=active&&scenicSettings.crowd;
  finishGlow.intensity=active?Math.max(0,22*(1-t/19)):0;
  if(active){
    for(let i=0;i<flagsN;i++){
@@ -333,11 +333,37 @@ const hoofFX=createHoofTerrainFX(scene,{lanes:12,quality:softwareGPU?'eco':mobil
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode=selectedTrack?.layout||'straight';
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
+const scenicSettings={crowd:true,trees:true,splits:true,details:true};
+function applyScenery(){
+ for(const actor of crowds)actor.visible=scenicSettings.crowd;
+ treeGroup.visible=scenicSettings.trees;
+ trackSplitMarkers.setVisible(scenicSettings.splits);
+ liveVillage.root.traverse(object=>{
+  if(/Público|audience/i.test(object.name))object.visible=scenicSettings.crowd;
+ });
+ stadiumDensity.root.traverse(object=>{
+  if(/audience/i.test(object.name))object.visible=scenicSettings.crowd;
+ });
+ liveDistrict.root.traverse(object=>{
+  if(/Árboles|Copas de paseo/i.test(object.name))object.visible=scenicSettings.trees;
+ });
+ const quality=scenicSettings.details?'balanced':'eco';
+ liveDistrict.setQuality(quality);liveVillage.setQuality(quality);
+ stadiumDensity.setQuality(quality);
+}
 const rainN=softwareGPU?260:mobile?450:1050,rainPos=new Float32Array(rainN*3),rr=seeded(624);
 for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*820;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
 const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:0xe1ecf0,size:.08,transparent:true,opacity:.52,depthWrite:false}));
 rain.visible=false;scene.add(rain);
+const rainIntensityInput=document.querySelector('#rain-intensity');
+function applyRainIntensity(){
+ const level=Math.max(0,Math.min(100,Number(rainIntensityInput?.value??70)))/100;
+ rain.material.opacity=.62*level;
+ rain.geometry.setDrawRange(0,Math.floor(rainN*level));
+}
+rainIntensityInput?.addEventListener('input',applyRainIntensity);
+applyRainIntensity();
 
 const initialQa=new URLSearchParams(location.search).get('finish-qa')==='alpha06';
 const initialLiveSlot=trackSchedule(new Date());
@@ -381,6 +407,22 @@ const winnerReplayOverlay=document.getElementById('winner-replay');
 const winnerReplayName=document.getElementById('winner-replay-name');
 const winnerReplayProgress=document.getElementById('winner-replay-progress');
 let finishGateElapsed=0;
+// Strict, same-origin, visual-only director messages from the containing TV.
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==window.parent||
+    broadcastQuery.get('embed')!=='tv'||!event.data||typeof event.data!=='object')return;
+ if(event.data.type==='CRP_TV_SCENERY'){
+  const values=event.data.settings;
+  if(!values||typeof values!=='object')return;
+  for(const key of Object.keys(scenicSettings)){
+   if(typeof values[key]==='boolean')scenicSettings[key]=values[key];
+  }
+  applyScenery();
+ }else if(event.data.type==='CRP_TV_REPLAY'){
+  const opts=event.data.settings;
+  if(opts&&typeof opts==='object')winnerReplay.configure(opts);
+ }
+});
 function startWinnerReplay(){
  if(finishController.state.crossedCount!==12||winnerReplay.state.phase!=='idle')return false;
  const first=officialRanking(profiles)[0];
@@ -786,7 +828,7 @@ function setLayout(mode){
  alternateTracks.select(mode);
  gateKit.root.visible=mode==='straight';
  finishSign.visible=mode==='straight';
- treeGroup.visible=true;
+ treeGroup.visible=scenicSettings.trees;
   stadiumDensity.setLayout(mode);
  trackFX.setLayout(mode);hoofFX.setLayout(mode);
  if(horses.length){setRace(raceIndex);if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}}
