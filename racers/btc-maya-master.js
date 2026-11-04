@@ -7,15 +7,15 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-face-poll-tail-20261104-v14';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-face-poll-tail-20261104-v15';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-face-poll-tail-20261104-v14';
-import {BTC_EYE_LAYOUT,eyePoint} from './btc-maya-eye-layout.js?v=btc-face-poll-tail-20261104-v14';
-import {pollBlend,pollCrestLift,stabilizePollWeights} from './btc-maya-poll-bridge.js?v=btc-face-poll-tail-20261104-v14';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-face-poll-tail-20261104-v15';
+import {BTC_EYE_LAYOUT,eyePoint} from './btc-maya-eye-layout.js?v=btc-face-poll-tail-20261104-v15';
+import {pollBlend,pollCrestLift,stabilizePollWeights} from './btc-maya-poll-bridge.js?v=btc-face-poll-tail-20261104-v15';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
-export const BTC_MAYA_RENDER_BUILD='btc-face-poll-tail-20261104-v14';
+export const BTC_MAYA_RENDER_BUILD='btc-face-poll-tail-20261104-v15';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
