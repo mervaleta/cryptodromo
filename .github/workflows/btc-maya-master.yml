@@ -8,6 +8,7 @@ on:
       - 'racers/racers.js'
       - 'racers/index.html'
       - 'tests/btc-maya-anatomy-browser.mjs'
+      - 'tests/btc-v12-anatomy-contract.mjs'
       - 'tests/btc-horse-atelier-contract.mjs'
       - '.github/workflows/btc-maya-master.yml'
   workflow_dispatch:
@@ -28,10 +29,11 @@ jobs:
         run: |
           node --check racers/btc-maya-master.js
           node --check racers/btc-maya-groom.js
+          node --check racers/btc-maya-hindquarters.js
           node --check racers/btc-maya-body-data.js
           node --check racers/btc-atelier-preview.js
           node --check tests/btc-maya-anatomy-browser.mjs
-          node --test tests/btc-horse-atelier-contract.mjs
+          node --test tests/btc-horse-atelier-contract.mjs tests/btc-v12-anatomy-contract.mjs
       - name: Install real Chromium and WebGL software path
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
