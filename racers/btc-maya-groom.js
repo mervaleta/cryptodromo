@@ -42,7 +42,7 @@ function createHairMass(source,skinAt,{
 }){
  const positions=[],colors=[],tip=[],ids=[],region=[],bones=[],weights=[],indices=[];
  // More independent roots, fewer segments/card: better silhouette and lower GPU cost.
- const ROWS=20,SIDES=6;
+ const ROWS=16,SIDES=6;
  const total=majorCount+fineCount;
  let strandCount=0,neckOutliers=0;
  const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
@@ -347,7 +347,7 @@ export function createMayaGroom(source,skinAt,{
  const spring=createBTCTailSpring();
  const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:320,
   size:clamp(maneSize,.6,1.9),color:maneColor,motion});
- const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:448,
+ const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:320,
   size:clamp(tailSize,.6,1.9),color:tailColor,motion});
  let disposed=false;
  return {
