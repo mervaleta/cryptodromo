@@ -36,14 +36,15 @@ function attach(source,geometry,material,name){
  source.parent.add(mesh);
  mesh.bind(source.skeleton,source.bindMatrix.clone());
  mesh.bindMatrixInverse.copy(source.bindMatrixInverse);
- mesh.frustumCulled=false;mesh.castShadow=true;mesh.receiveShadow=false;
+ mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=false;
  return mesh;
 }
 function createHairMass(source,skinAt,{
  tail,majorCount,fineCount,size,color,motion
 }){
  const positions=[],colors=[],tip=[],ids=[],region=[],bones=[],weights=[],indices=[];
- const ROWS=20,WIDTH=4,RIBBONS=2;
+ // More independent roots, fewer segments/card: better silhouette and lower GPU cost.
+ const ROWS=16,WIDTH=2,RIBBONS=2;
  const total=majorCount+fineCount;
  let strandCount=0;
  // Reuse the native animated Tail1..Tail7 skeleton: every hair root remains
@@ -75,11 +76,11 @@ function createHairMass(source,skinAt,{
   // Physically plausible hair: shorter layered crest, tapered fine fibers and
   // a weighted tail fan. Previous groom was an oversized solid brown curtain.
   const length=(tail
-   ?(major?.019+.0050*seed:.015+.007*seed)
-   :(major?.0048+.00215*seed:.0036+.00265*seed))*size;
+   ?(major?.021+.0060*seed:.018+.0075*seed)
+   :(major?.0060+.0031*seed:.0049+.0030*seed))*size;
   const breadth=(tail
-   ?(major?.00027+.00013*seed:.000065+.000075*seed)
-   :(major?.00039+.00015*seed:.000048+.000067*seed));
+   ?(major?.00028+.00012*seed:.000055+.000070*seed)
+   :(major?.00031+.00014*seed:.000037+.000045*seed));
   const base=positions.length/3;
   function point(t,cross,ribbon){
    const t2=smooth(t),w=Math.pow(1-t,.81)*(0.72+0.28*Math.sin(PI*t));
@@ -88,13 +89,15 @@ function createHairMass(source,skinAt,{
     // A live galloping horse streams its tail back from the dock, rather
     // than suspending a vertical curtain behind the hind legs. Target is
     // the supplied 212734.mp4 silhouette, never a still frame substitute.
-    const flow=t*.84+.16*t2;
-    const fan=(seed-.5)*(.0031*Math.sin(PI*t)+.0014*t2);
-    x=root[0]+fan+.00042*Math.sin(t*TAU+seed*4)*t2;
-    y=root[1]+length*flow+.00045*Math.sin(PI*t);
-    z=root[2]-(.0090+.0026*crossSeed)*flow
-      +.00095*Math.sin(PI*t)*(.5+.5*seed)
-      +(seed-.5)*(.0023*Math.sin(PI*t)+.0019*t2);
+    const flow=t*.74+.26*t2;
+    // Natural tail arcs rearward then descends, preserving the rump dock.
+    // Distinct lock lengths end at different heights, never in a broom edge.
+    const fan=(seed-.5)*(.0040*Math.sin(PI*t)+.0019*t2);
+    x=root[0]+fan+.00040*Math.sin(t*TAU+seed*4)*t2;
+    y=root[1]+length*(.58*t+.17*t2)+.00045*Math.sin(PI*t);
+    z=root[2]-(.0135+.0055*crossSeed)*flow
+      +.00075*Math.sin(PI*t)*(.5+.5*seed)
+      +(seed-.5)*(.0020*Math.sin(PI*t)+.0024*t2);
     if(ribbon===0)x+=cross*breadth*w;
     else z+=cross*breadth*.42*w;
    }else{
@@ -103,9 +106,9 @@ function createHairMass(source,skinAt,{
     const rearward=t*.78+.22*t2;
     const cy=root[1]+length*rearward;
     const neckZ=crest(cy);
-    const lift=.00048*Math.sin(PI*t)*(.65+.35*seed);
-    const feather=(.00082+.00040*seed)*t2;
-    const outward=(.00042+.00037*seed)*rearward;
+    const lift=.00080*Math.sin(PI*t)*(.65+.35*seed);
+    const feather=(.00090+.00070*seed)*t2;
+    const outward=(.00045+.00050*seed)*rearward;
     x=root[0]+side*(outward+.00018*Math.sin(PI*t));
     y=cy;
     z=neckZ-.00066+lift+feather-(.00014+.00019*crossSeed)*t2;
@@ -164,9 +167,9 @@ function createHairMass(source,skinAt,{
  geo.computeVertexNormals();geo.computeBoundingSphere();
  const mat=new THREE.MeshPhysicalMaterial({
   name:tail?'BTC tail - tapered layered hair':'BTC neck mane - feathered layers',
-  color,vertexColors:true,metalness:0,roughness:tail?.82:.79,
-  sheen:.46,sheenColor:new THREE.Color('#776052'),
-  sheenRoughness:.75,clearcoat:0,side:THREE.DoubleSide
+  color,vertexColors:true,metalness:0,roughness:tail?.72:.69,
+  sheen:.68,sheenColor:new THREE.Color('#906e57'),
+  sheenRoughness:.65,clearcoat:0,side:THREE.DoubleSide
  });
  mat.onBeforeCompile=shader=>{
   shader.uniforms.mayaTime=motion.time;
@@ -189,9 +192,9 @@ export function createMayaGroom(source,skinAt,{
  maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e'
 }={}){
  const motion={time:{value:0},wind:{value:1},gait:{value:0}};
- const mane=createHairMass(source,skinAt,{tail:false,majorCount:192,fineCount:368,
+ const mane=createHairMass(source,skinAt,{tail:false,majorCount:256,fineCount:480,
   size:clamp(maneSize,.6,1.9),color:maneColor,motion});
- const tail=createHairMass(source,skinAt,{tail:true,majorCount:104,fineCount:256,
+ const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:300,
   size:clamp(tailSize,.6,1.9),color:tailColor,motion});
  let disposed=false;
  return {
