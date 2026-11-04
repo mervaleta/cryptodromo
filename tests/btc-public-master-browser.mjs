@@ -28,6 +28,9 @@ try {
  assert.equal(s.heroGroom.gallopPreserved,true);
  assert.equal(s.heroGroom.originalRig,true);
  assert.equal(s.heroGroom.sculptedEyes,2);
+ assert.equal(s.heroGroom.eyeGlobes,2,'two actual spherical eyes must be present');
+ assert.equal(s.heroGroom.irisEditable,true,'the public iris must accept eyeColor');
+ assert.equal(s.heroGroom.blackEquinePupils,true);
  assert.equal(s.heroGroom.sculptedEars,2,'stylized pinnae should appear on the public horse');
  assert.equal(s.heroGroom.integratedMayaHooves,true);
  assert.ok(s.heroGroom.nativeEarFacesRemoved>=150,'no extra horn geometry on public BTC');
