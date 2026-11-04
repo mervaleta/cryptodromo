@@ -21,6 +21,9 @@ function world(id,p,lateral=0){
  return {x:x*Math.cos(a)-z*Math.sin(a),
          z:x*Math.sin(a)+z*Math.cos(a)+config.centerZ};
 }
+// Shared museum coordinates for a future broadcast-to-venue transform.
+// Rendering coordinates only; never use this for official ranking or price inputs.
+export const stadiumCoursePoint=world;
 export function buildThreeCoursePreview({THREE,scene,quality='medium'}={}){
  if(!THREE||!scene)throw new TypeError('THREE and scene required');
  const root=new THREE.Group();root.name='SATOSHI_3_INDEPENDENT_COURSES';scene.add(root);
