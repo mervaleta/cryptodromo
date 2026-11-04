@@ -36,9 +36,9 @@ La versión visual `traffic-director-v1` consume los mismos `trackMeters` y `pos
 3. Cada fotograma debe respetar una envolvente de seguridad entre carrocerías. Si todos los carriles están ocupados, **el auto visual posterior espera** detrás; las variaciones de precio y la distancia de llegada permanecen intactas.
 4. La carrocería gira levemente hacia la trayectoria elegida para evitar desplazamientos laterales antinaturales. El resultado y los tiempos se siguen leyendo exclusivamente de `officialRanking()`.
 
-El sistema precalcula 301 muestras para los 60 segundos y las interpola. También aplica protección entre muestras para evitar que dos trayectorias válidas se crucen al reproducirse a 60 FPS.
+El sistema precalcula 1.201 muestras para los 60 segundos (pasos de 0,05 s), con avance visual acotado y sin retrocesos, y las interpola. También aplica protección entre muestras para evitar que dos trayectorias válidas se crucen al reproducirse a 60 FPS.
 
-QA automática: `node --experimental-default-type=module --test tests/autodromo-traffic.mjs` examina las trayectorias de nueve carreras completas a 10 Hz, exige que el ganador y los metros oficiales permanezcan inmutables y que ningún par de carrocerías invada la envolvente. La prueba Chromium revisa posiciones mundiales de los coches sobre la pista. El estado puede inspeccionarse mediante `window.__cryptodromoAutodromoQA.auditTraffic(.1)`.
+QA automática: `node --experimental-default-type=module --test tests/autodromo-traffic.mjs` examina las trayectorias de nueve carreras completas a 40 Hz, exige que el ganador y los metros oficiales permanezcan inmutables y que ningún par de carrocerías invada la envolvente ni que se produzcan saltos hacia atrás o hacia adelante incompatibles con la velocidad visual acotada. La prueba Chromium revisa posiciones mundiales de los coches sobre la pista. El estado puede inspeccionarse mediante `window.__cryptodromoAutodromoQA.auditTraffic(.1)`.
 
 ## Cómo probar
 1. Abrir `/autodromo/` mediante un servidor HTTP estático que sirva la raíz del repositorio.
