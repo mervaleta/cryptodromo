@@ -39,7 +39,8 @@ let tier='all', selected=TOKEN_ROSTER.find(t=>t.symbol===location.hash.slice(1))
 const atelierMode=new URLSearchParams(location.search).get('atelier');
 const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='BTC');
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
-let atelierVariant=new URLSearchParams(location.search).get('btcMaster')==='maya'?'maya':'enhanced';
+// Normal BTC profile uses the sculpted horse; ?btcMaster=v5 retains the legacy study.
+let atelierVariant=new URLSearchParams(location.search).get('btcMaster')==='v5'?'enhanced':'maya';
 function updateAtelierState(token){
  const btc=token.symbol==='BTC';
  const entry=$('#btc-atelier-entry'),panel=$('#btc-atelier-panel');
@@ -110,7 +111,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-v5-motion-study-20261103':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-maya-face-hooves-groom-20261104':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -154,7 +155,7 @@ import(previewModule).then(({createPreview})=>{
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
  }
- $('#preview-state').textContent=btcAtelier?'BTC · HERO V5 · PELO DINÁMICO · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · CABALLO ANATÓMICO · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;
