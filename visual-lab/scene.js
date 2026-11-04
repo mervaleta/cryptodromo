@@ -1,4 +1,4 @@
-import {mountPresentationHorse} from './presentationHorse.js?v=alpha19-refresh-1';
+import {mountPresentationHorse} from './presentationHorse.js?v=world-presenter-p0-20261104';
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
