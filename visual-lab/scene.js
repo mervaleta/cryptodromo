@@ -1,4 +1,4 @@
-import {mountPresentationHorse} from './presentationHorse.js?v=alpha19-refresh-1';
+import {mountPresentationHorse} from './presentationHorse.js?v=satoshi-tv-safe-20261104';
 import * as THREE from 'three';
 import {Sky} from 'three/addons/objects/Sky.js';
 import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
@@ -439,6 +439,11 @@ async function bootHorses(){
  setRace(raceIndex);start.disabled=false;start.textContent='▶ INICIAR CARRERA';
  lastLiveIndex=-1;lastPhase='';updateLiveProgram();syncControlMode();
  status.textContent='CAMPO PREPARADO · 12 CORREDORES'+(horseEngineMode==='procedural'?' · MODELOS GENERADOS':'');
+ // TV archive starts the selected historical replay after all twelve models load.
+ // Automatic replay starts silently. The spectator can turn sound on from the player.
+ if(hasReplay&&broadcastQuery.get('embed')==='tv'){
+  soundManuallyMuted=true;voiceManuallyMuted=true;start.click();
+ }
 }
 function setRace(index){
  raceIndex=((index%(RACES_PER_DAY*FIXTURE_DAYS))+(RACES_PER_DAY*FIXTURE_DAYS))%(RACES_PER_DAY*FIXTURE_DAYS);
@@ -454,7 +459,7 @@ function setRace(index){
  finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent=(tripleMode?'SATOSHI NAKAMOTO · '+selectedTrack.name.toUpperCase():'GRAN PREMIO CRIPTO')+
- ' · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
+ ' · CARRERA '+String(tripleMode?race.trackSlot+1:race.number).padStart(3,'0')+' / '+(tripleMode?480:RACES_PER_DAY);
  if(horses.length){
   horses.forEach((h,i)=>{
    const e=race.entries[i];h.entry=e;h.progress=0;h.visualMeters=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
