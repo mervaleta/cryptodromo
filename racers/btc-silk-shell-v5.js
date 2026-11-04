@@ -29,7 +29,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   const sk=mane?bindMane(f):{bones:[1,0,0,0],weights:[1,0,0,0]};
   const length=(mane?
     (.0116+.0038*Math.sin(PI*f))*(.92+.22*seed)*maneSize:
-    (.022+.0040*seed)*tailSize)*(isMain?1:.87);
+    (.018+.0030*seed)*tailSize)*(isMain?1:.87);
   const vWidth=(mane?.00120:.00134)*(isMain?1:.54)*(.78+.28*seed);
   const dWidth=vWidth*(mane?.63:.58);
   const start=positions.length/3;
@@ -40,14 +40,14 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
    // Shared flowing S silhouette: a full, rounded root and feathered tips.
    const lift=mane?
     (.0023+.00065*seed)*Math.sin(PI*u)+(.00075+.0006*secondary)*t:
-    (.0028+.0011*seed)*Math.sin(PI*u)+(.0062+.0007*secondary)*t;
+    (.0028+.0011*seed)*Math.sin(PI*u)+(.0082+.0007*secondary)*t;
    const curl=(mane?.00055:.0010)*t*Math.sin(u*TAU*1.05+seed*PI);
    const cy=rootY+length*(u+.055*Math.sin(PI*u))+
     .0002*t*Math.sin(id*.73);
    const cz=rootZ+lift+curl;
    const cx=mane?
     flank*(.00016+.00047*belly+.00055*t)*(tier===0?1:.75):
-    (secondary-.5)*(.0016+.0038*belly)+
+    (secondary-.5)*(.0014+.0028*belly)+
     .00045*t*Math.sin(index*.7+u*PI);
    const falloff=Math.pow(1-u,.41);
    const thick=(.035+.965*belly)*falloff;
