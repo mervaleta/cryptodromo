@@ -36,6 +36,8 @@ try{
  assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges,'close every exposed dock edge with skinned Maya triangles');
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
+ assert.equal(start.heroGroom.crownBridgeLocks,112,'forelock and dorsal mane must be joined across the poll');
+ assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must sit within the sockets');
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
  assert.equal(start.heroGroom.heroHooves,4,'four visible, articulated hoof shells required');
@@ -55,7 +57,7 @@ try{
  await page.waitForTimeout(600);
  const after=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.ok(Math.abs(after.hoofPhase-before)>.001,'Original Gallop must animate sculpted model');
- for(const angle of ['profile','front','rear']){
+ for(const angle of ['profile','front','rear','detail','threeQuarter','top']){
   await page.evaluate(angle=>document.querySelector('[data-btc-camera="'+angle+'"]').click(),angle);
   await page.waitForTimeout(350);
   await page.locator('#horse-view').screenshot({path:dir+'/'+angle+'.png',timeout:70000});
