@@ -55,7 +55,7 @@ test('the specimen is accessible, local, interactive and honest about demo data'
   assert.match(guide, /<dialog class="crc-modal/);
   assert.match(guide, /role="tablist"/);
   assert.match(guide, /type="submit"/);
-  assert.match(guide, /sin datos reales/i);
+  assert.match(guide, /datos de demostración son ficticios/i);
   assert.match(guide, /addEventListener\('keydown'/);
   assert.ok(existsSync(new URL('../docs/CRC_IDENTITY_20261104.md',import.meta.url)));
 });
