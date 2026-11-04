@@ -444,10 +444,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   // Eliminate prior orange horseshoe meshes at every Gallop phase.
   shader.fragmentShader=shader.fragmentShader.replace(
    'diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.58,.31,.27),earVelvet*.20);',
-   'diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.58,.31,.27),earVelvet*.20);\\n'+
-   'float eyeContourR=length(vec2((vBTCMayaRest.y+.02831)/.00077,(vBTCMayaRest.z-.04268)/.00083));\\n'+
-   'float eyeContour=exp(-pow((eyeContourR-1.0)/.17,2.0));\\n'+
-   'eyeContour*=smoothstep(.0008,.0015,abs(vBTCMayaRest.x));\\n'+
+   'diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.58,.31,.27),earVelvet*.20);\n'+
+   'float eyeContourR=length(vec2((vBTCMayaRest.y+.02831)/.00077,(vBTCMayaRest.z-.04268)/.00083));\n'+
+   'float eyeContour=exp(-pow((eyeContourR-1.0)/.17,2.0));\n'+
+   'eyeContour*=smoothstep(.0008,.0015,abs(vBTCMayaRest.x));\n'+
    'diffuseColor.rgb*=1.-.085*eyeContour;'
   );
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
