@@ -177,6 +177,7 @@ export function trafficAudit(session,stepSeconds=0.2){
  if(!Number.isFinite(stepSeconds)||stepSeconds<=0||stepSeconds>10)
    throw new RangeError('Invalid traffic audit sample');
  let closest=Infinity,unsafePairs=0,changeCount=0,frames=0;
+ const examples=[];
  const starting=trafficAt(session,0);
  const oldSides=new Map(starting.map(row=>[row.symbol,row.sideMeters]));
  for(let t=0;t<=60+1e-6;t+=stepSeconds){
@@ -188,9 +189,15 @@ export function trafficAudit(session,stepSeconds=0.2){
      const a=rows[i],b=rows[j];
      const clearance=collisionClearance(a.visualMeters-b.visualMeters,a.sideMeters-b.sideMeters);
      if(Number.isFinite(clearance))closest=Math.min(closest,clearance);
-     if(clearance<-.01)unsafePairs++;
+     if(clearance<-.01){
+       unsafePairs++;
+       if(examples.length<8)examples.push({t:Number(t.toFixed(2)),a:a.symbol,b:b.symbol,
+         long:Number((a.visualMeters-b.visualMeters).toFixed(3)),
+         side:Number((a.sideMeters-b.sideMeters).toFixed(3)),
+         clearance:Number(clearance.toFixed(3))});
+     }
    }
  }
  return {frames,unsafePairs,closestClearance:closest,sideChanges:changeCount,
-   winner:session.official[0].entry.symbol,sessionKey:session.key};
+   winner:session.official[0].entry.symbol,sessionKey:session.key,examples};
 }
