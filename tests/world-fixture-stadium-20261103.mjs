@@ -11,6 +11,12 @@ test('world pages use Hostinger-compatible .js modules, watchdog and valid HTML'
  assert.equal(routes.length,10);
  for(const path of routes){
   const html=read(path);
+  if(path==='stadiums/crypto/index.html'){
+   assert.match(html,/crypto-venue\.js\?v=hub-1/);
+   assert.match(html,/\/stadiums\/crypto\/live\//);
+   assert.match(html,/\/stadiums\/crypto\/archive\//);
+   continue;
+  }
   assert.match(html,/stadium-network-ui\.js\?v=world2/);
   assert.match(html,/stadium-network-watchdog\.js\?v=world2/);
   assert.doesNotMatch(html,/src="\/assets\/stadium-network-ui\.mjs/);

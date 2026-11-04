@@ -34,12 +34,12 @@ test('CSS scoped, separate board and market selectors, mobile and reduced motion
  assert.match(css,/@media\(max-width:480px\)/);
  assert.match(css,/prefers-reduced-motion/);
 });
-test('home retains WebGL stage and loads .js consumer modules',()=>{
- assert.match(home,/id="raceCanvas"/);
- assert.match(home,/class="stage"/);
- assert.match(home,/addons\/premium-consumer\/consumer\.js/);
- assert.match(home,/addons\/premium-consumer\/consumer\.css/);
- assert.doesNotMatch(home,/addons\/premium-consumer\/consumer\.mjs/);
+test('hub remains home; prior consumer board stays offline until 1440-race API is ready',()=>{
+ const broadcast=read('stadiums/crypto/broadcast/index.html');
+ assert.match(home,/hub-grid/);
+ assert.doesNotMatch(home,/id="raceCanvas"|addons\/premium-consumer\/consumer\.js/);
+ assert.match(broadcast,/id="raceCanvas"/);
+ assert.doesNotMatch(broadcast,/addons\/premium-consumer\/consumer\.js/);
 });
 test('single cashier remains connected and is not replaced',()=>{
  assert.match(cashier,/id="cr"/);

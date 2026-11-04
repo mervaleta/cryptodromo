@@ -1,11 +1,11 @@
 /* Alpha18 CRP universal navigation: DOM enhancement, does not touch race logic. */
 (()=>{'use strict';
 const groups=[
- {label:'Explorar',icon:'◈',items:[['/stadiums/','Estadios del mundo'],['/stadiums/fixture/','Fixture mundial'],['/estadio/','Estadio 3D'],['/parade/','Modo Parade'],['/visual-lab/','Visual Lab'],['/laboratorio/','Laboratorio'],['/estadisticas/','Estadísticas']]},
+ {label:'Explorar',icon:'◈',items:[['/stadiums/','Estadios del mundo'],['/stadiums/fixture/','Fixture mundial'],['/estadio/','Estadio 3D'],['/parade/','Modo Parade'],['/visual-lab/','Visual Lab'],['/laboratorio/','Laboratorio'],['/estadisticas/','Estadísticas'],['/stadiums/crypto/archive/','Archivo Satoshi']]},
  {label:'Comunidad',icon:'♧',items:[['/comunidad/','Jugadores e insignias'],['/stables/','Escuderías'],['/championship/','Campeonatos'],['/cronicas/','Crónicas'],['/apuestas/','Favoritos · demo'],['/eventos.html','Eventos']]},
  {label:'Proyecto',icon:'▤',items:[['/institucional/','Presentación'],['/como-funciona.html','Cómo funciona'],['/contacto.html','Contacto'],['/preguntas.html','Ayuda']]}
 ];
-const main=[['/','Carrera'],['/racers/','Corredores'],['/fixture/','Fixture'],['/resultados/','Resultados'],['/grandes-premios/','Grandes Premios']];
+const main=[['/','Inicio'],['/stadiums/crypto/live/','Carreras · demo'],['/racers/','Corredores'],['/fixture/','Fixture'],['/resultados/','Resultados'],['/grandes-premios/','Grandes Premios']];
 const el=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=cls;if(text)x.textContent=text;return x};
 function init(){
  const existing=document.querySelector('header.sitebar,header.top,header.bar');if(!existing||existing.dataset.crpUnified==='1')return;
@@ -34,7 +34,7 @@ function init(){
  document.addEventListener('pointerdown',e=>{if(!e.target.closest('.crp-nav-group'))close()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
  inner.append(nav);
- const action=el('a','site-action','Ver carrera ↗');action.href='/';inner.append(action);header.append(inner);
+ const action=el('a','site-action','Ver carreras ↗');action.href='/stadiums/crypto/live/';inner.append(action);header.append(inner);
  existing.replaceWith(header);
  document.documentElement.classList.add('crp-navigation-ready');
 }

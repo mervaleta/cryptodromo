@@ -68,7 +68,7 @@ test('only one on-stage countdown visible per LIVE phase, without changing broad
  assert.match(presenter,/stage\.classList\.add\('is-presenting'\)/);
  assert.doesNotMatch(presenter,/clockEl\.textContent/);
  assert.match(scene,/countdownVisibility\(/);
- for(const path of ['index.html','visual-lab/index.html']){
+ for(const path of ['stadiums/crypto/broadcast/index.html','visual-lab/index.html']){
   const html=read(path);
   assert.match(html,/\.stage\.is-presenting \.dial\{display:none!important\}/);
   assert.equal((html.match(/id="present-countdown"/g)||[]).length,1);
@@ -90,7 +90,7 @@ test('Parade and LIVE share real camera console component and leave scores untou
  for(const id of ['yaw','pitch','height','distance','fov','lateral','camera-speed','camera-mode','sight','follow-horse'])
   assert.ok(ui.includes('id="'+id+'"'),'Parade missing '+id);
  assert.match(ui,/assets\/camera-console\.css/);
- assert.match(read('index.html'),/assets\/camera-console\.css/);
+ assert.match(read('stadiums/crypto/broadcast/index.html'),/assets\/camera-console\.css/);
  assert.match(ui,/id="toggle-camera-pad"/);
  assert.match(ui,/\.drift\.is-visible\{display:grid\}/);
  assert.doesNotMatch(read('visual-lab/cameraRig.js'),/createOfficialRace|officialRanking|PRICE_FIXTURE|RACES_PER_DAY/);

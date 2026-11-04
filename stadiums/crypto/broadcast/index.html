@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050b0a">
+<meta name="description" content="Carreras virtuales en las tres pistas del Estadio Satoshi Nakamoto. Transmisión de simulación sintética, sin apuestas reales.">
+<title>Transmisión Satoshi Nakamoto · Cryptódromo</title>
+<style>
+:root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:#070d0c;color:#f2f2e9;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(155deg,#0e1d1b,#060909 55%);min-height:100vh}
+.top{display:flex;align-items:center;justify-content:space-between;padding:13px clamp(15px,3.5vw,65px);border-bottom:1px solid #264037;background:#07110fee;position:relative;z-index:5;gap:18px}
+.brand{font-size:20px;letter-spacing:.02em;font-weight:900;color:#f3f1e3;text-decoration:none;white-space:nowrap}.brand:before{content:"◈";color:#2de2b0;margin-right:11px}.brand span{color:#3ecca2}
+.top nav{display:flex;flex-wrap:wrap;gap:20px}.top nav a{color:#b7c8c0;text-decoration:none;font-size:11px;text-transform:uppercase;letter-spacing:.13em}.top nav a:hover{color:white}
+.shell{max-width:1800px;margin:auto;padding:19px clamp(12px,3vw,55px) 36px}
+.heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:17px;flex-wrap:wrap}.overline{font-size:10px;font-weight:850;color:#39d3a7;letter-spacing:.22em;text-transform:uppercase}
+h1{font-family:Georgia,serif;font-size:clamp(30px,3.9vw,57px);font-weight:500;margin:6px 0 0;letter-spacing:-.05em;line-height:1.03}h1 em{color:#e4c185;font-weight:400}
+.heading small{font-size:11px;color:#a2b0a6;letter-spacing:.05em}.dot{display:inline-block;width:7px;height:7px;background:#40dba1;border-radius:100%;box-shadow:0 0 18px #19c68d;margin-right:7px}
+.stage{position:relative;width:100%;height:clamp(420px,58vw,770px);border:1px solid #435747;border-radius:8px;overflow:hidden;box-shadow:0 28px 80px #0009;background:#758b8c}
+#raceCanvas{display:block;width:100%;height:100%}
+.stage:after{content:"";position:absolute;pointer-events:none;inset:0;box-shadow:inset 0 0 100px 22px #08100c58}
+.broadcast{position:absolute;left:21px;top:20px;display:flex;gap:12px;align-items:center;z-index:2;font-size:11px;font-weight:900;letter-spacing:.13em;text-shadow:0 2px 6px #000}
+.broadcast span{padding:7px 11px;background:#0b1c17b8;border:1px solid #d6f3d138;border-radius:3px}
+.broadcast b{background:#bd2b2c;color:white;padding:8px 11px;border-radius:3px}
+.stage.is-presenting .dial{display:none!important}
+.dial{position:absolute;right:22px;top:18px;z-index:2;text-align:right;text-shadow:0 2px 5px #000}.dial div{font-size:11px;color:#dce6de;font-weight:800;letter-spacing:.18em}.dial strong{font-size:46px;font-weight:700;letter-spacing:-.07em;font-variant-numeric:tabular-nums}
+.lowerthird{position:absolute;bottom:0;left:0;right:0;padding:28px 21px 19px;z-index:2;background:linear-gradient(transparent,#06100bea 85%);display:flex;justify-content:space-between;align-items:end;gap:20px}
+.lowerthird strong{font-size:21px;letter-spacing:-.02em}.lowerthird p{margin:6px 0 0;color:#cfddcf;font-size:11px}
+.lowerthird .leader{color:#ebd394;text-align:right}.leader div{font-size:9px;letter-spacing:.18em;color:#9cbbaa}.leader strong{font-size:29px}
+.below{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,390px);gap:17px;margin-top:17px}
+.panel{border:1px solid #34453d;background:linear-gradient(155deg,#14231e,#0a1310);border-radius:6px;padding:17px}
+h2{font-size:13px;letter-spacing:.15em;margin:0 0 16px;text-transform:uppercase}
+.controlrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+button,select{background:#172d23;border:1px solid #426152;color:#f6f5e9;padding:12px 15px;font:inherit;font-size:12px;border-radius:3px;cursor:pointer;min-height:43px}
+button:hover,select:hover{background:#254537}button.primary{background:#c5a16b;color:#0c0f0a;border-color:#d8b885;font-weight:900;letter-spacing:.08em;min-width:195px}
+label{font-size:11px;color:#aebdb2;display:grid;gap:5px}label select{min-width:130px}.micro{font-size:11px;color:#8da59b;line-height:1.7;margin-top:14px}
+#standings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;padding:0;margin:0}
+#standings li{background:#0b1713;border:1px solid #263b31;padding:8px 9px;display:flex;align-items:center;gap:8px;min-width:0;font-size:12px}
+#standings i{width:6px;height:21px;flex-shrink:0;border-radius:2px}#standings b{font-size:11px;letter-spacing:.08em}#standings small{color:#94ab9c;margin-left:auto}
+.foot{font-size:11px;color:#7d9289;padding:20px 1px;line-height:1.6}.foot a{color:#9dcbb6}
+@media(max-width:890px){.below{grid-template-columns:1fr}.stage{height:520px}.top nav{display:none}#standings{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.stage{height:450px}.dial strong{font-size:30px}.broadcast{left:10px;top:10px;font-size:9px}.lowerthird strong{font-size:17px}.leader strong{font-size:20px}}
+.race-tabs{display:flex;gap:8px;margin:0 0 17px;border-bottom:1px solid #3b5846;padding-bottom:10px}
+.race-tabs button{min-height:36px;padding:9px 13px;border-radius:2px;background:#101e1a;border-color:#364f41;font-size:10px;letter-spacing:.09em;font-weight:800}
+.race-tabs button.active{background:#c8a46d;border-color:#c8a46d;color:#101610}
+.light-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));align-items:center;gap:15px}
+.light-controls label{display:flex;flex-direction:column;align-items:flex-start;gap:7px;font-size:10px;letter-spacing:.09em;color:#d1e4d9;line-height:1.3}
+.light-controls input[type=range]{width:100%;accent-color:#d8b77b}
+.light-controls input[type=color]{width:66px;height:44px;padding:5px;background:#122820;border:1px solid #597363}
+.light-controls input[type=checkbox]{accent-color:#d8b77b;width:19px;height:19px}
+.light-controls .light-switch{flex-direction:row;align-items:center;gap:9px;white-space:normal}
+.light-controls #light-preview{border-color:#a88b56;color:#f4d4a5}
+[hidden]{display:none!important}
+.race-narrator{position:absolute;bottom:95px;left:22px;right:22px;background:linear-gradient(90deg,#051713cb,#06160e44);border-left:3px solid #cfb17c;color:#f7f1dc;z-index:3;font-size:11px;font-weight:750;letter-spacing:.08em;max-width:65%;padding:11px 16px;text-shadow:0 1px 5px #000}
+.result-overlay{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:34px 18px;background:linear-gradient(125deg,#071c18f4,#070f11e2 70%);text-align:center;opacity:0;transition:opacity .85s cubic-bezier(.22,.7,.24,1);pointer-events:none}
+.result-overlay.is-visible{opacity:1;pointer-events:auto}
+.result-kicker{font-size:10px;letter-spacing:.25em;color:#dbc08c;font-weight:900}
+.result-title{font-family:Georgia,serif;letter-spacing:-.04em;font-size:clamp(28px,4vw,58px);font-weight:800;margin:8px 0 17px}
+.result-title em{color:#d4b273;font-weight:400}
+.result-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(810px,98%);gap:5px 13px;max-height:60%;overflow:auto}
+.result-row{display:grid;grid-template-columns:35px 8px minmax(0,1fr) 94px;gap:9px;align-items:center;min-width:0;padding:7px 12px;text-align:left;background:#ffffff11;border:1px solid #ffffff1c;border-radius:3px;font-size:12px}
+.result-row:first-child{background:#c3a56b27;border-color:#d8b97a9c}
+.result-row span:last-child{color:#e5d5b6;font-variant-numeric:tabular-nums;text-align:right}
+.result-meta{font-size:11px;letter-spacing:.09em;color:#a8c4b0;margin:13px 0 9px}
+#result-close{background:#cbaa77;color:#101b13;font-weight:850;border-color:#e9ce9e}
+.race-stats{border-top:1px solid #445747;margin-top:17px;padding-top:13px;font-size:11px;color:#c0d3c6;line-height:1.65}
+.race-stats strong{display:block;color:#e5d6b2;letter-spacing:.12em;margin-bottom:6px}
+.info-panel{margin-top:17px;max-width:none}
+.info-panel p{font-size:12px;color:#afc9b8}
+.info-panel a{color:#d9bd84;font-size:12px}
+#race-biography{border-left:2px solid #cba771;margin:14px 0;padding:8px 13px;color:#dfe9df;font-size:13px}
+@media(max-width:640px){.result-list{grid-template-columns:1fr;max-height:61%}.result-overlay{padding:14px 9px}.result-row{padding:4px 8px}.race-narrator{bottom:88px;font-size:10px;max-width:92%;left:8px;right:8px}}
+[hidden]{display:none!important}
+
+.live-program{margin-top:17px}
+.live-title{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.live-title h2{font-size:21px;letter-spacing:.05em;margin:8px 0}
+.live-title small{font-size:10px;letter-spacing:.13em;color:#a3c1ae;margin-left:10px}
+.live-dot{display:inline-block;width:9px;height:9px;background:#e1c386;border-radius:50%;box-shadow:0 0 16px #e1c386}
+.live-countdown{font-size:30px;color:#e5c38d;font-variant-numeric:tabular-nums;font-weight:900}
+.live-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:15px}
+.live-slots>div{padding:14px;background:#0b1a14;border:1px solid #375444;display:flex;flex-direction:column;align-items:start;gap:8px}
+.live-slots>div.live-current{background:#1b2c24;border-color:#d7b57c}
+.live-slots span{font-size:10px;letter-spacing:.12em;color:#9dbdaa}
+.live-slots strong{font-size:25px;font-variant-numeric:tabular-nums}
+.live-slots button{min-width:0;font-size:11px;padding:8px 12px}
+.live-slots .live-current button{background:#c7a76f;color:#0d170f;border-color:#ebc68b;font-weight:850}
+#audio-volume{max-width:120px;accent-color:#c7a76f}
+@media(max-width:600px){.live-slots{grid-template-columns:1fr}.live-title h2{font-size:16px}.live-countdown{font-size:23px}}
+
+.finish-celebration{position:absolute;inset:0;pointer-events:none;z-index:4;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;background:radial-gradient(ellipse at center,#d7b3692a 0,transparent 65%);text-shadow:0 5px 18px #000;animation:finishLight .7s ease-in}
+.finish-flare{font:900 clamp(25px,4vw,61px)/1.1 Georgia,serif;color:#f8dfa0;letter-spacing:.06em;text-align:center}
+.finish-celebration strong{font-weight:900;color:white;font-size:26px}
+.finish-celebration small{font-weight:900;color:#f2dba9;letter-spacing:.14em;text-align:center}
+@keyframes finishLight{from{opacity:0;filter:brightness(2)}to{opacity:1;filter:brightness(1)}}
+.presentation-overlay{position:absolute;inset:0;z-index:5;background:linear-gradient(105deg,#071812f0 0%,#102b1dd1 48%,#0b26168c 85%,#0a1a125c);display:flex;flex-direction:column;justify-content:space-between;padding:clamp(12px,3vw,31px);animation:finishLight .6s ease-in}
+.present-top{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:11px;letter-spacing:.16em;color:#ddc89c;font-weight:900}
+.present-top strong{font-size:clamp(25px,4vw,44px);font-variant-numeric:tabular-nums}
+.present-spotlight{display:flex;flex-direction:column;align-items:flex-start;padding:8px 0 12px}
+.present-spotlight #present-badge{font-weight:800;font-size:11px;color:#e7c791;letter-spacing:.2em}
+.present-spotlight strong{font-family:Georgia,serif;font-size:clamp(49px,9vw,110px);line-height:1.06;color:#f4e2b2;text-shadow:0 2px 30px #a18c4144}
+.present-spotlight #present-name{font-size:clamp(16px,2vw,24px);font-weight:900;letter-spacing:.11em}
+.present-spotlight small{font-size:12px;line-height:1.5;color:#bad4c6;max-width:650px}
+.present-roster{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;margin:8px 0}
+.present-roster>div{display:flex;align-items:center;justify-content:center;min-height:41px;border:1px solid #4663536b;background:#0c1c19a0;font-size:10px;font-weight:900;letter-spacing:.05em;position:relative}
+.present-roster>div.active{border-color:#eacb89;background:#c3a1643d;box-shadow:0 0 18px #e6c47d3e}
+.present-roster>div:before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--runner-color,#d3b77e)}
+.present-footer{font-size:10px;letter-spacing:.15em;color:#c9dbc8;font-weight:800}
+.auto-label{font-size:12px;font-weight:850;color:#e4bc7c;letter-spacing:.08em}
+#replay-mode{color:#e3c38b;border-color:#81683f}
+@media(max-width:680px){.present-roster{grid-template-columns:repeat(6,minmax(0,1fr))}.present-spotlight strong{font-size:57px}.presentation-overlay{padding:14px}.present-roster>div{min-height:33px}}
+
+/* Alpha 15 broadcast design cohesion: original crest and legible telemetry. */
+.brand{display:inline-flex;align-items:center;gap:9px}.brand:before{content:none}.brand-mark{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 0 12px #56e0ac30)}
+.top nav{gap:clamp(8px,1.2vw,17px)}.top nav a{font-size:10px;letter-spacing:.09em}.top nav a:hover,.top nav a:focus-visible{color:#f1d6a0}
+.stage{box-shadow:0 25px 75px #000a,0 0 0 1px #c5ae7252;background:#617781}
+.controlrow input:focus-visible,.controlrow select:focus-visible,.controlrow button:focus-visible,.top a:focus-visible{outline:2px solid #e0c383;outline-offset:2px}
+@media(max-width:860px){.top{align-items:flex-start;flex-direction:column}.top nav{gap:10px}.top nav a{font-size:10px}}
+</style>
+<link rel="stylesheet" href="/assets/camera-console.css?v=alpha17-1">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+<link rel="stylesheet" href="/visual-lab/trackSplitsPanel.css?v=alpha15-splits-1">
+<link rel="stylesheet" href="/assets/site-shell.css?v=unified-1"><link rel="stylesheet" href="/assets/crp-global-nav.css?v=alpha18-nav1"><script defer src="/assets/crp-global-nav.js?v=alpha19-hub-1"></script></head><body>
+<header class="sitebar"><div class="sitebar-inner"><a class="site-brand" href="/" aria-label="Cryptódromo, inicio"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a><nav class="site-nav" aria-label="Navegación principal"><a href="/" aria-current="page">Carrera</a><a href="/racers/">Corredores</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/grandes-premios/">Grandes Premios</a><a href="/cronicas/">Crónicas</a><a href="/apuestas/">Apuestas · demo</a><a href="/estadio/">Estadio</a><a href="/parade/">Modo Parade</a><a href="/institucional/">Proyecto</a></nav><a class="site-action" href="#raceCanvas">Ver la carrera ↗</a></div></header>
+<main class="shell">
+<div class="heading"><div><div class="overline"><span class="dot"></span>ESTADIO SATOSHI NAKAMOTO · PISTA EADWEARD MUYBRIDGE</div><h1>La carrera <em>es el mercado.</em></h1></div><small>12 CABALLOS · 780 UNIDADES VISUALES · LIVE AUTOMÁTICO</small></div>
+<div class="stage" id="stage">
+<canvas id="raceCanvas" aria-label="Estadio de carreras 3D con doce caballos, gradas y cámaras de transmisión"></canvas>
+<div class="broadcast"><b>● DEMO</b><span>CRYPTÓDROMO WORLD FEED</span></div>
+<div class="dial"><div>TIEMPO DE CARRERA</div><strong id="clock">00:00</strong></div>
+<div class="finish-celebration" id="finish-celebration" hidden>
+  <div class="finish-flare">✦ CRUZAN LA META ✦</div><strong id="finish-cross-count">1 / 12</strong><small>LA TRIBUNA ESTALLA · ESPERANDO AL ÚLTIMO CORREDOR</small>
+</div>
+<div class="presentation-overlay" id="presentation-overlay" hidden>
+  <div class="present-top"><span>PRÓXIMA CARRERA · PASE DE LISTA</span><strong id="present-countdown">01:00</strong></div>
+  <div class="present-spotlight"><span id="present-badge">01 / 12</span><strong id="present-symbol">BTC</strong><span id="present-name">BITCOIN</span><small id="present-record"></small></div>
+  <div class="present-roster" id="present-roster"></div>
+  <div class="present-footer">LA LARGADA ES AUTOMÁTICA · REPLAY CON PRECIOS SINTÉTICOS</div>
+</div>
+<div class="race-narrator" aria-live="polite"><span id="narrator-text">LA TRANSMISIÓN COMIENZA EN LA LARGADA</span></div>
+<div class="result-overlay" id="result-overlay" hidden>
+  <div class="result-kicker">CRYPTÓDROMO · ACTA OFICIAL · REPLAY SINTÉTICO</div>
+  <div class="result-title">RESULTADOS <em>CONFIRMADOS</em></div>
+  <div id="result-list" class="result-list" aria-label="Orden oficial de llegada"></div>
+  <div class="result-meta" id="result-meta">CLASIFICACIÓN FINAL · 12 CORREDORES</div>
+  <button type="button" id="result-close">VOLVER A LA TRANSMISIÓN</button>
+</div>
+<div class="lowerthird"><div><div class="overline" id="status">CARGANDO ESCENARIO 3D</div><strong id="raceName">GRAN PREMIO CRIPTO · CARRERA 001</strong><p id="message">Datos sintéticos, resultados predeterminados y sin apuestas</p></div><div class="leader"><div>AL FRENTE</div><strong id="leader">BTC</strong></div></div>
+</div>
+<div class="below">
+<section class="panel"><h2>Dirección de carrera</h2>
+<div class="race-tabs" role="tablist" aria-label="Panel de carrera y luces">
+<button type="button" class="active" role="tab" id="tab-race" aria-selected="true" aria-controls="panel-race">CARRERA / CLIMA</button>
+<button type="button" role="tab" id="tab-light" aria-selected="false" aria-controls="panel-light">✦ ILUMINACIÓN</button>
+<button type="button" role="tab" id="tab-camera" aria-selected="false" aria-controls="panel-camera">◉ CÁMARAS</button>
+</div>
+<div id="panel-race" role="tabpanel" aria-labelledby="tab-race"><div class="controlrow">
+<button class="primary" id="start" disabled hidden>▶ REPLAY MANUAL</button><span id="automatic-label" class="auto-label">● TRANSMISIÓN AUTOMÁTICA</span>
+<button id="reset" hidden>↺ REINICIAR</button><button id="next" hidden>SIGUIENTE CARRERA ›</button><button id="replay-mode">▶ MODO REPLAY MANUAL</button>
+<button id="voice" type="button" aria-pressed="false">🔊 ACTIVAR RELATO</button>
+<button id="sound" type="button" aria-pressed="false">♫ HABILITAR AUDIO</button>
+<label>VOLUMEN <input type="range" id="audio-volume" min="0" max="100" step="5" value="90" aria-label="Volumen del hipódromo"/></label>
+<label>CALIDAD 3D<select id="graphics-quality" aria-label="Calidad gráfica del estadio"><option value="auto">Automática (FPS)</option><option value="eco">Económica</option><option value="balanced">Equilibrada</option><option value="cinematic">Cinematográfica</option></select></label>
+<span class="auto-label" id="fps-readout" role="status">FPS · calculando</span>
+<label>MOTOR DE CABALLOS<select id="horse-engine" aria-label="Motor gráfico de los caballos"><option value="legacy">Actual (GLB)</option><option value="procedural">100% procedural (beta)</option></select></label>
+
+<label>TRAZADO<select id="layout"><option value="straight">Recta central</option><option value="s-bend">Curva en S</option><option value="oval">Óvalo completo</option></select></label>
+<label>SUPERFICIE<select id="surface"><option value="dirt">Tierra compactada</option><option value="grass">Césped</option><option value="synthetic">Sintética</option></select></label>
+
+
+
+<label>NUBOSIDAD <output id="cloud-cover-label">52%</output><input id="cloud-cover" type="range" min="0" max="100" value="52" step="5" aria-label="Cobertura de nubes"/></label>
+<label>BRUMA / NIEBLA <output id="fog-intensity-label">100%</output><input id="fog-intensity" type="range" min="0" max="240" value="100" step="5" aria-label="Densidad de niebla ambiental"/></label>
+<label>ATMÓSFERA<select id="weather"><option value="auto">Automática · reloj del estadio</option><option value="golden">Atardecer</option><option value="noon">Pleno día</option><option value="night">Noche</option><option value="rain">Lluvia</option></select></label>
+<label>HORA SOLAR <output id="daytime-label">Auto · Buenos Aires</output><input id="daytime" type="range" min="0" max="1439" value="720" step="5" aria-label="Hora solar de simulación"/></label>
+<label class="light-switch"><input id="daytime-auto" type="checkbox" checked/> SEGUIR HORA DEL ESTADIO</label>
+<label>LUZ NATURAL <output id="sunlight-label">100%</output><input id="sunlight" type="range" min="0" max="200" value="100" step="5" aria-label="Intensidad de la luz solar"/></label><span id="wet-state" class="auto-label" aria-live="polite">Humedad del estadio 0% · superficie seca</span>
+</div><p class="micro">Emisión automática cada tres minutos, pista de 780 unidades, humedad acumulativa, pisadas en curvas y presentación de doce fichas. Caballos de producción con pelajes identificables, huellas y charcos. En modo procedural beta se generan también jockeys, mantillas y dorsales; la versión actual conserva su estética y movimiento originales. Pista horizontal real 3D, cámara en perspectiva, tribuna multinivel, público instanciado, caballos animados y materiales procedurales. La llegada continúa determinada exclusivamente por los dos inputs financieros y sus dosis del CRP.</p></div>
+<div id="panel-camera" role="tabpanel" aria-labelledby="tab-camera" hidden>
+<div class="camera-deck" id="camera-deck">
+ <div class="camera-intro"><div><h3>Dirección de cámaras · Alpha 17</h3><p>Un solo panel para todas las vistas. Los ajustes son manuales y no cambian la carrera ni los resultados.</p></div><span class="camera-reading" id="camera-reading">CÁMARA · TV</span></div>
+ <div class="camera-grid">
+  <label>Vista / plano<select id="camera" aria-label="Plano de cámara"><option value="broadcast">Dirección TV automática</option><option value="rail">Railcam · a pie de pista</option><option value="low">Casco · plano bajo</option><option value="aerial">Cenital · óvalo entero</option><option value="overview">Panorámica del estadio</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta · foto finish</option><option value="startline">Puerta de largada</option><option value="side">Lateral · velocidad</option><option value="reverse">Contraplano</option><option value="leader">Líder · persecución</option><option value="pack">Pelotón · gran angular</option><option value="grandstand">Desde tribuna</option><option value="orbit">Órbita del estadio</option><option value="paddock">Paddock y edificios</option></select></label>
+  <label>Giro horizontal <output id="camera-angle-label">0°</output><input id="camera-angle" data-camera-field="yaw" data-unit="°" data-default="0" type="range" min="-180" max="180" value="0" step="1" aria-label="Giro horizontal"/></label>
+  <label>Inclinación vertical <output id="camera-pitch-label">0°</output><input id="camera-pitch" data-camera-field="pitch" data-unit="°" data-default="0" type="range" min="-75" max="75" value="0" step="1" aria-label="Ángulo vertical"/></label>
+  <label>Altura adicional <output id="camera-height-label">0 m</output><input id="camera-height" data-camera-field="height" data-unit=" m" data-default="0" type="range" min="-20" max="140" value="0" step="1" aria-label="Altura de cámara"/></label>
+  <label>Acercamiento / Dolly <output id="camera-distance-label">100%</output><input id="camera-distance" data-camera-field="distance" data-format="percent" data-default="100" type="range" min="30" max="340" step="5" value="100" aria-label="Distancia de cámara; menor es más cerca"/></label>
+  <label>Óptica / Zoom <output id="camera-zoom-label">50°</output><input id="camera-zoom" data-camera-field="fov" data-unit="°" data-default="50" type="range" min="18" max="90" step="1" value="50" aria-label="Campo visual en grados; menor es mayor zoom"/></label>
+  <label>Desplazamiento lateral <output id="camera-lateral-label">0 m</output><input id="camera-lateral" data-camera-field="lateral" data-unit=" m" data-default="0" type="range" min="-90" max="90" step="1" value="0" aria-label="Desplazamiento horizontal sin cambiar el objetivo"/></label>
+ </div>
+ <div class="camera-divider"></div>
+ <div class="camera-heading">Control fino de la toma</div>
+ <div class="camera-nudge" aria-label="Movimiento manual de la cámara">
+  <button type="button" data-camera-nudge="yaw:-12" aria-label="Girar a izquierda">↶</button>
+  <button type="button" data-camera-nudge="yaw:12" aria-label="Girar a derecha">↷</button>
+  <button type="button" data-camera-nudge="pitch:8" aria-label="Elevar ángulo">↑</button>
+  <button type="button" data-camera-nudge="pitch:-8" aria-label="Bajar ángulo">↓</button>
+  <button type="button" data-camera-nudge="distance:-15" aria-label="Acercar cámara">＋</button>
+  <button type="button" data-camera-nudge="distance:15" aria-label="Alejar cámara">−</button>
+ </div>
+ <div class="camera-quick"><button type="button" data-camera-reset id="camera-reset">↺ Restablecer encuadre</button><button type="button" id="camera-view-front">Vista del frente</button><button type="button" id="camera-view-top">Vista cenital</button><button type="button" id="camera-view-ground">A nivel de pista</button></div>
+ <p class="camera-hint">Arrastrá sobre la imagen para girar e inclinar. Rueda: acercamiento real de cámara. Ctrl + rueda: zoom óptico. El control de altura es independiente de ambos.</p>
+</div></div>
+<div id="panel-light" role="tabpanel" aria-labelledby="tab-light" hidden>
+<div class="light-controls"><label class="light-switch"><input type="checkbox" id="light-power" checked/> REFLECTORES ENCENDIDOS</label>
+<label>POTENCIA / DIMMER <span id="light-level" aria-live="polite">84%</span><input id="light-dimmer" type="range" min="0" max="100" value="84" step="1"/></label>
+<label>COLOR DEL HAZ <input id="light-color" type="color" value="#fff3d4" aria-label="Color de los reflectores"/></label>
+<label>APERTURA DEL HAZ <span id="light-spread-label">62°</span><input id="light-spread" type="range" min="25" max="88" value="62" step="1" aria-label="Ángulo de cobertura de reflectores"/></label>
+<label>LUZ AMBIENTE <span id="light-ambient-label">100%</span><input id="light-ambient" type="range" min="0" max="200" value="100" step="5" aria-label="Luz ambiente adicional del estadio"/></label>
+<label class="light-switch"><input type="checkbox" id="light-perimeter" checked/> FAROLES DEL PERÍMETRO</label>
+<label>JUEGO DE LUCES <select id="light-pattern"><option value="steady">Fijo / transmisión TV</option><option value="pulse">Pulsación</option><option value="chase">Secuencial</option><option value="wave">Barrido</option><option value="rainbow">Festival cromático</option></select></label>
+<button id="light-preview" type="button">☾ VER EL ESTADIO DE NOCHE</button></div>
+<p class="micro" id="light-status" role="status">Los reflectores iluminan el piso y los caballos. En modo noche el sistema regula la exposición visual de la pista. Efectos cosméticos, nunca alteran el ganador.</p>
+</div></section>
+<section class="panel"><h2>Clasificación en pista</h2><ol id="standings"></ol>
+<div class="race-stats" id="race-stats"><strong>ESTADÍSTICAS</strong><div id="race-stat-content">Preparando posiciones y diferencias…</div></div></section>
+</div>
+<section class="panel crp-split-wrap" aria-label="Parciales y puntos de campeonato">
+<div class="crp-split-toolbar"><h2>PARCIALES / CAMPEONATO</h2><label>REGLAMENTO <select id="split-mode" aria-label="Tipo de parciales"><option value="quarters">Cuartos · 250 / 500 / 750 / meta</option><option value="legacy">Clásico · 200 / 400 / 600 / 800</option></select></label></div>
+<div id="race-splits" aria-live="off">Preparando parciales de los doce corredores…</div>
+<p class="crp-split-note">+1 punto al primero en llegar a cada marca bonificada. Clasificación: 25, 18, 15, 12, 10, 8, 6, 4, 2, 1, 0, 0 puntos. La meta no recibe un bonus duplicado en modo cuartos. Datos sintéticos.</p>
+</section>
+<section class="panel live-program" id="live">
+<div class="live-title"><div><div class="overline">PROGRAMACIÓN DEL ESTADIO · ARGENTINA (UTC−3)</div><h2><span class="live-dot"></span> CRYPTÓDROMO LIVE <small>REPLAY SINTÉTICO</small></h2></div><div id="live-countdown" class="live-countdown">00:00</div></div>
+<p class="micro">La transmisión arranca automáticamente: 1 minuto de carrera, 1 minuto para la llegada y resultados, 1 minuto de presentación y cuenta regresiva. Para escuchar sonido activá audio una sola vez. Fixture ficticio reproducible, sin cotizaciones ni apuestas reales.</p>
+<div class="live-slots">
+ <div><span>ANTERIOR</span><strong id="live-previous">--:--</strong><button id="live-prev" type="button">Ver repetición</button></div>
+ <div class="live-current"><span>AHORA · ESTADIO SATOSHI</span><strong id="live-current">--:--</strong><button id="live-now" type="button">● LIVE AUTOMÁTICO</button></div>
+ <div><span>PRÓXIMA</span><strong id="live-next-label">--:--</strong><button id="live-next" type="button">Ver fixture</button></div>
+</div><p id="live-state" class="micro" role="status">Consultando la hora del estadio…</p>
+</section>
+<section class="panel info-panel"><h2>Los protagonistas</h2><p>Historias y estadísticas calculadas para los cien caballos del Cryptódromo. Cada identidad es ficticia; las victorias y los podios corresponden a las 3.360 carreras sintéticas.</p><div id="race-biography" aria-live="polite">Seleccioná un caballo en la clasificación para ver su biografía.</div><a href="/racers/">Explorar los 100 caballos y sus estadísticas ↗</a></section>
+<footer class="foot">CRYPTÓDROMO · transmisión 3D. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
+</main><script type="module" src="/visual-lab/scene.js?v=alpha19-live-20261104"></script></body></html>

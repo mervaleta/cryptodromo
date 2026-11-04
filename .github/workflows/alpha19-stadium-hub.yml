@@ -1,0 +1,55 @@
+name: Alpha19 stadium hub and 1440-race regression
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'assets/stadium-hub.css'
+      - 'assets/crypto-*.js'
+      - 'assets/stadium-network-*.js'
+      - 'stadiums/**'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/tripleLiveSchedule.js'
+      - 'visual-lab/threeCoursePreview.js'
+      - 'estadio/estadio.js'
+      - 'race-lab/source/src/stadium/presets.js'
+      - 'tests/world-fixture-stadium-20261103.mjs'
+      - 'tests/alpha19-stadium-hub.mjs'
+      - '.github/workflows/alpha19-stadium-hub.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'assets/stadium-hub.css'
+      - 'assets/crypto-*.js'
+      - 'assets/stadium-network-*.js'
+      - 'stadiums/**'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/tripleLiveSchedule.js'
+      - 'visual-lab/threeCoursePreview.js'
+      - 'estadio/estadio.js'
+      - 'race-lab/source/src/stadium/presets.js'
+      - 'tests/world-fixture-stadium-20261103.mjs'
+      - 'tests/alpha19-stadium-hub.mjs'
+      - '.github/workflows/alpha19-stadium-hub.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install procedural stadium dependency
+        run: npm ci --prefix race-lab/source
+      - name: JavaScript syntax and source contracts
+        run: |
+          for f in assets/crypto-archive.js assets/crypto-venue.js visual-lab/tripleLiveSchedule.js visual-lab/threeCoursePreview.js visual-lab/scene.js estadio/estadio.js; do node --experimental-default-type=module --check "$f"; done
+      - name: Check 1440-race schedule, stadiums, replay and archive
+        run: |
+          node --experimental-default-type=module --test tests/alpha19-stadium-hub.mjs
+          node --experimental-default-type=module --test tests/alpha19-triple-fixture.mjs
+          node --experimental-default-type=module tests/world-stadium-network.mjs
+          node --experimental-default-type=module tests/world-fixture-stadium-20261103.mjs

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const url='https://race.cryptodromo.com/';
+const url='https://race.cryptodromo.com/stadiums/crypto/broadcast/?track=muybridge';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl']});
 let errors=[];
 try {
@@ -25,10 +25,11 @@ try {
   modelScripts:[...document.scripts].map(s=>s.src).filter(Boolean),
  }));
  console.log('Browser initialization',JSON.stringify(init));
- const start=page.locator('#startButton');
+ await page.locator('#live-now').click(); // enter manual replay, enabling controls
+ const start=page.locator('#start');
  await start.click();
  await page.waitForTimeout(4000);
- const tick=await page.locator('#raceClock').innerText();
+ const tick=await page.locator('#clock').innerText();
  console.log('Race clock after start',tick);
  console.log('Browser errors',JSON.stringify(errors));
  console.log('Module contract',JSON.stringify(await page.evaluate(async()=>{ try {const a=await import('/race-lab/source/src/data/raceFixture.js?debug=20261102');const b=await import('/race-lab/source/src/data/officialRace.js?debug=20261102');const entries=a.getRaceFixture(0,0).entries;let result;try{result=b.createOfficialRace(entries).map(x=>x.entry.symbol).slice(0,2);}catch(e){result=String(e);}return {sample:entries.slice(0,2).map(e=>({symbol:e.symbol,coefficients1:e.coefficients1,coefficients2:e.coefficients2})),expected:b.FIRST_COEFFICIENTS, result};}catch(e){return{error:String(e)}} })));
@@ -37,7 +38,7 @@ try {
  await mkdir('artifacts',{recursive:true});
  await page.screenshot({path:'artifacts/cryptodromo-race-live.png',fullPage:true});
  assert.notEqual(tick,'00:00','Race clock did not start');
- await page.locator('#startButton').click();
+ await page.locator('#start').click();
  if(errors.length)throw new Error(errors.join('\n').slice(0,5000));
  console.log('PASS: production domain renders canvas, game starts, and clock advances. Screenshot saved.');
 } finally{await browser.close();}
