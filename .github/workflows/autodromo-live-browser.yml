@@ -40,6 +40,13 @@ jobs:
             assert.equal(state.frameReady,true,'WebGL should run on Hostinger');
             assert.equal(state.carCount,12);
             assert.equal(state.rosterCount,100);
+            assert.equal(state.overtakingSystem,'traffic-director-v1',
+              'Live site must not serve stale fixed-lane code');
+            const traffic=await page.evaluate(()=>window.__cryptodromoAutodromoQA.auditTraffic(.1));
+            assert.equal(traffic.unsafePairs,0,'Production cars must maintain body clearance');
+            assert.ok(traffic.minimumVisualSpeed>=-.05,'No backward visual teleport');
+            assert.ok(traffic.maximumVisualSpeed<=45,'No instant forward teleport');
+            assert.ok(traffic.sideChanges>0,'Overtaking needs lateral lane changes');
             assert.equal(state.grid.length,12,'Must expose twelve distinct pole positions');
             assert.equal(state.grid[0].row,1);
             assert.equal(state.grid[1].row,1);
