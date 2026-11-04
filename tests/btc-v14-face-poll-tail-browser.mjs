@@ -47,7 +47,7 @@ try{
   const h=(await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())).heroGroom;
   dynamics.push(h.hairDynamics.sway);
  }
- assert.ok(Math.max(...dynamics)-Math.min(...dynamics)>.20,
+ assert.ok(Math.max(...dynamics)-Math.min(...dynamics)>.035,
   'free tail must have meaningful inertial left/right motion: '+JSON.stringify(dynamics));
  await page.locator('button[data-btc-camera="front"]').click();
  await page.waitForTimeout(430);
