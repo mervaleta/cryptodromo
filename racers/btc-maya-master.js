@@ -13,6 +13,7 @@ import {createBTCSculptedHooves} from './btc-maya-hooves.js';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
+const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
 const TAU=Math.PI*2;
 const shade=new THREE.Color('#32231d');
 function fromBase64(s){
