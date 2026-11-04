@@ -26,6 +26,9 @@ try{
  assert.equal(start.heroGroom.triangles,10790);
  assert.ok(start.heroGroom.fineLocks>=500);
  assert.equal(start.heroGroom.originalRig,true);
+ assert.ok(start.heroGroom.facialSurfaces>=5,'rigged eyes, nostrils and mouth required');
+ assert.ok(start.heroGroom.facialTriangles>200,'facial detail is actual 3D geometry');
+ assert.ok(start.heroGroom.fineLocks>=900,'full layered mane and tail required');
  assert.equal(start.heroGroom.modelPreserved,true);
  assert.equal(start.heroGroom.gallopPreserved,true);
  const before=start.hoofPhase;
