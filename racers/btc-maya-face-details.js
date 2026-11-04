@@ -7,20 +7,28 @@ import * as THREE from 'three';
 const TAU=Math.PI*2;
 const sin=Math.sin,cos=Math.cos;
 function makeProjector(positions) {
- const p=positions, n=p.length/3;
- // Find the true outer sculpted surface near a facial landmark. This avoids
- // putting 2D decorative patches at arbitrary positions in front of the head.
- return (side,y,z,xHint=.002)=>{
-  const desired=side*xHint;
-  let best=Infinity,x=desired;
+ // Nearest single triangle vertices gave millimetre-scale jumps along an eye
+ // rim. Blend the six closest ORIGINAL Maya skin samples in the eye's YZ plane.
+ // Matching both the eyeball and the eyelids to Head keeps the eye intact
+ // through all phases of the native Gallop.
+ const p=positions,n=p.length/3;
+ return (side,y,z)=>{
+  const nearby=[];
   for(let i=0;i<n;i++){
-   const px=p[i*3],py=p[i*3+1],pz=p[i*3+2];
-   if(side*px<.0001)continue;
-   const dy=(py-y)*1.6,dz=(pz-z)*1.35,dx=px-desired;
-   const score=dy*dy+dz*dz+dx*dx*.23;
-   if(score<best){best=score;x=px;}
+   const x=p[i*3],py=p[i*3+1],pz=p[i*3+2];
+   if(side*x<.00025)continue;
+   const d2=Math.pow((py-y)*1.6,2)+Math.pow((pz-z)*1.35,2);
+   if(nearby.length<8||d2<nearby.at(-1).d2){
+    nearby.push({x,d2});nearby.sort((a,b)=>a.d2-b.d2);
+    if(nearby.length>8)nearby.pop();
+   }
   }
-  return {x:x+side*.000085,miss:Math.sqrt(best)};
+  let total=0,weighted=0;
+  for(const a of nearby){
+   const w=1/(a.d2+2.5e-8);
+   total+=w;weighted+=a.x*w;
+  }
+  return {x:total?weighted/total:side*.00228,miss:Math.sqrt(nearby[0]?.d2||0)};
  };
 }
 function detailMesh(source,skinAt,positions,{name,color,metalness=0,roughness=.72,sheen=0},build) {
@@ -74,8 +82,8 @@ function loopRibbon(ctx,project,side,cy,cz,ry,rz,thickness,phase=0,sweep=TAU) {
   const skew=1+.18*sin(a);
   const x=project(side,y,z,.0019).x;
   const dy=-sin(a)*thickness*skew,dz=cos(a)*thickness*skew;
-  vert(x+side*.000025,y+dy,z+dz,.84+.12*sin(a)*sin(a));
-  vert(x+side*.000055,y-dy,z-dz,.85+.15*cos(a)*cos(a));
+  vert(x+side*.000014,y+dy,z+dz,.92+.07*sin(a)*sin(a));
+  vert(x+side*.000027,y-dy,z-dz,.91+.08*cos(a)*cos(a));
  }
  for(let i=0;i<N;i++){
   const a=start+i*2,b=a+1,c=a+2,d=a+3;
@@ -88,22 +96,20 @@ export function createBTCMayaFaceDetails(source,skinAt,positions) {
  // Equine eye rim, not an oversized doll-eye sphere. The inset iris from the
  // master remains visible; a warm upper eyelid creates a true brow silhouette.
  components.push(detailMesh(source,skinAt,positions,{
-  name:'BTC Maya skinned bilateral upper and lower eyelids',color:'#52392c',roughness:.92
+  name:'BTC Maya skinned symmetric upper eyelid contours',color:'#81513b',roughness:.93
  },ctx=>{
   for(const side of [-1,1]){
-   loopRibbon(ctx,project,side,-.02818,.04255,.00065,.00046,.000067);
+   loopRibbon(ctx,project,side,-.02814,.04257,.00052,.00039,.000035,0,Math.PI);
   }
  }));
- // Soft eyelid shadow and tear ducts, seated on the Maya skin.
+ // The old isolated dark tear-duct triangles fractured in front/rear views.
+ // Replace them with a continuous low-contrast lower eyelid. Every vertex
+ // is shaped from the same anatomical eye center and Head skin transform.
  components.push(detailMesh(source,skinAt,positions,{
-  name:'BTC Maya anatomical tear ducts',color:'#4d3226',roughness:.8
+  name:'BTC Maya symmetric lower eyelid contours',color:'#73503e',roughness:.94
  },ctx=>{
   for(const side of [-1,1]){
-   const y=-.02882,z=.04241,x=project(side,y,z,.002).x;
-   const a=ctx.vert(x+side*.00004,y-.00007,z);
-   const b=ctx.vert(x+side*.00005,y+.00007,z+.0001);
-   const c=ctx.vert(x+side*.00004,y+.00010,z-.00008);
-   ctx.idx.push(a,b,c);
+   loopRibbon(ctx,project,side,-.02814,.04257,.00052,.00039,.000031,Math.PI,Math.PI);
   }
  }));
  // The user's Maya surface already has physically shaped nostrils. Additional
