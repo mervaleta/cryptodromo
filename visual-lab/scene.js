@@ -27,7 +27,7 @@ import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
 import {applyGateStaging} from './gateChoreography.js?v=alpha20-1';
 import {getRaceFixture as getLegacyRaceFixture,RACES_PER_DAY as LEGACY_RACES_PER_DAY,FIXTURE_DAYS} from '/race-lab/source/src/data/raceFixture.js?v=alpha03-coats-2';
-import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-live-1';
+import {getTripleRaceFixture,TRIPLE_RACES_PER_DAY,TRACK_RACES_PER_DAY} from '/race-lab/source/src/data/tripleRaceFixture.js?v=alpha19-week-v2';
 import {tripleLiveSlot,getTrack} from './tripleLiveSchedule.js?v=alpha19-live-1';
 import {buildBroadcastProfiles,broadcastPosition,broadcastSpeed} from './raceChoreography.js?v=alpha05-cruise-1';
 import {createOfficialRace,officialRanking} from '/race-lab/source/src/data/officialRace.js?v=crp-20261102';
@@ -454,7 +454,8 @@ function setRace(index){
  finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
  resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent=(tripleMode?'SATOSHI NAKAMOTO · '+selectedTrack.name.toUpperCase():'GRAN PREMIO CRIPTO')+
- ' · CARRERA '+String(race.number).padStart(3,'0')+' / '+RACES_PER_DAY;
+ ' · CARRERA '+String(tripleMode?race.trackRaceNumber:race.number).padStart(3,'0')+' / '+
+   (tripleMode?TRACK_RACES_PER_DAY:RACES_PER_DAY);
  if(horses.length){
   horses.forEach((h,i)=>{
    const e=race.entries[i];h.entry=e;h.progress=0;h.visualMeters=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
