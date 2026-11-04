@@ -14,14 +14,14 @@ try{
  const page=await browser.newPage({viewport:{width:1320,height:840},deviceScaleFactor:1,reducedMotion:'no-preference'});
  page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text())});
- await page.goto('http://127.0.0.1:8799/racers/?btcMaster=maya#BTC',{waitUntil:'domcontentloaded',timeout:90000});
+ await page.goto('http://127.0.0.1:8799/racers/#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
    s?.drawCalls>0&&s?.clips?.includes('Gallop');
  },null,{timeout:120000});
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
- assert.equal(start.variant,'maya');
+ assert.equal(start.variant,'enhanced');
  assert.equal(start.heroGroom.vertices,5406);
  assert.equal(start.heroGroom.triangles,10790);
  assert.ok(start.heroGroom.fineLocks>=500);
@@ -40,7 +40,7 @@ try{
  }
  await page.evaluate(()=>document.querySelector('[data-btc-variant="baseline"]').click());
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.version==='btc-real-hero-v4-20261103',null,{timeout:120000});
- await page.evaluate(()=>document.querySelector('[data-btc-variant="maya"]').click());
+ await page.evaluate(()=>document.querySelector('[data-btc-variant="enhanced"]').click());
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104',null,{timeout:120000});
  await page.locator('button.runner[data-symbol="ETH"]').click();
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='ETH',null,{timeout:120000});
