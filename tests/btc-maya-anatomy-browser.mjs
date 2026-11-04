@@ -22,10 +22,13 @@ try{
  },null,{timeout:120000});
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.variant,'maya');
- assert.equal(start.heroGroom.vertices,5407,'native Maya topology plus one integrated tail-root cap center');
+ assert.equal(start.heroGroom.vertices,5409,'original anatomical surface with tail and both ear-root caps');
  assert.ok(start.heroGroom.triangles>9500&&start.heroGroom.triangles<10500,
   'Maya horse must retain full body topology but remove duplicate appendages');
  assert.ok(start.heroGroom.nativeEarFacesRemoved>=150,'legacy horns must be culled');
+ assert.ok(start.heroGroom.earCutBorderEdges>=40,'count genuine poll cut boundaries');
+ assert.equal(start.heroGroom.integratedEarRootCapTriangles,start.heroGroom.earCutBorderEdges,'all ear-root cut edges must share new cap triangles');
+ assert.equal(start.heroGroom.earRootCapCenters,2,'close both ear-root openings in the actual skin mesh');
  assert.ok(start.heroGroom.extraTailFacesRemoved>=150,'second flesh-colored tail must be culled');
  assert.ok(start.heroGroom.extraTailFacesRemoved>250,'retire the old skin-tail free end while preserving croup skin');
  assert.ok(start.heroGroom.poweredHindVertices>1000,'croup and hind thighs must be resculpted, not repainted');
