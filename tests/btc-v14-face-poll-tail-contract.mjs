@@ -60,10 +60,10 @@ test('tail inertia follows native Gallop and settles to rest without moving its 
 test('the normal real BTC card loads refined 3D resources, with rollback and all others intact',()=>{
  const page=read('racers/index.html'),catalog=read('racers/racers.js');
  const preview=read('racers/btc-atelier-preview.js'),master=read('racers/btc-maya-master.js');
- assert.match(page,/racers\.js\?v=btc-face-poll-tail-20261104-v14/);
- assert.match(catalog,/btc-atelier-preview\.js\?v=btc-face-poll-tail-20261104-v14/);
- assert.match(preview,/btc-maya-master\.js\?v=btc-face-poll-tail-20261104-v14/);
- assert.match(master,/btc-maya-face-details\.js\?v=btc-face-poll-tail-20261104-v14/);
+ assert.match(page,/racers\.js\?v=btc-face-poll-tail-20261104-v15/);
+ assert.match(catalog,/btc-atelier-preview\.js\?v=btc-face-poll-tail-20261104-v15/);
+ assert.match(preview,/btc-maya-master\.js\?v=btc-face-poll-tail-20261104-v15/);
+ assert.match(master,/btc-maya-face-details\.js\?v=btc-face-poll-tail-20261104-v15/);
  assert.match(master,/createBTCHeroMaya/);
  assert.match(preview,/createBTCTerrainStage/);
  assert.match(preview,/next!=='original'/);
