@@ -28,7 +28,7 @@ export function buildThreeCoursePreview({THREE,scene,quality='medium'}={}){
  const ownGeo=g=>(geometries.push(g),g),ownMat=m=>(materials.push(m),m);
  const railing=ownMat(new THREE.MeshStandardMaterial({color:0xecf0e4,roughness:.72,metalness:.08}));
  const edge=ownMat(new THREE.MeshStandardMaterial({color:0x334a38,roughness:.95}));
- const marker=ownMat(new THREE.MeshStandardMaterial({color:0xe5c27c,roughness:.6}));
+ const marker=ownMat(new THREE.LineBasicMaterial({color:0xe5c27c}));
  const detail=quality==='low'?90:quality==='high'?320:180;
  const makeRibbon=(id,material,halfWidth,y)=>{
    const points=[],idx=[];
