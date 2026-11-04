@@ -26,7 +26,10 @@ test('Alpha07 1-second official finish hold, fade-in and positive runout',()=>{
  assert.match(scene,/VISUAL_START_X=-390,VISUAL_FINISH_X=390/);
  assert.match(scene,/finishReveal/);
  assert.match(scene,/broadcastRunoutDistance/);
- assert.match(scene,/trackFX\.stamp/);
+ // Hoof contacts now follow the rendered rig, replacing distance-only fake stamps.
+ assert.match(scene,/hoofFX\.stepHorse\(h\.index/);
+ assert.match(scene,/h\.model\.update\(dt,running/);
+ assert.doesNotMatch(scene,/trackFX\.stamp\(/);
  assert.match(scene,/trackFX\.update/);
  assert.match(html,/\.result-overlay\.is-visible\{opacity:1/);
  assert.match(html,/transition:opacity \.85s/);

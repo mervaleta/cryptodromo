@@ -9,7 +9,10 @@ test('the mane is attached to the same animated rig shared by Race, Parade and R
  assert.match(horse,/mane\.update\(step/);
  assert.match(horse,/mane\.dispose\(\)/);
  assert.match(horse,/setWind\(level=/);
- for(const path of ['visual-lab/scene.js','parade/parade.js','racers/horse-preview.js'])
+ // The race delegates its horse renderer through the shared adapter now.
+ assert.match(source('visual-lab/scene.js'),/horseRenderer\.js\?v=/);
+ assert.match(source('visual-lab/horseRenderer.js'),/horse\.js\?v=alpha18-gaitmane-1/);
+ for(const path of ['parade/parade.js','racers/horse-preview.js'])
   assert.match(source(path),/horse\.js\?v=alpha18-gaitmane-1/,path);
  assert.match(source('parade/parade.js'),/maneEnabled:horseModels\.filter/);
 });
@@ -23,12 +26,13 @@ test('weather changes mane wind only, never the official scoring or race time',(
   assert.doesNotMatch(source(path),/createWindMane|setWind|crpManeTime/);
 });
 test('public entrypoints invalidate cached horse imports across the three modes',()=>{
+ const home=source('index.html');
+ assert.match(home,/\/stadiums\/crypto\//,'Home now uses the stadium hub, not the deprecated scene entrypoint');
  const expected=[
-  ['index.html','scene.js?v=alpha18-camera-density-gaitmane-1'],
-  ['visual-lab/index.html','scene.js?v=alpha18-camera-density-gaitmane-1'],
-  ['parade/index.html','parade.js?v=alpha18-camera-density-gaitmane-1'],
-  ['racers/index.html','racers.js?v=alpha18-gaitmane-1'],
-  ['racers/racers.js','horse-preview.js?v=alpha18-gaitmane-1']
+  ['visual-lab/index.html',/scene\.js\?v=hoof-fx-public-20261104-v2/],
+  ['parade/index.html',/parade\.js\?v=[\w.-]+/],
+  ['racers/index.html',/racers\.js\?v=hoof-btc-fiche-20261104-v1/],
+  ['racers/racers.js',/horse-preview\.js\?v=alpha18-gaitmane-1/]
  ];
- for(const [path,query] of expected)assert.ok(source(path).includes(query),path+' missing '+query);
+ for(const [path,pattern] of expected)assert.match(source(path),pattern,path+' module cache identity missing');
 });
