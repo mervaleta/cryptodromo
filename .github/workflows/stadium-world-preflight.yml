@@ -8,6 +8,10 @@ on:
       - 'visual-lab/threeCoursePreview.js'
       - 'tests/stadium-course-clearance.mjs'
       - 'tests/stadium-broadcast-contract.mjs'
+      - 'stadiums/crypto/live/index.html'
+      - 'assets/crypto-venue.js'
+      - 'assets/crypto-channel-countdown.js'
+      - 'tests/stadium-staggered-countdowns.mjs'
       - 'race-lab/source/src/data/worldRaceRecord.js'
       - 'tests/stadium-world-record.mjs'
       - 'tests/stadium-world-browser-acceptance.mjs'
@@ -29,7 +33,9 @@ jobs:
         run: |
           node --experimental-default-type=module --check visual-lab/scene.js
           node --experimental-default-type=module --check visual-lab/presentationHorse.js
-          node --experimental-default-type=module --test tests/stadium-broadcast-contract.mjs tests/stadium-world-record.mjs tests/stadium-course-clearance.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs tests/world-fixture-stadium-20261103.mjs tests/stadium-world.mjs
+          node --experimental-default-type=module --check assets/crypto-venue.js
+          node --experimental-default-type=module --check assets/crypto-channel-countdown.js
+          node --experimental-default-type=module --test tests/stadium-broadcast-contract.mjs tests/stadium-staggered-countdowns.mjs tests/stadium-world-record.mjs tests/stadium-course-clearance.mjs tests/alpha19-stadium-hub.mjs tests/alpha19-triple-fixture.mjs tests/stadium-live-integration.mjs tests/world-fixture-stadium-20261103.mjs tests/stadium-world.mjs
           node --experimental-default-type=module tests/world-stadium-network.mjs
   chromium:
     runs-on: ubuntu-24.04
