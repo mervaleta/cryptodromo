@@ -98,7 +98,7 @@ export function addBTCHindquarterGaitShader(shader,gaitUniform) {
     throw Error('BTC gait corrective requires the Three.js vertex hook');
   shader.uniforms.btcHindGait=gaitUniform;
   shader.vertexShader=shader.vertexShader.replace('#include <common>',
-    '#include <common>\\nuniform float btcHindGait;');
+    '#include <common>\nuniform float btcHindGait;');
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-    '#include <begin_vertex>\\nfloat btcHindPhase=sin(btcHindGait*6.283185307);\\nfloat btcStifle=smoothstep(.006,.010,position.y)*(1.0-smoothstep(.021,.028,position.z))*smoothstep(.008,.013,position.z);\\ntransformed.x+=sign(position.x)*btcStifle*btcHindPhase*.00015;\\ntransformed.y+=btcStifle*btcHindPhase*.000055;');
+    '#include <begin_vertex>\nfloat btcHindPhase=sin(btcHindGait*6.283185307);\nfloat btcStifle=smoothstep(.006,.010,position.y)*(1.0-smoothstep(.021,.028,position.z))*smoothstep(.008,.013,position.z);\ntransformed.x+=sign(position.x)*btcStifle*btcHindPhase*.00015;\ntransformed.y+=btcStifle*btcHindPhase*.000055;');
 }
