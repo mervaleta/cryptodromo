@@ -68,8 +68,9 @@ try{
  console.log('SCENE_INIT',JSON.stringify(initial));
  const deployedScript=await page.evaluate(async()=>{
   const source=await (await fetch('/visual-lab/scene.js?version-probe=alpha09-'+Date.now(),{cache:'no-store'})).text();
+   const adapter=await (await fetch('/visual-lab/horseRenderer.js?version-probe='+Date.now(),{cache:'no-store'})).text();
   return {hasRunout:source.includes('broadcastRunoutDistance({...p,exitVelocity},leaderMeters,elapsed-60)'),
-   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('alpha18-gaitmane-1')&&source.includes('h.model.setBank?.'),
+   hasResult:source.includes('showOfficialResult()'),hasGait:source.includes('horseRenderer.js')&&source.includes('h.model.setBank?.')&&adapter.includes('alpha18-gaitmane-1'),
    length:source.length,engineStatus:document.querySelector('#race-biography')?.textContent};
  });
  console.log('PUBLIC_ENGINE_VERSION',JSON.stringify(deployedScript));
