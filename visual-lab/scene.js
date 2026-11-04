@@ -21,6 +21,7 @@ import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
+import {createHoofTerrainFX} from './hoofTerrainFX.js?v=hoof-fx-1';
 import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha20-procedural-2';
 import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
@@ -325,14 +326,12 @@ const liveVillage=createParadeVillage(scene,{quality:softwareGPU||mobile?'eco':'
 const stadiumDensity=createStadiumDensity({THREE,scene,quality:softwareGPU||mobile?'eco':'balanced',softwareGPU});
 const nightLights=createNightLights(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
 const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUAL_FINISH_X});
+// Terrain collisions are pure VFX. Keep legacy puddle/wetness, hide fake prints.
+trackFX.marks.visible=false;trackFX.shadows.visible=false;
+const hoofFX=createHoofTerrainFX(scene,{lanes:12,quality:softwareGPU?'eco':mobile?'balanced':'cinematic'});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode=selectedTrack?.layout||'straight';
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
-// Dust particles when running; no effect on outcomes.
-const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
-const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
-const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false}));
-dust.visible=false;scene.add(dust);
 const rainN=softwareGPU?260:mobile?450:1050,rainPos=new Float32Array(rainN*3),rr=seeded(624);
 for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*820;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
@@ -457,7 +456,7 @@ function setRace(index){
  lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
  finishController.reset();tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
  finishCelebration.hidden=true;presentation.hidden=true;stage.classList.remove('is-presenting');
- resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();
+ resultsOverlay.hidden=true;resultsOverlay.classList.remove('is-visible');trackFX.reset();hoofFX.reset();
  clockEl.textContent='00:00';document.getElementById('raceName').textContent=(tripleMode?'SATOSHI NAKAMOTO · '+selectedTrack.name.toUpperCase():'GRAN PREMIO CRIPTO')+
  ' · CARRERA '+String(tripleMode?race.trackRaceNumber:race.number).padStart(3,'0')+' / '+(tripleMode?TRACK_RACES_PER_DAY:RACES_PER_DAY);
  if(horses.length){
@@ -741,7 +740,7 @@ function setLayout(mode){
  gateKit.root.visible=mode==='straight';
  finishSign.visible=mode==='straight';
  treeGroup.visible=mode!=='oval';
- trackFX.setLayout(mode);
+ trackFX.setLayout(mode);hoofFX.setLayout(mode);
  if(horses.length){setRace(raceIndex);if(liveFollowing){lastLiveIndex=-1;updateLiveProgram();}}
 }
 layoutSelect.addEventListener('change',()=>setLayout(layoutSelect.value));
@@ -757,6 +756,10 @@ function setTrackType(type){
  if(type==='grass'){
   earth.map=grassTexture;earth.bumpMap=grassTexture;earth.bumpScale=.023;earth.color.set('#bfd09f');earth.roughness=.90;
   trackFX.marks.material.color.set('#27451e');
+ }else if(type==='sand'){
+  earth.map=earthTexture;earth.bumpMap=earthTexture;earth.bumpScale=.07;
+  earth.color.set('#ead6ac');earth.roughness=.99;
+  trackFX.marks.material.color.set('#83613d');
  }else if(type==='synthetic'){
   earth.map=null;earth.bumpMap=null;earth.bumpScale=0;earth.color.set('#a5aaa2');earth.roughness=.66;
   trackFX.marks.material.color.set('#404945');
@@ -764,13 +767,13 @@ function setTrackType(type){
   earth.map=earthTexture;earth.bumpMap=earthTexture;earth.bumpScale=.047;earth.color.set('#f0e2d4');earth.roughness=.96;
   trackFX.marks.material.color.set('#493526');
  }
- proceduralGround?.setSurface(type);
+ proceduralGround?.setSurface(type);hoofFX.setSurface(type);
  earthBaseColor=earth.color.clone();earthBaseRough=earth.roughness;
  earth.needsUpdate=true;
 }
 // Identity of each Satoshi course controls visual surface only, never race outcomes.
 if(tripleMode){
- const courseSurfaces={muybridge:'dirt',genesis:'synthetic','vint-cerf':'grass'};
+ const courseSurfaces={muybridge:'dirt',genesis:'sand','vint-cerf':'grass'};
  trackType.value=courseSurfaces[selectedTrack.id]||'dirt';
  trackType.disabled=true;
  trackType.title='Superficie asignada a '+selectedTrack.name;
@@ -795,7 +798,7 @@ function applyQualityPreset(next){
  renderer.setPixelRatio(Math.min(p.pixelRatio,softwareGPU?.78:mobile?1.1:1.6));
  const audienceCount=Math.max(120,Math.min(crowdN,Math.floor(crowdN*p.crowdFactor)));
  for(const inst of crowds)inst.count=audienceCount;
- dustGeo.setDrawRange(0,Math.max(20,Math.floor(dustN*p.particleFactor)));
+ hoofFX.setQuality(next);
  rainGeo.setDrawRange(0,Math.max(70,Math.floor(rainN*p.particleFactor)));
  if(!softwareGPU){
   const shadowSize=p.shadowResolution;
@@ -1035,18 +1038,7 @@ function adjustCamera(dt){
  camera.lookAt(cameraFocus);
 }
 function particles(dt){
- if(running&&horses.length){
-  const attr=dustGeo.attributes.position;
-  for(let i=0;i<dustN;i++){
-   const h=horses[i%horses.length],r=seeded(i*13+Math.floor(elapsed*15));
-   const direction=trackPoint(layoutMode,h.progress,h.index);
-    const trail=1+r()*7,lateral=(r()-.5)*1.3;
-    attr.setXYZ(i,h.model.root.position.x-direction.tangentX*trail+direction.sideX*lateral,
-      r()*.40,h.model.root.position.z-direction.tangentZ*trail+direction.sideZ*lateral);
-  }
-  attr.needsUpdate=true;dust.visible=true;
-  dust.material.opacity=weatherSelect.value==='rain'?.08:(trackType.value==='grass'?.14:.48);
- }else dust.visible=false;
+ // Keep rain from the original weather render; terrain debris is in hoofFX.
  if(rain.visible){const attr=rainGeo.attributes.position;for(let i=0;i<rainN;i++){
   let y=attr.getY(i)-dt*25;
   if(y<0)y=29;attr.setY(i,y);
@@ -1059,7 +1051,7 @@ function updateEnvironment(){
   trackFX.update(environmentSeconds,{weather:weatherSelect.value,sun:(isSolarNight()||weatherSelect.value==='night'||weatherSelect.value==='rain')?0:Math.max(0,Math.sin((getSolarMinutes()/60-6)/13*Math.PI))});
   if(now-lastWetUpdate>230){
    lastWetUpdate=now;
-   const wet=trackFX.wetness;
+   const wet=trackFX.wetness;hoofFX.setWetness(wet);
    // All stadium surfaces retain accumulated dampness even after rain stops.
    earth.color.copy(earthBaseColor).lerp(new THREE.Color('#34342e'),wet*.49);
    earth.roughness=Math.max(.19,earthBaseRough-wet*.57);
@@ -1114,7 +1106,7 @@ function animate(now,draw=true){
    // avoid a second oversized global vertical bounce in the scene.
    // Never float the root above the track; footfall kick is applied to the ground.
    h.model.root.position.y=0;
-   if(elapsed<60+RUNOUT_SECONDS)trackFX.stamp(h.index,world.x,world.z,h.visualSpeed*7,world.heading);
+   // Footfall marks are spawned from gait events after model.update().
   });
   clockEl.textContent=elapsed>=60?'01:00':'00:'+String(Math.floor(Math.min(elapsed,59))).padStart(2,'0');
   if(!inRunout){
@@ -1179,7 +1171,11 @@ function animate(now,draw=true){
  // first 1.2s of a race they rejoin their already-calculated official path.
  if(layoutMode==='straight')applyGateStaging({horses,gate:gateKit,
    phase:running||elapsed>0?'race':'presentation',elapsed,layoutMode,trackPoint,live:running});
- for(const h of horses)h.model.update(dt,running?h.visualSpeed:1);
+ for(const h of horses){
+  h.model.update(dt,running?h.visualSpeed:1);
+  hoofFX.stepHorse(h.index,{model:h.model,dt,speed:h.visualSpeed,running});
+ }
+ hoofFX.update(dt,{wind:maneWind,pixelRatio:renderer.getPixelRatio()});
  if(draw){
   nightLights.update(now/1000);
   cloudLayer.update(now/1000);
@@ -1241,6 +1237,14 @@ if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
     lastCrossedAt,winners:officialSnapshot?.entries?.map(x=>x.symbol)};}
  };
 }
+// Opt-in read-only diagnostics; never used for race positioning or scoring.
+if(new URLSearchParams(location.search).get('hoof-qa')==='1'){
+ window.__cryptodromoHoofQA=Object.freeze({snapshot:()=>Object.freeze({
+  ...hoofFX.stats,running,elapsed,horseRenderer:horseEngineMode,layout:layoutMode,
+  officialRanking:officialRanking(profiles).map(e=>e.entry?.symbol||e.symbol)
+ })});
+}
+window.addEventListener('pagehide',()=>hoofFX.dispose(),{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
