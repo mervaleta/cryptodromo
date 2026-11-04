@@ -11,7 +11,7 @@
  */
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const smooth=v=>{const t=clamp(v,0,1);return t*t*(3-2*t);};
-const gaussian=(v,c,r)=>Math.exp(-((v-c)/r)**2);
+const gaussian=(v,c,r)=>Math.exp(-Math.pow((v-c)/r,2));
 
 export const BTC_HINDQUARTER_BUILD='btc-hindquarters-rump-gaskin-20261104-v12';
 export function sculptBTCHindquarters(positions) {
