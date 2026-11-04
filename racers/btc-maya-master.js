@@ -336,7 +336,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   bone.set(freshB);weights.set(freshW);
  }
  // Stabilize skull-to-crest skin binding while preserving native Gallop.
- const headIndex=best.skeleton.bones.findIndex(b=>b.name==='Head');
+ const headIndex=source.skeleton.bones.findIndex(b=>b.name==='Head');
  if(headIndex<0)throw Error('BTC requires native Head joint');
  let pollAnchoredVertices=0;
  for(let v=0;v<nVerts;v++){
