@@ -54,7 +54,9 @@ async function loadTrack(page,id){
   return f&&!f.hidden&&f.src.includes('track='+id)&&
    !!f.contentDocument?.querySelector('#raceCanvas')&&
    !f.contentDocument?.querySelector('#stadium-broadcast')&&
-   f.contentDocument.querySelector('#raceCanvas').width>0;
+   f.contentDocument.querySelector('#start')?.disabled===false&&
+   f.contentDocument.querySelector('#raceCanvas').width>300&&
+   !/CARGANDO ESCENARIO 3D|ERROR EN ESCENA/.test(f.contentDocument.querySelector('#status')?.textContent||'');
  },id,{timeout:115000});
  assert.equal(page.frames().length,2,'Recursive iframe discovered');
 }
