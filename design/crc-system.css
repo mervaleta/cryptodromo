@@ -149,3 +149,20 @@ html body:not(.hub) :is(.panel,.card,.hub-card) :is(p,small){line-height:1.55;}
 .crc-ui .crc-standing{display:grid;grid-template-columns:32px minmax(90px,1fr) minmax(80px,110px);gap:12px;align-items:center;background:var(--crc-surface);padding:9px 12px;font-size:13px;}
 .crc-ui .crc-standing [data-numeric]{text-align:right;font-variant-numeric:tabular-nums;}
 @media(max-width:600px){.crc-ui .crc-standing{gap:7px;padding:9px 8px;grid-template-columns:28px minmax(65px,1fr) minmax(70px,86px);}}
+
+/* Unified shell geometry. 1480px follows the 2026 shared app shell, not an invented legacy dimension. */
+:root{
+  --crc-shell-max:1480px;
+  --crc-shell-gutter:clamp(16px,2vw,24px);
+  --crc-shell-width:min(var(--crc-shell-max),calc(100% - var(--crc-shell-gutter) - var(--crc-shell-gutter)));
+  --crp-site-max:var(--crc-shell-max);
+  --crp-site-width:var(--crc-shell-max);
+  --crp-content-width:var(--crc-shell-max);
+}
+.crc-ui .crc-container,.crc-page-shell{width:var(--crc-shell-width);max-width:var(--crc-shell-max);margin-inline:auto;}
+.crc-reading-column{max-width:850px;margin-inline:auto;}
+.crc-section-inner{min-width:0;max-width:100%;}
+/* Use the same max width and symmetric gutters while preserving editorial line lengths. */
+body.hub .hub-shell{width:var(--crc-shell-width);max-width:var(--crc-shell-max);margin-inline:auto;}
+body.hub .hub-head-inner{width:100%;max-width:none;}
+body:not(.hub) .world-shell,body:not(.hub) .world-footer-note{box-sizing:border-box;width:var(--crc-shell-width);max-width:var(--crc-shell-max);margin-inline:auto;padding-inline:0;}
