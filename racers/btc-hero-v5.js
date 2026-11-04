@@ -130,7 +130,7 @@ export function createBTCHeroV5(root,options={}){
     const crest=gauss(y,-.023,.009)*gauss(z,.038,.008);
     const loin=gauss(y,.006,.010)*gauss(z,.034,.009);
     const tuck=gauss(y,.012,.010)*gauss(z,.016,.008);
-    const depth=1+.18*scapula+.22*croup+.11*shoulder+.09*barrel+
+    const depth=1+.17*scapula+.14*croup+.09*shoulder+.075*barrel+
       .06*loin-.025*tuck;
     const dorsal=.00080*crest+.00062*croup+.00032*loin;
     const shoulderPlane=.00044*scapula+.00020*shoulder;
@@ -158,10 +158,10 @@ export function createBTCHeroV5(root,options={}){
    if(!material||coatFinish.some(s=>s.material===material))continue;
    coatFinish.push({material,roughness:material.roughness,metalness:material.metalness});
    // Wet-looking plastic is avoided; directional shoulder shading is retained.
-   if(typeof material.roughness==='number')material.roughness=Math.max(.35,material.roughness*.78);
+   if(typeof material.roughness==='number')material.roughness=Math.max(.57,material.roughness*.99);
    if(typeof material.metalness==='number')material.metalness=0;
   }
-  passes.push('06 Seda con cutícula satinada; pelaje con especular controlado');
+  passes.push('06 Fibras satinadas y pelaje mate: textura sin brillo plástico');
  }
 
  // Physically inspired delayed response of a damped hair mass to the Gallop.
