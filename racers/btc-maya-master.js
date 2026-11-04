@@ -254,7 +254,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCMayaRest;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\nfloat coatDirection=sin(vBTCMayaRest.y*13700.+vBTCMayaRest.z*1850.)*sin(vBTCMayaRest.x*7600.-vBTCMayaRest.y*920.);\nfloat coatSalt=fract(sin(dot(floor(vBTCMayaRest*4700.),vec3(17.43,37.2,91.1)))*43758.5453);\nfloat dorsalLight=smoothstep(.027,.041,vBTCMayaRest.z)*.04;\nfloat amberBreak=sin(vBTCMayaRest.y*470.+vBTCMayaRest.z*890.)*sin(vBTCMayaRest.x*340.);\nfloat coatGrain=.97+.045*coatDirection+.05*(coatSalt-.5)+.055*amberBreak+dorsalLight;\ndiffuseColor.rgb*=clamp(coatGrain,.85,1.09);\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.78,.75,.72),crpMuzzle*.67);\nfloat lipCrease=exp(-pow((vBTCMayaRest.y+.0337)/.0011,2.)-pow((vBTCMayaRest.z-.0341)/.00034,2.));\nfloat nostril=exp(-pow((vBTCMayaRest.y+.0335)/.00043,2.)-pow((vBTCMayaRest.z-.0359)/.00040,2.))*smoothstep(.0007,.0021,abs(vBTCMayaRest.x));\nfloat lowLeg=(1.0-smoothstep(.008,.018,vBTCMayaRest.z))*smoothstep(.006,.014,abs(vBTCMayaRest.y));\ndiffuseColor.rgb*=1.0-.21*lipCrease-.48*nostril;\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.49,.37,.32),lowLeg*.68);');
+   '#include <color_fragment>\nfloat crpMuzzle=1.0-smoothstep(-.035,-.028,vBTCMayaRest.y);\ncrpMuzzle*=smoothstep(.031,.035,vBTCMayaRest.z)*(1.0-smoothstep(.039,.043,vBTCMayaRest.z));\nfloat coatDirection=sin(vBTCMayaRest.y*13700.+vBTCMayaRest.z*1850.)*sin(vBTCMayaRest.x*7600.-vBTCMayaRest.y*920.);\nfloat coatSalt=fract(sin(dot(floor(vBTCMayaRest*4700.),vec3(17.43,37.2,91.1)))*43758.5453);\nfloat dorsalLight=smoothstep(.027,.041,vBTCMayaRest.z)*.04;\nfloat amberBreak=sin(vBTCMayaRest.y*470.+vBTCMayaRest.z*890.)*sin(vBTCMayaRest.x*340.);\nfloat coatGrain=.97+.045*coatDirection+.05*(coatSalt-.5)+.055*amberBreak+dorsalLight;\ndiffuseColor.rgb*=clamp(coatGrain,.85,1.09);\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.78,.75,.72),crpMuzzle*.67);\nfloat lipCrease=exp(-pow((vBTCMayaRest.y+.0337)/.0012,2.)-pow((vBTCMayaRest.z-.0341)/.00048,2.));\nfloat nostril=exp(-pow((vBTCMayaRest.y+.0335)/.00043,2.)-pow((vBTCMayaRest.z-.0359)/.00040,2.))*smoothstep(.0007,.0021,abs(vBTCMayaRest.x));\nfloat lowLeg=(1.0-smoothstep(.008,.018,vBTCMayaRest.z))*smoothstep(.006,.014,abs(vBTCMayaRest.y));\ndiffuseColor.rgb*=1.0-.10*lipCrease-.44*nostril;\ndiffuseColor.rgb*=mix(vec3(1.),vec3(.49,.37,.32),lowLeg*.68);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
    '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.027*coatDirection+.035*amberBreak,.68,.95);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
@@ -301,9 +301,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
    for(let i=0;i<sides;i++){
     const theta=i*TAU/sides,radius=Math.sin(Math.PI*.5*u);
     vertices.push(
-     side*(.00202+.00025*(1-u*u)),
-     center[1]+.00047*radius*Math.cos(theta),
-     center[2]+.00037*radius*Math.sin(theta)
+     side*(.00202+.00013*(1-u*u)),
+     center[1]+.00051*radius*Math.cos(theta),
+     center[2]+.00030*radius*Math.sin(theta)
     );
     for(let k=0;k<4;k++){bone.push(sk.joints[k]);weights.push(sk.weights[k]);}
    }
@@ -322,7 +322,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  geometry.computeVertexNormals();
  const material=new THREE.MeshPhysicalMaterial({
   name:'BTC dark glossy iris from Maya eye sockets',color:/^#[0-9a-f]{6}$/i.test(eyeColor)?eyeColor:'#271910',
-  roughness:.19,metalness:0,clearcoat:.64,clearcoatRoughness:.12,
+  roughness:.27,metalness:0,clearcoat:.46,clearcoatRoughness:.21,
   side:THREE.DoubleSide
  });
  const mesh=new THREE.SkinnedMesh(geometry,material);
