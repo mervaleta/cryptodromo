@@ -111,7 +111,7 @@ function applySkin(mesh,source){
  source.parent.add(mesh);
  return mesh;
 }
-function makeAnatomy(source,skinAt){
+function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coat',hoofColor}={}){
  const {positions,indices}=unbox();
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
@@ -173,7 +173,13 @@ function makeAnatomy(source,skinAt){
  // cheeks, muzzle, shoulder landmarks, fetlocks and hoof forms carry light.
  const coat=source.material.clone();
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.83;
+ coat.metalness=0;coat.roughness=.77;
+ // The horse is an animal, not a neon advertising statue. BTC branding is
+ // carried by the identity card; the animal gets a natural chestnut coat.
+ // A published editor profile with brand_colored intentionally overrides it.
+ const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#936e50');
+ const accent=new THREE.Color(/^#[0-9a-f]{6}$/i.test(brandAccent||'')?brandAccent:'#f7931a');
+ coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.10));
  coat.flatShading=false;coat.side=THREE.FrontSide;
  const prior=coat.onBeforeCompile;
  const cacheKey=coat.customProgramCacheKey?.bind(coat);
@@ -190,7 +196,7 @@ function makeAnatomy(source,skinAt){
  };
  coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-maya-muzzle-v2';
  const hoof=new THREE.MeshStandardMaterial({
-  name:'BTC sculpted keratin',color:'#39302a',roughness:.78,metalness:0
+  name:'BTC sculpted keratin',color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#39302a',roughness:.78,metalness:0
  });
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
@@ -271,8 +277,8 @@ function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}
   }
   const sk=skinAt(...root);
   const length=(tail?(major?.0125+.0045*a:.0115+.0065*a)*tailSize:
-   (major?.0060+.0030*b:.0032+.0043*b)*maneSize);
-  const width=major?(tail?.00025+.00012*b:.00031+.00013*a):(tail?.00007+.00008*b:.000065+.000085*a);
+   (major?.0068+.0038*b:.0032+.0043*b)*maneSize);
+  const width=major?(tail?.00033+.00011*b:.00042+.00013*a):(tail?.000075+.000080*b:.000075+.000085*a);
   const start=positions.length/3;
   for(let i=0;i<=SEG;i++){
    const t=i/SEG,e=smooth(t),fall=Math.pow(1-t,.85),r=Math.sin(t*Math.PI);
@@ -284,7 +290,7 @@ function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}
      root[2]-length*(t*.92+.08*Math.sin(t*Math.PI))];
    }else{
     center=[
-     root[0]+side*(.00043*r+.00175*e)*(0.7+0.3*a),
+     root[0]+side*(.00055*r+.00225*e)*(0.7+0.3*a),
      root[1]+(.0015+.0010*a)*e,
      root[2]-(length*(.52*t+.48*e))];
    }
@@ -304,9 +310,9 @@ function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}
  };
  // Main silhouette: satin ribbon clumps integrated into the neck, then many
  // narrow wisps for texture; tail hangs down rather than floating backwards.
- for(let i=0;i<32;i++){add(0,i,32,-1,true);add(0,i,32,1,true);}
+ for(let i=0;i<56;i++){add(0,i,56,-1,true);add(0,i,56,1,true);}
  for(let i=0;i<142;i++){add(0,i,142,-1);add(0,i,142,1);}
- for(let i=0;i<40;i++)add(1,i,40,1,true);
+ for(let i=0;i<82;i++)add(1,i,82,1,true);
  for(let i=0;i<290;i++)add(1,i,290);
  const geo=new THREE.BufferGeometry();
  geo.setIndex(indices);
@@ -345,11 +351,11 @@ function makeGroom(source,skinAt,body,{maneSize=1,tailSize=1,color='#35251e'}={}
  mesh.castShadow=true;mesh.receiveShadow=false;
  return {mesh,geo,material,uniforms,locks,vertices:positions.length/3};
 }
-export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e'}={}){
+export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e',coatColor,brandAccent,brandMode,hoofColor}={}){
  const {best,hidden}=sourceBody(root);
  const originalVisibility=hidden.map(x=>({...x}));
  const skinAt=makeSkinTransfer(best);
- const anatomy=makeAnatomy(best,skinAt);
+ const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
  const groom=makeGroom(best,skinAt,anatomy,{maneSize,tailSize,color});
  const eyes=makeAnatomicalEyes(best,skinAt);
  for(const h of hidden)h.obj.visible=false;
