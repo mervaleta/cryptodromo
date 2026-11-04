@@ -1,6 +1,6 @@
 # JANCH World | Contrato de programación por tres pistas (04-11-2026)
 
-**Estado:** decisión de producto aprobada; especificación para implementación y pruebas. **No cambia el fixture de producción ni el motor de resultados.**
+**Estado:** contrato aprobado e implementado en PR #95 (borrador, aún no fusionado). **No cambia el fixture de producción ni el motor de resultados.**
 
 ## Principios
 1. El Estadio Satoshi Nakamoto es el estadio maestro. Primero completar y optimizar sus tres pistas y su ciclo; después clonar la arquitectura para las otras siete sedes, adaptando arquitectura, mercado, superficie y deporte. No sobrescribir trabajo de otros agentes sobre estadio, caballos, cámaras o fixture.
@@ -15,9 +15,9 @@
 10. Champions conserva su calendario de finales como excepción editorial pendiente de definir; si se ejecuta en modo continuo, usar también tres pistas y ciclos de 180s.
 
 ## Estado actual y cambios futuros
-- `assets/stadium-network-engine.js`: actualmente genera intervalos editoriales 3/5/6/10 minutos y un solo evento de 60s; **no cumple** este contrato. Cambiarlo en una PR de implementación coordinada, con tests.
+- `assets/stadium-network-engine.js`: PR #95 cambia intervalos editoriales 3/5/6/10 a una largada/minuto, ciclos de 180 s y metadatos de cierre. El `main` original continúa con el calendario anterior hasta integrar el PR.
 - `race-lab/source/src/data/raceFixture.js` y `visual-lab/tripleLiveSchedule.js`: revisar la semántica real de inicio de ciclo/largada antes de copiarla; preservar el sistema Satoshi existente.
-- Sedes nuevas: ampliar de 1 o 2 a >=3 pistas; diseñar geometrías y recursos propios después de optimizar Satoshi.
+- Sedes nuevas: catálogo editorial ampliado a tres pistas cada una en PR #95 (24 en total). **Todavía falta diseñar las geometrías físicas y recursos propios**, después de optimizar Satoshi.
 - El calendario mundial editorial no equivale todavía a simulaciones 3D conectadas. No alterar el cálculo oficial ni clasificaciones hasta contar con una integración verificada.
 
 ## Pruebas de aceptación
@@ -31,3 +31,10 @@
 
 ## Regla operativa para la implementación
 No fusionar cambios en producción hasta comparar con el main más reciente, coordinar los PR activos de fixture y estadios, pasar CI y validar en navegador Hostinger. Esta especificación no autoriza por sí sola el despliegue.
+
+## Implementación preparada en PR #95
+- `assets/stadium-network-engine.js`: catálogo de 24 pistas, calendario minuto a minuto, duración de 180s, marcas de cierre y política de liquidación.
+- `assets/janch-market-settlement.js`: validador fail-closed de vela final vs precio oficial. No obtiene cotizaciones ni produce resultados deportivos.
+- `assets/stadium-network-ui.js` y páginas `stadiums/`: cifras, horarios y versión de caché world3.
+- Pruebas: `tests/world-stadium-network.mjs`, `tests/janch-market-settlement.mjs`, `tests/alpha19-stadium-hub.mjs`, `tests/world-fixture-stadium-20261103.mjs`; CI world.
+- Integración segura: esperar CI, revisar rama contra nuevo main, resolver conflictos de otros agentes, probar fixture y navegador antes de fusionar. Ninguna pista adicional está anunciada como carrera 3D operativa.
