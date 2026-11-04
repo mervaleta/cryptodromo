@@ -226,7 +226,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  geo.computeVertexNormals();geo.computeBoundingSphere();
  // Important: unlike V5's procedural wax, the Maya sculpt's REAL modeled
  // cheeks, muzzle, shoulder landmarks, fetlocks and hoof forms carry light.
- const coat=new THREE.MeshPhysicalMaterial().copy(source.material);
+ const coat=new THREE.MeshPhysicalMaterial();
+ // Copy shared PBR maps/colors without assuming the GLB source is already a
+ // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
+ THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
  coat.metalness=0;coat.roughness=.66;
  coat.clearcoat=.085;coat.clearcoatRoughness=.78;
