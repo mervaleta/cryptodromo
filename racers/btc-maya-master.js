@@ -115,6 +115,26 @@ function applySkin(mesh,source){
 }
 function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coat',hoofColor}={}){
  const {positions,indices}=unbox();
+ // Model real hoof flare, quarters and the toe/heel transition directly on
+ // the Maya sculpt vertices. The four measured coronet centers are defined
+ // in original .ma rest space, not guessed in normalized scene coordinates.
+ const hoofCentersY=[-.01625,.01045];
+ let beveledHoofVertices=0;
+ for(let i=0;i<positions.length;i+=3){
+  const x=positions[i],y=positions[i+1],z=positions[i+2];
+  const hind=y>.005,fore=y<-.009;
+  if(!(fore||hind)||z>=.0034||Math.abs(x)<.0011)continue;
+  const centerY=hind?hoofCentersY[1]:hoofCentersY[0];
+  if(Math.abs(y-centerY)>.0036)continue;
+  const centerX=Math.sign(x)*(hind?.00278:.00265);
+  const fall=smooth((.00335-z)/.0027);
+  // Equestrian hoof walls widen toward the ground and project their toe.
+  positions[i]=centerX+(x-centerX)*(1+.18*fall);
+  positions[i+1]=centerY+(y-centerY)*(1+.14*fall)
+    +(fore?-.000085:.00006)*fall;
+  // Preserve ground contact and imported gait, including all four fetlocks.
+  beveledHoofVertices++;
+ }
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
  for(let i=0;i<positions.length;i+=3){
@@ -221,7 +241,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices};
 }
 
 function makeAnatomicalEyes(source,skinAt){
@@ -286,7 +306,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    version:BTC_MAYA_MASTER,modelPreserved:true,gallopPreserved:true,
    originalRig:true,source:'supplied-Maya-2017-sculpt',
    sculptedBodyParts:1,vertices:anatomy.vertices,
-   triangles:anatomy.triangles,oldHairHidden:!best.visible,
+   triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,oldHairHidden:!best.visible,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
