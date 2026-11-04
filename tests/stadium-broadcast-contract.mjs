@@ -27,6 +27,15 @@ test('all directly referenced race DOM elements exist in BOTH broadcast and labo
  }
 });
 
+test('all channel pages use the continuous synthetic fixture and local 1..480 race labels',()=>{
+ assert.match(scene,/tripleMode\?race\.trackRaceNumber:race\.number/);
+ assert.match(scene,/TRACK_RACES_PER_DAY/);
+ assert.match(scene,/tripleRaceFixture\.js\?v=alpha19-week-v2/);
+ const archive=read('assets/crypto-archive.js');
+ assert.match(archive,/tripleRaceFixture\.js\?v=alpha19-week-v2/);
+ assert.match(read('stadiums/crypto/archive/index.html'),/crypto-archive\.js\?v=satoshi-week-v2/);
+ assert.match(read('visual-lab/index.html'),/scene\.js\?v=alpha19-satoshi-week-v2-20261104/);
+});
 test('optional WebGL presentation failure cannot stop the official race',()=>{
  assert.match(preview,/if\(!container\)/);
  assert.match(preview,/return \{show:noop,dispose:noop\}/);
