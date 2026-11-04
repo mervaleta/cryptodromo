@@ -8,7 +8,7 @@
   <link rel="icon" href="/assets/cryptodromo-logo.png">
   <title>Estadios de Cryptódromo | Recorrido 3D</title>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
-  <script type="module" src="/estadio/estadio.js"></script>
+  <script type="module" src="/estadio/estadio.js?v=world3d-2"></script>
   <link rel="stylesheet" href="/race-lab/source/src/style.css">
   <style>
     .stadium-page{max-width:1480px;margin:auto;padding:26px clamp(16px,3vw,42px) 60px}
@@ -44,14 +44,25 @@
   </div></header>
   <main class="stadium-page" id="main-content">
     <div class="stadium-eyebrow">La casa de las carreras del mercado</div>
-    <h1>UN UNIVERSO, <span>TRES ESTADIOS</span></h1>
-    <p class="stadium-lead">Explorá el complejo <strong>Satoshi Nakamoto</strong> con su Pista Eadweard Muybridge, y las futuras sedes de Bolsa y Materias Primas. Un solo generador tridimensional, tres arquitecturas diferentes. La carrera y sus resultados permanecen independientes de la escenografía.</p>
+    <h1>UN UNIVERSO, <span>OCHO ESTADIOS</span></h1>
+    <p class="stadium-lead">Explorá en 3D las ocho sedes financieras de Cryptódromo World. Cada estadio comparte un motor procedural y tiene arquitectura, señalética y ambiente propios. El óvalo visual es una maqueta de recorrido común: las trece pistas deportivas definitivas siguen en desarrollo. Ninguna visita modifica los resultados de carrera.</p>
     <section class="stadium-panel" aria-label="Explorador 3D del estadio">
       <div class="stadium-controls">
         <label for="venue-select">Sede <select id="venue-select" aria-label="Elegir estadio">
-          <option value="satoshi">Satoshi Nakamoto · Cripto</option>
-          <option value="exchange">Estadio de la Bolsa · Acciones</option>
-          <option value="horizon">Estadio Horizonte · Commodities</option>
+          <optgroup label="Ocho sedes de Cryptódromo World">
+          <option value="crypto">Cryptódromo Central · Cripto</option>
+          <option value="merval">Estadio MERVAL · Buenos Aires</option>
+          <option value="wall-street">Wall Street Arena · Nueva York</option>
+          <option value="tokyo">Tokyo Circuit · Japón</option>
+          <option value="london">London Exchange Grounds</option>
+          <option value="commodities">Commodity Coliseum</option>
+          <option value="forex">Forex International</option>
+          <option value="champions">Champions Arena</option>
+          </optgroup><optgroup label="Conceptos 3D originales">
+          <option value="satoshi">Satoshi Nakamoto · Clásico</option>
+          <option value="exchange">Estadio de la Bolsa · Concepto</option>
+          <option value="horizon">Estadio Horizonte · Concepto</option>
+          </optgroup>
         </select></label>
         <label for="camera-select">Visita <select id="camera-select" aria-label="Elegir vista">
           <option value="aerial">Panorámica</option>
@@ -75,11 +86,11 @@
       </div>
       <div id="stadiumView"><canvas id="stadiumCanvas" aria-label="Reconstrucción 3D del Estadio Satoshi Nakamoto"></canvas><div id="stadiumNotice" role="status">EXPLORADOR 3D · ESCENOGRAFÍA PROCEDURAL</div></div>
     </section>
-    <p class="stadium-lead" id="venue-caption" aria-live="polite">Estadio Satoshi Nakamoto · Pista Eadweard Muybridge · Mercado Cripto</p>
+    <p class="stadium-lead" id="venue-caption" aria-live="polite">Cryptódromo Central · Pista Eadweard Muybridge · Mercado Cripto</p>
     <div class="stadium-copy">
-      <article><h2>Tres arquitecturas</h2><p>Torres históricas para Satoshi, composición art déco para Bolsa e instalaciones industriales para Horizonte. Cada sede tiene su propia personalidad, pero comparte el mismo sistema.</p></article>
+      <article><h2>Ocho identidades mundiales</h2><p>Buenos Aires, Nueva York, Tokio, Londres, commodities, divisas, cripto y la arena de campeones reciben arquitectura y materiales generados por código.</p></article>
       <article><h2>Complejo deportivo</h2><p>Tribunas, clubhouse, acceso, boleterías, paseo gastronómico, caballerizas, paddock, servicios, jardines, luminarias y vías técnicas.</p></article>
-      <article><h2>Construcción procedural</h2><p>Geometría y materiales compartidos, públicos y vegetación instanciados, niveles de calidad y clima visual. Este recorrido no modifica la pista ni los resultados de carrera.</p></article>
+      <article><h2>Construcción procedural</h2><p>Geometría compartida, públicos y vegetación instanciados, luz y clima regulables. Las vistas 3D representan las sedes; las trece pistas especializadas son una fase posterior.</p></article>
     </div>
     <a class="stadium-back" href="/">← Volver a la carrera</a>
   </main>

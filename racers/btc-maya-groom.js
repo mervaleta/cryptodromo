@@ -214,6 +214,7 @@ function createHairMass(source,skinAt,{
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
  return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3};
 }
+
 export function createMayaGroom(source,skinAt,{
  maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e'
 }={}){

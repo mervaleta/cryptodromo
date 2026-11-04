@@ -149,12 +149,62 @@ export function createStadiumVenue({THREE,scene,stadiumId='satoshi',quality='med
       box(main,x,72,-189,11,8,21,M.metal);
     }
     for(const x of [-205,205])box(main,x,23,-191,48,24,34,M.wall);
+  }else if(preset.features.neon){
+    // Tokyo: multi-tier skyline and emissive bands. Entirely generated geometry.
+    for(const x of [-108,108]){
+      box(main,x,32,-191,32,39,34,M.wall,'Tokyo pavilion');
+      for(let k=0;k<3;k++){
+        box(main,x,52+k*11,-190,48-k*8,2.1,43-k*8,M.roof,'Neon tier roof');
+        box(main,x,50+k*11,-167.5-k*4,44-k*8,.65,.8,M.led,'Neon fascia');
+      }
+      pole(main,x,82,-191,.35,10,M.metal);
+    }
   }else{
     for(const x of [-90,90]){
       pole(main,x,39,-188,12,50,M.wall);
       const cap=add(main,cone,M.roof,'Silo de materias primas');cap.scale.set(13,11,13);cap.position.set(x,68,-188);
     }
     for(let i=0;i<12;i++){const roof=box(main,-135+i*23,27,-191,21,3,38,M.metal);roof.rotation.z=.15;}
+  }
+  // Each world venue receives an identifiable skyline feature without
+  // changing the lane geometry or adding a second scenic engine.
+  if(preset.features.localPlaza){
+    for(const x of [-220,220]){
+      pole(main,x,25,-200,2.3,48,M.trim);
+      const bell=add(main,cone,M.roof,'Cupola porteña');bell.scale.set(6,9,6);bell.position.set(x,53,-200);
+    }
+  }
+  if(preset.features.skyline){
+    const silhouette=[];
+    for(let i=0;i<24;i++){
+      const h=22+(i%4)*11+(i*13%29);
+      silhouette.push({x:-295+i*25,y:h/2,z:-265-(i%3)*12,w:16,h,d:18});
+    }
+    instanced(main,cube,M.glass,'Manhattan skyline',silhouette);
+  }
+  if(preset.features.clockTower){
+    box(main,0,43,-215,23,70,24,M.wall,'Torre del reloj');
+    box(main,0,82,-215,27,3,28,M.roof,'Reloj tejado');
+    const clock=add(main,ownGeo(new THREE.CylinderGeometry(7,7,.4,32)),M.trim,'Esfera del reloj');
+    clock.rotation.x=Math.PI/2;clock.position.set(0,64,-202.8);
+    box(main,0,64,-202.2,.8,9,.7,M.metal,'Aguja vertical');
+    box(main,2,64,-202.2,5,.8,.7,M.metal,'Aguja horizontal');
+  }
+  if(preset.features.mines){
+    for(let i=0;i<7;i++)pole(main,-160+i*52,35,-254,6,54,M.metal);
+    box(main,0,65,-256,380,3,6,M.roof,'Pasarela de commodities');
+  }
+  if(preset.features.globalArches){
+    for(const x of [-185,-65,65,185]){
+      pole(main,x,21,-266,1.7,42,M.metal);
+      const crest=add(main,ownGeo(new THREE.TorusGeometry(11,1.1,8,24,Math.PI)),M.led,'Arco de divisas');
+      crest.position.set(x,42,-266);
+    }
+  }
+  if(preset.features.championsArch){
+    for(const x of [-60,60])pole(main,x,21,-280,4,42,M.metal);
+    box(main,0,43,-280,132,5,8,M.roof,'Arco de campeones');
+    const trophy=add(main,cone,M.led,'Copa central');trophy.scale.set(10,16,10);trophy.position.set(0,55,-280);
   }
   // Side bleachers / secondary facilities, deliberately separate from the original in-race scenery.
   for(const x of [-350,350]){

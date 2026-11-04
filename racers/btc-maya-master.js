@@ -7,11 +7,11 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-harmony-silhouette-20261104-v3';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-harmony-silhouette-20261104-v3';
-import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-harmony-silhouette-20261104-v3';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-hindquarters-20261104-v5';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-hindquarters-20261104-v5';
+import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-hindquarters-20261104-v5';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
-export const BTC_MAYA_RENDER_BUILD='btc-harmony-silhouette-20261104-v3';
+export const BTC_MAYA_RENDER_BUILD='btc-master-hindquarters-20261104-v5';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -117,7 +117,70 @@ function applySkin(mesh,source){
  return mesh;
 }
 function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coat',hoofColor}={}){
- const {positions,indices}=unbox();
+ let {positions,indices:originalIndices}=unbox();
+ // Actual sculpt contains its OWN old ear tips and a thin skin-colored tail.
+ // Both were still visible beneath the new pinnae and groom, generating
+ // the reported four-horn and double-tail silhouettes.
+ const removed={nativeEarFaces:0,extraTailFaces:0};
+ const visibleTriangles=[];
+ const retiredTailEdges=new Set();
+ const edgeKey=(a,b)=>a<b?a+':'+b:b+':'+a;
+ const earVertex=id=>{
+  const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
+  return Math.abs(x)>.00113&&y>-.0302&&y<-.0230&&z>.04485;
+ };
+ const tailVertex=id=>{
+  const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
+  // The dock joins the rump here. Removing the root tears an open hole.
+  // Only retire the old free end; preserve the skinned croup envelope.
+  return y>.0155&&Math.abs(x)<.00155&&z>.016&&z<.0355;
+ };
+ for(let t=0;t<originalIndices.length;t+=3){
+  const tri=[originalIndices[t],originalIndices[t+1],originalIndices[t+2]];
+  if(tri.filter(earVertex).length>=2){removed.nativeEarFaces++;continue;}
+  if(tri.filter(tailVertex).length>=2){
+   removed.extraTailFaces++;
+   for(let k=0;k<3;k++)retiredTailEdges.add(edgeKey(tri[k],tri[(k+1)%3]));
+   continue;
+  }
+  visibleTriangles.push(...tri);
+ }
+ // The old free tail leaves a polygonal opening at its skinned dock.
+ // Close the actual body manifold rather than adding another tail-shaped
+ // capsule. Each retained boundary edge gets a triangle to a single
+ // depressed interior center. Reverse the inherited edge orientation so
+ // the cap meets the source's normal winding.
+ const keptEdges=new Map();
+ for(let t=0;t<visibleTriangles.length;t+=3){
+  for(let k=0;k<3;k++){
+   const a=visibleTriangles[t+k],b=visibleTriangles[t+(k+1)%3];
+   const key=edgeKey(a,b);
+   const entry=keptEdges.get(key)||{a,b,count:0};
+   entry.count++;
+   keptEdges.set(key,entry);
+  }
+ }
+ const border=[...keptEdges].filter(([key,e])=>
+  e.count===1&&retiredTailEdges.has(key)).map(([,e])=>e);
+ if(border.length<20||border.length>100)
+  throw Error('BTC tail root border unexpectedly changed');
+ const borderVertices=new Set(border.flatMap(e=>[e.a,e.b]));
+ const center=[0,0,0];
+ for(const id of borderVertices)for(let k=0;k<3;k++)center[k]+=positions[id*3+k];
+ for(let k=0;k<3;k++)center[k]/=borderVertices.size;
+ // Sink the cap fractionally into the rump, never let it form a stump.
+ center[1]-=.00048;
+ const capCenter=positions.length/3;
+ positions=Float32Array.from([...positions,...center]);
+ for(const {a,b} of border)visibleTriangles.push(b,a,capCenter);
+ removed.tailDockBorderEdges=border.length;
+ removed.integratedDockCapTriangles=border.length;
+ const indices=new Uint16Array(visibleTriangles);
+ if(removed.nativeEarFaces<150||removed.extraTailFaces<150)
+  throw Error('BTC original ear/tail geometry not located; refusing cosmetic patch');
+ // Weight transfer remains anchored to the ORIGINAL rest surface while
+ // sculpting; moving geometry must never reassign its joints by proximity.
+ const skinRest=Float32Array.from(positions);
  // Model real hoof flare, quarters and the toe/heel transition directly on
  // the Maya sculpt vertices. The four measured coronet centers are defined
  // in original .ma rest space, not guessed in normalized scene coordinates.
@@ -179,10 +242,32 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   positions[i+2]=z+.00030*brow+.00050*withers+
     .00052*poll+.00050*neck+.00026*belly-.00024*throat;
  }
+ // Strengthen the hindquarter silhouette: the supplied Maya body was
+ // transfer-skinned correctly but its thighs and gaskins read skeletal
+ // during the stretched phase of Gallop. Shape the *same* skinned surface,
+ // not attached tubes or independent muscle ornaments.
+ let poweredHindVertices=0;
+ for(let i=0;i<positions.length;i+=3){
+  const x=positions[i],y=positions[i+1],z=positions[i+2];
+  const lateral=smooth((Math.abs(x)-.0012)/.0021);
+  const croup=gauss(y,.0093,.0068)*gauss(z,.028,.0078);
+  const thigh=gauss(y,.0108,.0058)*gauss(z,.0180,.0081);
+  const gaskin=gauss(y,.0114,.0044)*gauss(z,.0107,.0061);
+  const hock=gauss(y,.0115,.0040)*gauss(z,.0072,.0049)*smooth((z-.0032)/.0028);
+  const muscle=lateral*(.15*croup+.31*thigh+.20*gaskin+.09*hock);
+  if(muscle<.006)continue;
+  // Radial expansion widens the top of both hind legs and rounds their
+  // front/back contour without thickening the cannon bone or hoof.
+  positions[i]=x*(1+muscle);
+  positions[i+1]=y+(y-.0104)*(.25*thigh+.21*gaskin+.13*hock)
+    +.00050*croup*lateral;
+  positions[i+2]=z+.00023*croup*lateral+.00009*thigh*lateral;
+  poweredHindVertices++;
+ }
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
  for(let i=0;i<positions.length;i+=3){
-  const skin=skinAt(positions[i],positions[i+1],positions[i+2]);
+  const skin=skinAt(skinRest[i],skinRest[i+1],skinRest[i+2]);
   for(let k=0;k<4;k++){
    bone[(i/3)*4+k]=skin.joints[k];weights[(i/3)*4+k]=skin.weights[k];
   }
@@ -295,7 +380,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,poweredHindVertices,...removed};
 }
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
@@ -341,11 +426,62 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  return {mesh,geometry,material};
 }
 
+
+/**
+ * Heal the circular rump opening left by the old polygon tail. Rather than
+ * placing another tail-like tube on top, this is a low convex patch of the
+ * actual COAT material, following the original Back bone in Gallop.
+ * The new groom grows from immediately behind this seamless rump surface.
+ */
+function sculptRumpSurfacePatch(source,coat){
+ const back=source.skeleton.bones.findIndex(b=>b.name==='Back');
+ if(back<0)throw Error('BTC rump patch requires original Back bone');
+ const SIDE=36,RINGS=6,xyz=[0,.01605,.03045],joints=[back,0,0,0],
+   weights=[1,0,0,0],indices=[];
+ for(let row=1;row<=RINGS;row++){
+  const r=row/RINGS;
+  for(let i=0;i<SIDE;i++){
+   const theta=TAU*i/SIDE,cs=Math.cos(theta),sn=Math.sin(theta);
+   const x=cs*.00235*r,z=.03045+sn*.00250*r;
+   const y=.01422+.00183*(1-r*r);
+   xyz.push(x,y,z);
+   joints.push(back,0,0,0);weights.push(1,0,0,0);
+  }
+ }
+ for(let j=0;j<SIDE;j++){
+  const k=(j+1)%SIDE;
+  indices.push(0,1+k,1+j);
+ }
+ for(let row=1;row<RINGS;row++){
+  for(let j=0;j<SIDE;j++){
+   const k=(j+1)%SIDE;
+   const a=1+(row-1)*SIDE+j,b=1+(row-1)*SIDE+k,
+      c=1+row*SIDE+j,d=1+row*SIDE+k;
+   indices.push(a,b,c,b,d,c);
+  }
+ }
+ const geo=new THREE.BufferGeometry();
+ geo.setIndex(indices);
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
+ geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(joints,4));
+ geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+ geo.computeVertexNormals();
+ const mesh=new THREE.SkinnedMesh(geo,coat);
+ mesh.name='BTC integrated sculpted rump, single tail exit';
+ mesh.position.copy(source.position);mesh.quaternion.copy(source.quaternion);
+ mesh.scale.copy(source.scale);mesh.bindMode=source.bindMode;
+ source.parent.add(mesh);mesh.bind(source.skeleton,source.bindMatrix.clone());
+ mesh.bindMatrixInverse.copy(source.bindMatrixInverse);
+ mesh.frustumCulled=false;mesh.castShadow=true;mesh.receiveShadow=true;
+ return {vertices:xyz.length/3,triangles:indices.length/3,
+  dispose(){mesh.removeFromParent();geo.dispose();}};
+}
 export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e',tailColor,eyeColor,coatColor,brandAccent,brandMode,hoofColor}={}){
  const {best,hidden}=sourceBody(root);
  const originalVisibility=hidden.map(x=>({...x}));
  const skinAt=makeSkinTransfer(best);
  const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
+ const rumpPatch=sculptRumpSurfacePatch(best,anatomy.materials[0]);
  const groom=createMayaGroom(best,skinAt,{
   maneSize,tailSize,maneColor:color,tailColor:tailColor||color
  });
@@ -362,8 +498,11 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    originalRig:true,source:'supplied-Maya-2017-sculpt',
    sculptedBodyParts:1,vertices:anatomy.vertices,
    harmonyBuild:BTC_MAYA_RENDER_BUILD,
+   nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
+   tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
+   poweredHindVertices:anatomy.poweredHindVertices,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
+   animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
    motionType:'original-gallop-bones-plus-spring-fine-ribbons',
    time,phase,disposed
   };},
@@ -380,7 +519,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
   dispose(){
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
-   groom.dispose();face.dispose();ears.dispose();
+   groom.dispose();face.dispose();ears.dispose();rumpPatch.dispose();
    eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());

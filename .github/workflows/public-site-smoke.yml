@@ -1,0 +1,29 @@
+name: Public site smoke · general web
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'institucional/index.html'
+      - 'como-funciona.html'
+      - 'preguntas.html'
+      - 'contacto.html'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - '404.html'
+      - 'api/auth.php'
+      - 'deploy.php'
+      - 'tests/public-site-smoke.mjs'
+      - '.github/workflows/public-site-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public website and retired endpoints over HTTPS
+        run: node tests/public-site-smoke.mjs
