@@ -3,6 +3,9 @@ on:
   pull_request:
     paths:
       - 'stadiums/crypto/broadcast/index.html'
+      - 'stadiums/crypto/archive/index.html'
+      - 'assets/crypto-archive.js'
+      - 'visual-lab/index.html'
       - 'visual-lab/scene.js'
       - 'visual-lab/presentationHorse.js'
       - 'visual-lab/threeCoursePreview.js'
