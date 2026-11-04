@@ -56,7 +56,7 @@ test('illustrative favorite bots normalize 12 horse probabilities, irrespective 
  assert.equal(official.length,12);
 });
 test('camera and lighting controls are aligned on both home and visual lab',()=>{
- for(const path of ['index.html','visual-lab/index.html']){
+ for(const path of ['stadiums/crypto/broadcast/index.html','visual-lab/index.html']){
   const html=read(path);
   for(const id of ['camera-zoom','camera-angle','camera-height','light-spread','light-ambient','light-perimeter'])
    assert.ok(html.includes('id="'+id+'"'),path+' missing '+id);

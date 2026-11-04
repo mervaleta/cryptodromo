@@ -1,14 +1,23 @@
 # Cryptódromo · Racing Demo (2026)
 
-[Carrera](https://race.cryptodromo.com/) · [Corredores](https://race.cryptodromo.com/racers/) · [Maestro BTC](https://race.cryptodromo.com/racers/#BTC) · [Presentación](https://race.cryptodromo.com/institucional/)
+[Landing de estadios](https://race.cryptodromo.com/) · [Satoshi LIVE](https://race.cryptodromo.com/stadiums/crypto/live/) · [Archivo](https://race.cryptodromo.com/stadiums/crypto/archive/) · [Corredores](https://race.cryptodromo.com/racers/) · [Maestro BTC](https://race.cryptodromo.com/racers/#BTC) · [Presentación](https://race.cryptodromo.com/institucional/)
 
 Cryptódromo convierte **variaciones de precios en una competencia visual de 12 corredores**. Esta edición es una **demo reproducible con precios sintéticos precargados**, NO usa cotizaciones en tiempo real ni acepta apuestas, depósitos, retiros o premios con dinero real. La historia original del producto contempla otros modos y una fase posterior de apuestas reguladas, pero no están habilitados aquí.
+
+## Alpha19: portal de estadios y tres canales Satoshi Nakamoto
+
+- `/` es la **landing de ocho estadios**, `/stadiums/{slug}/` son subsitios de sedes (otros siete con calendario editorial y maqueta 3D).
+- `/stadiums/crypto/` es el Estadio Satoshi Nakamoto. `/stadiums/crypto/live/` presenta tres relojes, con una vista 3D seleccionable. `/stadiums/crypto/archive/` permite consultar las **10.080 carreras de una semana sintética**, filtrar por pista y ticker, y reproducir un evento histórico del fixture.
+- Las pistas **Eadweard Muybridge, Genesis y Vint Cerf** tienen 480 carreras cada una por día, desfasadas un minuto y con largada a `:30`, total **1.440** por día. `tripleRaceFixture.js` reutiliza precios sintéticos y `officialRace.js`. `tripleLiveSchedule.js` selecciona los tres canales sin cambiar resultados.
+- `/stadiums/crypto/broadcast/` conserva el antiguo render de la home, con `?track=...` y `?replayDay=...&replayMinute=...`. La transmisión WebGL se muestra de a un canal por vez por rendimiento; los tres cronogramas evolucionan simultáneamente.
+- `/estadio/?venue=crypto` ofrece la **maqueta escénica tridimensional de tres trazados**; es una semilla de diseño pendiente de pulido AAA, no una geometría certificada ni una segunda autoridad de scoring.
+- **Compatibilidad heredada:** `/fixture/`, `/resultados/`, estadísticas y escuderías conservan por ahora el fixture Alpha18 de 480 carreras; no representan todavía los 1.440 eventos de Alpha19. El archivo oficial de la nueva sede es `/stadiums/crypto/archive/`. Unificar los consumidores históricos requiere una migración separada para no romper los Gran Premio y acumulados.
 
 ## Estructura actual
 
 | Área | Ruta | Fuente principal |
 | --- | --- | --- |
-| Transmisión de carrera | `/` | `index.html`, `visual-lab/`, `race-lab/source/` |
+| Transmisión de carrera | `/stadiums/crypto/broadcast/` | `stadiums/crypto/broadcast/index.html`, `visual-lab/`, `race-lab/source/` |
 | Corredores y maestro BTC | `/racers/` | `racers/`; contrato en `docs/HORSE-MASTER-CONNECTION.md` |
 | Fixture, resultados, estadísticas | `/fixture/`, `/resultados/`, `/estadisticas/` | `race-lab/source/src/data/` y adaptadores de cada vista |
 | Grandes Premios | `/grandes-premios/` | `grandes-premios/` |

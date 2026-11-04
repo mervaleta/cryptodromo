@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStadiumVenue} from '/race-lab/source/src/stadium/venue.js';
 import {getStadiumPreset,WORLD_STADIUM_IDS} from '/race-lab/source/src/stadium/presets.js';
+import {buildThreeCoursePreview} from '/visual-lab/threeCoursePreview.js?v=alpha19-live-1';
 // The stadium museum is independent from the alpha14 live race and its horse/camera pipeline.
 
 const $=id=>document.getElementById(id);
 const wrap=$('stadiumView'),canvas=$('stadiumCanvas'),notice=$('stadiumNotice');
-let renderer,venue,frame=0,lastTime=0;
+let renderer,venue,coursePreview=null,frame=0,lastTime=0;
 try{
   renderer=new THREE.WebGLRenderer({canvas,antialias:window.innerWidth>720,powerPreference:'high-performance'});
   renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -62,19 +63,27 @@ function environment(){
   venue.setEnvironment({hour,type,wind:type==='storm'?24:8,clouds:type==='clear'?.12:.82});
 }
 function rebuild(){
-  const previous=venue;
+  const previous=venue,oldPreview=coursePreview;
+  let next=null,nextPreview=null;
   try{
-    const next=createStadiumVenue({THREE,scene,stadiumId:venueInput.value,
+    next=createStadiumVenue({THREE,scene,stadiumId:venueInput.value,
       quality:qualityInput.value,weatherParticles:true});
-    venue=next;previous?.dispose();
+    const crypto=venueInput.value==='crypto'||venueInput.value==='satoshi';
+    if(crypto){
+      next.areas.track.visible=false;
+      nextPreview=buildThreeCoursePreview({THREE,scene,quality:qualityInput.value});
+    }
+    venue=next;coursePreview=nextPreview;
+    oldPreview?.dispose();previous?.dispose();
     const preset=getStadiumPreset(venueInput.value),stats=venue.getStats();
-    caption.textContent=preset.name+' · '+preset.track+' · '+preset.market+' · '+preset.tagline;
-    notice.textContent='ESCENOGRAFÍA PROCEDURAL · '+stats.crowdCount+' ESPECTADORES · '+stats.treeCount+' ÁRBOLES';
+    caption.textContent=(coursePreview?'Estadio Satoshi Nakamoto · Muybridge / Genesis / Vint Cerf · Tres trazados 3D':
+      preset.name+' · '+preset.track+' · '+preset.market+' · '+preset.tagline);
+    notice.textContent=(coursePreview?'3 PISTAS EN EL ESTADIO · ':'ESCENOGRAFÍA PROCEDURAL · ')+stats.crowdCount+' ESPECTADORES · '+stats.treeCount+' ÁRBOLES';
     pickCamera();environment();
   }catch(error){
     console.error('Stadium explorer error:',error);
     notice.textContent='Error al construir el estadio: '+error.message;
-    if(previous)venue=previous;
+    nextPreview?.dispose();next?.dispose();venue=previous;coursePreview=oldPreview;
   }
 }
 function resize(){
@@ -102,6 +111,7 @@ if(new URLSearchParams(location.search).get('stadium-qa')==='1'){
       venue:venueInput.value,
       canvas:[canvas.width,canvas.height],
       meshes:venue?.getStats(),
+      courses:coursePreview?.courses||[],
       fog:[scene.fog.near,scene.fog.far],
       renderCalls:renderer.info.render.calls,
       webgl:renderer.capabilities.isWebGL2 ?? true
@@ -117,5 +127,5 @@ function tick(now){
 frame=requestAnimationFrame(tick);
 window.addEventListener('pagehide',()=>{
   cancelAnimationFrame(frame);resizeObserver.disconnect();
-  controls.dispose();venue?.dispose();renderer.dispose();
+  controls.dispose();coursePreview?.dispose();venue?.dispose();renderer.dispose();
 },{once:true});

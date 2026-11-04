@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-test('homepage embeds cinematic broadcast and preserves institutional navigation',()=>{
- const html=read('index.html');
+test('stadium broadcast preserves cinematic engine and site has a new landing',()=>{
+ const home=read('index.html');
+ assert.match(home,/Elegí tu tribuna/);
+ const html=read('stadiums/crypto/broadcast/index.html');
  assert.match(html,/\/visual-lab\/scene\.js\?v=alpha(?:18|20)-[a-z0-9-]+/);
  assert.match(html,/id="presentation-overlay"/);
  assert.match(html,/id="live-countdown"/);
