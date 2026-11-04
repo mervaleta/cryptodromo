@@ -38,6 +38,7 @@ try{
  assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
  assert.equal(start.heroGroom.crownBridgeLocks,112,'forelock and dorsal mane must be joined across the poll');
  assert.equal(start.heroGroom.heroLocks,56,'sculpted swept hero locks must actually render');
+ assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
  assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
  assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must sit within the sockets');
  assert.equal(start.heroGroom.originalRig,true);
