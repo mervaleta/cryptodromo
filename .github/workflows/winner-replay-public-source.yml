@@ -1,0 +1,23 @@
+name: Satoshi winner replay + environment · public source check
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/winner-replay-public-source.mjs'
+      - '.github/workflows/winner-replay-public-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deployment-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check actual production HTML and modules, not just GitHub files
+        env:
+          CRP_BASE_URL: https://race.cryptodromo.com
+        run: node tests/winner-replay-public-source.mjs
