@@ -49,7 +49,7 @@ export function createBTCSculptedHooves(source,skinAt,{hoofColor='#37302b'}={}){
   }
   const indexStart=indexes.length;
   // Soft continuous hoof wall with true beveled edges, no angular block.
-  for(let row=0;row<rings.length-1;row++)for(let j=0;j<SIDES;j++){
+  for(let row=0;row<rings.length-2;row++)for(let j=0;j<SIDES;j++){
    const jn=(j+1)%SIDES,a=start+row*SIDES+j,b=start+row*SIDES+jn,
     c=start+(row+1)*SIDES+j,d=start+(row+1)*SIDES+jn;
    indexes.push(a,b,c,b,d,c);
