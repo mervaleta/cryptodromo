@@ -12,3 +12,9 @@
 .hub-footer{border-top:1px solid #35513f;padding:34px 0 55px;color:#a8b8a8;font-size:12px}.hub-footer .hub-shell{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}.hub-footer a{text-decoration:none;color:#a5ebb8}.hub-note{padding:15px 18px;border:1px solid #395d47;border-radius:9px;color:#b5cdb8;font-size:12px;line-height:1.65;margin:22px 0;background:#10221a}
 @media(max-width:1180px){.hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hub-broadcast{grid-template-columns:1fr}.hub-side{display:none}}@media(max-width:780px){.hub-livegrid{grid-template-columns:1fr}.hub-venuehero{grid-template-columns:1fr}.hub-head-inner{min-height:74px;flex-wrap:wrap;padding:15px 0}.hub-nav{width:100%;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.hub-nav a{white-space:nowrap}.hub-hero{min-height:520px}.hub-player iframe{height:790px}.hub-venueart{min-height:220px}}@media(max-width:510px){.hub-shell{width:calc(100% - 28px)}.hub-grid{grid-template-columns:1fr}.hub-title{font-size:clamp(42px,13vw,74px)}.hub-statrow{gap:10px}.hub-stat{min-width:130px;padding:4px 12px}.hub-stat strong{font-size:24px}.hub-player iframe{height:720px;min-height:500px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hub-card,.hub-button{transition:none}}
+
+
+/* One CRC shell for home, Satoshi and the racing archive, without changing the 3D viewport. */
+body.hub .hub-shell{width:var(--crc-shell-width);max-width:var(--crc-shell-max);margin-inline:auto;}
+body.hub .hub-head-inner{width:100%;max-width:none;}
+body.hub .hub-footer .hub-shell{width:var(--crc-shell-width);}
