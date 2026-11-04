@@ -3,16 +3,16 @@
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
   "buildId": "btc-master-procedural-hind-groom-20261104-v12",
-  "status": "pending_deploy",
-  "statusLabel": "Corrección geométrica 3D de grupa y piernas; crin compacta y flexión ligada al Gallop · QA de Hostinger pendiente",
+  "status": "needs_fix",
+  "statusLabel": "v12 publicado y verificado en Hostinger · crin corregida; articulación posterior aún requiere refinamiento",
   "updatedAt": "2026-11-04",
-  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips.",
+  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Confirmar visualmente en la URL canónica ambos perfiles, frente y atrás, transiciones y movimiento Gallop bajo WebGL",
-    "Comprobar continuidad de las raíces de la crin, sin filamentos de garganta ni huecos alrededor de orejas",
-    "Verificar sin torsiones la articulación de babilla/corvejón en todas las fases; no sustituir el galope original",
-    "Validar sombras y legibilidad del pelo procedimental en dispositivos móviles y navegadores sin GPU dedicada"
+    "Revisar especialmente la transición anatómica muslo-corvejón en todas las fases del Gallop; aún se ven estrechamientos y siluetas poco naturales en perfil",
+    "Cotejar fase a fase con la referencia 212734.mp4 antes de modificar el rig o las curvas de animación de manera coordinada",
+    "Validar proporción, sombreado y continuidad de patas desde cámaras laterales y posteriores en alta resolución",
+    "Mantener crin compacta sin volver a introducir filamentos colgantes y garantizar rendimiento en 12 corredores"
   ],
   "nextPhase": {
     "status": "blocked",
