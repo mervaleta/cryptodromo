@@ -376,10 +376,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.54;
+ coat.metalness=0;coat.roughness=.69;
  coat.defines={STANDARD:'',PHYSICAL:''};
- coat.clearcoat=.115;coat.clearcoatRoughness=.55;
- coat.sheen=.28;coat.sheenColor.set('#ac805b');coat.sheenRoughness=.78;
+ coat.clearcoat=.040;coat.clearcoatRoughness=.83;
+ coat.sheen=.13;coat.sheenColor.set('#ac805b');coat.sheenRoughness=.90;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
