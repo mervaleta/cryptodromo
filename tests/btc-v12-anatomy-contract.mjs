@@ -50,7 +50,7 @@ test('Groom, bone weights and coat texture remain procedural rather than images'
  assert.strictEqual(vertexShader.uniforms.btcHindGait,phase);
  assert.match(vertexShader.vertexShader,/btcStifle/);
  assert.match(vertexShader.vertexShader,/transformed\\.x/);
- assert.ok(vertexShader.vertexShader.includes('\\nfloat btcHindPhase'),'shader inserts a real newline before muscle motion');
+ assert.ok(vertexShader.vertexShader.includes(String.fromCharCode(10)+'float btcHindPhase'),'shader inserts a real newline before muscle motion');
 });
 test('canonical BTC chain picks new groom and body modules; 99 other horses unchanged',()=>{
  const files=['racers/index.html','racers/racers.js','racers/btc-atelier-preview.js','racers/btc-maya-master.js'];
