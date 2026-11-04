@@ -25,14 +25,15 @@ jobs:
           for attempt in $(seq 1 20); do
             echo "Public origin check ${attempt}/20"
             ok=true
-            for module in index.html racers.js btc-atelier-preview.js btc-maya-master.js btc-maya-groom.js btc-maya-face-details.js btc-maya-hooves.js; do
+            for module in index.html racers.js btc-atelier-preview.js btc-terrain-stage.js btc-maya-master.js btc-maya-groom.js btc-maya-face-details.js btc-maya-hooves.js; do
               if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "${ORIGIN}/${module}?deploy=${GITHUB_SHA}" -o "/tmp/btc-${module}"; then ok=false; break; fi
             done
             if [[ "$ok" == true ]] &&
-              grep -q 'btc-master-procedural-hind-groom-20261104-v12' /tmp/btc-index.html &&
-              grep -q 'btc-master-procedural-hind-groom-20261104-v12' /tmp/btc-racers.js &&
-              grep -q 'btc-master-procedural-hind-groom-20261104-v12' /tmp/btc-btc-atelier-preview.js &&
-              grep -q 'BTC_MAYA_RENDER_BUILD' /tmp/btc-btc-maya-master.js &&
+              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-index.html &&
+              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-racers.js &&
+              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-btc-atelier-preview.js &&
+              grep -q 'btc-master-procedural-hind-groom-20261104-v12-fx1' /tmp/btc-btc-maya-master.js &&
+              grep -q 'createHoofTerrainFX' /tmp/btc-btc-terrain-stage.js &&
               grep -q 'neckOutliers' /tmp/btc-btc-maya-groom.js &&
               grep -q 'createBTCMayaFaceDetails' /tmp/btc-btc-maya-face-details.js &&
               grep -q 'createBTCSculptedHooves' /tmp/btc-btc-maya-hooves.js; then

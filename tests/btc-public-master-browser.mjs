@@ -25,7 +25,26 @@ try {
     s?.clips?.includes('Gallop')&&s?.drawCalls>0;
  },null,{timeout:120000});
  const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
- assert.equal(s.heroGroom.gallopPreserved,true);
+ // Verificación específica del nuevo terreno en la URL pública.
+ // Que cargue el GLB no es suficiente: debe impactar el suelo y dejar huella.
+ assert.ok(s.terrain?.visible,'BTC terrain FX must be active in the public card');
+ assert.equal(s.terrain.surface,'dirt');
+ assert.ok(['skeleton','master'].includes(s.terrain.contactSource),
+  'Hoof contacts must use animated rig, not phase proxy');
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.terrain?.impacts>=2,
+  undefined,{timeout:60000,polling:400});
+ const dirt=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain);
+ assert.ok(dirt.imprints>=2,'At least 2 planted hoof imprints expected');
+ await page.selectOption('#btc-terrain-surface','sand');
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.terrain?.impacts>=1,
+  undefined,{timeout:60000,polling:400});
+ assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain)).surface,'sand');
+ await page.selectOption('#btc-terrain-surface','grass');
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.terrain?.impacts>=1,
+  undefined,{timeout:60000,polling:400});
+ assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain)).surface,'grass');
+ await page.selectOption('#btc-terrain-surface','dirt');
+  assert.equal(s.heroGroom.gallopPreserved,true);
  assert.equal(s.heroGroom.originalRig,true);
  assert.equal(s.heroGroom.sculptedEyes,2);
  assert.equal(s.heroGroom.eyeGlobes,2,'two actual spherical eyes must be present');
