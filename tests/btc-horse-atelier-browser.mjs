@@ -23,7 +23,8 @@ try{
  assert.equal(state.heroGroom?.version,'btc-maya-2017-sculpt-gallop-20261104');
  assert.equal(state.heroGroom?.oldHairHidden,true);
  assert.equal(state.heroGroom?.gallopPreserved,true);
- assert.equal(state.heroGroom?.vertices,5406);
+ assert.equal(state.heroGroom?.vertices,5407,'Maya body plus one skinned native tail-root closure vertex');
+ assert.ok(state.heroGroom?.integratedDockCapTriangles>=20,'no opening under the flowing tail');
  assert.ok(state.heroGroom?.sculptedBodyParts>=1);
  assert.equal(state.heroGroom?.animatedHair,true);
  assert.equal(state.heroGroom?.modelPreserved,true);
