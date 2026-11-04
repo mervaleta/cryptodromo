@@ -9,7 +9,13 @@ let publishedHorseProfiles=Object.create(null);
 function visualToken(token){
  const profile=resolveHorseProfile(token,publishedHorseProfiles);
  if(!profile.edited)return token;
- return {...token,name:profile.name,color:profile.raceColor,coat:profile.appearanceMode==='natural_coat'?profile.coatColor:profile.raceColor};
+ return {...token,name:profile.name,color:profile.raceColor,
+  coat:profile.appearanceMode==='natural_coat'?profile.coatColor:profile.raceColor,
+  mayaAppearance:{coatColor:profile.coatColor,brandMode:profile.appearanceMode,
+   hoofColor:profile.hoofColor,maneColor:profile.maneColor,tailColor:profile.tailColor,
+   eyeColor:profile.eyeColor,muzzleColor:profile.muzzleColor,
+   maneScale:profile.maneScale,tailScale:profile.tailScale,
+   maneStyle:profile.maneStyle,tailStyle:profile.tailStyle}};
 }
 function renderPublicIdentity(profile){
  const parent=document.querySelector('.horse-biography');if(!parent)return;
@@ -33,7 +39,8 @@ let tier='all', selected=TOKEN_ROSTER.find(t=>t.symbol===location.hash.slice(1))
 const atelierMode=new URLSearchParams(location.search).get('atelier');
 const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='BTC');
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
-let atelierVariant='enhanced';
+// Normal BTC profile uses the sculpted horse; ?btcMaster=v5 retains the legacy study.
+let atelierVariant=new URLSearchParams(location.search).get('btcMaster')==='v5'?'enhanced':'maya';
 function updateAtelierState(token){
  const btc=token.symbol==='BTC';
  const entry=$('#btc-atelier-entry'),panel=$('#btc-atelier-panel');
@@ -104,7 +111,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-real-hero-v4-20261103':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-maya-luxe-20261104-v2':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -135,7 +142,7 @@ if(btcAtelier){
  $('#btc-hair-color').addEventListener('input',event=>preview?.setHairColor?.(event.target.value));
  document.querySelectorAll('[data-btc-camera]').forEach(button=>
   button.addEventListener('click',()=>preview?.setCamera?.(button.dataset.btcCamera)));
- changeVariant('enhanced');
+ changeVariant(atelierVariant);
 }
 import(previewModule).then(({createPreview})=>{
  preview=createPreview($('#horse-canvas'),previewFallback);
@@ -146,8 +153,9 @@ import(previewModule).then(({createPreview})=>{
   preview.setSpeed(Number($('#btc-speed').value));
   preview.setHairColor($('#btc-hair-color').value);
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
+  window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
  }
- $('#preview-state').textContent=btcAtelier?'BTC · HERO V4 · CRIN FLUIDA · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · CABALLO ANATÓMICO · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;

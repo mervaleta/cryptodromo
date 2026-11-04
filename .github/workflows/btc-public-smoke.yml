@@ -1,36 +1,60 @@
-name: Verify public BTC Hero V4 on race.cryptodromo.com
+name: Verify live BTC anatomical 3D horse on Hostinger
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/btc-public-smoke.yml'
       - 'racers/**'
+      - 'tests/btc-public-master-browser.mjs'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   verify-live:
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 18
     steps:
-      - name: Verify public site serves V4, not only GitHub source
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Verify Hostinger serves the latest BTC module chain
         shell: bash
         run: |
           set -euo pipefail
           ORIGIN="https://race.cryptodromo.com/racers"
-          for attempt in $(seq 1 14); do
-            echo "Attempt ${attempt}: checking Hostinger public pages"
-            if curl -fLsS --connect-timeout 8 --max-time 20 "${ORIGIN}/racers.js?audit=${GITHUB_SHA}" -o /tmp/racers.js &&
-               curl -fLsS --connect-timeout 8 --max-time 20 "${ORIGIN}/btc-atelier-preview.js?audit=${GITHUB_SHA}" -o /tmp/preview.js &&
-               curl -fLsS --connect-timeout 8 --max-time 20 "${ORIGIN}/btc-hero-v4.js?audit=${GITHUB_SHA}" -o /tmp/hero.js &&
-               grep -q "btc-real-hero-v4-20261103" /tmp/racers.js &&
-               grep -q "createBTCHeroV4" /tmp/preview.js &&
-               grep -q "new THREE.SkinnedMesh" /tmp/hero.js; then
-              echo "PASS: live public domain serves functional BTC Hero V4 code."
-              exit 0
+          for attempt in $(seq 1 20); do
+            echo "Public origin check ${attempt}/20"
+            ok=true
+            for module in index.html racers.js btc-atelier-preview.js btc-maya-master.js btc-maya-groom.js btc-maya-face-details.js btc-maya-hooves.js; do
+              if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "${ORIGIN}/${module}?deploy=${GITHUB_SHA}" -o "/tmp/btc-${module}"; then ok=false; break; fi
+            done
+            if [[ "$ok" == true ]] &&
+              grep -q 'btc-maya-luxe-20261104-v2' /tmp/btc-index.html &&
+              grep -q 'btc-maya-luxe-20261104-v2' /tmp/btc-racers.js &&
+              grep -q 'btc-maya-luxe-20261104-v2' /tmp/btc-btc-atelier-preview.js &&
+              grep -q 'BTC_MAYA_RENDER_BUILD' /tmp/btc-btc-maya-master.js &&
+              grep -q 'forelock' /tmp/btc-btc-maya-groom.js &&
+              grep -q 'createBTCMayaFaceDetails' /tmp/btc-btc-maya-face-details.js &&
+              grep -q 'createBTCSculptedHooves' /tmp/btc-btc-maya-hooves.js; then
+              echo 'LIVE_HOSTINGER_BTC_FILES_UPDATED'
+              break
             fi
-            echo "Not deployed to public origin yet."
+            if [[ "$attempt" -eq 20 ]]; then
+              echo '::error::Main updated but Hostinger has not deployed the new BTC horse'
+              exit 1
+            fi
             sleep 15
           done
-          echo "::error::GitHub main contains BTC V4, but public Hostinger origin does not serve it."
-          exit 1
+      - name: Install Chromium for real production WebGL acceptance
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Verify native Gallop and anatomically sculpted BTC at real URL
+        run: node tests/btc-public-master-browser.mjs
+      - name: Archive internal production diagnostic still only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-live-anatomical-verification
+          path: artifacts/btc-live/*.png
+          if-no-files-found: ignore

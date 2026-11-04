@@ -1,0 +1,52 @@
+name: BTC V5 motion study · 10 real WebGL passes
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-hero-v5.js'
+      - 'racers/btc-silk-shell-v5.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - 'tests/btc-v5-*'
+      - '.github/workflows/btc-v5-lookdev.yml'
+  workflow_dispatch:
+concurrency:
+  group: btc-v5-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  v5-lookdev:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax and safety contracts
+        run: |
+          node --check racers/btc-hero-v5.js
+          node --check racers/btc-silk-shell-v5.js
+          node --check racers/btc-atelier-preview.js
+          node --check racers/racers.js
+          node --check tests/btc-v5-visual-iterations.mjs
+          node --test tests/btc-horse-atelier-contract.mjs
+      - name: Install Chromium and Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Capture 10 real candidate renders and prove hair motion independently of gait
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/btc-v5-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-v5-visual-iterations.mjs
+      - name: Keep internal diagnostic WebGL screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-v5-ten-real-webgl-passes-and-hair-motion
+          path: artifacts/btc-v5/**
+          if-no-files-found: warn
