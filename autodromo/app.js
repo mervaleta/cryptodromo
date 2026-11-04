@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {createFormulaCar} from './car.js';
-import {createCarCircuit} from './circuit.js';
-import {CAR_TRACKS,CAR_ROSTER,carTrack,getCarSession,positionsAt,resultsAtFinish} from './logic.js';
+import {createCarCircuit} from './circuit.js?v=autodromo-pole-2';
+import {CAR_TRACKS,CAR_ROSTER,carTrack,getCarSession,positionsAt,resultsAtFinish} from './logic.js?v=autodromo-pole-2';
 import {tripleLiveSlot} from '../visual-lab/tripleLiveSchedule.js';
 
 const $=id=>document.getElementById(id);
