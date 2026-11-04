@@ -19,6 +19,28 @@ const browser=await chromium.launch({
 await mkdir('artifacts/stadium-world',{recursive:true});
 const failures=[];
 try{
+ // Verify the ACTUAL live hub DOM, with a fixed local instant matching the bug report.
+ // The iframe is stubbed here so this UI-only check does not launch a fourth WebGL scene.
+ const hub=await browser.newPage({viewport:{width:1360,height:900}});
+ try{
+  await hub.clock.install({time:new Date('2026-11-04T17:42:14Z')});
+  await hub.route('**/stadiums/crypto/broadcast/**',route=>route.fulfill({
+   status:200,contentType:'text/html',body:'<!doctype html><html><body>3D broadcast tested separately</body></html>'
+  }));
+  const home=await hub.goto(new URL('/stadiums/crypto/live/',origin).toString(),
+   {waitUntil:'domcontentloaded',timeout:45000});
+  assert.equal(home?.status(),200,'hub HTTP');
+  await hub.waitForFunction(()=>
+   [...document.querySelectorAll('.hub-track [data-countdown]')].every(e=>e.textContent!=='--:--'),
+   null,{timeout:15000});
+  const counts=await hub.locator('.hub-track [data-countdown]').allInnerTexts();
+  assert.deepEqual(counts,['00:16','01:16','02:16'],'LIVE cards show end-of-phase timers instead of staggered starts');
+  const labels=await hub.locator('.hub-track [data-race-label]').allInnerTexts();
+  assert.deepEqual(labels.map(x=>x.match(/largada ([0-9:]+)/)?.[1]),
+   ['14:42:30','14:43:30','14:44:30']);
+  await hub.screenshot({path:'artifacts/stadium-world/hub-staggered-countdowns.png'});
+  console.log('PASS hub staggered next starts',counts,labels);
+ }finally{await hub.close();}
  for(const {track,minute} of routes){
   const page=await browser.newPage({viewport:{width:1360,height:860},deviceScaleFactor:1});
   const fatal=[];
