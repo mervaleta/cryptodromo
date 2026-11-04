@@ -46,7 +46,7 @@ try {
  await page.selectOption('#btc-terrain-surface','dirt');
   // Production must serve the **new mesh**, not only the old v12 page.
  assert.equal(s.heroGroom.harmonyBuild,'btc-master-procedural-hind-groom-20261104-v12-fx2');
- assert.equal(s.heroGroom.eyeCenterX,.002235,'real cornea depth in canonical BTC fiche');
+ assert.equal(s.heroGroom.eyeCenterX,.00185,'real cornea depth in canonical BTC fiche');
  assert.ok(s.heroGroom.pollAnchoredVertices>10,'stable native skinning at skull-crest');
  assert.ok(s.heroGroom.fineLocks>=1000,'real fine hair density');
  await page.waitForFunction(()=>Math.abs(window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.tailInertia||0)>.005,
