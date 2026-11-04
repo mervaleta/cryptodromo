@@ -29,7 +29,7 @@ function start(){
  const bar=element('section','pm-bar');bar.setAttribute('aria-label','Programa de carreras');
  bar.innerHTML='<div class="pm-program"><span class="pm-eyebrow">CRYPTÓDROMO · WORLD RACING</span><strong data-program>Próxima carrera</strong><small>12 corredores · mercados en créditos</small></div><div class="pm-count"><span>PRÓXIMA LARGADA</span><strong data-count>--:--</strong></div><nav aria-label="Accesos rápidos"><a href="#premium-markets">Mercados</a><a href="/resultados/">Resultados</a><a href="/demo-caja/">Mi cuenta</a></nav>';
  main.insertBefore(bar,stage);
- const area=element('section','pm-markets');area.id='premium-markets';area.setAttribute('aria-label','Selección de apuestas');
+ const area=element('section','pm-board');area.id='premium-markets';area.setAttribute('aria-label','Selección de apuestas');
  area.innerHTML=`<div class="pm-heading"><div><span class="pm-eyebrow">TAQUILLA · GRAN PREMIO</span><h2>Elegí tu favorito</h2><p>Las posiciones se definen en la pista. El ticket se registra y liquida en la cuenta única.</p></div><div class="pm-money"><span>SALDO DISPONIBLE</span><strong data-balance>··· CR</strong><a href="/demo-caja/">Gestionar cuenta</a></div></div>
   <div class="pm-race"><div data-racestatus>Consultando programa</div><label for="pm-raceselect">Próxima carrera <select id="pm-raceselect" data-race></select></label></div>
   <div class="pm-columns"><div class="pm-card"><div class="pm-cardhead"><h3>Corredores</h3><span>12 participantes</span></div><div class="pm-runners" data-runners role="group" aria-label="Elegir caballo"></div></div>
@@ -37,7 +37,7 @@ function start(){
   <div class="pm-history"><div class="pm-cardhead"><h3>Mis últimos tickets</h3><a href="/demo-caja/">Ver movimientos</a></div><div data-history>Consultando operaciones…</div></div>`;
  stage.insertAdjacentElement('afterend',area);
  const q=s=>$(area,s),balance=q('[data-balance]'),raceselect=q('[data-race]'),runners=q('[data-runners]'),choice=q('[data-choice]'),stake=q('[data-stake]'),payout=q('[data-payout]'),submit=q('[data-submit]'),review=q('[data-review]'),edit=q('[data-edit]'),error=q('[data-error]'),success=q('[data-success]'),history=q('[data-history]');
- let state=null,races=[],selection={abs:null,runner:null,market:'WIN',stake:100},reviewing=false,pending=null,busy=false;
+ let state=null,races=[],selection={abs:null,runner:null,market:'WIN',stake:100},reviewing=false,pending=null,busy=false,loading=false;
  const notice=(text='')=>{error.hidden=!text;error.textContent=text};
  const current=()=>races.find(x=>x.abs===selection.abs);
  const dirty=()=>{reviewing=false;pending=null;success.hidden=true;drawTicket()};
@@ -83,7 +83,7 @@ function start(){
      if(!response.ok||!data.ok)throw Error(data.error||'No se pudo procesar la operación');return data;
    }finally{clearTimeout(timer)}
  }
- async function refresh(){if(busy||document.hidden)return;try{state=await api('bootstrap');render();notice()}catch(e){notice('Cuenta temporalmente no disponible: '+e.message)}}
+ async function refresh(){if(busy||document.hidden||loading)return;loading=true;try{state=await api('bootstrap');render();notice()}catch(e){notice('Cuenta temporalmente no disponible: '+e.message)}finally{loading=false}}
  async function place(){
    if(busy||!state)return;let result;
    try{result=quote(selection.stake,selection.market);if(!current().entries.some(e=>e.symbol===selection.runner))throw Error('Seleccioná un corredor');}catch(e){notice(e.message);return}
@@ -102,7 +102,7 @@ function start(){
  // Don't remove technical controls or alter the engine: expose them on demand.
  const tech=main.querySelector('.below > section.panel:first-child');
  if(tech){tech.classList.add('pm-tech');const h=tech.querySelector(':scope > h2');if(h){const toggle=element('button','pm-toggle','Mostrar controles de producción');toggle.type='button';toggle.setAttribute('aria-expanded','false');h.insertAdjacentElement('afterend',toggle);tech.classList.add('pm-closed');toggle.addEventListener('click',()=>{const opening=tech.classList.toggle('pm-closed');toggle.setAttribute('aria-expanded',String(!opening));toggle.textContent=opening?'Mostrar controles de producción':'Ocultar controles de producción'})}}
- const update=()=>{try{const r=liveSlot();bar.querySelector('[data-program]').textContent=`${r.racing?'EN VIVO':'PRÓXIMA CARRERA'} · J${r.next.dayIndex+1} / #${r.next.slot+1} · ${r.next.label}`;bar.querySelector('[data-count]').textContent=formatCountdown(r.secondsToNext)}catch{bar.querySelector('[data-count]').textContent='--:--'}};
+ const update=()=>{try{const r=liveSlot();bar.querySelector('[data-program]').textContent=`${r.racing?'EN VIVO':'PRÓXIMA CARRERA'} · J${(r.racing?r.dayIndex:r.next.dayIndex)+1} / #${(r.racing?r.slot:r.next.slot)+1} · ${r.racing?String(Math.floor(r.slot*3/60)).padStart(2,'0')+':'+String(r.slot*3%60).padStart(2,'0'):r.next.label}`;bar.querySelector('[data-count]').textContent=formatCountdown(r.secondsToNext)}catch{bar.querySelector('[data-count]').textContent='--:--'}};
  update();refresh();setInterval(update,1000);setInterval(refresh,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){update();refresh()}});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
