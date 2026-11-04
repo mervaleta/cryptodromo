@@ -226,9 +226,11 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  geo.computeVertexNormals();geo.computeBoundingSphere();
  // Important: unlike V5's procedural wax, the Maya sculpt's REAL modeled
  // cheeks, muzzle, shoulder landmarks, fetlocks and hoof forms carry light.
- const coat=source.material.clone();
+ const coat=new THREE.MeshPhysicalMaterial().copy(source.material);
  coat.name='BTC Maya natural sculpted coat';
  coat.metalness=0;coat.roughness=.66;
+ coat.clearcoat=.085;coat.clearcoatRoughness=.78;
+ coat.sheen=.24;coat.sheenColor.set('#9c7258');coat.sheenRoughness=.82;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
@@ -281,7 +283,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices};
 }
 
-function makeAnatomicalEyes(source,skinAt){
+function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const vertices=[],bone=[],weights=[],faces=[];
  const sides=20,rings=7;
  // Eye position and dimensions measured against the user's Maya 2017 eye
@@ -314,7 +316,7 @@ function makeAnatomicalEyes(source,skinAt){
  geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
  geometry.computeVertexNormals();
  const material=new THREE.MeshPhysicalMaterial({
-  name:'BTC dark glossy iris from Maya eye sockets',color:'#21120b',
+  name:'BTC dark glossy iris from Maya eye sockets',color:/^#[0-9a-f]{6}$/i.test(eyeColor)?eyeColor:'#271910',
   roughness:.19,metalness:0,clearcoat:.64,clearcoatRoughness:.12,
   side:THREE.DoubleSide
  });
@@ -324,15 +326,15 @@ function makeAnatomicalEyes(source,skinAt){
  return {mesh,geometry,material};
 }
 
-export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e',coatColor,brandAccent,brandMode,hoofColor}={}){
+export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e',tailColor,eyeColor,coatColor,brandAccent,brandMode,hoofColor}={}){
  const {best,hidden}=sourceBody(root);
  const originalVisibility=hidden.map(x=>({...x}));
  const skinAt=makeSkinTransfer(best);
  const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
  const groom=createMayaGroom(best,skinAt,{
-  maneSize,tailSize,maneColor:color,tailColor:color
+  maneSize,tailSize,maneColor:color,tailColor:tailColor||color
  });
- const eyes=makeAnatomicalEyes(best,skinAt);
+ const eyes=makeAnatomicalEyes(best,skinAt,{eyeColor});
  const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions);
  const hoofShells=createBTCSculptedHooves(best,skinAt,{hoofColor});
  for(const h of hidden)h.obj.visible=false;
