@@ -205,8 +205,11 @@ export function trafficAt(session,seconds){
  // The between-keyframe safety pass is essential: interpolating two valid
  // 0.2s pictures is not automatically safe when the official ranking changes.
  // Enforce a safe body envelope at the exact render timestamp.
- const fixed=[];
- for(const row of frame){
+ const fixed=[],byIndex=new Map();
+ // Presentation order can legitimately trail the official order while a
+ // faster car waits for an occupied passing lane. Never force two models to
+ // exchange their world positions just because the scoreboard flipped.
+ for(const row of [...frame].sort((a,b)=>b.visualMeters-a.visualMeters||a.index-b.index)){
    let allowed=row.visualMeters;
    for(const ahead of fixed){
      const lateralRatio=Math.abs(row.sideMeters-ahead.sideMeters)/SAFE_LATERAL_METERS;
@@ -214,9 +217,10 @@ export function trafficAt(session,seconds){
      const safeGap=SAFE_LONGITUDINAL_METERS*Math.sqrt(1-lateralRatio*lateralRatio);
      allowed=Math.min(allowed,ahead.visualMeters-safeGap);
    }
-   fixed.push({...row,visualMeters:allowed});
+   const safe={...row,visualMeters:allowed};
+   fixed.push(safe);byIndex.set(row.index,safe);
  }
- return fixed;
+ return frame.map(row=>byIndex.get(row.index));
 }
 /** Rigorous, side-effect-free race inspection for automated regressions. */
 export function trafficAudit(session,stepSeconds=0.2){
