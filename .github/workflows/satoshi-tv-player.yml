@@ -15,6 +15,7 @@ on:
       - 'tests/stadium-flight-tv-director.mjs'
       - 'assets/satoshi-tv-contract.js'
       - 'assets/crypto-venue.js'
+      - 'assets/crypto-venue-aaa-20261105-r1.js'
       - 'assets/crypto-archive.js'
       - 'tests/satoshi-tv-player-contract.mjs'
       - 'tests/satoshi-tv-player-browser.mjs'
@@ -37,6 +38,7 @@ jobs:
       - name: Verify the single-player and replay contracts
         run: |
           node --experimental-default-type=module --check assets/crypto-venue.js
+          node --experimental-default-type=module --check assets/crypto-venue-aaa-20261105-r1.js
           node --experimental-default-type=module --check assets/crypto-archive.js
           node --experimental-default-type=module --check assets/satoshi-tv-contract.js
           node --experimental-default-type=module --check visual-lab/scene.js
