@@ -35,7 +35,7 @@ No fusionar ni activar hasta pasar la suite de integración con la base definiti
 1. Copia de seguridad de la base y verificación de las tablas existentes users y sus columnas e índices. Si la tabla difiere de la usada por api/auth.php, preparar una migración conservativa supervisada.
 2. Confirmar PHP >=8.1 con Argon2id, PDO MySQL y cURL. Configurar DB_HOST, DB_NAME, DB_USER y DB_PASS con permisos mínimos; o CRP_USERS_DSN con una base privada.
 3. Definir CRP_USERS_SECRET como valor aleatorio de mínimo 32 caracteres distinto entre entornos. Configurar cookies de sesión HTTPS y almacenamiento privado de sesiones PHP; confirmar que el directorio de datos no sea público y que haya backups encriptados con control de acceso.
-4. Desde CLI en Hostinger/entorno de migración: php scripts/users-migrate.php. Ejecutar inicialmente en una copia de la BD. **Limitación actual**: los CREATE INDEX simples deben revisarse antes de repetir el script; no ejecutar una segunda vez hasta reparar idempotencia.
+4. Desde CLI en Hostinger/entorno de migración: php scripts/users-migrate.php. Ejecutar inicialmente en una copia de la BD. **Índices idempotentes**: SQLite usa IF NOT EXISTS y MariaDB comprueba metadata antes de crear índices. Antes de producción: ejecutar la migración dos veces contra una copia de la BD, hacer backup y confirmar esquema legacy.
 5. Para mensajes reales, opcionalmente configurar CRP_MAIL_API_KEY, CRP_MAIL_FROM y CRP_SITE_URL (origen HTTPS propio). Se requiere aprobación explícita del proveedor y dominio de envío. Sin proveedor no se declara completada la recuperación de contraseña.
 6. Verificar configuración de despliegue Hostinger del repositorio y rutas /cuenta/ y /api/users.php. Un commit no demuestra deploy.
 
