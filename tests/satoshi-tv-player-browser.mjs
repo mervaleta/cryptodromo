@@ -48,6 +48,41 @@ async function requirePlayer(page,track){
  return player;
 }
 try{
+ // Slow WebGL boot: valid HTML already contains #raceCanvas, but the scene's
+ // module has not run. Never uncover an empty picture or invoke route fallback.
+ const delayed=await browser.newContext({viewport:{width:1280,height:760},deviceScaleFactor:1});
+ let resumeScene;
+ const sceneGate=new Promise(resolve=>{resumeScene=resolve;});
+ let delayedModuleRequests=0;
+ await delayed.route('**/visual-lab/scene.js*',async route=>{
+  delayedModuleRequests++;
+  await sceneGate;
+  await route.continue();
+ });
+ try{
+  const delayedPage=await openPage(delayed,'/stadiums/crypto/live/?track=muybridge');
+  await delayedPage.waitForFunction(()=>{
+   const frame=document.getElementById('stadium-broadcast');
+   const doc=frame?.contentDocument;
+   return !!doc?.querySelector('#raceCanvas')&&
+    doc.getElementById('start')?.disabled===true;
+  },null,{timeout:45000});
+  assert.ok(delayedModuleRequests>0,'3D module was not intercepted');
+  assert.equal(await delayedPage.locator('#tv-loading').isVisible(),true,
+   'Loading overlay must stay visible while models are not initialized');
+  assert.equal(await delayedPage.locator('#stadium-broadcast').evaluate(el=>el.style.visibility),'hidden',
+   'Do not uncover a DOM-only 3D canvas');
+  assert.equal(await delayedPage.locator('#tv-error').isVisible(),false,
+   'A valid document waiting for 3D boot is not a hosting rewrite');
+  resumeScene();
+  await requirePlayer(delayedPage,'muybridge');
+  assert.equal(await delayedPage.locator('#tv-loading').isVisible(),false);
+  console.log('PASS Satoshi TV delayed WebGL: loading remains covered until all horse models are ready');
+ }finally{
+  resumeScene();
+  await delayed.close();
+ }
+
  const desktop=await browser.newContext({viewport:{width:1560,height:930},deviceScaleFactor:1});
  const page=await openPage(desktop,'/stadiums/crypto/live/?track=muybridge');
  const player=await requirePlayer(page,'muybridge');
