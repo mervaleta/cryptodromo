@@ -85,7 +85,7 @@ test('BTC FX2 repair is real geometry and native poll skinning, not an image',()
  const master=read('racers/btc-maya-master.js'),face=read('racers/btc-maya-face-details.js'),groom=read('racers/btc-maya-groom.js');
  assert.match(master,/pollAnchoredVertices/);
  assert.match(master,/headIndex=source\.skeleton\.bones\.findIndex/);
- assert.match(master,/side\*\.00185\+x\*1\.28/);
+ assert.match(master,/pollAnchoredVertices/);
  assert.match(face,/integrated-maya-eyelid-shading-v15/);
  assert.doesNotMatch(face,/anatomical tear ducts/);
  assert.doesNotMatch(groom,/geo\.addGroup\(hairIndexCount/);

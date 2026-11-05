@@ -20,7 +20,7 @@ try{
  for(const camera of ['face','poll','profile']){
   await page.locator('[data-btc-camera="'+camera+'"]').click();
   await page.waitForTimeout(300);
-  await page.locator('#horse-canvas').screenshot({
+  await page.screenshot({
    path:'artifacts/btc-ocular-fast/'+camera+'.png',timeout:80000
   });
  }

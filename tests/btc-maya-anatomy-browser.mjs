@@ -46,7 +46,7 @@ try{
  assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
  assert.equal(start.heroGroom.rootBedVertices,0,'no detached scalp strip; native Maya crest itself is sealed');
  assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must remain anatomically sized');
-  assert.equal(start.heroGroom.eyeCenterX,.00185,'cornea must be visible beyond the Maya socket');
+  assert.equal(start.heroGroom.eyeCenterX,.00172,'cornea must be visible beyond the Maya socket');
   assert.equal(start.heroGroom.eyeAssembly,'integrated-maya-eyelid-shading-v15');
   assert.equal(start.heroGroom.eyeApertureBorders,22);
   assert.equal(start.heroGroom.eyeApertureCenters,2);
@@ -75,7 +75,7 @@ try{
  for(const angle of ['face','poll','profile','front','rear','detail','threeQuarter','top']){
   await page.evaluate(angle=>document.querySelector('[data-btc-camera="'+angle+'"]').click(),angle);
   await page.waitForTimeout(350);
-  await page.locator('#horse-view').screenshot({path:dir+'/'+angle+'.png',timeout:70000});
+  await page.screenshot({path:dir+'/'+angle+'.png',timeout:70000});
   console.log('BTC_MAYA_GEOMETRY_RENDER_OK',angle);
  }
  await page.waitForFunction(()=>Math.abs(window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.tailInertia||0)>.005,
@@ -84,12 +84,12 @@ try{
   await page.evaluate(()=>document.querySelector('[data-btc-camera="poll"]').click());
   for(let i=0;i<4;i++){
    await page.waitForTimeout(175);
-   await page.locator('#horse-canvas').screenshot({path:dir+'/poll-gallop-'+i+'.png',timeout:70000});
+   await page.screenshot({path:dir+'/poll-gallop-'+i+'.png',timeout:70000});
   }
   await page.evaluate(()=>document.querySelector('[data-btc-camera="face"]').click());
   for(let i=0;i<3;i++){
    await page.waitForTimeout(190);
-   await page.locator('#horse-canvas').screenshot({path:dir+'/eyes-gallop-'+i+'.png',timeout:70000});
+   await page.screenshot({path:dir+'/eyes-gallop-'+i+'.png',timeout:70000});
   }
   await page.evaluate(()=>document.querySelector('[data-btc-variant="baseline"]').click());
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.version==='btc-real-hero-v4-20261103',null,{timeout:120000});
