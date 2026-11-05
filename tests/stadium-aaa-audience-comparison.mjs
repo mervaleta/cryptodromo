@@ -8,6 +8,11 @@ try{
   const page=await browser.newPage({viewport:{width:1600,height:940}});
   await page.goto(host+'/visual-lab/?track=genesis&finish-qa=alpha06',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>document.querySelector('#start')?.disabled===false,null,{timeout:120000});
+  await page.evaluate(()=>{
+   const control=document.getElementById('graphics-quality');
+   control.value='balanced';
+   control.dispatchEvent(new Event('change',{bubbles:true}));
+  });
   for(const [view,weather] of [['overview','noon'],['rail','noon'],['rail','night']]){
    await page.evaluate(([view,weather])=>{
     for(const [id,value] of [['camera',view],['weather',weather]]){
