@@ -38,7 +38,9 @@ try{
  assert.equal(start.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
   assert.equal(start.heroGroom.proceduralHairTexture,true);
   assert.equal(start.heroGroom.hindTextureGenerated,true);
-  assert.equal(start.heroGroom.hindGaitCorrective,true);
+  assert.equal(start.heroGroom.hindGaitCorrective,false);
+ assert.equal(start.heroGroom.hindVolumeConsistent,true);
+ assert.ok(start.heroGroom.hindCrossSideAfter<start.heroGroom.hindCrossSideBefore,'Corrected hind skin crossover must decrease');
   assert.ok(start.heroGroom.hindMaxExpansion>.10);
   assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
  assert.equal(start.heroGroom.crownBridgeLocks,112,'forelock and dorsal mane must be joined across the poll');

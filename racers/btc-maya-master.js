@@ -7,6 +7,7 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
+import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b';
 import {createMayaGroom} from './btc-maya-groom.js?v=btc-eye-nape-hair-20261104-v1';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-eye-nape-hair-20261104-v1';
@@ -368,6 +369,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   }
   bone.set(freshB);weights.set(freshW);
  }
+ // Recover the visually reviewed v13b left/right hind-limb weight separation.
+ // Unlike the older shader oscillator, this changes only skin weights in rest pose.
+ const hindWeightReport=stabilizeHindSkinWeights(skinRest,bone,weights,
+  source.skeleton.bones.map(b=>b.name));
  // Stabilize skull-to-crest skin binding while preserving native Gallop.
  const headIndex=source.skeleton.bones.findIndex(b=>b.name==='Head');
  if(headIndex<0)throw Error('BTC requires native Head joint');
@@ -453,7 +458,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
    '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.038*coatDirection+.046*amberBreak,.65,.94);');
   addBTCHindquarterCoatTexture(shader);
-  addBTCHindquarterGaitShader(shader,hindGait);
+  // Keep native Gallop transforms. No additional pose-varying muscle offset.
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
    '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.002,amberBreak*.0017,coatDirection*.0015));');
  };
@@ -482,7 +487,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,pollAnchoredVertices,poweredHindVertices,hindMaxExpansion:hindSculpt.maxExpansion,generatedHindCoat:true,hindGait,...removed};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,pollAnchoredVertices,poweredHindVertices,hindMaxExpansion:hindSculpt.maxExpansion,generatedHindCoat:true,hindGait,hindWeightReport,...removed};
 }
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
@@ -626,7 +631,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
-   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:true,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
+   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.00172,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
