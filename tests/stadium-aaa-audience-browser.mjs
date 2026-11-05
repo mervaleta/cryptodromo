@@ -16,10 +16,16 @@ try {
   control.dispatchEvent(new Event('change',{bubbles:true}));
  },{id,value});
  page.on('pageerror',e=>errors.push(e.message));
- const response=await page.goto(new URL('/visual-lab/?track=genesis&audience-qa=1&finish-qa=alpha06',origin).toString(),{waitUntil:'domcontentloaded',timeout:45000});
+ const response=await page.goto(new URL('/visual-lab/?track=genesis&audience-qa=1&finish-qa=alpha06&stadium-perf-qa=1',origin).toString(),{waitUntil:'domcontentloaded',timeout:45000});
  assert.equal(response?.status(),200);
  await page.waitForFunction(()=>document.querySelector('#start')?.disabled===false && window.__cryptodromoAudienceQA?.snapshot()?.groups?.length===8,null,{timeout:120000});
  const first=await page.evaluate(()=>window.__cryptodromoAudienceQA.snapshot());
+ const staticQA=await page.evaluate(()=>window.__cryptodromoStaticQA?.snapshot());
+ assert.equal(staticQA?.straight?.previousObjectCount,582);
+ assert.equal(staticQA?.straight?.instancedDrawGroups,3);
+ assert.equal(staticQA?.straight?.racingSurfaceModified,false);
+ assert.ok(staticQA?.woodland?.previousObjectCount>0);
+ assert.ok(staticQA?.woodland?.instancedDrawGroups<=4);
  assert.equal(first.articulated,true);
  assert.equal(first.remoteGrandstand.parts,8);
  assert.equal(first.remoteGrandstand.originalCoordinatesRetained,true);
