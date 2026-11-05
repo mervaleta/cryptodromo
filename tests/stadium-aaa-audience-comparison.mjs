@@ -18,6 +18,10 @@ try{
   });
   assert.ok(renderReady.width>=640&&renderReady.height>=360,`${name}: render canvas not initialized`);
   assert.ok(renderReady.webgl,`${name}: WebGL context unavailable`);
+  // A presentation scrim can make both WebGL screenshots look almost black.
+  // Dismiss it before evidence capture, without advancing the race or prices.
+  await page.evaluate(()=>document.querySelector('#replay-mode')?.click());
+  await page.waitForFunction(()=>!document.querySelector('#stage')?.classList.contains('is-presenting'),null,{timeout:10000});
   await page.evaluate(()=>{
    const control=document.getElementById('graphics-quality');
    control.value='balanced';
@@ -31,7 +35,15 @@ try{
     }
    },[view,weather]);
    await page.waitForTimeout(950);
-   await page.screenshot({path:'artifacts/stadium-aaa-audience/comparison/'+name+'-'+view+'-'+weather+'.png'});
+   const visibility=await page.evaluate(()=>{
+    const overlay=document.querySelector('#presentation-overlay');
+    const style=overlay?getComputedStyle(overlay):null;
+    return {presentationActive:document.querySelector('#stage')?.classList.contains('is-presenting')===true,
+     overlayVisible:!!overlay&&!overlay.hidden&&style?.display!=='none'&&style?.visibility!=='hidden'&&Number(style?.opacity||1)>0};
+   });
+   assert.equal(visibility.presentationActive,false,`${name}/${view}/${weather}: presentation covers scene`);
+   assert.equal(visibility.overlayVisible,false,`${name}/${view}/${weather}: presentation overlay still visible`);
+   await page.screenshot({path:'artifacts/stadium-aaa-audience/comparison/'+name+'-'+view+'-'+weather+'.png',timeout:45000});
    // Approximate frame pacing only, measured in a software WebGL CI browser.
    // It is useful for relative regression checks, NOT desktop hardware FPS.
    const pacing=await page.evaluate(()=>new Promise(resolve=>{
