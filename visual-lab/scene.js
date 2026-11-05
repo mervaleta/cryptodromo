@@ -13,6 +13,7 @@ import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=satoshi-aaa-audience-20261105-v1';
 import {createSatoshiPavilionDetail} from './satoshiPavilionDetail.js?v=satoshi-aaa-pavilion-20261105-v1';
+import {createSatoshiGrandstandCrowd} from './stadiumGrandstandCrowd.js?v=satoshi-grandstand-people-20261105-v1';
 import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
@@ -251,21 +252,22 @@ function sign(text,x,y,z,w=24,h=3,parent=venue,fg='#f3ecd7',bg='#0e3028'){
 }
 sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7,pavilion);
 sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0,pavilion);
-// Spectators: shared-instanced bodies and heads, individual colors, multi-tier seating.
-const crowdN=softwareGPU?260:mobile?440:980,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
-const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.InstancedMesh(headG,mat('#dbb78b'),crowdN)];
-const dummy=new THREE.Object3D(),palette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
-const rnd=seeded(641903);
+// Remote grandstands retain their exact seeded coordinates and dress colors,
+// but are no longer two isolated primitive torso/head meshes.
+const crowdN=softwareGPU?260:mobile?440:980;
+const crowdPalette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
+const rnd=seeded(641903),remotePeople=[];
 for(let i=0;i<crowdN;i++){
  const section=i%3,row=Math.floor(rnd()*7);
  const x=standCenters[section]+(rnd()-.5)*(standWidths[section]-8);
  const z=-107-row*2.6+(section===2?9:0),y=4.62+row*.93;
- dummy.position.set(x,y,z);dummy.rotation.y=(rnd()-.5)*.6;dummy.updateMatrix();crowds[0].setMatrixAt(i,dummy.matrix);
- dummy.position.y+=.52;dummy.updateMatrix();crowds[1].setMatrixAt(i,dummy.matrix);
- crowds[0].setColorAt(i,new THREE.Color(palette[Math.floor(rnd()*palette.length)]));
- crowds[1].setColorAt(i,new THREE.Color(rnd()>.55?'#d9b798':'#b99573'));
+ const yaw=(rnd()-.5)*.6;
+ const coat=crowdPalette[Math.floor(rnd()*crowdPalette.length)];
+ const skin=rnd()>.55?'#d9b798':'#b99573';
+ remotePeople.push({x,y,z,yaw,coat,skin});
 }
-for(const inst of crowds){inst.castShadow=false;inst.receiveShadow=false;inst.instanceMatrix.needsUpdate=true;venue.add(inst);}
+const grandstandCrowd=createSatoshiGrandstandCrowd({THREE,parent:venue,people:remotePeople});
+const crowds=grandstandCrowd.meshes;
 // The stands erupt at the finish: 128 tiny waving pennants in one draw call.
 const flagsN=softwareGPU?48:128;
 const flagGeom=new THREE.PlaneGeometry(.82,.55),flagMat=new THREE.MeshBasicMaterial({color:'#f1cf86',side:THREE.DoubleSide,transparent:true,opacity:.92});
@@ -348,6 +350,8 @@ if(new URLSearchParams(location.search).get('audience-qa')==='1'){
   snapshot:()=>Object.freeze({
    ...stadiumDensity.stats,layout:layoutMode,visible:stadiumDensity.root.visible,
    drawCalls:renderer.info.render.calls,
+   remoteGrandstand:grandstandCrowd.stats,
+   remoteVisible:grandstandCrowd.visibleCount,
    groups:stadiumDensity.root.children.filter(item=>item.name.startsWith('Stands · audience'))
     .map(item=>({name:item.name,count:item.count,visible:item.visible}))
   })
@@ -909,7 +913,7 @@ function applyQualityPreset(next){
  const p=rendererSettings(next,{devicePixelRatio:window.devicePixelRatio||1});
  renderer.setPixelRatio(Math.min(p.pixelRatio,softwareGPU?.78:mobile?1.1:1.6));
  const audienceCount=Math.max(120,Math.min(crowdN,Math.floor(crowdN*p.crowdFactor)));
- for(const inst of crowds)inst.count=audienceCount;
+ grandstandCrowd.setPopulation(audienceCount);
  hoofFX.setQuality(next);
  rainGeo.setDrawRange(0,Math.max(70,Math.floor(rainN*p.particleFactor)));
  if(!softwareGPU){
@@ -1425,7 +1429,7 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
    })
  });
 }
-window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();},{once:true});
+window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();grandstandCrowd.dispose();},{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
