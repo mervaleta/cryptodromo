@@ -26,8 +26,19 @@ try{
   assert.ok(renderReady.webgl,`${name}: WebGL context unavailable`);
   // A presentation scrim can make both WebGL screenshots look almost black.
   // Dismiss it before evidence capture, without advancing the race or prices.
-  await page.evaluate(()=>document.querySelector('#replay-mode')?.click());
-  await page.waitForFunction(()=>!document.querySelector('#stage')?.classList.contains('is-presenting'),null,{timeout:10000});
+  if(name==='before'){
+   // Historical baseline lacks a reliable manual-presentation dismissal.
+   // Hide only its DOM presentation layer for architectural comparison;
+   // do not advance the race, change prices, or alter the candidate.
+   await page.evaluate(()=>{
+    document.querySelector('#stage')?.classList.remove('is-presenting');
+    const overlay=document.querySelector('#presentation-overlay');
+    if(overlay){overlay.hidden=true;overlay.style.display='none';}
+   });
+  }else{
+   await page.evaluate(()=>document.querySelector('#replay-mode')?.click());
+   await page.waitForFunction(()=>!document.querySelector('#stage')?.classList.contains('is-presenting'),null,{timeout:20000});
+  }
   await page.evaluate(()=>{
    const control=document.getElementById('graphics-quality');
    control.value='balanced';
