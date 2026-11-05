@@ -51,7 +51,49 @@ try {
   throw new RuntimeException('Concurrency invariant failed: '.$total.'/'.$credit.'/'.$balance);
  $broken=$db->query('SELECT event_id FROM prediction_journal GROUP BY event_id HAVING COUNT(*)<>2 OR SUM(delta)<>0')->fetchAll();
  if($broken)throw new RuntimeException('Unbalanced ledger');
- echo "PASS 100 concurrent authenticated test users; no lost updates or imbalance\n";
+ // Second stress case: simultaneous debits from ONE verified account.
+ // Ten of twenty 100-CR tickets may succeed against a single 1000-CR grant.
+ $db->exec('INSERT INTO users(id) VALUES(101)');
+ $db=null;
+ $sharedPids=[];
+ for($n=1;$n<=20;$n++){
+  $pid=pcntl_fork();
+  if($pid===-1)throw new RuntimeException('shared account fork failed');
+  if($pid===0) {
+   try {
+    $conn=new PDO('sqlite:'.$dbPath,null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+    $conn->exec('PRAGMA busy_timeout=30000');
+    $svc=new CrpPredictions($conn,$fixtureDir);
+    $svc->confirm(101,['race_id'=>$race['race_id'],'modality'=>'winner',
+     'picks'=>[$race['runners'][0]],'stake'=>100,
+     'idempotency_key'=>sprintf('00000000-0000-4000-8000-%012x',$1000+$n)],
+     $race['start_at']-120);
+    exit(0);
+   } catch(PredictionFailure $e) {
+    if($e->http===409 && str_contains($e->getMessage(),'insuficientes'))exit(3);
+    fwrite(STDERR,"unexpected shared error: ".$e->getMessage()."\n");exit(2);
+   } catch(Throwable $e) {
+    fwrite(STDERR,"shared db error: ".$e->getMessage()."\n");exit(2);
+   }
+  }
+  $sharedPids[]=$pid;
+ }
+ $success=0;$insufficient=0;
+ foreach($sharedPids as $pid) {
+  pcntl_waitpid($pid,$status);
+  if(!pcntl_wifexited($status))throw new RuntimeException('Shared debit worker interrupted');
+  $exit=pcntl_wexitstatus($status);
+  if($exit===0)$success++;
+  elseif($exit===3)$insufficient++;
+  else throw new RuntimeException('Shared debit unexpected exit '.$exit);
+ }
+ $db=new PDO('sqlite:'.$dbPath,null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+ $sharedTickets=(int)$db->query('SELECT COUNT(*) FROM predictions WHERE user_id=101')->fetchColumn();
+ $sharedBalance=(int)$db->query('SELECT credits FROM prediction_accounts WHERE user_id=101')->fetchColumn();
+ $sharedLedger=(int)$db->query("SELECT COALESCE(SUM(delta),0) FROM prediction_journal WHERE account_key='user:101'")->fetchColumn();
+ if($success!==10 || $insufficient!==10 || $sharedTickets!==10 || $sharedBalance!==0 || $sharedLedger!==0)
+  throw new RuntimeException('Shared account double-spend invariant failed: '.json_encode([$success,$insufficient,$sharedTickets,$sharedBalance,$sharedLedger]));
+ echo "PASS 100 independent users and 20 shared-account contenders: 10 debits, 10 denied, zero negative balances\n";
 } finally {
  if(is_file($dbPath))unlink($dbPath);
  if(is_file($dbPath.'-wal'))unlink($dbPath.'-wal');
