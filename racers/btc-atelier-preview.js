@@ -106,7 +106,7 @@ export function createPreview(canvas,onFailure=()=>{}){
       color:profile.maneColor||hairColor,
       tailColor:profile.tailColor||hairColor,
       eyeColor:profile.eyeColor
-     }:{maneSize,tailSize,color:hairColor,pass:btcPass};
+     }:{maneSize,tailSize,color:hairColor,pass:btcPass,neckRepair:stageParams.get('btcNeckRepair')!=='off'};
      nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,coatOptions);
     }
    }catch(error){next.dispose();throw error;}
