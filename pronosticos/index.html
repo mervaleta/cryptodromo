@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Pronósticos de Cryptódromo: créditos ficticios, sin dinero, premios ni canje.">
+<meta name="theme-color" content="#090e18">
+<title>Pronósticos · Cryptódromo</title>
+<link rel="icon" href="/assets/cryptodromo-logo.png">
+<link rel="stylesheet" href="./style.css?v=predictions-v1">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="top">
+ <div class="wrap nav">
+  <a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="">CRYPTÓDROMO <span>PRONÓSTICOS</span></a>
+  <nav aria-label="Navegación"><a href="/stadiums/crypto/live/">LIVE</a><a href="/stadiums/crypto/archive/">Archivo</a><a href="/racers/">Caballos</a><a href="/cryptodromo/profile.html">Perfil</a></nav>
+ </div>
+</header>
+<main id="contenido" class="wrap">
+ <section class="masthead">
+  <div>
+   <p class="eyebrow">SATOSHI NAKAMOTO · TRES PISTAS · PRODE VIRTUAL</p>
+   <h1>El pronóstico es tuyo.<br><em>El resultado, del fixture.</em></h1>
+   <p class="sub">Elegí una largada, armá tu combinación y seguí el resultado oficial. Las recompensas son exclusivamente puntos ficticios.</p>
+  </div>
+  <div class="balance">
+   <span>CUENTA DE SIMULACIÓN</span><strong id="credits">No conectada</strong>
+   <small>CR virtuales · sin valor monetario</small>
+   <div id="identity" class="identity">Verificando sesión…</div>
+  </div>
+ </section>
+ <div class="disclosure" role="note"><strong>SIMULACIÓN CON CRÉDITOS VIRTUALES.</strong> Sin compras, depósitos, retiros, transferencias ni premios. Los resultados sintéticos son reproducibles y pueden conocerse anticipadamente. No es una apuesta de dinero real ni un sistema de pronósticos impredecible.</div>
+ <div id="alert" class="alert" role="status" aria-live="polite">Conectando con el fixture oficial…</div>
+ <div class="layout">
+  <div class="left">
+   <section class="panel">
+    <div class="section-heading"><div><span class="eyebrow">AGENDA DE LARGADAS</span><h2>Elegí la carrera</h2></div><select id="track" aria-label="Filtrar por pista"><option value="all">Tres pistas</option><option value="muybridge">Eadweard Muybridge</option><option value="genesis">Genesis</option><option value="vint-cerf">Vint Cerf</option></select></div>
+    <div id="races" class="races" aria-live="polite"></div>
+   </section>
+   <section class="panel">
+    <div class="section-heading"><div><span class="eyebrow">PARTICIPANTES VERIFICADOS</span><h2 id="race-title">Seleccioná una carrera</h2></div><span class="minor" id="cutoff">Cierre oficial: servidor</span></div>
+    <div id="runners" class="runners"><p class="muted">Los 12 corredores aparecerán al elegir una carrera.</p></div>
+   </section>
+  </div>
+  <aside class="right">
+   <section class="panel ticket">
+    <span class="eyebrow">BOLETO DE PRONÓSTICO</span><h2>Tu selección</h2>
+    <label for="mode">Modalidad</label><select id="mode"><option value="winner">Ganador · 1 caballo</option><option value="podium">Podio · 3 sin orden</option><option value="exacta">Exacta · 1.º y 2.º</option><option value="trifecta">Trifecta · 1.º, 2.º y 3.º</option></select>
+    <div class="chosen"><span>SELECCIONES</span><div id="picks" class="chips">Elegí corredores de la grilla</div></div>
+    <label for="stake">Créditos a comprometer (1 a 1000)</label><input id="stake" type="number" min="1" max="1000" step="1" value="25" inputmode="numeric">
+    <div class="potential"><span>Recompensa ficticia si acertás</span><strong id="reward">100 CR</strong></div>
+    <p class="muted fine">Recompensa fija de demostración, no cuota financiera ni probabilidad implícita. La selección confirmada no se puede editar.</p>
+    <button id="confirm" class="primary" type="button" disabled>Confirmar pronóstico virtual</button>
+    <p class="muted fine">Solo disponibles con inicio de sesión Google verificado. La admisión se cierra 5 s antes de la largada, según la hora del servidor.</p>
+   </section>
+   <section class="panel rules"><h2>Reglas transparentes</h2><p><b>Ganador:</b> 1.º exacto · ×4.</p><p><b>Podio:</b> tres primeros sin importar orden · ×25.</p><p><b>Exacta:</b> 1.º y 2.º en orden · ×30.</p><p><b>Trifecta:</b> 1.º, 2.º y 3.º en orden · ×150.</p><p class="muted fine">Al confirmar se descuentan los CR comprometidos. Si acertás, se suman apuesta × multiplicador; si no, no hay devolución. Una carrera anulada devuelve los CR.</p></section>
+  </aside>
+ </div>
+ <section class="panel history">
+  <div class="section-heading"><div><span class="eyebrow">CUENTA · TRAZABILIDAD</span><h2>Mis comprobantes</h2></div><button id="reload" type="button" class="secondary">Actualizar</button></div>
+  <div id="history"><p class="muted">El historial aparece cuando hay una sesión válida.</p></div>
+ </section>
+ <footer>CRYPTÓDROMO · laboratorio deportivo sintético · <a href="/metodologia.html">Metodología</a> · <a href="/juego-responsable.html">Juego responsable</a></footer>
+</main>
+<script type="module" src="./app.js?v=predictions-v1"></script>
+</body>
+</html>
