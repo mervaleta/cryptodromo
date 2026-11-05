@@ -19,6 +19,10 @@ test('channel fade is always released once a verified race canvas is present',()
  assert.match(src,/const start=doc\?\.getElementById\('start'\)/);
  assert.match(src,/return start\?\.disabled===false/);
  assert.match(src,/if\(hasRaceDocument\(\)\)\{\s*watchLoad\(serial\)/);
+ assert.match(src,/PROBE_TIMEOUT_MS=12000/);
+ assert.match(src,/new AbortController\(\)/);
+ assert.match(src,/controller\.abort\(\)/);
+ assert.match(src,/clearTimeout\(deadline\)/);
  assert.match(src,/if\(\/\^ERROR/);
 });
 test('single verified iframe and existing Hostinger rewrite fallback survive',()=>{
