@@ -153,3 +153,10 @@
 - Clasificación P0 visual: encuadre rail nocturno tapado por techo/estructura. No mover cámaras compartidas ni caballos sin diagnosticar la geometría y la intención del director de TV; antes de corregir, exigir screenshot del nuevo HEAD y una prueba de visibilidad desde rail día/noche. Evitar aprobar por aserciones DOM/WebGL.
 - En HEAD 77ecaff, Actions `41974287189` Satoshi Stadium SUCCESS y `41974287108` Starting Gates SUCCESS. Audience `41974287301`, pavilion `41974287288` y photo finish `41974287099` todavía QUEUED; Alpha17 `41974287239` IN_PROGRESS al consultar. No confundir checks parciales con aprobación del conjunto.
 - Bloqueo temporal: faltan los nuevos PNG del HEAD para evaluar placa, focos y cámara; no fusionar ni publicar. FPS GPU real y revisión de las tres pistas siguen pendientes.
+
+## Iteración 9 · CI de pabellón y reparación del contrato (2026-11-05)
+- Main comprobado `40bb62b26c657a48552700ba7313aae01d1ecea7`; rama 97 commits por delante y 6 por detrás, sin rebase ni fusión.
+- En Actions `41974287288`, WebGL del pabellón PASS pero geometry FAIL: `tests/satoshi-pavilion-detail.mjs:69` intentaba iterar `layer.children` sobre dos `SpotLight` directos añadidos a la raíz; `TypeError: layer.children is not iterable`. Es un error de la prueba, no evidencia de geometría rota.
+- Corrección `5aa34273cda8f68d9efa6173cb56a8534b4dc671`: distinguir grupos de lotes instanciados de focos directos, exigir que estos sean `THREE.SpotLight` y que no proyecten sombras; mantener comprobación de todos los lotes y de limpieza GPU. **Esperar CI nuevo antes de declarar PASS**.
+- Actions `41974287099` photo-finish contratos y Chromium PASS; `41974287301` geometría audiencia PASS y WebGL CANCELLED; `41974287239` cámara CANCELLED pese a pasos de QA completos. No tomar cancelaciones como aprobación.
+- P0 visual previo: cubierta/columna ocluye railcam nocturna. Sin nuevas capturas visualmente revisadas del HEAD corregido ni FPS GPU real, no se certifica AAA. PR #115 permanece draft; no publicar.
