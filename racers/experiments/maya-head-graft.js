@@ -9,8 +9,10 @@
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from '../btc-maya-body-data.js?v=btc-master-procedural-hind-groom-20261104-v12';
 
-export const BTC_MAYA_HEAD_GRAFT_BUILD='btc-maya-actual-head-geometry-20261105-v1';
-const MAYA_HEAD_CUT=-.0206,GLB_FACE_CUT=-.0235;
+export const BTC_MAYA_HEAD_GRAFT_BUILD='btc-v19-native-gallop-maya-face-stitch-20261105';
+// V19: the neck/body mesh and genuine face meet at nearly the SAME plane;
+// V1's 0.0029m overlap caused bright triangular polygons and z-fighting.
+const MAYA_HEAD_CUT=-.02065,GLB_FACE_CUT=-.02055;
 
 function sourceArray(encoded){
  const str=atob(encoded),buffer=new Uint8Array(str.length);
@@ -88,8 +90,10 @@ function cropNativeHead(main){
  const keep=[];
  for(let i=0;i<idx.count;i+=3){
   const a=idx.getX(i),b=idx.getX(i+1),c=idx.getX(i+2);
-  const centerY=(p.getY(a)+p.getY(b)+p.getY(c))/3;
-  if(centerY>=GLB_FACE_CUT)keep.push(a,b,c);
+  // Reject any triangle that crosses into the genuine Maya facial region.
+  // Centroid-only removal left long native neck triangles visible over the face.
+  const minY=Math.min(p.getY(a),p.getY(b),p.getY(c));
+  if(minY>=GLB_FACE_CUT)keep.push(a,b,c);
  }
  if(keep.length<1200||keep.length>=idx.count)throw Error('Native face crop removed unexpected geometry');
  const trimmed=old.clone();
@@ -116,7 +120,7 @@ export function createBTCMayaHeadGraft(root,{coatColor}={}){
   let px=x,py=y,pz=z;
   // Blend the *rear neck only* onto the native collar. Muzzle, cheek, jaw,
   // ears and eyes are never re-proportioned by this compatibility blend.
-  const blend=smoothstep(-.0248,-.0206,y);
+  const blend=smoothstep(-.0248,MAYA_HEAD_CUT,y);
   if(blend>0){
    let best=-1,d=Infinity;
    for(let i=0;i<pMain.count;i++){
@@ -125,7 +129,7 @@ export function createBTCMayaHeadGraft(root,{coatColor}={}){
     if(dist<d){d=dist;best=i;}
    }
    if(best>=0){
-    const amount=blend*.80;
+    const amount=blend*.98;
     px+=(pMain.getX(best)-x)*amount;
     py+=(pMain.getY(best)-y)*amount*.40;
     pz+=(pMain.getZ(best)-z)*amount;
@@ -156,11 +160,15 @@ export function createBTCMayaHeadGraft(root,{coatColor}={}){
  // The Maya muzzle has actual modeled cheekbones/nostrils; no spheres,
  // photographs, stickers, detached eye overlays or procedural nose cones.
  const originalMaterial=[main.material].flat()[0];
- const material=new THREE.MeshStandardMaterial({
-  name:'BTC Maya 2017 anatomical head only',
-  color:/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:originalMaterial.color,
-  metalness:0,roughness:.74,side:THREE.FrontSide
- });
+ // The source material carries the actual Quaternius renderer PBR finish.
+ // A new solid-color material gave the graft a dark brown patch against an
+ // orange neck even when both sampled nominally identical baseColor values.
+ const material=originalMaterial.clone();
+ material.name='BTC Maya 2017 head, native body PBR';
+ material.side=THREE.FrontSide;
+ material.metalness=0;
+ material.roughness=Math.max(.52,Math.min(.84,originalMaterial.roughness??.68));
+ // Ignore coatColor override: the head MUST read the same tone as the body.
  const head=new THREE.SkinnedMesh(geometry,material);
  head.name='BTC Maya source anatomical head and muzzle, native Gallop';
  head.bindMode=main.bindMode;
