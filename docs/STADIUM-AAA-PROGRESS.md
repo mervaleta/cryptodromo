@@ -23,17 +23,25 @@
 - `visual-lab/stadiumDensity.js` (siluetas, vestuario, postura, estadísticas).
 - `visual-lab/scene.js` (versión de import y QA no mutable).
 - `visual-lab/index.html` y `stadiums/crypto/broadcast/index.html` (cache).
-- `tests/stadium-aaa-audience.mjs` y `tests/stadium-aaa-audience-browser.mjs`.
+- `tests/stadium-aaa-audience.mjs`, `tests/stadium-aaa-audience-browser.mjs` y `tests/stadium-aaa-audience-comparison.mjs`.
 - `.github/workflows/stadium-aaa-audience.yml`.
 - `docs/stadium/STADIUM-AAA-VISUAL-BIBLE.md`.
+- `tests/stadium-live-integration.mjs` y `tests/winner-replay-env-contract.mjs` (claves esperadas de caché sin alterar el motor).
 - Este checkpoint.
 
 ## Pruebas y capturas
 - Contrato Node: `node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-clean-photo-finish-tv.mjs`.
 - Capturas de Chromium real: workflow `Satoshi AAA audience - real browser and crowd geometry`, artefacto `satoshi-aaa-audience-render`. Vistas: panorámica diurna, railcam diurna, railcam nocturna y óvalo.
-- **Estado a la creación:** CI por ejecutar y capturas por inspeccionar. No confundir código de screenshot con haber visto el render.
+- **CI de audiencia verificado:** Actions #41960445118 completado con geometry SUCCESS y webgl SUCCESS. Chromium/WebGL renderizó y subió 4 capturas reales, artefacto #13385815192. Capturas todavía por inspeccionar visualmente antes de aprobar calidad. La prueba inicial falló por selector oculto, corregida y validada en ejecución sucesiva.
 - Producción de Hostinger: sin evidencia postintegración; PR no fusionado.
 - Rendimiento: sin medición FPS por GPU ni visual review. Los draw groups son presupuesto estático, no fps.
+
+## Estado de pruebas concurrentes
+- Audiencia y geometría: PASS en Actions #41960445118; cuatro capturas Chromium reales.
+- Satoshi Nakamoto Stadium: PASS en #41960445027.
+- Stadium clean/photo finish/director: contratos PASS, pero Chromium FAIL en #41960445067 por timeout esperando la transición a Genesis (test browser línea 51); investigar antes de integrar. No está demostrado que la PR haya introducido la falla.
+- Alpha17 camera console: run #41960445018 CANCELLED; no certificada.
+- Dos contratos inicialmente fallaron por la URL con caché vieja de scene.js; actualizados a la nueva clave y el workflow Satoshi ahora pasa.
 
 ## PR activos/conflictos
 - PR #100, #99, #89 y #64: familia BTC, NO TOCAR. PR #95: agenda mundial; PR #84: identidad CRC.
@@ -48,7 +56,7 @@
 - Césped/tierra/sintética: repetición de textura, drenajes, rugosidad y polvo pendiente de benchmark.
 - Iluminación nocturna y lluvia: requieren luminancia física legible, sin fog artificial excesivo.
 - Cámara de meta, transmisión y rendimiento en móviles modestos: no aprobados como AAA.
-- Capturas comparables baseline/branch y Hostinger pendientes.
+- Capturas comparables baseline/branch y Hostinger pendientes. El script adicional `tests/stadium-aaa-audience-comparison.mjs` requiere ambos servidores (4173 candidato, 4174 baseline) y aún no se ejecutó en CI.
 - QA de seguridad e integridad global fuera del cambio de escenario no está completo.
 
 ## Próxima acción exacta para otro agente
