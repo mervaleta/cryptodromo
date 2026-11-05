@@ -23,6 +23,14 @@ function fakeThree(){
   }
   updateMatrix(){this.matrix={position:[...this.p],scale:[...this.s],rotation:[...this.r]};}
  }
+ class SpotLight{
+  constructor(color,intensity,distance,angle,penumbra,decay){
+   Object.assign(this,{color,intensity,distance,angle,penumbra,decay,castShadow:false,disposed:false});
+   this.position={set(...coordinates){this.xyz=coordinates;}};
+   this.target={position:{set(...coordinates){this.xyz=coordinates;}}};
+  }
+  dispose(){this.disposed=true;}
+ }
  class InstancedMesh{
   constructor(geometry,material,count){this.geometry=geometry;this.material=material;this.count=count;this.matrices=[];
    this.instanceMatrix={needsUpdate:false};this.name='';this.visible=true;}
@@ -30,7 +38,7 @@ function fakeThree(){
   computeBoundingSphere(){this.boundingSphere={};}
  }
  const THREE={
-  Group,Object3D,InstancedMesh,
+  Group,Object3D,InstancedMesh,SpotLight,
   BoxGeometry:class extends Geometry{},
   CylinderGeometry:class extends Geometry{},
   MeshStandardMaterial:class extends Material{}
@@ -47,6 +55,8 @@ test('Satoshi architectural detail attaches to existing VIP, closes floating und
  assert.equal(details.stats.tracksAffected,0);
  assert.equal(details.stats.foundationSupported,true);
  assert.equal(details.stats.hasGroundEntrance,true);
+ assert.equal(details.stats.facadeLights,2);
+ assert.equal(details.stats.shadowsAdded,0);
  assert.ok(details.stats.colonnade>=10);
  assert.ok(details.stats.batches<=12);
  assert.ok(details.stats.instances>=100);
@@ -68,11 +78,14 @@ test('Satoshi architectural detail attaches to existing VIP, closes floating und
  details.setEnvironment({night:true,wetness:.8});
  assert.equal(details.environment.night,true);
  assert.equal(details.environment.wetness,.8);
+ assert.ok(details.environment.washIntensity>0,'night lighting should illuminate stone facade');
  details.setQuality('eco');
  assert.equal(details.root.children[0].visible,true,'supports must survive economy mode');
  assert.equal(details.root.children[1].visible,false,'ornament can disappear in economy mode');
+ assert.equal(details.environment.washIntensity,0,'mobile eco must disable additional spotlights');
  details.setQuality('high');
  assert.equal(details.root.children[1].visible,true);
+ assert.ok(details.environment.washIntensity>0,'higher quality night uses local facade light');
  details.dispose();
  assert.equal(vip.children.length,0);
  assert.ok(owned.length>=8);
