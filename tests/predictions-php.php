@@ -52,6 +52,18 @@ check(count($service->personal(2,$now)['history'])===0,'history isolated by veri
 $sum=$db->query('SELECT event_id,COUNT(*) AS c,SUM(delta) AS s FROM prediction_journal GROUP BY event_id')->fetchAll(PDO::FETCH_ASSOC);
 foreach($sum as $event){check((int)$event['c']===2 && (int)$event['s']===0,'double entry invariant: '.$event['event_id']);}
 $race2=$service->race('2026-11-05',603);
+// Force a SQL error mid-transaction. Neither ticket nor grant nor stake can survive.
+$db->exec("CREATE TRIGGER deny_user2_stake BEFORE INSERT ON prediction_journal WHEN NEW.event_id LIKE 'STAKE:%' AND NEW.account_key='user:2' BEGIN SELECT RAISE(ABORT,'forced crash'); END");
+try {
+ $service->confirm(2,['race_id'=>$race2['race_id'],'modality'=>'winner',
+   'picks'=>[$race2['runners'][0]],'stake'=>22,'idempotency_key'=>key(9)],$race2['start_at']-50);
+ throw new RuntimeException('Expected simulated storage failure');
+} catch(PDOException $expected) {
+ check(str_contains($expected->getMessage(),'forced crash'),'mid-transaction rollback error');
+}
+check((int)$db->query('SELECT COUNT(*) FROM predictions WHERE user_id=2')->fetchColumn()===0,'no dangling ticket on SQL error');
+check((int)$db->query('SELECT COUNT(*) FROM prediction_accounts WHERE user_id=2')->fetchColumn()===0,'no phantom first grant on SQL error');
+$db->exec('DROP TRIGGER deny_user2_stake');
 $other=$service->confirm(2,['race_id'=>$race2['race_id'],'modality'=>'winner','picks'=>[$race2['runners'][0]],'stake'=>22,'idempotency_key'=>key(9)],$race2['start_at']-50);
 check($service->voidRace($race2['race_id'],$race2['start_at']-1)===1,'void refunds one ticket');
 check($service->voidRace($race2['race_id'],$race2['start_at']-1)===0,'void idempotent');
