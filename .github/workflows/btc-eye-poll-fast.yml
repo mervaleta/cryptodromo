@@ -1,5 +1,7 @@
 name: BTC Eye + Poll · real WebGL closeup fast
 on:
+  push:
+    branches: [work/btc-face-restore-visual-20261105]
   pull_request:
     paths:
       - 'racers/btc-maya-*'
