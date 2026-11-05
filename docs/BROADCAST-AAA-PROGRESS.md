@@ -61,3 +61,15 @@ Todos los cambios son **de presentación**. No se editaron resultados, perfiles 
 ### Criterio de salida
 
 Triple canal visible; cambios de cámara legibles; cambios de líder relatados solo cuando suceden; audio sin superposición; clasificación y replay idénticos al fixture; presentación móvil funcional; capturas y métricas de rendimiento; verificación de publicación pública. Todo otro resultado es una **iteración parcial**.
+
+## Iteración 1b · robustez de sintonización (mismo PR #117)
+
+**Defecto observado en el controlador:** `assets/crypto-venue.js` consideraba válida y visible una emisión con la sola existencia de `#raceCanvas`; esa etiqueta aparece antes de que `bootHorses()` termine de cargar las doce mallas. En equipos lentos, la transición podía quitar el velo demasiado temprano y exponer una escena vacía. En la rama corregida:
+
+- `hasRaceDocument()` confirma la identidad del HTML (y sigue rechazando hubs anidados).
+- `validFrameDoc()` espera el indicador de arranque `#start.disabled === false` que `scene.js` activa **después** de preparar los doce modelos.
+- En `load`, un HTML válido pero aún no listo espera al sondeo existente; **no** salta automáticamente al fallback como si fuera un archivo equivocado.
+- Si el estado de escena empieza con `ERROR`, la TV presenta un mensaje explícito en lugar de dar por exitosa la emisión.
+- `stadiums/crypto/live/index.html` invalida la caché del controlador y `tests/tv-transition-watchdog.mjs` documenta el contrato.
+
+**QA:** PR #117 y workflows en GitHub Actions; solo se debe registrar PASS al comprobar una ejecución del último commit. No se ha probado aún un ciclo completo ni un equipo móvil real.
