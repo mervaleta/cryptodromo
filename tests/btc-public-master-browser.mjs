@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
-const BUILD='btc-maya-face-native-gallop-20261105-v16',dir='artifacts/btc-live';mkdirSync(dir,{recursive:true});
+const BUILD='btc-v20b-native-hind-gallop-20261105',dir='artifacts/btc-live';mkdirSync(dir,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:920,height:700},deviceScaleFactor:1,reducedMotion:'no-preference'});
 const faults=[];page.on('pageerror',e=>faults.push(e.message));
@@ -17,6 +17,8 @@ try{
  await page.goto(root+'#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  let live=await ready();
  assert.equal(live.heroGroom.originalRig,true);
+ assert.equal(live.heroGroom.hindRestoration?.sameOriginalSkeleton,true,'The published hind limbs must be the authored native GLB rig');
+ assert.ok(live.heroGroom.hindRestoration?.donorHindTriangles>280,'Actual original GLB hind geometry must be served');
  assert.equal(live.heroGroom.hindVolumeConsistent,true);
  assert.ok(live.heroGroom.hindCrossSideAfter<live.heroGroom.hindCrossSideBefore);
  await page.goto(root+'?btcCapture=1&btcFreeze=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
