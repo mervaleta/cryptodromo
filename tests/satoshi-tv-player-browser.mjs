@@ -89,7 +89,7 @@ try{
  }
 
  const desktop=await browser.newContext({viewport:{width:1560,height:930},deviceScaleFactor:1});
- const page=await openPage(desktop,'/stadiums/crypto/live/?track=muybridge');
+ const page=await openPage(desktop,'/stadiums/crypto/live/?track=muybridge&tv-qa=1');
  const player=await requirePlayer(page,'muybridge');
  await page.screenshot({path:'artifacts/satoshi-tv/live-main-channel.png'});
  assert.equal(await page.locator('.tv-channel').count(),3);
@@ -117,6 +117,10 @@ try{
  await page.waitForFunction(()=>!document.querySelector('#tv-player').classList.contains('is-switching'),
   null,{timeout:12000});
  assert.equal(await page.locator('[data-tv-switch="vint-cerf"]').getAttribute('aria-pressed'),'true');
+ const channelMetrics=await page.evaluate(()=>window.__satoshiTvQA?.snapshot().tuning);
+ assert.equal(channelMetrics.successfulTuneCount,3,'All three 3D channels must report prepared scene');
+ assert.equal(channelMetrics.failedTuneCount,0,'Normal 3-channel zapping must not trigger station errors');
+ assert.ok(Number.isFinite(channelMetrics.lastTuneLatencyMs),'Last channel tuning duration must be measurable');
  await desktop.close();
 
  // Replay navigation from actual archive must open the SAME single player.
@@ -162,9 +166,11 @@ try{
  const broken=await browser.newContext({viewport:{width:1000,height:780}});
  await broken.route(/\/(stadiums\/crypto\/broadcast|visual-lab)\/index\.html/,route=>
   route.fulfill({status:200,contentType:'text/html',body:liveHtml}));
- const faulty=await openPage(broken,'/stadiums/crypto/live/');
+ const faulty=await openPage(broken,'/stadiums/crypto/live/?tv-qa=1');
  await faulty.locator('#tv-error').waitFor({state:'visible',timeout:30000});
  assert.equal(await faulty.locator('#stadium-broadcast').getAttribute('src'),'about:blank');
+ assert.ok((await faulty.evaluate(()=>window.__satoshiTvQA?.snapshot().tuning.failedTuneCount))>=1,
+  'Broken provider must record tune error, release iframe and offer retry');
  assert.equal(faulty.frames().length,2);
  await faulty.screenshot({path:'artifacts/satoshi-tv/error-no-recursion.png'});
  await broken.close();
