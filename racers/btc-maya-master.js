@@ -502,8 +502,8 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
    // Eye cornea calibrated to Maya's actual outer socket, x approximately .00240.
     // Ellipsoidal ocular surface follows the ORIGINAL eye aperture,
     // centered ~x=.00145,y=-.02831,z=.04268, not the outer cheek.
-    xyz.push(side*.00185+x*1.28,-.02831+y*1.78,.04268+z*1.86);
-   const nx=normal.getX(i)/1.28,ny=normal.getY(i)/1.78,
+    xyz.push(side*.00172+x,-.02831+y*1.78,.04268+z*1.86);
+   const nx=normal.getX(i),ny=normal.getY(i)/1.78,
      nz=normal.getZ(i)/1.86,nl=Math.hypot(nx,ny,nz)||1;
     normals.push(nx/nl,ny/nl,nz/nl);
    local.push(x/radius,y/radius,z/radius);
@@ -527,8 +527,8 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const irisColor=new THREE.Color(chosen);
  const material=new THREE.MeshPhysicalMaterial({
   name:'BTC inset natural eye globes with independently colored irises',
-  color:'#33211a',metalness:0,roughness:.27,
-  clearcoat:.62,clearcoatRoughness:.19,side:THREE.FrontSide
+  color:'#493021',metalness:0,roughness:.34,
+  clearcoat:.38,clearcoatRoughness:.29,side:THREE.FrontSide
  });
  material.onBeforeCompile=shader=>{
   shader.uniforms.btcIrisColor={value:irisColor};
@@ -539,7 +539,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCEyeRest;\nvarying float vBTCEyeSide;\nuniform vec3 btcIrisColor;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x*vBTCEyeSide;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=btcIrisColor*mix(.72,1.12,smoothstep(.22,1.,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
+   '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x*vBTCEyeSide;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=(btcIrisColor*.74+vec3(.075,.036,.019))*mix(.86,1.16,smoothstep(.22,1.,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
  };
  material.customProgramCacheKey=()=> 'btc-three-inset-equine-eyes-20261104-v2';
  const mesh=new THREE.SkinnedMesh(geometry,material);
@@ -628,7 +628,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:true,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.00185,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
+   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.00172,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
    eyeAssembly:face.eyeAssembly,
    integratedEyeRims:face.integratedEyeRims,
