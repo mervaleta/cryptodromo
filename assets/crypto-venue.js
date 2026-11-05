@@ -77,7 +77,20 @@ const setError=detail=>{
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
 };
-const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=photo-finish-tv-params-20261104-v1',{cache:'no-store',redirect:'follow'}));
+// Bound each HTML probe including response-body transfer. If Hostinger stalls,
+// the TV eventually offers retry rather than spinning forever before iframe load.
+const PROBE_TIMEOUT_MS=12000;
+const probe=()=>findRacePlayerSource(async path=>{
+ const controller=new AbortController();
+ const deadline=setTimeout(()=>controller.abort(),PROBE_TIMEOUT_MS);
+ try{
+  const response=await fetch(path+'?build=photo-finish-tv-params-20261104-v1',{
+   cache:'no-store',redirect:'follow',signal:controller.signal
+  });
+  const html=response.ok?await response.text():'';
+  return {ok:response.ok,text:async()=>html};
+ }finally{clearTimeout(deadline);}
+});
 function setUrl(){
  const url=new URL(location.href);
  url.searchParams.set('track',active);
