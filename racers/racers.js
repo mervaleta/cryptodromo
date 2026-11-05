@@ -55,7 +55,7 @@ function renderBTCRevision(){
   return;
  }
  header.textContent='Maestro BTC · build '+btcRevision.buildId+(btcRevision.visualPass?' · '+btcRevision.visualPass:'');
- status.textContent=(btcRevision.status==='verified'?'Verificado':btcRevision.status==='pending_deploy'?'Pendiente de despliegue':'En revisión, defectos pendientes')+' · '+btcRevision.updatedAt;
+ status.textContent=(btcRevision.status==='verified'?'Verificado':btcRevision.status==='pending_deploy'?'Pendiente de despliegue':'En revisión, defectos pendientes')+' · '+btcRevision.updatedAt+(btcRevision.statusLabel?' · '+btcRevision.statusLabel:'');
  const items=(Array.isArray(btcRevision.openIssues)?btcRevision.openIssues:[]).map(issue=>{
   const li=document.createElement('li');li.textContent=issue;return li;
  });
