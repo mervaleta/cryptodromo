@@ -41,10 +41,10 @@ const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='B
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
 // The approved V5 code was never deleted: restore its rigged groom + spring motion on BTC. Maya stays debug-only.
 const requestedBTCMaster=new URLSearchParams(location.search).get('btcMaster');
-document.body.classList.toggle('btc-maya-debug',requestedBTCMaster==='maya');
+document.body.classList.toggle('btc-maya-debug',requestedBTCMaster!=='original');
 // V5 uses original GLB bones + authored Gallop and restores volumetric mane/tail.
 // ?btcMaster=original is an explicit rollback; malformed Maya is diagnostic-only.
-let atelierVariant=requestedBTCMaster==='maya'?'maya':requestedBTCMaster==='original'?'original':'enhanced';
+let atelierVariant=requestedBTCMaster==='original'?'original':requestedBTCMaster==='v5'?'enhanced':'maya';
 let btcRevision=null;
 function renderBTCRevision(){
  const panel=$('#btc-master-revision');
@@ -67,7 +67,7 @@ function renderBTCRevision(){
 }
 async function loadBTCRevision(){
  try{
-  const response=await fetch('/racers/btc-master-revision.json?v=btc-v5-neck-tail-premium-20261105-v4',{cache:'no-store'});
+  const response=await fetch('/racers/btc-master-revision.json?v=btc-maya-face-native-gallop-20261105-v16',{cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
@@ -148,7 +148,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-v5-neck-tail-premium-20261105-v4':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-maya-face-native-gallop-20261105-v16':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -213,7 +213,7 @@ import(previewModule).then(({createPreview})=>{
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
   window.__cryptodromoBTCAtelierSetPose=n=>preview?.setPose?.(n);
  }
- $('#preview-state').textContent=btcAtelier?'BTC · V5 ACTUALIZADO · CUELLO Y COLA CORREGIDOS · GALOPE NATIVO':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · MAYA V16 · GALOPE NATIVO · CANDIDATO VISUAL':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;

@@ -180,3 +180,11 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Se conserva intacto el hocico, los ojos, todas las patas, pesos originales y clip Gallop. Otros 99 corredores, cómputo de carrera y odds no modificados.
 - El visor muestra versión de revisión y no `MODELO MAESTRO` ni promesa AAA. Se agregó `tests/btc-hair-root-geometry.mjs`: prueba de que todas las raíces geométricas de la cola quedan debajo de la superficie de la grupa en el GLB fuente y comparten exactamente el esqueleto nativo.
 - Criterio pendiente: capturas WebGL reales de los cinco ángulos y 16 fases, y aprobación explícita del usuario. **No hay aprobación de modelo maestro.**
+
+## 2026-11-05 · `btc-maya-face-native-gallop-20261105-v16` · restauración anatómica Maya 2017 (candidato publicado, no AAA)
+- Se dejó de seleccionar el GLB V5 agujereado como apariencia por defecto de BTC y se recuperó el sculpt Maya 2017 del PR #100, partiendo del mejor candidato del 4 de noviembre (#89).
+- Se conservaron el esqueleto original de 50 huesos y el clip Gallop; se recuperó el corrector V13b para evitar pesos cruzados entre ambas patas posteriores y se retiró la deformación sinusoide aditiva de músculos.
+- Se retiraron párpados flotantes del candidato antiguo y se ajustaron dos ojos esféricos mate con iris editable y pupila negra, encajados en órbitas reales. Hocico, ollares y mandíbula son malla Maya, no pintura ni render.
+- Crin y cola: raíz pegada a la línea cervical, mechones con menor arco y longitud superficial. El cuerpo, crin, ojos y Gallop son animados en Three.js, no imágenes estáticas.
+- En `/racers/#BTC` se selecciona Maya V16 por defecto. Reversión instantánea: `?btcMaster=v5#BTC` o `?btcMaster=original#BTC`; ningún otro símbolo se modifica.
+- Pruebas reales Chromium/WebGL previas: rama work/btc-face-restore-visual-20261105, run 42041368297 (contorno/ojos/hocico), 42041764109 (16 fases y 6 cámaras; revisión en curso al integrar). Esta no es aprobación estética ni certificación de Hostinger. Candidato needs_visual_qa, no modelo maestro, no replicación.

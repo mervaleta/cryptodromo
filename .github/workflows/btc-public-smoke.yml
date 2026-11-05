@@ -1,11 +1,8 @@
-name: Verify BTC V5 v4 actually on Hostinger with real WebGL
+name: BTC Maya V16 · verify Hostinger, Gallop and six real WebGL cameras
 on:
   push:
     branches: [main]
-    paths:
-      - 'racers/**'
-      - 'tests/btc-public-master-browser.mjs'
-      - '.github/workflows/btc-public-smoke.yml'
+    paths: ['racers/**','tests/btc-public-master-browser.mjs','.github/workflows/btc-public-smoke.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,46 +14,38 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
-      - name: Verify six exact public files, not stale cached source
+      - name: Verify effective Hostinger build rather than just GitHub
         shell: bash
         run: |
           set -euo pipefail
           ORIGIN='https://race.cryptodromo.com/racers'
-          for attempt in $(seq 1 20); do
-            echo "Checking Hostinger BTC V5 v4 deployment: $attempt/20"
+          for attempt in $(seq 1 24); do
             ok=true
-            for module in index.html racers.js btc-atelier-preview.js btc-hero-v5.js btc-neck-crest-repair.js btc-silk-shell-v5.js btc-master-revision.json; do
-              if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "$ORIGIN/$module?deploy=$GITHUB_SHA-$attempt" -o "/tmp/btc-$module"; then
-                ok=false; break
-              fi
+            for module in index.html racers.js btc-atelier-preview.js btc-maya-master.js btc-maya-groom.js btc-maya-face-details.js btc-maya-pose-volume.js btc-master-revision.json; do
+              if ! curl -fLsS --connect-timeout 10 --max-time 30 "$ORIGIN/$module?deploy=$GITHUB_SHA-$attempt" -o "/tmp/btc-$module"; then ok=false;break;fi
             done
             if [[ "$ok" == true ]] &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-index.html &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-racers.js &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-btc-atelier-preview.js &&
-               grep -Fq 'closeBTCNeckCrest' /tmp/btc-btc-hero-v5.js &&
-               grep -Fq 'btc-crest-closure-20261105-v1' /tmp/btc-btc-neck-crest-repair.js &&
-               grep -Fq '.01640+' /tmp/btc-btc-silk-shell-v5.js &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-btc-master-revision.json; then
-              echo 'HOSTINGER_ACTUAL_BTC_V4_MODULES_PUBLISHED'
+               grep -Fq 'btc-maya-face-native-gallop-20261105-v16' /tmp/btc-index.html &&
+               grep -Fq 'btc-maya-face-native-gallop-20261105-v16' /tmp/btc-racers.js &&
+               grep -Fq 'btc-maya-face-native-gallop-20261105-v16' /tmp/btc-btc-atelier-preview.js &&
+               grep -Fq 'btc-maya-face-native-gallop-20261105-v16' /tmp/btc-btc-maya-master.js &&
+               grep -Fq 'btc-maya-face-native-gallop-20261105-v16' /tmp/btc-btc-master-revision.json; then
+              echo 'HOSTINGER_BTC_MAYA_V16_EFFECTIVE_BUILD_CONFIRMED'
               break
             fi
-            if [[ "$attempt" == 20 ]]; then
-              echo '::error::Hostinger has NOT deployed the exact v4 BTC module chain'
-              exit 1
-            fi
+            if [[ "$attempt" == 24 ]]; then echo '::error::Hostinger has not delivered BTC Maya V16'; exit 1;fi
             sleep 15
           done
-      - name: Install Chromium headless real GPU fallback
+      - name: Install Chromium for real browser rendering
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
           npx playwright install chromium --with-deps
-      - name: Capture user page and full real native galope from five cameras
+      - name: Capture canonical live BTC and 16-phase real Gallop
         run: node tests/btc-public-master-browser.mjs
-      - name: Store QA screenshots, not a false AAA certificate
+      - name: Retain visual evidence for owner comparison, NOT AAA approval
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-v4-hostinger-public-webgl-visual-qa
+          name: btc-maya-v16-hostinger-16phase-sixcam-real-webgl
           path: artifacts/btc-live/*.png
           if-no-files-found: warn

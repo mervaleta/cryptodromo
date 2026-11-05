@@ -8,7 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-restore-v5-hair-gallop-20261105-v1';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-maya-face-native-gallop-20261105-v16';
 import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-restore-v5-hair-gallop-20261105-v1';
 
 const CAMERA_POSITIONS={
@@ -24,7 +24,7 @@ const stageParams=new URLSearchParams(location.search);
 let btcPass=Math.floor(clamp(stageParams.get('btcPass')??10,1,10));
 const fixedFrame=stageParams.get('btcFreeze')==='1';
 export function createPreview(canvas,onFailure=()=>{}){
- const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
+ const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:stageParams.get('btcCapture')==='1'});
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -58,7 +58,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  let terrainSurface='dirt',terrainWetness=0;
 
  let heldPoseTime=0,heldPoseIndex=null;
- let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='original'?'original':'enhanced',renderedSymbol=null,renderedVariant=null,frameHeld=false;
+ let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='original'?'original':stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#30261f';
  const resize=()=>{

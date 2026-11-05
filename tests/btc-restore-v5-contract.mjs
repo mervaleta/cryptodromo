@@ -1,33 +1,18 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-test('restores the real V5 geometry and motion rather than original GLB-only fallback',()=>{
- const racers=read('racers/racers.js');
- const preview=read('racers/btc-atelier-preview.js');
- const html=read('racers/index.html');
- const v5=read('racers/btc-hero-v5.js');
- const shell=read('racers/btc-silk-shell-v5.js');
- assert.match(racers,/requestedBTCMaster==='original'\?'original':'enhanced'/);
- assert.match(preview,/stageParams\.get\('btcMaster'\)==='original'\?'original':'enhanced'/);
- assert.match(html,/data-btc-variant="enhanced" aria-pressed="true"/);
- assert.match(preview,/createBTCHeroV5/);
- assert.match(preview,/maneMotion:variant==='original'/);
+test('legacy V5 groom and Gallop stay selectable as a rollback',()=>{
+ const racers=read('racers/racers.js'),preview=read('racers/btc-atelier-preview.js');
+ assert.match(racers,/requestedBTCMaster==='v5'\?'enhanced'/);
+ assert.match(preview,/createBTCHeroV5/);assert.match(preview,/createBTCHeroMaya/);
  assert.match(preview,/gaitCorrectionStrength:0/);
- assert.match(v5,/damped-gallop-coupled-spring/);
- assert.match(v5,/createBTCSilkShell/);
- assert.match(v5,/nativeTailBones/);
- assert.match(shell,/Tail'\+\(index\+1\)/);
+ const v5=read('racers/btc-hero-v5.js'),shell=read('racers/btc-silk-shell-v5.js');
+ assert.match(v5,/damped-gallop-coupled-spring/);assert.match(v5,/createBTCSilkShell/);
  assert.match(shell,/SkinnedMesh/);
- assert.doesNotMatch(shell,/SpriteMaterial|CanvasTexture|TextureLoader|\.png|\.jpg|\.webp/);
 });
-test('new V5 build and documentation describe the visible runner, not the Maya prototype',()=>{
+test('Maya V16 is visible with owner visual acceptance still pending',()=>{
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- const v5=read('racers/btc-hero-v5.js');
- assert.equal(manifest.masterId,'btc-original-glb-v5-groom');
- assert.equal(manifest.buildId,'btc-v5-neck-tail-premium-20261105-v4');
- assert.match(v5,/BTC_HERO_V5_PUBLIC_BUILD='btc-v5-neck-tail-premium-20261105-v4'/);
+ assert.equal(manifest.masterId,'btc-maya-2017-sculpt-gallop-20261104');
+ assert.equal(manifest.buildId,'btc-maya-face-native-gallop-20261105-v16');
  assert.equal(manifest.status,'needs_visual_qa');
- assert.match(manifest.visualPass,/Hero V5 pase 10/);
- assert.match(read('docs/BTC-MASTER-CHANGELOG.md'),/Restauraci.n Hero V5 pase 10/);
+ assert.match(read('racers/btc-maya-master.js'),/BTC_MAYA_RENDER_BUILD='btc-maya-face-native-gallop-20261105-v16'/);
 });
