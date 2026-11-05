@@ -2,6 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const src=readFileSync(new URL('../assets/crypto-venue.js',import.meta.url),'utf8');
+const immutable=readFileSync(new URL('../assets/crypto-venue-aaa-20261105-r1.js',import.meta.url),'utf8');
+test('immutable TV controller retains all features and LIVE points to cache-safe path',()=>{
+ assert.match(immutable,/^\/\* Immutable TV entrypoint:/);
+ assert.equal(immutable.slice(immutable.indexOf('\n')+1),src,'CDN-safe copy diverged from the tested canonical controller');
+ const live=readFileSync(new URL('../stadiums/crypto/live/index.html',import.meta.url),'utf8');
+ assert.match(live,/<script type="module" src="\/assets\/crypto-venue-aaa-20261105-r1\.js"><\/script>/);
+ assert.doesNotMatch(live,/<script[^>]*src="\/assets\/crypto-venue\.js/);
+});
 test('channel fade is always released once a verified race canvas is present',()=>{
  assert.match(src,/function signalReady\(expectedSerial=serial\)/);
  assert.match(src,/if\(expectedSerial!==serial\)return false/);
