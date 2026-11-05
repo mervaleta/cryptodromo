@@ -6,7 +6,7 @@
  */
 import * as THREE from 'three';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCSilkShell} from './btc-silk-shell-v5.js?v=btc-silk-shell-v5-20261103';
+import {createBTCSilkShell} from './btc-silk-shell-v5.js?v=btc-silk-shell-v5-luxury-20261105-v2';
 export const BTC_HERO_V5='btc-v5-motion-study-20261103';
 export const BTC_HERO_V5_PUBLIC_BUILD='btc-v5-luxury-profile-20261105-v2';
 const PI=Math.PI,TAU=PI*2;
