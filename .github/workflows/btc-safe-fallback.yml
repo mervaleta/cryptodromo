@@ -8,6 +8,8 @@ on:
       - 'racers/btc-atelier-preview.js'
       - 'racers/btc-master-revision.json'
       - 'tests/btc-safe-fallback-contract.mjs'
+      - 'tests/btc-native-gallop-reference-contract.mjs'
+      - 'race-lab/source/src/horse.js'
       - '.github/workflows/btc-safe-fallback.yml'
 permissions:
   contents: read
@@ -23,4 +25,5 @@ jobs:
           node --check racers/btc-maya-master.js
           node --check racers/racers.js
           node --check racers/btc-atelier-preview.js
-          node --test tests/btc-safe-fallback-contract.mjs tests/btc-horse-atelier-contract.mjs tests/btc-v12-anatomy-contract.mjs
+          node --check race-lab/source/src/horse.js
+          node --test tests/btc-native-gallop-reference-contract.mjs tests/btc-safe-fallback-contract.mjs tests/btc-horse-atelier-contract.mjs tests/btc-v12-anatomy-contract.mjs
