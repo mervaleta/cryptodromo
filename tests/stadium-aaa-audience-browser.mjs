@@ -8,6 +8,13 @@ await mkdir('artifacts/stadium-aaa-audience',{recursive:true});
 try {
  const page=await browser.newPage({viewport:{width:1600,height:940}});
  const errors=[];
+ // QA may run in TV/embed mode where production controls are hidden, but present.
+ const setControl=async (id,value)=>page.evaluate(({id,value})=>{
+  const control=document.getElementById(id);
+  if(!control)throw new Error('Missing control: '+id);
+  control.value=value;
+  control.dispatchEvent(new Event('change',{bubbles:true}));
+ },{id,value});
  page.on('pageerror',e=>errors.push(e.message));
  const response=await page.goto(new URL('/visual-lab/?track=genesis&audience-qa=1',origin).toString(),{waitUntil:'domcontentloaded',timeout:45000});
  assert.equal(response?.status(),200);
@@ -17,17 +24,17 @@ try {
  assert.equal(first.layout,'straight');
  assert.equal(first.groups.find(x=>x.name.endsWith('arms')).count,first.crowd*2);
  assert.ok(first.drawCalls>0);
- await page.selectOption('#camera','overview');
- await page.selectOption('#weather','noon');
+ await setControl('camera','overview');
+ await setControl('weather','noon');
  await page.waitForTimeout(1200);
  await page.screenshot({path:'artifacts/stadium-aaa-audience/01-overview-day.png'});
- await page.selectOption('#camera','rail');
+ await setControl('camera','rail');
  await page.waitForTimeout(1000);
  await page.screenshot({path:'artifacts/stadium-aaa-audience/02-rail-day.png'});
- await page.selectOption('#weather','night');
+ await setControl('weather','night');
  await page.waitForTimeout(1200);
  await page.screenshot({path:'artifacts/stadium-aaa-audience/03-rail-night.png'});
- await page.selectOption('#layout','oval');
+ await setControl('layout','oval');
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
  await page.screenshot({path:'artifacts/stadium-aaa-audience/04-oval-clearance.png'});
  assert.deepEqual(errors,[]);
