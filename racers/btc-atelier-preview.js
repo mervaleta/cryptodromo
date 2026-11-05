@@ -82,7 +82,10 @@ export function createPreview(canvas,onFailure=()=>{}){
   try{
    const next=await createHorse({
     coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
-    mode:paused?'Idle':'Gallop',maneMotion:false
+    mode:paused?'Idle':'Gallop',maneMotion:false,
+    // Three.js Horse.glb reference: evaluate the authored gait as one coherent clip.
+    // No secondary gaitRefiner joint offsets on the BTC anatomy QA viewer.
+    gaitCorrectionStrength:0
    });
    if(disposed||request!==selection){next.dispose();return;}
    next.root.scale.setScalar(.78);
