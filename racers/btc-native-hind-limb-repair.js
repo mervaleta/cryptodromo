@@ -88,8 +88,12 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
  if(!original.skeleton?.bones.some(b=>b.name.startsWith('BackLowerLeg')))
   throw Error('BTC V20 requires original GLB Gallop hock joints');
  const hoof=originalHoof(root);
- if(!hoof||hoof.skeleton!==original.skeleton)
-  throw Error('BTC V20 requires original GLB hoof mesh on SAME rig');
+ if(!hoof||hoof.skeleton?.bones?.length!==original.skeleton.bones.length||
+  hoof.skeleton.bones.some((bone,i)=>bone.name!==original.skeleton.bones[i]?.name))
+  throw Error('BTC V20 requires original GLB hoof mesh with identical bone order');
+ // GLTFLoader creates separate Skeleton wrapper objects for sibling GLB
+ // primitives even though both share the same 50 authored joint names.
+ // Bind ALL donors to the Main skeleton to ensure matrix parity.
  const crop=cropMayaHind(anatomy);
  let donor=null,donorHooves=null,bodyCut=null,hoovesCut=null;
  try{
@@ -108,7 +112,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    throw Error('BTC V20 native donor unexpectedly incomplete: '+bodyCut.triangles+'/'+hoovesCut.triangles);
   donor=attachNativeDonor(original,bodyCut.geometry,anatomy.materials[0],
    'BTC V20 original Gallop hind limbs with original skin weights');
-  donorHooves=attachNativeDonor(hoof,hoovesCut.geometry,anatomy.materials[1],
+  donorHooves=attachNativeDonor(original,hoovesCut.geometry,anatomy.materials[1],
    'BTC V20 original Gallop posterior hoof keratin');
  }catch(e){
   donor?.removeFromParent();donorHooves?.removeFromParent();
