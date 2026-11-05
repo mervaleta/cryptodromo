@@ -3,10 +3,11 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 
 const origin=process.env.CRP_BASE_URL||'https://race.cryptodromo.com';
-const stamp='satoshi-tv-deploy-20261104';
+const stamp='cryptodromo-force-deploy-20261105-1029';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const resources=[
  ['/stadiums/crypto/live/',/Cryptódromo\s*<em>TV/],
+ ['/stadiums/crypto/live/',/CRP-DEPLOY-MAIN-20261105-1029-ART/],
  ['/stadiums/crypto/live/index.html',/id="tv-player"/],
  ['/stadiums/crypto/broadcast/index.html',/id="raceCanvas"/],
  ['/visual-lab/index.html',/id="raceCanvas"/],
