@@ -7,6 +7,9 @@ test('channel fade is always released once a verified race canvas is present',()
  assert.match(src,/if\(expectedSerial!==serial\)return false/);
  assert.match(src,/if\(!validFrameDoc\(\)\)return false/);
  assert.match(src,/frameReadySerial===expectedSerial/);
+ assert.match(src,/function connectReadyObserver\(expectedSerial\)/);
+ assert.match(src,/readyObserver\.observe\(start,\{attributes:true,attributeFilter:\['disabled'\]\}\)/);
+ assert.match(src,/if\(frameReadySerial===expectedSerial\)\{uncover\(\);return true;\}/);
  assert.match(src,/setTimeout\(release,350\)/);
  assert.match(src,/requestAnimationFrame\(release\)/);
  assert.match(src,/try\{\s*audioButton\.disabled/);
