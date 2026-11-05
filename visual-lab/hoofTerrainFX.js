@@ -31,7 +31,7 @@ function imprintTexture(){
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number.isFinite(n)?n:a));
 const QUALITY={eco:{particles:160,rate:.22,imprints:450},balanced:{particles:480,rate:.46,imprints:950},
   cinematic:{particles:760,rate:.58,imprints:1700}};
-export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='dirt',seed=12585}={}){
+export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='dirt',seed=12585,imprintScale=1,imprintLimit=null}={}){
   const solver=createHoofContactSolver({lanes,soleThreshold:.07,releaseThreshold:.18});
   // Original Quaternius GLB contains four animated lower-leg end bones.
   // Track the rig endpoints until the BTC master publishes true sole markers.
@@ -60,6 +60,10 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     return entry.soles;
   }
   const maxMarks=1700,maxParticles=1350;
+  // A single-horse showroom should not display stadium-sized footprints.
+  const printScale=clamp(Number(imprintScale),.15,2);
+  const effectiveMarks=Number.isInteger(imprintLimit)?Math.max(4,Math.min(1700,imprintLimit)):null;
+  const markCapacity=()=>effectiveMarks===null?QUALITY[preset].imprints:Math.min(effectiveMarks,QUALITY[preset].imprints);
   const texture=imprintTexture();
   const printGeometry=new THREE.PlaneGeometry(.69,.77);
   printGeometry.rotateX(-Math.PI/2);
@@ -146,8 +150,8 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     particleGeometry.setDrawRange(0,maxLive());
     // Do not rescale existing official positioning on a quality switch.
     if(particleCursor>=maxLive())particleCursor=0;
-    markCursor%=QUALITY[preset].imprints;
-    marks.count=Math.min(marks.count,QUALITY[preset].imprints);
+    markCursor%=markCapacity();
+    marks.count=Math.min(marks.count,markCapacity());
   }
   function setWetness(n){
     wetness=clamp(n,0,1);
@@ -158,11 +162,11 @@ export function createHoofTerrainFX(scene,{lanes=12,quality='balanced',surface='
     dummy.position.set(event.x,groundY+.017,event.z);
     dummy.rotation.set(0,event.heading,0);
     const scale=profile().markScale*(.87+.17*event.pressure);
-    dummy.scale.set(.70*scale,1,.80*scale);
+    dummy.scale.set(.70*scale*printScale,1,.80*scale*printScale);
     dummy.updateMatrix();
     marks.setMatrixAt(markCursor,dummy.matrix);
-    markCursor=(markCursor+1)%QUALITY[preset].imprints;
-    marks.count=Math.min(QUALITY[preset].imprints,marks.count+1);
+    markCursor=(markCursor+1)%markCapacity();
+    marks.count=Math.min(markCapacity(),marks.count+1);
     marks.instanceMatrix.needsUpdate=true;
   }
   function emit(x,y,z,vx,vy,vz,kind){
