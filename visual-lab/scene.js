@@ -17,7 +17,7 @@ import {createSatoshiGrandstandCrowd} from './stadiumGrandstandCrowd.js?v=satosh
 import {createStraightCourseBatches,createForestBatches} from './stadiumStaticBatches.js?v=satoshi-static-batches-v1';
 import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
-import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
+import {createStadiumBackdrop} from './stadiumBackdrop.js?v=satoshi-backdrop-facades-20261105-v1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha15-runout-1';
@@ -192,7 +192,7 @@ const straightChildren=scene.children.slice(straightSceneIndex);scene.add(straig
 straightChildren.forEach(child=>straightCourse.add(child));
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
-createStadiumBackdrop(scene,{softwareGPU,mobile});
+const distantBackdrop=createStadiumBackdrop(scene,{softwareGPU,mobile});
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=softwareGPU?55:mobile?90:155,forestTrees=[];
 for(let i=0;i<treeN;i++){
@@ -210,6 +210,7 @@ if(broadcastQuery.get('stadium-perf-qa')==='1'){
  window.__cryptodromoStaticQA=Object.freeze({
   snapshot:()=>Object.freeze({
    straight:courseStaticBatches.stats,woodland:forestBatches.stats,
+   skyline:distantBackdrop.stats,
    drawCalls:renderer.info.render.calls,
    straightVisible:straightCourse.visible,treesVisible:treeGroup.visible
   })
@@ -374,6 +375,7 @@ const scenicSettings={crowd:true,trees:true,splits:true,details:true};
 function applyScenery(){
  for(const actor of crowds)actor.visible=scenicSettings.crowd;
  treeGroup.visible=scenicSettings.trees;
+ distantBackdrop.setTreeVisible(scenicSettings.trees);
  trackSplitMarkers.setVisible(scenicSettings.splits);
  liveVillage.root.traverse(object=>{
   if(/Público|audience/i.test(object.name))object.visible=scenicSettings.crowd;
@@ -839,6 +841,7 @@ function setWeather(mode){
  for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?85:0;}
  nightLights.configure({night});
  liveDistrict.setEnvironment({hour,type:wet?'rain':night?'night':'clear',wetness:trackFX.wetness});
+ distantBackdrop.setEnvironment({night,wetness:trackFX.wetness});
  liveVillage.setEnvironment({night,wetness:trackFX.wetness});
  pavilionDetail.setEnvironment({night,wetness:trackFX.wetness});
 }
@@ -942,6 +945,7 @@ function applyQualityPreset(next){
  liveVillage.setQuality(next);
  stadiumDensity.setQuality(next);
  pavilionDetail.setQuality(next);
+ distantBackdrop.setQuality(next);
  graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
   (graphicsModeSelect.value==='auto'?' · AUTO':'');
  resize();
@@ -1448,7 +1452,7 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
    })
  });
 }
-window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();grandstandCrowd.dispose();courseStaticBatches.dispose();forestBatches.dispose();},{once:true});
+window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();grandstandCrowd.dispose();courseStaticBatches.dispose();forestBatches.dispose();distantBackdrop.dispose();},{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
