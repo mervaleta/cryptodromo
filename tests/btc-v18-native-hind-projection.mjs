@@ -65,7 +65,7 @@ test('native Gallop hind leg weights stay on their OWN side; front legs unaffect
  assert.deepEqual(Array.from(weights.slice(8)),[1,0,0,0],'front leg untouched');
 });
 
-test('V18 only changes BTC's preview imports and keeps the authored Gallop clip',()=>{
+test('V18 changes only BTC preview imports and keeps the authored Gallop clip',()=>{
  const master=read('racers/btc-maya-master.js');
  assert.match(master,/projectHindWeightsFromNative\(source,skinRest,bone,weights\)/);
  assert.match(master,/gaitCorrectionStrength:0|gallopPreserved:true/);
