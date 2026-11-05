@@ -20,7 +20,8 @@ try{
    assert.equal(result.liveVIPWorldZ,-145,'real spires/roof not relocated');
    assert.equal(result.grandstandCameraZ,-119,'broadcast must look from the actual spectator bank');
    assert.equal(result.currentLayout,mode);
-   assert.ok(result.ovalClearance>25,'building still on oval backstraight');
+   assert.ok(Math.abs(result.ovalClearance-36.5)<.15,
+     'Hostinger clearance must match the real oval backstretch, not cached geometry');
    assert.ok(result.standGap>=4,'no rear spectator walkway');
    assert.ok(result.straightClearance>25);
    assert.ok(result.sBendClearance>25);
