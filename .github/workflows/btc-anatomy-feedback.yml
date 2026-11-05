@@ -1,0 +1,29 @@
+name: BTC anatomy feedback · poll, hind legs and prints
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-maya-pose-volume.js'
+      - 'racers/btc-terrain-stage.js'
+      - 'visual-lab/hoofTerrainFX.js'
+      - 'tests/btc-anatomy-feedback-contract.mjs'
+      - '.github/workflows/btc-anatomy-feedback.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  anatomy-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check anatomy, rig isolation and footprints
+        run: |
+          node --check racers/btc-maya-master.js
+          node --check racers/btc-maya-pose-volume.js
+          node --check racers/btc-terrain-stage.js
+          node --check visual-lab/hoofTerrainFX.js
+          node --test tests/btc-anatomy-feedback-contract.mjs tests/btc-v12-anatomy-contract.mjs tests/btc-horse-atelier-contract.mjs
