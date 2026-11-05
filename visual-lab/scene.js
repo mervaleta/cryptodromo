@@ -14,6 +14,7 @@ import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=satoshi-aaa-audience-20261105-v1';
 import {createSatoshiPavilionDetail} from './satoshiPavilionDetail.js?v=satoshi-aaa-pavilion-20261105-v1';
 import {createSatoshiGrandstandCrowd} from './stadiumGrandstandCrowd.js?v=satoshi-grandstand-people-20261105-v1';
+import {createStraightCourseBatches,createForestBatches} from './stadiumStaticBatches.js?v=satoshi-static-batches-v1';
 import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
@@ -174,18 +175,18 @@ for(let i=0;i<12;i++){
  const z=-14.9+i*2.65;
  box(809,.016,.027,0,.025,z,lanePaint).castShadow=false;
 }
-for(let x=-380;x<=380;x+=20)for(const z of [-17,17]){
- const slab=box(.34,.017,1.3,x,.025,z,mat('#efe4c6'));slab.castShadow=false;
-}
+// Dedicated static-mesh batches replace hundreds of individual geometry
+// allocations. Their dimensions and positions reproduce the original posts,
+// marks and fence, and they follow the straight-only visibility switch.
 function rail(z){
  for(const y of [.65,1.23])box(812,.115,.115,0,y,z,C.rail);
- for(let x=-402;x<=402;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
 }
 rail(-20.2);rail(20.2);
-// Outer track lawn, sculpted hedges and paddock fencing.
 // Turf beside the safety rail stays flush: no raised hedge blocks.
-for(let x=-399;x<=399;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
 box(812,.12,.13,0,1.25,53,C.steel);
+const courseStaticBatches=createStraightCourseBatches({
+ THREE,parent:scene,railMaterial:C.rail,steelMaterial:C.steel
+});
 const straightCourse=new THREE.Group();straightCourse.name='Straight track assets';
 const straightChildren=scene.children.slice(straightSceneIndex);scene.add(straightCourse);
 straightChildren.forEach(child=>straightCourse.add(child));
@@ -193,15 +194,26 @@ straightChildren.forEach(child=>straightCourse.add(child));
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
 createStadiumBackdrop(scene,{softwareGPU,mobile});
 const treeGroup=new THREE.Group();scene.add(treeGroup);
-const treeN=softwareGPU?55:mobile?90:155;
+const treeN=softwareGPU?55:mobile?90:155,forestTrees=[];
 for(let i=0;i<treeN;i++){
  const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-153-r()*16:132+r()*22;
  // No trees emerging through the relocated pavilion or VIP forecourt.
  if(back&&Math.abs(x)<60&&z>-181&&z<-126)continue;
- const h=5+r()*9;
- cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
- cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
- cone(h*.16,h*.53,x,h*.82,z,treeNeedle,treeGroup,7);
+ const h=5+r()*9,light=r()>.5;
+ forestTrees.push({x,z,h,light});
+}
+const forestBatches=createForestBatches({THREE,parent:treeGroup,trees:forestTrees,
+ trunkMaterial:treeTrunk,needleMaterial:treeNeedle,lightMaterial:treeLight});
+// Instrumentation only: existing racer positions, timing and result are never
+// read or changed by static-scene batching.
+if(broadcastQuery.get('stadium-perf-qa')==='1'){
+ window.__cryptodromoStaticQA=Object.freeze({
+  snapshot:()=>Object.freeze({
+   straight:courseStaticBatches.stats,woodland:forestBatches.stats,
+   drawCalls:renderer.info.render.calls,
+   straightVisible:straightCourse.visible,treesVisible:treeGroup.visible
+  })
+ });
 }
 // Alpha16: preserve Satoshi's landmark VIP pavilion but NOT its previous
 // uninterrupted 810m tribune. Three short modular stands live in Parade Village.
@@ -1429,7 +1441,7 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
    })
  });
 }
-window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();grandstandCrowd.dispose();},{once:true});
+window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();grandstandCrowd.dispose();courseStaticBatches.dispose();forestBatches.dispose();},{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
