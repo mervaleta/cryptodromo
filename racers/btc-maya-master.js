@@ -9,12 +9,13 @@ import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b';
 import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-face-native-gallop-20261105-v16';
+import {createBTCNativeHindLimbRepair} from './btc-native-hind-limb-repair.js?v=btc-v20-native-hind-gallop-20261105';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-face-native-gallop-20261105-v16';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
-export const BTC_MAYA_RENDER_BUILD='btc-maya-face-native-gallop-20261105-v16';
+export const BTC_MAYA_RENDER_BUILD='btc-v20-native-hind-gallop-20261105';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -615,6 +616,9 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  const eyes=makeAnatomicalEyes(best,skinAt,{eyeColor});
  const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions,{coatColor:anatomy.materials[0].color});
  const ears=createBTCHarmonyEars(best,{coatColor});
+ // Replace the malformed V16 hind-joint anatomy with unmodified source GLB
+ // lower limbs (the SAME geometry/weights for which Gallop was authored).
+ const hindRepair=createBTCNativeHindLimbRepair(root,best,anatomy);
  for(const h of hidden)h.obj.visible=false;
  // The original plastic eyes are hidden in favor of two inset glossy
  // equine eyes with the same skinned and animated head transform.
@@ -631,7 +635,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
-   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
+   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'original-skinned-GLB-hind-limbs-v20',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.001825,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
@@ -655,7 +659,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
   dispose(){
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
-   groom.dispose();face.dispose();ears.dispose();rumpPatch.dispose();
+   hindRepair.dispose();groom.dispose();face.dispose();ears.dispose();rumpPatch.dispose();
    eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());
