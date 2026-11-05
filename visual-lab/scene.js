@@ -12,6 +12,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=satoshi-aaa-audience-20261105-v1';
+import {createSatoshiPavilionDetail} from './satoshiPavilionDetail.js?v=satoshi-aaa-pavilion-20261105-v1';
 import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
@@ -239,6 +240,7 @@ for(const x of [-24,24]){
  cone(3.2,8.4,0,11.05,0,C.roof,tower,12);
  cyl(.11,.15,2,0,16.2,0,C.bronze,tower);
 }
+const pavilionDetail=createSatoshiPavilionDetail({THREE,parent:vip,quality:softwareGPU||mobile?'eco':'balanced'});
 function sign(text,x,y,z,w=24,h=3,parent=venue,fg='#f3ecd7',bg='#0e3028'){
  const c=document.createElement('canvas');c.width=1024;c.height=148;const ctx=c.getContext('2d');
  ctx.fillStyle=bg;ctx.fillRect(0,0,1024,148);ctx.fillStyle='#cca969';ctx.fillRect(0,0,1024,9);
@@ -822,6 +824,7 @@ function setWeather(mode){
  nightLights.configure({night});
  liveDistrict.setEnvironment({hour,type:wet?'rain':night?'night':'clear',wetness:trackFX.wetness});
  liveVillage.setEnvironment({night,wetness:trackFX.wetness});
+ pavilionDetail.setEnvironment({night,wetness:trackFX.wetness});
 }
 weatherSelect.value='auto';
 weatherSelect.addEventListener('change',()=>{setWeather(weatherSelect.value);applyLightingControls();});
@@ -922,6 +925,7 @@ function applyQualityPreset(next){
  liveDistrict.setQuality(next);
  liveVillage.setQuality(next);
  stadiumDensity.setQuality(next);
+ pavilionDetail.setQuality(next);
  graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
   (graphicsModeSelect.value==='auto'?' · AUTO':'');
  resize();
@@ -1411,11 +1415,17 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
      grandstandCameraZ:PAVILION_GRANDSTAND_CAMERA_Z,
      currentLayout:layoutMode,
      visible:pavilion.visible,
-     finishMarkerVisible:finishSign.visible
+     finishMarkerVisible:finishSign.visible,
+     detailVersion:pavilionDetail.stats.version,
+     detailBatches:pavilionDetail.stats.batches,
+     detailInstances:pavilionDetail.stats.instances,
+     detailSupported:pavilionDetail.stats.foundationSupported,
+     detailBounds:pavilionDetail.stats.bounds,
+     detailNight:pavilionDetail.environment.night
    })
  });
 }
-window.addEventListener('pagehide',()=>hoofFX.dispose(),{once:true});
+window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();},{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
