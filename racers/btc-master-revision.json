@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-v20-native-hind-gallop-20261105",
+  "buildId": "btc-v20b-native-hind-gallop-20261105",
   "status": "needs_visual_qa",
   "statusLabel": "Candidato BTC V20 exclusivo en PR sin fusionar: patas traseras originales del GLB original riggeado en el Gallop original, sustituyendo las patas deformadas de Maya 2017. Capturas reales Chromium/WebGL pendientes de revisión. No publicado, no AAA.",
   "updatedAt": "2026-11-05",
