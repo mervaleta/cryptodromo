@@ -10,7 +10,7 @@ try{
  const page=await browser.newPage({viewport:{width:1350,height:780},deviceScaleFactor:1});
  const errors=[];
  page.on('pageerror',error=>errors.push(error.message));
- const response=await page.goto(new URL('/stadiums/crypto/broadcast/index.html?track=muybridge&hoof-qa=1',base),{
+ const response=await page.goto(new URL('/stadiums/crypto/broadcast/index.html?track=muybridge&hoof-qa=1',base).toString(),{
   waitUntil:'domcontentloaded',timeout:45000
  });
  assert.equal(response?.status(),200);
