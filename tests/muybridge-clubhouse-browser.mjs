@@ -27,6 +27,12 @@ try{
    assert.ok(result.sBendClearance>25);
    assert.equal(result.finishMarkerVisible,mode==='straight');
    assert.equal(result.visible,true);
+   assert.equal(result.detailVersion,'satoshi-vip-architecture-20261105-v1');
+   assert.equal(result.detailSupported,true,'upper floor must have real ground supports');
+   assert.ok(result.detailBatches>=8 && result.detailBatches<=12,'draw-call budget');
+   assert.ok(result.detailInstances>100,'building contains actual modelled elements');
+   assert.ok(result.detailBounds.minZ>=-13.5 && result.detailBounds.maxZ<=15.5,
+     'architectural detail may not escape the established pavilion/forecourt footprint');
    // LIVE can disable manual camera dropdown while following a broadcast.
    // For screenshot QA change its value without waiting for user enablement.
    await page.evaluate(()=>{
@@ -38,6 +44,16 @@ try{
    });
    await page.waitForTimeout(900);
    await page.screenshot({path:'/tmp/muybridge-clubhouse-'+id+'.png'});
+   // Camera and lighting are the real controls used by the LIVE page, not
+   // synthetic render images. The select may be hidden in TV/embed mode.
+   await page.evaluate(()=>{
+     const weather=document.getElementById('weather');
+     if(!weather)throw new Error('Missing weather control');
+     weather.value='night';weather.dispatchEvent(new Event('change',{bubbles:true}));
+   });
+   await page.waitForFunction(()=>window.__cryptodromoPavilionQA.snapshot().detailNight===true);
+   await page.waitForTimeout(800);
+   await page.screenshot({path:'/tmp/muybridge-clubhouse-'+id+'-night.png'});
    console.log('CLUBHOUSE_QA_OK',JSON.stringify({id,layout:mode,worldZ:result.liveVIPWorldZ,
      ovalClearance:result.ovalClearance}));
  }
