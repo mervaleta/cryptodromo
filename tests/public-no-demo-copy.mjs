@@ -60,3 +60,26 @@ test('Key public pages retain transparent synthetic-price disclosures',()=>{
  assert.doesNotMatch(broadcast,/<b>● DEMO<\/b>/);
  assert.doesNotMatch(readFileSync(join(ROOT,'visual-lab/index.html'),'utf8'),/<b>● DEMO<\/b>/);
 });
+
+// Every public entrypoint must reference this copy revision, not a stale
+// browser-cached script URL from the previous branding.
+test('public race entrypoints use cache-busted scripts for cleaned broadcast copy',()=>{
+ const expected={
+  'stadiums/crypto/live/index.html':'/assets/crypto-venue.js?v=copy-clean-20261105-v1',
+  'autodromo/index.html':'./app.js?v=copy-clean-20261105-v1',
+  'stadiums/index.html':'/assets/stadium-network-ui.js?v=copy-clean-20261105-v1',
+  'stadiums/crypto/broadcast/index.html':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+  'visual-lab/index.html':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+  'institucional/index.html':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+  'race-lab/source/index.html':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+  'public/index.html':'/race-lab/source/src/main.js?v=copy-clean-20261105-v1'
+ };
+ for(const [path,expectedSrc] of Object.entries(expected)){
+  const html=readFileSync(join(ROOT,path),'utf8');
+  assert.ok(html.includes(expectedSrc),path+' still loads stale code instead of '+expectedSrc);
+ }
+ const worldUI=readFileSync(join(ROOT,'assets/stadium-network-ui.js'),'utf8');
+ assert.ok(worldUI.includes('/assets/stadium-network-engine.js?v=copy-clean-20261105-v1'));
+ const engine=readFileSync(join(ROOT,'assets/stadium-network-engine.js'),'utf8');
+ assert.doesNotMatch(engine,/"stage":"fixture demo"/i);
+});
