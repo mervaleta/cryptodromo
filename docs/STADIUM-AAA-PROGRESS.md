@@ -48,6 +48,18 @@
 - Estado de QA: ejecución disparada para revisión, todavía no aprobada al registrar este punto. Falta comparación visual antes/después y medición FPS.
 - Deuda: ventanas originales aún usan paneles planos; falta profundidad de huecos, mejores materiales, contraste de sombras y revisión desde cerca.
 
+## Iteración 3 · público de las tribunas históricas (código integrado; pendiente de verificación WebGL)
+- Hallazgo: scene.js conservaba dos mallas antiguas (torso cilíndrico + cabeza esférica) para entre 260 y 980 aficionados. La primera iteración solo corregía el público de las gradas de proximidad.
+- Nuevo módulo visual-lab/stadiumGrandstandCrowd.js construye figuras completas instanciadas: torso, cabeza, pelo, brazos, manos, pantalones, zapatos y sombreros.
+- Se conservaron las ubicaciones x/y/z, filas, rotación y colores del generador original mediante la misma semilla fija. No se cambió el evento de fotofinish ni la animación de banderines.
+- El gobernador de calidad ahora usa grandstandCrowd.setPopulation() para reducir grupos proporcionalmente, sin amputar partes ni superar el aforo de las mallas.
+- El interruptor de público sigue ocultando todas las partes; se incorporó liberación de mallas y materiales en pagehide, e instrumentación de solo lectura en audience-qa=1.
+- Contrato nuevo tests/stadium-grandstand-crowd.mjs, CI del estadio ampliada. Pruebas Chromium de audiencia verifican ambos sistemas.
+- Nuevas URLs de escena cache-busted a satoshi-grandstand-people-20261105-v3; tests de referencias de versión también actualizados.
+- Comparación reproducible: el workflow de audiencia ahora inicia dos servidores, uno desde baseline b5b0bd6 y otro desde la rama, para six capturas pareadas (panorámica, rail de día y noche) a través de tests/stadium-aaa-audience-comparison.mjs.
+- Estado de CI: ejecuciones de esta iteración disparadas, algunas en cola; no afirmar aprobación visual ni datos de rendimiento por el solo cambio.
+- Pendiente: inspección de las capturas reales, chequeo de que los nuevos brazos y sombreros no ocluyen a los caballos, y métricas FPS en dispositivos reales.
+
 ## Estado de pruebas concurrentes
 - Audiencia y geometría: PASS en Actions #41960445118; cuatro capturas Chromium reales.
 - Satoshi Nakamoto Stadium: PASS en #41960445027.
