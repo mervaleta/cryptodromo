@@ -70,7 +70,10 @@ try{
      if(!weather)throw new Error('Missing weather control');
      weather.value='night';weather.dispatchEvent(new Event('change',{bubbles:true}));
    });
-   await page.waitForFunction(()=>window.__cryptodromoPavilionQA.snapshot().detailNight===true);
+   await page.waitForFunction(()=>{
+     const vip=window.__cryptodromoPavilionQA?.snapshot();
+     return vip?.detailNight===true && vip.detailWashIntensity>0;
+   },null,{timeout:25000});
    await page.waitForTimeout(1300);
    await page.screenshot({path:'/tmp/muybridge-clubhouse-'+id+'-night.png'});
    await page.locator('#stage').screenshot({path:'/tmp/muybridge-clubhouse-'+id+'-architecture-night.png'});
