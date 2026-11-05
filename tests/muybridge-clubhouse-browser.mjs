@@ -25,8 +25,15 @@ try{
    assert.ok(result.sBendClearance>25);
    assert.equal(result.finishMarkerVisible,mode==='straight');
    assert.equal(result.visible,true);
-   const camera=page.locator('#camera');
-   if(await camera.count()) await camera.selectOption('aerial');
+   // LIVE can disable manual camera dropdown while following a broadcast.
+   // For screenshot QA change its value without waiting for user enablement.
+   await page.evaluate(()=>{
+     const camera=document.getElementById('camera');
+     if(camera&&[...camera.options].some(o=>o.value==='aerial')){
+       camera.value='aerial';
+       camera.dispatchEvent(new Event('change',{bubbles:true}));
+     }
+   });
    await page.waitForTimeout(900);
    await page.screenshot({path:'/tmp/muybridge-clubhouse-'+id+'.png'});
    console.log('CLUBHOUSE_QA_OK',JSON.stringify({id,layout:mode,worldZ:result.liveVIPWorldZ,
