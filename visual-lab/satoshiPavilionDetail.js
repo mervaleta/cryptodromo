@@ -146,7 +146,7 @@ export function createSatoshiPavilionDetail({THREE,parent,quality='balanced'}={}
  const facadeWash=[];
  for(const x of [-20,20]){
   const lamp=new THREE.SpotLight(0xffdfae,0,48,Math.PI/3,.74,2);
-  lamp.position.set(x,8.6,15.6);
+  lamp.position.set(x,8.6,14.2); // stays inside the published detail envelope
   lamp.target.position.set(x,12.6,4.6);
   lamp.castShadow=false;
   root.add(lamp,lamp.target);
