@@ -53,12 +53,12 @@ function renderBTCRevision(){
  if(panel.hidden)return;
  const header=$('#btc-master-build'),status=$('#btc-master-status'),list=$('#btc-master-issues');
  if(!btcRevision){
-  header.textContent='Maestro BTC · registro de versión no disponible';
+  header.textContent='BTC · versión visual no disponible';
   status.textContent='No se pudo cotejar la revisión publicada.';
   list.replaceChildren();
   return;
  }
- header.textContent='Maestro BTC · build '+btcRevision.buildId+(btcRevision.visualPass?' · '+btcRevision.visualPass:'');
+ header.textContent='BTC · build '+btcRevision.buildId+(btcRevision.visualPass?' · '+btcRevision.visualPass:'');
  status.textContent=(btcRevision.status==='verified'?'Verificado':btcRevision.status==='pending_deploy'?'Pendiente de despliegue':'En revisión, defectos pendientes')+' · '+btcRevision.updatedAt+(btcRevision.statusLabel?' · '+btcRevision.statusLabel:'');
  const items=(Array.isArray(btcRevision.openIssues)?btcRevision.openIssues:[]).map(issue=>{
   const li=document.createElement('li');li.textContent=issue;return li;
@@ -213,7 +213,7 @@ import(previewModule).then(({createPreview})=>{
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
   window.__cryptodromoBTCAtelierSetPose=n=>preview?.setPose?.(n);
  }
- $('#preview-state').textContent=btcAtelier?'BTC · HERO V5 · CRIN Y COLA 3D · GALOPE NATIVO':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · V5 ACTUALIZADO · CUELLO Y COLA CORREGIDOS · GALOPE NATIVO':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;
