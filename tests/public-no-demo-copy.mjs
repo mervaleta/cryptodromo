@@ -65,7 +65,7 @@ test('Key public pages retain transparent synthetic-price disclosures',()=>{
 // browser-cached script URL from the previous branding.
 test('public race entrypoints use cache-busted scripts for cleaned broadcast copy',()=>{
  const expected={
-  'stadiums/crypto/live/index.html':'/assets/crypto-venue.js?v=copy-clean-20261105-v1',
+  'stadiums/crypto/live/index.html':'/assets/crypto-venue-broadcast-aaa-20261105.js',
   'autodromo/index.html':'./app.js?v=copy-clean-20261105-v1',
   'stadiums/index.html':'/assets/stadium-network-ui.js?v=copy-clean-20261105-v1',
   'stadiums/crypto/broadcast/index.html':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
