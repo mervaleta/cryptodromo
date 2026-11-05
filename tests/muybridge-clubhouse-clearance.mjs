@@ -18,7 +18,8 @@ test('Muybridge clubhouse must be behind spectator structures, not across the ba
  assert.equal(PAVILION_BASE_BOUNDS.maxZ,-131.5);
  assert.equal(PAVILION_FORECOURT_BOUNDS.maxZ,-129.5);
  assert.ok(audit.standGap>=4,'leave walking space behind grandstand roof');
- assert.ok(audit.ovalClearance>25,'oval runners and rail must never intersect clubhouse footprint');
+ assert.ok(Math.abs(audit.ovalClearance-36.5)<.15,
+   'oval clearance must use the TRUE 72m backstraight and its -93m outer lane');
  assert.ok(audit.straightClearance>25);
  assert.ok(audit.sBendClearance>25);
  assert.equal(audit.trackSignWorldZ,-103);
@@ -29,6 +30,7 @@ test('Muybridge clubhouse must be behind spectator structures, not across the ba
  // An extra dense sample protects against track math refinement later.
  for(const layout of ['oval','straight','s-bend'])
    assert.ok(clubhouseCourseClearance(layout,1000)>25,layout+' intersects the pavilion');
+ assert.ok(Math.abs(clubhouseCourseClearance('oval',1000)-36.5)<.15);
  const midway=trackPoint('oval',.625,5.5);
  assert.ok(Math.abs(midway.z+72)<.001,'back straight must be where expected');
 });
