@@ -154,6 +154,18 @@ function crp_users_fail(int $code, string $msg): never { crp_users_reply($code, 
 function crp_users_event(PDO $db, ?int $uid, string $kind): void {
     $db->prepare('INSERT INTO user_security_events(user_id,kind,created_at) VALUES(?,?,?)')
       ->execute([$uid,$kind,time()]);
+    // Only real account events create real in-app notices; sports notifications
+    // must originate from the canonical race schedule and settlement services.
+    $notices = [
+        'register' => ['Bienvenido a Cryptódromo', 'Tu perfil ya está disponible. Elegí tus caballos favoritos.'],
+        'password_changed' => ['Contraseña modificada', 'Se cerraron las demás sesiones de tu cuenta.'],
+        'password_reset' => ['Contraseña restablecida', 'Las sesiones anteriores fueron revocadas.'],
+        'email_verified' => ['Correo verificado', 'La dirección de correo quedó verificada.']
+    ];
+    if ($uid !== null && isset($notices[$kind])) {
+        $db->prepare('INSERT INTO user_notifications(user_id,kind,title,body,created_at) VALUES(?,?,?,?,?)')
+          ->execute([$uid,$kind,$notices[$kind][0],$notices[$kind][1],time()]);
+    }
 }
 function crp_users_throttle(PDO $db, string $kind, string $subject, int $limit = 8): void {
     $key = hash_hmac('sha256', $kind . ':' . $subject, crp_users_secret());
