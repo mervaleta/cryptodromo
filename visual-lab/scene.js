@@ -194,6 +194,8 @@ const treeGroup=new THREE.Group();scene.add(treeGroup);
 const treeN=softwareGPU?55:mobile?90:155;
 for(let i=0;i<treeN;i++){
  const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-153-r()*16:132+r()*22;
+ // No trees emerging through the relocated pavilion or VIP forecourt.
+ if(back&&Math.abs(x)<60&&z>-181&&z<-126)continue;
  const h=5+r()*9;
  cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
  cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
