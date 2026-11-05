@@ -2,22 +2,24 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-procedural-hind-groom-20261104-v12-fx1",
+  "buildId": "btc-master-procedural-hind-groom-20261104-v12-fx1-lookdev1",
   "status": "pending_deploy",
-  "statusLabel": "BTC v12 · nuevo visor de contacto de pezuñas y terrenos, pendiente de despliegue; anatomía sin cambios",
+  "statusLabel": "Ronda de lookdev implementada en rama; sin validación visual WebGL de producción",
   "updatedAt": "2026-11-04",
-  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final. | V12-FX1: la ficha 3D integra un suelo visible con tierra, arena y césped, partículas por los cuatro contactos animados y control de humedad. No cambia la geometría ni los huesos del caballo, ni resuelve todavía el defecto muslo-corvejón; el registro de efectos queda pendiente de validación del Hostinger público.",
+  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final. | V12-FX1: la ficha 3D integra un suelo visible con tierra, arena y césped, partículas por los cuatro contactos animados y control de humedad. No cambia la geometría ni los huesos del caballo, ni resuelve todavía el defecto muslo-corvejón; el registro de efectos queda pendiente de validación del Hostinger público. | LOOKDEV V1: micropelaje direccional filtrado por fwidth para evitar ruido en cámara, crin/cola con rugosidad elevada y grano de cutícula antialias. No se declara AAA; todavía deben consolidarse los PR #89, #99 y #100 y validar capturas reales antes de publicación.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
     "Revisar especialmente la transición anatómica muslo-corvejón en todas las fases del Gallop; aún se ven estrechamientos y siluetas poco naturales en perfil",
     "Cotejar fase a fase con la referencia 212734.mp4 antes de modificar el rig o las curvas de animación de manera coordinada",
     "Validar proporción, sombreado y continuidad de patas desde cámaras laterales y posteriores en alta resolución",
-    "Mantener crin compacta sin volver a introducir filamentos colgantes y garantizar rendimiento en 12 corredores"
+    "Mantener crin compacta sin volver a introducir filamentos colgantes y garantizar rendimiento en 12 corredores",
+    "Inspeccionar crin/cola con luz rasante y confirmar ausencia de shimmer, transparencias o hebras flotantes en 16 fases"
   ],
   "nextPhase": {
     "status": "blocked",
     "title": "Física avanzada de crin y cola",
     "prerequisite": "Aceptar nueva topología y deformación en ficha pública y cotejar contra 212734.mp4",
     "reference": "212734.mp4"
-  }
+  },
+  "visualPass": "Lookdev v1 · microfur y crin AA"
 }
