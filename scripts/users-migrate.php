@@ -8,6 +8,16 @@ declare(strict_types=1);
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once dirname(__DIR__) . '/api/users-lib.php';
+function crp_users_index(PDO $db, string $statement, string $name, string $table): void {
+    if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+        $db->exec(str_replace('CREATE INDEX ', 'CREATE INDEX IF NOT EXISTS ', $statement));
+        return;
+    }
+    $q = $db->prepare('SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name=? AND index_name=?');
+    $q->execute([$table,$name]);
+    if ((int)$q->fetchColumn() === 0) $db->exec($statement);
+}
+
 try {
     $db = crp_users_db();
     $mysql = $db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
@@ -35,7 +45,7 @@ try {
       session_hash $token PRIMARY KEY, user_id $n NOT NULL, created_at $stamp NOT NULL,
       expires_at $stamp NOT NULL, last_seen_at $stamp NOT NULL,
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)");
-    $db->exec("CREATE INDEX idx_user_sessions_owner ON user_sessions(user_id, expires_at)");
+    crp_users_index($db, "CREATE INDEX idx_user_sessions_owner ON user_sessions(user_id, expires_at)", "idx_user_sessions_owner", "user_sessions");
     $db->exec("CREATE TABLE IF NOT EXISTS user_favorites (
       user_id $n NOT NULL, symbol VARCHAR(16) NOT NULL, added_at $stamp NOT NULL,
       PRIMARY KEY(user_id,symbol), FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)");
@@ -43,17 +53,17 @@ try {
       id $id, user_id $n NOT NULL, kind VARCHAR(40) NOT NULL,
       title VARCHAR(160) NOT NULL, body TEXT NOT NULL, created_at $stamp NOT NULL,
       read_at $stamp NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)");
-    $db->exec("CREATE INDEX idx_user_notifications_owner ON user_notifications(user_id,created_at)");
+    crp_users_index($db, "CREATE INDEX idx_user_notifications_owner ON user_notifications(user_id,created_at)", "idx_user_notifications_owner", "user_notifications");
     $db->exec("CREATE TABLE IF NOT EXISTS user_security_events (
       id $id, user_id $n NULL, kind VARCHAR(50) NOT NULL,
       created_at $stamp NOT NULL,
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL)");
-    $db->exec("CREATE INDEX idx_user_events_owner ON user_security_events(user_id,created_at)");
+    crp_users_index($db, "CREATE INDEX idx_user_events_owner ON user_security_events(user_id,created_at)", "idx_user_events_owner", "user_security_events");
     $db->exec("CREATE TABLE IF NOT EXISTS user_action_tokens (
       token_hash $token PRIMARY KEY, user_id $n NOT NULL, purpose VARCHAR(20) NOT NULL,
       expires_at $stamp NOT NULL, created_at $stamp NOT NULL, used_at $stamp NULL,
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)");
-    $db->exec("CREATE INDEX idx_user_tokens_owner ON user_action_tokens(user_id,purpose)");
+    crp_users_index($db, "CREATE INDEX idx_user_tokens_owner ON user_action_tokens(user_id,purpose)", "idx_user_tokens_owner", "user_action_tokens");
     $db->exec("CREATE TABLE IF NOT EXISTS user_rate_limits (
       limiter_key $token PRIMARY KEY, attempts INTEGER NOT NULL,
       window_start $stamp NOT NULL)");
