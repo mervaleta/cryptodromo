@@ -12,6 +12,11 @@ try {
  // animated SwiftShader frames keep invalidating the compositor surface.
  const cdp=await page.context().newCDPSession(page);
  const capture=async filename=>{
+  const probe=await page.evaluate(()=>window.__cryptodromoOcclusionQA?.snapshot());
+  assert.ok(probe,'Missing camera occlusion diagnostic');
+  assert.equal(probe.samples?.length,25,'Expected 25 camera rays per screenshot');
+  assert.ok(probe.samples.every(sample=>sample.hit===null || typeof sample.hit==='object'));
+  await writeFile('artifacts/stadium-aaa-audience/'+filename.replace(/\.png$/,'.occlusion.json'),JSON.stringify(probe,null,2));
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
   assert.ok(data?.length>1000,'Chromium returned no screenshot pixels');
   await writeFile('artifacts/stadium-aaa-audience/'+filename,Buffer.from(data,'base64'));
@@ -24,7 +29,7 @@ try {
   control.dispatchEvent(new Event('change',{bubbles:true}));
  },{id,value});
  page.on('pageerror',e=>errors.push(e.message));
- const response=await page.goto(new URL('/visual-lab/?track=genesis&audience-qa=1&finish-qa=alpha06&stadium-perf-qa=1',origin).toString(),{waitUntil:'domcontentloaded',timeout:45000});
+ const response=await page.goto(new URL('/visual-lab/?track=genesis&audience-qa=1&finish-qa=alpha06&stadium-perf-qa=1&stadium-occlusion-qa=1',origin).toString(),{waitUntil:'domcontentloaded',timeout:45000});
  assert.equal(response?.status(),200);
  await page.waitForFunction(()=>document.querySelector('#start')?.disabled===false && window.__cryptodromoAudienceQA?.snapshot()?.groups?.length===8,null,{timeout:120000});
  const first=await page.evaluate(()=>window.__cryptodromoAudienceQA.snapshot());
