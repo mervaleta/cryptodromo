@@ -56,7 +56,7 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  const files=['racers/index.html','racers/racers.js','racers/btc-atelier-preview.js'];
  for(const file of files){
    const content=read(file);
-   assert.ok(content.includes('hoof-btc-fiche-20261104-v1'),'FX public build not used by '+file);
+   assert.ok(content.includes('btc-master-visual-pass-20261104-v1'),'FX public build not used by '+file);
    assert.ok(!content.includes('btc-master-solid-groom-20261104-v11'),file+' still stale');
  }
  assert.match(read('racers/btc-maya-master.js'),/btc-master-procedural-hind-groom-20261104-v12-fx1/);
@@ -76,7 +76,8 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.match(groom,/solidRingSides:SIDES/);
  assert.doesNotMatch(groom,/TextureLoader|\.jpg|\.png|\.webp|PlaneGeometry/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- assert.equal(manifest.buildId,build+'-fx1');
+ assert.equal(manifest.buildId,build+'-fx1-lookdev1');
+ assert.match(manifest.visualPass,/Lookdev v1/);
  assert.equal(manifest.status,'pending_deploy');
  assert.equal(module.BTC_HINDQUARTER_BUILD,'btc-hindquarters-rump-gaskin-20261104-v12');
 });
