@@ -12,6 +12,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=photo-finish-tv-params-20261104-v1';
+import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y} from './pavilionPlacement.js?v=muybridge-clearance-1';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
@@ -201,12 +202,17 @@ for(let i=0;i<treeN;i++){
 // Alpha16: preserve Satoshi's landmark VIP pavilion but NOT its previous
 // uninterrupted 810m tribune. Three short modular stands live in Parade Village.
 // This also leaves gaps for the paddock, services, food court and drone vistas.
-const venue=new THREE.Group();venue.name='Estadio Satoshi Nakamoto · Pabellón VIP y meta';scene.add(venue);
-box(93,1.35,27,0,.65,-78,C.concrete,venue);
-box(105,.35,11,0,1.15,-68,C.stone,venue);
+const venue=new THREE.Group();venue.name='Estadio Satoshi Nakamoto · gradas y meta';scene.add(venue);
+// The old (z=-78) clubhouse intersected Muybridge's backstretch at z=-72.
+// Only the clubhouse is relocated; stands, crowds, finish marker and cameras
+// retain their existing world coordinates and sporting semantics.
+const pavilion=new THREE.Group();pavilion.name='Pabellón VIP · detrás de la tribuna';
+pavilion.position.z=PAVILION_OFFSET_Z;venue.add(pavilion);
+box(93,1.35,27,0,PAVILION_FOUNDATION_Y,-78,C.concrete,pavilion);
+box(105,.35,11,0,1.15,-68,C.stone,pavilion);
 const standCenters=[-210,-5,207],standWidths=[101,122,101];
 // Center VIP house framed with ornamental stone, patterned windows and copper roofing.
-const vip=new THREE.Group();vip.position.set(0,0,-78);venue.add(vip);
+const vip=new THREE.Group();vip.position.set(0,0,-78);pavilion.add(vip);
 box(69,13,9,0,11,0,C.ivory,vip);
 box(71,.65,11,0,18.0,0,C.roof,vip);
 for(let j=0;j<20;j++){
@@ -218,7 +224,7 @@ for(let j=0;j<20;j++){
  }
  box(.22,12,.38,x,11,4.9,C.stone,vip);
 }
-box(71,1.5,9.5,0,20.1,-.4,C.roof,vip);
+box(71,1.5,9.5,0,PAVILION_UPPER_ROOF_Y,-.4,C.roof,vip);
 for(const x of [-24,24]){
  const tower=new THREE.Group();tower.position.set(x,19,3.5);vip.add(tower);
  cyl(3.0,3.0,.7,0,0,0,C.ivory,tower);
@@ -231,16 +237,16 @@ for(const x of [-24,24]){
  cone(3.2,8.4,0,11.05,0,C.roof,tower,12);
  cyl(.11,.15,2,0,16.2,0,C.bronze,tower);
 }
-function sign(text,x,y,z,w=24,h=3,fg='#f3ecd7',bg='#0e3028'){
+function sign(text,x,y,z,w=24,h=3,parent=venue,fg='#f3ecd7',bg='#0e3028'){
  const c=document.createElement('canvas');c.width=1024;c.height=148;const ctx=c.getContext('2d');
  ctx.fillStyle=bg;ctx.fillRect(0,0,1024,148);ctx.fillStyle='#cca969';ctx.fillRect(0,0,1024,9);
  ctx.font='900 71px system-ui';ctx.fillStyle=fg;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,512,83,960);
  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
- const surface=mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}),venue);
+ const surface=mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}),parent);
  surface.position.set(x,y,z);return surface;
 }
-sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7);
-sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0);
+sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7,pavilion);
+sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0,pavilion);
 // Spectators: shared-instanced bodies and heads, individual colors, multi-tier seating.
 const crowdN=softwareGPU?260:mobile?440:980,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
 const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.InstancedMesh(headG,mat('#dbb78b'),crowdN)];
