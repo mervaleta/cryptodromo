@@ -1,3 +1,19 @@
+## 2026-11-05 · `btc-maya-v18-hind-neck-eye-20261105` · WIP (no deploy, no AAA)
+
+**Defectos observados en captura real de V16 del usuario:** corvejones y extremidades posteriores con deformación antinatural durante Gallop, coronilla sin continuidad, flequillo rígido, ojos diminutos y pelaje excesivamente uniforme.
+
+**Cambios de la rama aislada V18, todavía NO aprobados visualmente:**
+
+- **Rig posterior:** nuevo `btc-maya-native-hind-skin.js` proyecta la posición de reposo de los vértices posteriores de Maya sobre triángulos de la pierna NATIVA Quaternius del mismo lado; interpola pesos de los tres vértices con coordenadas baricéntricas, en lugar de depender únicamente de los 12 vecinos y del difuminado topológico. Se aplica después del suavizado y del filtro izquierda/derecha. No cambia bones, clip Gallop ni la carrera.
+- **IK:** se excluyen también `IKBackLeg.*` y `FFB.*` del lado contrario al normalizar los pesos de los corvejones, porque el filtro anterior sólo comprobaba `Back*` y se filtraban controles de pie de la pata opuesta.
+- **Nuca:** `btc-maya-groom.js` mide la cresta usando la propia geometría esculpida Maya que se renderiza (no la curva fija de la versión anterior). La coronilla adopta un anclaje graduado `Head ↔ Neck`; el 100% Head a lo largo de todo el puente causaba hundimientos/roturas durante el cabeceo.
+- **Flequillo:** guías más largas hacia la frente e inercia V17 separada de la crin, manteniendo raíces con skinning original y puntas flexibles.
+- **Ojos:** córnea 3D ligeramente más visible dentro de la órbita, acabado húmedo y brillo suave PBR, iris con estriación y limbo, pupila negra horizontal. No hay planos o sprites.
+- **Pelaje:** ajustes conservadores de roughness/sheen/clearcoat. **NO se han recuperado todavía los mapas de texturas reales**: `Horse_VR_2017.ma` cita imágenes externas (`horse_diffuse_Brown_Light.png`, `horse_nrm.png`, `horse_eye_chestnut.png`, `fur_spec.png`), no presentes en las fuentes. Sin estas texturas o un reemplazo artístico equivalente, la apariencia AAA no está resuelta.
+- **QA de código:** prueba nueva `tests/btc-v18-native-hind-projection.mjs` y ensayo aislado de proyección de triángulos sobre ambos lados. No equivale a QA visual ni FPS. Pendiente 16 poses Chromium/WebGL reales, correcciones tras observar capturas, cotejo con `212734.mp4` y pruebas de Hostinger.
+
+**Estado** `needs_visual_qa`. **No fusionar el PR ni publicar hasta que las patas no deformen y el pelo/ojos se vean mejor en seis cámaras.** Conservar 99 corredores independientes.
+
 ## 2026-11-05 · `btc-maya-mp4-groom-inertia-20261105-v17` · **candidato en PR aislado, pendiente QA**
 
 - **Referencia real inspeccionada:** `212734.mp4` H.264 1920×1080, 10.5 s (~30 fps); hoja comparativa con 12 fases de nuca y flequillo 0.00–1.83 s. Ver `docs/BTC-MP4-212734-HAIR-REFERENCE-20261105.md`.
