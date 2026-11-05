@@ -9,10 +9,10 @@ test('legacy V5 groom and Gallop stay selectable as a rollback',()=>{
  assert.match(v5,/damped-gallop-coupled-spring/);assert.match(v5,/createBTCSilkShell/);
  assert.match(shell,/SkinnedMesh/);
 });
-test('Maya V16 is visible with owner visual acceptance still pending',()=>{
+test('BTC V20b is visible with owner visual acceptance still pending',()=>{
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
  assert.equal(manifest.masterId,'btc-maya-2017-sculpt-gallop-20261104');
- assert.equal(manifest.buildId,'btc-maya-face-native-gallop-20261105-v16');
+ assert.equal(manifest.buildId,'btc-v20b-native-hind-gallop-20261105');
  assert.equal(manifest.status,'needs_visual_qa');
- assert.match(read('racers/btc-maya-master.js'),/BTC_MAYA_RENDER_BUILD='btc-maya-face-native-gallop-20261105-v16'/);
+ assert.match(read('racers/btc-maya-master.js'),/BTC_MAYA_RENDER_BUILD='btc-v20b-native-hind-gallop-20261105'/);
 });
