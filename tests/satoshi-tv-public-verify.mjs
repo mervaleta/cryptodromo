@@ -10,7 +10,8 @@ const resources=[
  ['/stadiums/crypto/live/index.html',/id="tv-player"/],
  ['/stadiums/crypto/broadcast/index.html',/id="raceCanvas"/],
  ['/visual-lab/index.html',/id="raceCanvas"/],
- ['/assets/crypto-venue.js',/findRacePlayerSource/],
+ ['/assets/crypto-venue.js',/PROBE_TIMEOUT_MS=12000/],
+ ['/alpha15/director.js',/coverage-variety/],
  ['/assets/crypto-archive.js',/Ver repetición en TV/],
  ['/race-lab/source/src/data/tripleRaceFixture.js',/alpha19-triple-v2-continuous-week/],
  ['/race-lab/source/src/data/raceFixture.js',/getContinuousFixturePrice/]
@@ -63,10 +64,14 @@ async function loadTrack(page,id){
 try{
  const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
  page.on('pageerror',e=>faults.push('page: '+e.message));
- const live=new URL('/stadiums/crypto/live/?track=muybridge',origin);
+ const live=new URL('/stadiums/crypto/live/?track=muybridge&tv-qa=1',origin);
  const response=await page.goto(live.toString(),{waitUntil:'domcontentloaded',timeout:45000});
  assert.equal(response?.status(),200,'LIVE page not published');
  await loadTrack(page,'muybridge');
+ const metrics=await page.evaluate(()=>window.__satoshiTvQA?.snapshot()?.tuning);
+ assert.ok(metrics&&Number.isFinite(metrics.lastTuneLatencyMs),
+  'Public player is still using a stale cached controller without 3D-ready telemetry');
+ assert.equal(metrics.successfulTuneCount,1);
  await page.screenshot({path:'artifacts/satoshi-public-tv/muybridge-live.png'});
  console.log('PASS public Muybridge TV');
  for(const id of ['genesis','vint-cerf']){
