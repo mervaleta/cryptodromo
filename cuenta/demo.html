@@ -25,5 +25,54 @@ ul{padding-left:18px;line-height:2}.foot{font-size:13px;margin-top:38px}
 </div>
 <div class="grid"><section class="card"><h2>Mis caballos</h2><p>Una selección visual de los corredores que podrías seguir.</p><ul><li>BTC · Bitcoin</li><li>ETH · Ethereum</li><li>SOL · Solana</li></ul><p class="small">Ejemplos de interfaz, no favoritos guardados.</p></section>
 <section class="card"><h2>Próxima experiencia</h2><p>Desde tu cuenta real podrás gestionar favoritos, historial y pronósticos ficticios, sujetos al fixture oficial y a la validación de sesiones.</p><a href="/cuenta/"><button>Ir al acceso real</button></a></section></div>
-<p class="foot">Prototipo de exhibición aislado del sistema de autenticación y de la contabilidad. No usar como comprobante de registro, saldo o acceso.</p>
+<section class="card" style="margin-top:24px"><h2>Laboratorio de conversión · Simulación</h2><p>Todos los saldos y precios son ilustrativos. No se envían fondos, no se registran operaciones ni se habilitan retiros.</p>
+<div class="grid"><div><label class="k" for="amount">Créditos a convertir (CR)</label><p><input id="amount" type="number" min="1" max="1000" value="100" step="1" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p></div>
+<div><label class="k" for="asset">Moneda de destino</label><p><select id="asset" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></select></p></div></div>
+<div class="grid"><div><label class="k" for="spread">Spread de venta de la plataforma (%)</label><p><input id="spread" type="number" min="0" max="20" step=".1" value="1.5" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p></div>
+<div><label class="k" for="fee">Comisión de conversión (%)</label><p><input id="fee" type="number" min="0" max="20" step=".1" value=".75" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p></div></div>
+<div class="grid"><div><div class="k">Cotización ilustrativa</div><div class="value" style="font-size:1.4rem" id="rate"></div></div><div><div class="k">Importe neto estimado</div><div class="value" style="font-size:1.4rem" id="net"></div></div></div>
+<div id="breakdown" class="small" aria-live="polite"></div><p><button type="button" id="simulate">Agregar al libro simulado</button> <button type="button" class="secondary" id="clear">Reiniciar simulación</button></p>
+<h3>Ingresos simulados de la plataforma</h3><div class="grid"><div><div class="k">Comisiones</div><div class="value" id="fees-total">0 CR</div></div><div><div class="k">Spread bruto</div><div class="value" id="spread-total">0 CR</div></div><div><div class="k">Saldo CR de prueba restante</div><div class="value" id="remaining">1.000 CR</div></div></div>
+<div class="small" id="ledger">Sin conversiones simuladas.</div></section>
+<script>
+(()=>{'use strict';
+const assets=[
+['USD','Dólar estadounidense',1],['EUR','Euro',1.09],['ARS','Peso argentino',0.00075],
+['USDT','Tether',1],['USDC','USD Coin',1],['BTC','Bitcoin',95000],['ETH','Ethereum',3400],['SOL','Solana',165],
+['BNB','BNB',650],['XRP','XRP',2.2],['ADA','Cardano',0.65],['DOGE','Dogecoin',0.17],['LTC','Litecoin',105],
+['TRX','TRON',0.27],['AVAX','Avalanche',29],['DOT','Polkadot',5],['LINK','Chainlink',18],
+['XLM','Stellar',0.35],['BCH','Bitcoin Cash',420],['DAI','DAI',1]
+];
+const el=id=>document.getElementById(id), select=el('asset');
+assets.forEach(([symbol,name])=>select.add(new Option(name+' · '+symbol,symbol)));
+let remaining=1000,commissionTotal=0,spreadTotal=0,entries=[];
+const fmt=(n,max=8)=>Number(n).toLocaleString('es-AR',{maximumFractionDigits:max});
+function quote(){
+ const amount=Number(el('amount').value),spread=Number(el('spread').value)/100,fee=Number(el('fee').value)/100;
+ const asset=assets.find(a=>a[0]===select.value),unit=asset[2];
+ const valid=Number.isFinite(amount)&&amount>0&&amount<=remaining&&Number.isFinite(spread)&&spread>=0&&spread<=.2&&Number.isFinite(fee)&&fee>=0&&fee<=.2;
+ // Purely illustrative assumption: 1 CR = 0.01 USD at mid-market.
+ const usd=amount*.01,spreadCr=amount*spread,feeCr=amount*fee,netCr=amount-spreadCr-feeCr,netAsset=netCr*.01/unit;
+ el('rate').textContent='1 '+asset[0]+' = '+fmt(unit/.01,4)+' CR (referencia)';
+ el('net').textContent=valid?fmt(netAsset,12)+' '+asset[0]:'Importe inválido';
+ el('breakdown').textContent=valid?'Bruto: '+fmt(amount)+' CR · Comisión: '+fmt(feeCr)+' CR · Spread: '+fmt(spreadCr)+' CR · Neto equivalente: '+fmt(netCr)+' CR · Sin costo de red ni impuestos.':'Ingresá un monto dentro del saldo disponible y tasas entre 0% y 20%.';
+ el('simulate').disabled=!valid;
+ return valid?{amount,spreadCr,feeCr,netAsset,symbol:asset[0]}:null;
+}
+function render(){
+ el('fees-total').textContent=fmt(commissionTotal,4)+' CR';
+ el('spread-total').textContent=fmt(spreadTotal,4)+' CR';
+ el('remaining').textContent=fmt(remaining,4)+' CR';
+ el('ledger').replaceChildren();
+ if(!entries.length){el('ledger').textContent='Sin conversiones simuladas.';return;}
+ const list=document.createElement('ol');
+ entries.forEach(e=>{const li=document.createElement('li');li.textContent=fmt(e.amount)+' CR → '+fmt(e.netAsset,12)+' '+e.symbol+' · comisión '+fmt(e.feeCr,4)+' CR · spread '+fmt(e.spreadCr,4)+' CR';list.append(li);});
+ el('ledger').append(list);
+}
+['amount','spread','fee','asset'].forEach(id=>el(id).addEventListener('input',quote));
+el('simulate').addEventListener('click',()=>{const q=quote();if(!q)return;remaining=Number((remaining-q.amount).toFixed(8));commissionTotal+=q.feeCr;spreadTotal+=q.spreadCr;entries.push(q);render();quote();});
+el('clear').addEventListener('click',()=>{remaining=1000;commissionTotal=0;spreadTotal=0;entries=[];render();quote();});
+render();quote();
+})();
+</script><p class="foot">Prototipo de exhibición aislado del sistema de autenticación y de la contabilidad. No usar como comprobante de registro, saldo o acceso.</p>
 </main></body></html>
