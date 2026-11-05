@@ -10,7 +10,7 @@ const resources=[
  ['/stadiums/crypto/live/index.html',/id="tv-player"/],
  ['/stadiums/crypto/broadcast/index.html',/id="raceCanvas"/],
  ['/visual-lab/index.html',/id="raceCanvas"/],
- ['/assets/crypto-venue.js',/PROBE_TIMEOUT_MS=12000/],
+ ['/assets/crypto-venue-broadcast-aaa-20261105.js',/PROBE_TIMEOUT_MS=12000/],
  ['/alpha15/director.js',/coverage-variety/],
  ['/assets/crypto-archive.js',/Ver repetición en TV/],
  ['/race-lab/source/src/data/tripleRaceFixture.js',/alpha19-triple-v2-continuous-week/],
