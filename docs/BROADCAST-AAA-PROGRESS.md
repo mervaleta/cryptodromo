@@ -102,3 +102,21 @@ Triple canal visible; cambios de cámara legibles; cambios de líder relatados s
 - En `tests/satoshi-tv-player-browser.mjs`: además de la simulación de descarga demorada, se comprueban tres sintonizaciones exitosas medibles, cero errores en zapping normal, y liberación + error medible cuando ambas rutas devuelven páginas inválidas.
 - `stadiums/crypto/live/index.html` invalida la caché del controlador (`broadcast-telemetry4`).
 - **Pendiente:** CI completa del HEAD nuevo, capturas visuales en todas las condiciones y ensayo sostenido móvil. No confundir métricas disponibles con métricas de rendimiento medidas.
+
+## Iteración 1f · cierre de tres fallos Chromium (2026-11-05)
+
+Revisión de logs del anterior HEAD `de54255`:
+
+- `alpha17-camera-browser.mjs:108`: `page.screenshot` agotaba 40 s **después** de pasar las aserciones de cámara real.
+- `winner-replay-env-browser.mjs:72`: timeout al capturar captura de controles de entorno; comprobaciones de replay/resultado anteriores pasaron.
+- `stadium-clean-photo-finish-browser.mjs:51`: el cambio de canal esperaba que desapareciera la capa de transición y agotaba 15 s en WebGL software.
+
+Correcciones en rama:
+
+1. El controlador `assets/crypto-venue.js` retira sincrónicamente la clase `is-switching` al reconocer `#start.disabled === false` y deja los callbacks de 350 ms / RAF como protección redundante. El efecto de salida CSS sigue durando 520 ms.
+2. `tests/helpers/optionalScreenshot.mjs` guarda capturas cuando el compositor responde (7 s máximo). Si `Page.captureScreenshot` falla, informa `VISUAL_EVIDENCE_UNAVAILABLE` y permite que **las aserciones funcionales sigan ejecutándose**. No convierte un fallo de lógica o WebGL en éxito. Lo usan `alpha17-camera-browser`, `winner-replay-env-browser`, `stadium-clean-photo-finish-browser` y `hoof-btc-ficha-browser`.
+3. Pruebas de cámara, audio, resultado y cambio de canal continúan siendo obligatorias. La imposibilidad de capturar imágenes sigue siendo una **limitación de evidencia visual**; nunca se debe presentar como QA visual completo.
+
+**Colaboración:** PR #115 del estadio modifica varios de los mismos HTML, `scene.js` y tests. Integrar secuencialmente, con actualización de #115 después de cerrar #117 y revisión de conflictos; no sustituir una de las ramas por la otra. PR #122 del maestro BTC no comparte archivos con la rama TV. No tocar modelos ni datasets.
+
+**Salida requerida:** GitHub Actions del HEAD de esta iteración en verde, luego integración, smoke test real contra `https://race.cryptodromo.com/stadiums/crypto/live/`. Hasta entonces, NO dar por desplegado.
