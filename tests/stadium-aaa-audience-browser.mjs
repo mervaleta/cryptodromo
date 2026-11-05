@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 
 const origin=process.env.CRP_BASE_URL||'http://127.0.0.1:4173';
@@ -8,6 +8,14 @@ await mkdir('artifacts/stadium-aaa-audience',{recursive:true});
 try {
  const page=await browser.newPage({viewport:{width:1600,height:940}});
  const errors=[];
+ // Capture rendered pixels through CDP: Playwright screenshot can stall while
+ // animated SwiftShader frames keep invalidating the compositor surface.
+ const cdp=await page.context().newCDPSession(page);
+ const capture=async filename=>{
+  const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
+  assert.ok(data?.length>1000,'Chromium returned no screenshot pixels');
+  await writeFile('artifacts/stadium-aaa-audience/'+filename,Buffer.from(data,'base64'));
+ };
  // QA may run in TV/embed mode where production controls are hidden, but present.
  const setControl=async (id,value)=>page.evaluate(({id,value})=>{
   const control=document.getElementById(id);
@@ -42,16 +50,16 @@ try {
  await setControl('camera','overview');
  await setControl('weather','noon');
  await page.waitForTimeout(1200);
- await page.screenshot({path:'artifacts/stadium-aaa-audience/01-overview-day.png'});
+ await capture('01-overview-day.png');
  await setControl('camera','rail');
  await page.waitForTimeout(1000);
- await page.screenshot({path:'artifacts/stadium-aaa-audience/02-rail-day.png'});
+ await capture('02-rail-day.png');
  await setControl('weather','night');
  await page.waitForTimeout(1200);
- await page.screenshot({path:'artifacts/stadium-aaa-audience/03-rail-night.png'});
+ await capture('03-rail-night.png');
  await setControl('layout','oval');
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
- await page.screenshot({path:'artifacts/stadium-aaa-audience/04-oval-clearance.png'});
+ await capture('04-oval-clearance.png');
  assert.deepEqual(errors,[]);
  console.log('PASS real WebGL audience',first.crowd,first.drawCalls);
 } finally {await browser.close();}
