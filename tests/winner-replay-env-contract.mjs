@@ -54,7 +54,7 @@ test('both official scene pages mount slow-motion overlay, source and result ord
   const doc=read(html);
   for(const id of ['winner-replay','winner-replay-name','winner-replay-progress','result-overlay','raceCanvas'])
    assert.ok(doc.includes('id="'+id+'"'),html+' missing '+id);
-  assert.match(doc,/scene\.js\?v=satoshi-static-batches-20261105-v4/);
+  assert.match(doc,/scene\.js\?v=satoshi-aaa-cinematic-statics-20261105-v5/);
  }
  assert.match(scene,/winnerReplay\.begin\(index,first\.entry\.symbol\)/);
  assert.match(scene,/lastCrossedAt=gate\.lastCrossAt;\s*startWinnerReplay\(\)/);
