@@ -114,7 +114,7 @@ function createHairMass(source,skinAt,{
     const cy=Math.min(-.0236,root[1]+length*(.72*t+.28*t2));
     x=root[0]+side*(.00009*t+.00049*t2)+side*.00007*Math.sin(PI*t+seed);
     y=cy;
-    z=crest(cy)+.00022+.00082*Math.sin(PI*t)*(.64+.36*seed)-.00020*t2;
+    z=crest(cy)+.00022+.00036*Math.sin(PI*t)*(.64+.36*seed)-.00020*t2;
     if(ribbon===0)z+=cross*breadth*.59*w;
     else x+=side*cross*breadth*.32*w;
    }else if(hero){
@@ -122,8 +122,8 @@ function createHairMass(source,skinAt,{
     // Every guide has a different arch and a naturally tapering lifted tip.
     const flow=t*.72+.28*t2;
     const cy=Math.min(-.00455,root[1]+length*flow);
-    const arch=(.00175+.00215*seed)*Math.pow(Math.sin(PI*t),1.3);
-    const tipRise=.00049*t2*t2*(.35+.65*seed);
+    const arch=(.00072+.00080*seed)*Math.pow(Math.sin(PI*t),1.3);
+    const tipRise=.00016*t2*t2*(.35+.65*seed);
     x=root[0]+side*(.00010+(.00046+.00018*seed)*t2);
     y=cy+.00015*Math.sin(PI*t)*(seed-.5);
     z=crest(cy)+.00016+arch+tipRise+
@@ -165,14 +165,14 @@ function createHairMass(source,skinAt,{
     // The large, smooth "calligraphic" mane is made of feathered layers:
     // it starts on the poll, flows down the full neck and finishes in
     // overlapping tapered curls. Stronger silhouette, fewer dark wires.
-    const lift=(.00145+.0012*seed)*Math.sin(PI*t);
+    const lift=(.00070+.00055*seed)*Math.sin(PI*t);
     const drape=(.00009+.00012*seed)*t2;
     // Locks sit on the crest; the previous wide sweep detached at the shoulder.
-    const outward=(.00019+.00019*seed)*(.26*rearward+.74*t2);
+    const outward=(.00013+.00013*seed)*(.26*rearward+.74*t2);
     x=root[0]+side*(outward+.00009*Math.sin(PI*t));
     y=Math.min(-.00455,cy+.00013*Math.sin(PI*t*1.2+seed*2.8)*t2);
     z=neckZ+.00018+lift-drape+
-       .00019*Math.sin(PI*t*1.7+seed*3)*t2;
+       .00009*Math.sin(PI*t*1.7+seed*3)*t2;
     if(ribbon===0)z+=cross*breadth*w;
     else x+=side*cross*breadth*.50*w;
     // Physically trim low fibers: no alpha masking or recoloring.
