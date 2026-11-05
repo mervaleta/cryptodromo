@@ -11,7 +11,10 @@ const problems=[];
 async function waitReady(page){
  await page.waitForFunction(()=>{
   const f=document.querySelector('#stadium-broadcast');
-  return !!f&&!f.hidden&&f.contentDocument?.querySelector('#start')?.disabled===false&&
+  return !!f&&!f.hidden&&f.style.visibility==='visible'&&
+   document.querySelector('#tv-loading')?.hidden===true&&
+   !document.querySelector('#tv-player')?.classList.contains('is-switching')&&
+   f.contentDocument?.querySelector('#start')?.disabled===false&&
    f.contentDocument?.querySelector('#raceCanvas')?.width>300;
  },null,{timeout:130000});
 }
