@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08120f">
+<meta name="description" content="Cuenta y perfil de Cryptódromo, seguimiento de caballos y estadísticas personales.">
+<title>Mi cuenta · Cryptódromo</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="stylesheet" href="/assets/users.css?v=users-20261105">
+<script type="module" src="/assets/users-app.js?v=users-20261105"></script>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<header class="topbar"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="Cryptódromo"></a>
+<nav aria-label="Navegación principal"><a href="/">Estadios</a><a href="/stadiums/crypto/live/">Carreras</a><a href="/racers/">Corredores</a><a href="/stadiums/crypto/archive/">Resultados</a><a href="/cuenta/" aria-current="page">Mi cuenta</a></nav></header>
+<main id="main" class="layout">
+<section class="intro"><span class="eyebrow">CRYPTÓDROMO / CLUB DE CORREDORES</span><h1>Tu lugar en la tribuna<span>.</span></h1>
+<p>Una cuenta para seguir a tus caballos, consultar tu actividad y personalizar tu experiencia deportiva.</p><small>Esta plataforma es una demostración con resultados sintéticos, sin apuestas ni dinero real.</small></section>
+<div id="message" class="message" role="status" aria-live="polite"></div>
+<section id="service-error" class="panel" hidden><h2>Servicio no disponible</h2><p>No se pudo conectar con el sistema de identidad. No se simularon cuentas ni se guardaron datos en el navegador.</p><button type="button" id="retry">Reintentar</button></section>
+<section id="public-profile" class="panel" hidden><h2>Perfil público</h2><div id="public-content"></div><a href="/cuenta/">Volver a mi cuenta</a></section>
+<div id="guest" class="auth-grid" hidden>
+  <section class="panel"><div class="section-head"><h2>Iniciar sesión</h2><span class="hint">Identidad verificada por servidor</span></div>
+    <form id="login-form" autocomplete="on"><label for="login-email">Correo electrónico</label><input id="login-email" type="email" name="email" autocomplete="username" maxlength="254" required>
+    <label for="login-password">Contraseña</label><input id="login-password" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Entrar a mi cuenta</button></form>
+    <button id="show-reset" class="textbutton" type="button">Olvidé mi contraseña</button>
+  </section>
+  <section class="panel"><div class="section-head"><h2>Crear cuenta</h2><span class="hint">Sin créditos ni transacciones</span></div>
+    <form id="register-form" autocomplete="on"><label for="reg-alias">Alias público</label><input id="reg-alias" name="alias" pattern="[A-Za-z0-9_]{3,24}" maxlength="24" placeholder="ej: jinete_btc" autocomplete="nickname" required>
+    <label for="reg-email">Correo electrónico</label><input id="reg-email" type="email" name="email" autocomplete="email" maxlength="254" required>
+    <label for="reg-password">Contraseña (12 caracteres mínimo)</label><input id="reg-password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+    <button type="submit">Crear mi identidad</button></form><p class="footnote">El correo se verificará cuando el servicio de envío esté habilitado. No compartimos tu correo en el perfil público.</p>
+  </section>
+  <section id="reset-panel" class="panel full" hidden><h2>Recuperar contraseña</h2><p>Enviaremos un enlace de uso único si el servicio de correo está configurado.</p>
+  <form id="reset-form"><label for="reset-email">Correo de la cuenta</label><input id="reset-email" name="email" type="email" required><button type="submit">Solicitar enlace</button></form>
+  <form id="new-password-form" hidden><label for="new-password">Nueva contraseña</label><input id="new-password" name="password" type="password" minlength="12" required><button type="submit">Guardar nueva contraseña</button></form></section>
+</div>
+<div id="dashboard" hidden>
+ <div class="identity panel">
+   <div class="identity-name"><span class="eyebrow">PASE DE PISTA</span><h2 id="dashboard-alias"></h2><p id="dashboard-email"></p><span id="verification-status" class="hint"></span></div>
+   <div class="identity-actions"><button id="verify-email" type="button" class="secondary">Verificar correo</button><button id="logout" type="button" class="secondary">Cerrar sesión</button><button id="logout-all" type="button" class="danger">Cerrar todas las sesiones</button></div>
+ </div>
+ <div class="stats-strip"><div class="stat"><strong id="favorite-count">0</strong><span>Caballos favoritos</span></div><div class="stat"><strong id="session-count">1</strong><span>Sesiones abiertas</span></div><div class="stat"><strong id="activity-count">0</strong><span>Eventos recientes</span></div></div>
+ <div class="dashboard-grid">
+  <section class="panel"><div class="section-head"><h2>Mis caballos</h2><a href="/racers/">Ver los 100 corredores</a></div><p>Seguí a los caballos del registro oficial. Sus carreras y resultados conservan la fuente deportiva.</p>
+    <form id="favorite-form" class="inline"><label for="horse-select">Caballo</label><select id="horse-select" name="symbol" required><option value="">Cargando roster…</option></select><button type="submit">Seguir</button></form>
+    <ul id="favorites-list" class="item-list"></ul></section>
+  <section class="panel"><div class="section-head"><h2>Próximas carreras</h2><a href="/stadiums/crypto/live/">Ver en vivo</a></div><div id="upcoming">Los horarios de los favoritos se consultan en el fixture oficial.</div></section>
+  <section class="panel"><div class="section-head"><h2>Notificaciones</h2></div><div id="notifications">No hay notificaciones.</div></section>
+  <section class="panel"><div class="section-head"><h2>Mi actividad</h2></div><div id="activity">Cargando actividad real…</div></section>
+  <section class="panel"><div class="section-head"><h2>Mi perfil</h2></div>
+    <form id="profile-form"><label for="profile-alias">Alias público</label><input id="profile-alias" name="alias" pattern="[A-Za-z0-9_]{3,24}" maxlength="24" required>
+     <label for="profile-zone">Zona horaria</label><select id="profile-zone" name="timezone"><option value="America/Argentina/Buenos_Aires">Buenos Aires</option><option value="America/Mexico_City">Ciudad de México</option><option value="America/Sao_Paulo">San Pablo</option><option value="America/New_York">Nueva York</option><option value="Europe/Madrid">Madrid</option><option value="UTC">UTC</option></select>
+     <label for="profile-locale">Idioma</label><select id="profile-locale" name="locale"><option value="es">Español</option><option value="en">English</option><option value="pt">Português</option></select>
+     <label class="check"><input id="profile-public" type="checkbox"> Perfil público visible por alias</label>
+     <label class="check"><input id="profile-notify" type="checkbox"> Notificaciones dentro del sitio</label>
+     <button type="submit">Guardar preferencias</button></form>
+     <p id="public-link" class="footnote"></p></section>
+  <section class="panel"><div class="section-head"><h2>Seguridad</h2></div><form id="password-form">
+    <label for="current-password">Contraseña actual</label><input id="current-password" name="current_password" type="password" autocomplete="current-password" required>
+    <label for="change-password">Contraseña nueva</label><input id="change-password" name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+    <button type="submit">Cambiar contraseña y revocar otras sesiones</button></form>
+    <p class="footnote">La cuenta se mantiene en el servidor. Las contraseñas nunca se almacenan en este navegador.</p></section>
+  <section class="panel full"><h2>Pronósticos y resultados personales</h2><p>La conexión con el motor de pronósticos se habilitará mediante el contrato de identidad. No inventamos tickets, aciertos ni estadísticas.</p><a href="/stadiums/crypto/archive/">Consultar resultados oficiales de las tres pistas</a></section>
+ </div>
+</div>
+</main><footer class="footer">Cryptódromo · Identidad y carreras sintéticas · <a href="/privacidad.html">Privacidad</a> · <a href="/juego-responsable.html">Uso responsable</a></footer>
+</body></html>
