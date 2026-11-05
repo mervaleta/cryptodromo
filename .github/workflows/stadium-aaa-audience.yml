@@ -14,6 +14,9 @@ on:
       - 'tests/stadium-presentation-visibility-browser.mjs'
       - '.github/workflows/stadium-aaa-audience.yml'
   workflow_dispatch:
+concurrency:
+  group: satoshi-aaa-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
