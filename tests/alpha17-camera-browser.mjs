@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
@@ -105,7 +105,19 @@ try{
  assert.equal(await page.locator('#fov-label').innerText(),'34°');
  // The stage is animated continuously; a locator screenshot waits for layout stability.
   // Capture the viewport directly so camera QA cannot stall on live WebGL motion.
-  await page.screenshot({path:'artifacts/alpha17-parade-orbit.png',timeout:40000});
+  // The animated software-WebGL canvas can starve Playwright's screenshot
+  // stability protocol on CI (page.screenshot 40s timeout after fonts loaded).
+  // Capture the same viewport directly through Chromium DevTools. This still
+  // produces real browser pixels; do NOT replace visual evidence with a mock.
+  const capture=await page.context().newCDPSession(page);
+  try {
+   const {data}=await capture.send('Page.captureScreenshot',{
+    format:'png',captureBeyondViewport:false,fromSurface:true
+   });
+   assert.ok(data.length>12000,'Empty Chromium camera capture');
+   await writeFile('artifacts/alpha17-parade-orbit.png',Buffer.from(data,'base64'));
+  } finally {await capture.detach();}
+
  await page.selectOption('#camera-mode','follow');
  await page.waitForTimeout(300);
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'follow');
