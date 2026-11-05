@@ -12,7 +12,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=photo-finish-tv-params-20261104-v1';
-import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y} from './pavilionPlacement.js?v=muybridge-clearance-1';
+import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-1';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
@@ -1385,6 +1385,20 @@ if(new URLSearchParams(location.search).get('hoof-qa')==='1'){
   ...hoofFX.stats,running,elapsed,horseRenderer:horseEngineMode,layout:layoutMode,
   officialRanking:officialRanking(profiles).map(e=>e.entry?.symbol||e.symbol)
  })});
+}
+// Opt-in QA: inspect the REAL pavilion transform and the measured oval clearance
+// without exposing mutable scene internals or changing the official race.
+if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
+ window.__cryptodromoPavilionQA=Object.freeze({
+   snapshot:()=>Object.freeze({
+     ...pavilionPlacementAudit(),
+     livePavilionGroupZ:pavilion.position.z,
+     liveVIPWorldZ:vip.getWorldPosition(new THREE.Vector3()).z,
+     currentLayout:layoutMode,
+     visible:pavilion.visible,
+     finishMarkerVisible:finishSign.visible
+   })
+ });
 }
 window.addEventListener('pagehide',()=>hoofFX.dispose(),{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
