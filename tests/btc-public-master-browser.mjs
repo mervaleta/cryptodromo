@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
 import {chromium} from 'playwright';
-const BUILD='btc-v5-head-neck-seal-20261105-v5';
+const BUILD='btc-v5-neck-tail-premium-20261105-v4';
 const folder='artifacts/btc-live';
 mkdirSync(folder,{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
@@ -18,43 +18,40 @@ const root='https://race.cryptodromo.com/racers/';
 async function waitForModel(expectPatch=true){
  await page.waitForFunction(({patch,version})=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
-  return s?.symbol==='BTC'&&s?.variant==='enhanced'&&s?.heroGroom?.neckClosureTriangles===(patch?72:0)
+  return s?.symbol==='BTC'&&s?.variant==='enhanced'&&s?.heroGroom?.neckClosureTriangles===(patch?30:0)
     &&s?.heroGroom?.nativeTailBones===7&&s?.drawCalls>0&&s?.clips?.includes('Gallop')
     &&document.querySelector('#btc-master-build')?.textContent?.includes(version);
  },{patch:expectPatch,version:BUILD},{timeout:120000});
  return await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
 }
-async function snap(path){
- await page.evaluate(()=>document.querySelector('#horse-view')?.scrollIntoView({block:'center',behavior:'instant'}));
- return page.screenshot({path,timeout:90000});
-}
 try{
  // No query flags: this is the exact URL the user will open.
  await page.goto(root+'#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  const real=await waitForModel();
- assert.equal(real.heroGroom.neckClosureBuild,'btc-head-neck-border-closure-20261105-v2');
+ assert.equal(real.heroGroom.neckClosureBuild,'btc-crest-closure-20261105-v1');
  assert.equal(real.heroGroom.source,'original-skinned-glb');
  assert.equal(real.heroGroom.gallopPreserved,true);
  assert.equal(real.heroGroom.oldHairHidden,true);
  assert.equal(real.heroGroom.pass,10);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(400);
- const oldTime=await snap(folder+'/canonical-top-neck.png');
+ const oldTime=await page.locator('#horse-canvas').screenshot({path:folder+'/canonical-top-neck.png',timeout:90000});
  await page.waitForTimeout(650);
- const newTime=await snap();
+ const newTime=await page.locator('#horse-canvas').screenshot();
  assert.notDeepEqual(oldTime,newTime,'Canonical BTC must visibly gallop');
  // Compare same actual source pose before/after ONLY the neck patch.
  await page.goto(root+'?btcFreeze=1&btcNeckRepair=off#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await waitForModel(false);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(350);
- const before=await snap(folder+'/before-top-hole.png');
+ const before=await page.locator('#horse-canvas').screenshot({path:folder+'/before-top-hole.png',timeout:90000});
  await page.goto(root+'?btcFreeze=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await waitForModel(true);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(350);
- const after=await snap(folder+'/after-top-neck-closed.png');
+ const after=await page.locator('#horse-canvas').screenshot({path:folder+'/after-top-neck-closed.png',timeout:90000});
  assert.notDeepEqual(before,after,'Actual patch must change top-view pixels');
+ const canvas=page.locator('#horse-canvas');
  for(const camera of ['profile','front','rear','threeQuarter','top']){
   await page.locator('[data-btc-camera="'+camera+'"]').click();
   const phases=camera==='profile'||camera==='top'?Array.from({length:16},(_,i)=>i):[0,4,8,12];
@@ -62,7 +59,7 @@ try{
    await page.evaluate(p=>window.__cryptodromoBTCAtelierSetPose(p),p);
    await page.waitForFunction(p=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===p,p);
    await page.waitForTimeout(150);
-   await snap(folder+'/'+camera+'-'+String(p).padStart(2,'0')+'.png');
+   await canvas.screenshot({path:folder+'/'+camera+'-'+String(p).padStart(2,'0')+'.png',timeout:90000});
   }
  }
  await page.locator('button.runner[data-symbol="ETH"]').click({timeout:20000});
