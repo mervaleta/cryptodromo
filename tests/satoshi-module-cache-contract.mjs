@@ -27,6 +27,6 @@ test('all entry HTML and TV source URLs bust old production caches',()=>{
  assert.match(read('visual-lab/index.html'),/scene\.js\?v=[a-z0-9][\w.-]+/);
   assert.ok(read('assets/satoshi-tv-contract.js').includes("build:'photo-finish-tv-params-20261104-v1'"));
  assert.ok(read('estadio/index.html').includes('stadium-flight-v1-20261104'));
- assert.ok(read('stadiums/crypto/live/index.html').includes('copy-clean-20261105-v1'));
+ assert.ok(read('stadiums/crypto/live/index.html').includes('/assets/crypto-venue-broadcast-aaa-20261105.js'));
  
 });

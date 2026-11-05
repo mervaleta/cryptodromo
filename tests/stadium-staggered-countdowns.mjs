@@ -45,6 +45,6 @@ test('card phase and labels derive from the same independent channel snapshot',(
  assert.match(live,/data\.next\.label/);
  assert.match(live,/data-race-label/);
  assert.doesNotMatch(live,/60-data\.slotSeconds:phase==='results'/);
- assert.match(page,/crypto-venue\.js\?v=copy-clean-20261105-v1/);
+ assert.match(page,/crypto-venue-broadcast-aaa-20261105\.js/);
  assert.throws(()=>projectChannelCountdown(null),TypeError);
 });

@@ -9,7 +9,8 @@ const live=read('stadiums/crypto/live/index.html');
 const broadcast=read('stadiums/crypto/broadcast/index.html');
 const lab=read('visual-lab/index.html');
 const archive=read('assets/crypto-archive.js');
-const tv=read('assets/crypto-venue.js');
+const tv=read('assets/crypto-venue-broadcast-aaa-20261105.js');
+assert.equal(tv.split('\n').slice(1).join('\n'),read('assets/crypto-venue.js'),'Immutable deployed TV controller must match canonical logic');
 const scene=read('visual-lab/scene.js');
 
 test('TV controller has exactly one paused-by-default 3D frame and three actionable channels',()=>{
