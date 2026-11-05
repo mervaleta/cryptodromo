@@ -426,10 +426,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.72;
+ coat.metalness=0;coat.roughness=.64;
  coat.defines={STANDARD:'',PHYSICAL:''};
- coat.clearcoat=.028;coat.clearcoatRoughness=.83;
- coat.sheen=.17;coat.sheenColor.set('#977458');coat.sheenRoughness=.93;
+ coat.clearcoat=.065;coat.clearcoatRoughness=.72;
+ coat.sheen=.29;coat.sheenColor.set('#977458');coat.sheenRoughness=.87;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
@@ -467,7 +467,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
    '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.002,amberBreak*.0017,coatDirection*.0015));');
  };
- coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-integrated-eyelids-v15-hind-native';
+ coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-anisotropic-coat-corneas-v18';
  const hoof=new THREE.MeshStandardMaterial({
   name:'BTC original Maya four integrated hoof walls',
   color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#694937',
@@ -501,7 +501,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
  if(headJoint<0)throw Error('BTC eye globes require native Head joint');
  // Smaller globes sit INSIDE the two actual sockets; previous spheres floated ahead of the eyelid.
- const radius=.000285,template=new THREE.SphereGeometry(radius,48,32);
+ const radius=.000355,template=new THREE.SphereGeometry(radius,48,32);
  const xyz=[],normals=[],local=[],sides=[],bones=[],weights=[],indices=[];
  const point=template.getAttribute('position'),normal=template.getAttribute('normal');
  const tris=template.getIndex();
@@ -512,9 +512,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
    // Eye cornea calibrated to Maya's actual outer socket, x approximately .00240.
     // Ellipsoidal ocular surface follows the ORIGINAL eye aperture,
     // centered ~x=.00145,y=-.02831,z=.04268, not the outer cheek.
-    xyz.push(side*(.001825+x),-.02831+y*1.60,.04268+z*1.67);
-   const nx=side*normal.getX(i),ny=normal.getY(i)/1.60,
-     nz=normal.getZ(i)/1.67,nl=Math.hypot(nx,ny,nz)||1;
+    xyz.push(side*(.00191+x),-.02831+y*1.55,.04268+z*1.56);
+   const nx=side*normal.getX(i),ny=normal.getY(i)/1.55,
+     nz=normal.getZ(i)/1.56,nl=Math.hypot(nx,ny,nz)||1;
     normals.push(nx/nl,ny/nl,nz/nl);
    local.push(x/radius,y/radius,z/radius);
    sides.push(side);
@@ -537,8 +537,8 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const irisColor=new THREE.Color(chosen);
  const material=new THREE.MeshPhysicalMaterial({
   name:'BTC inset natural eye globes with independently colored irises',
-  color:'#251711',metalness:0,roughness:.53,
-  clearcoat:.075,clearcoatRoughness:.68,side:THREE.FrontSide
+  color:'#251711',metalness:0,roughness:.26,
+  clearcoat:.78,clearcoatRoughness:.12,side:THREE.FrontSide
  });
  material.onBeforeCompile=shader=>{
   shader.uniforms.btcIrisColor={value:irisColor};
@@ -549,9 +549,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCEyeRest;\nvarying float vBTCEyeSide;\nuniform vec3 btcIrisColor;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=(btcIrisColor*.74+vec3(.075,.036,.019))*mix(.86,1.16,smoothstep(.22,1.,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
+   '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nfloat btcEyeStreak=sin(atan(vBTCEyeRest.z,vBTCEyeRest.y)*67.+vBTCEyeRest.x*5.)*.085;\nvec3 btcEyeIrisShading=(btcIrisColor*.80+vec3(.07,.036,.022))*mix(.78,1.21,smoothstep(.10,.96,btcEyeIrisRadius))*(1.+btcEyeStreak);\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);\nfloat btcLimbus=smoothstep(.78,.93,btcEyeIrisRadius)*(1.-smoothstep(.99,1.08,btcEyeIrisRadius))*btcEyeFacing;\ndiffuseColor.rgb*=1.-.32*btcLimbus;');
  };
- material.customProgramCacheKey=()=> 'btc-eye-small-matte-corneas-20261105-v5';
+ material.customProgramCacheKey=()=> 'btc-eye-wet-cornea-horizontal-pupil-20261105-v18';
  const mesh=new THREE.SkinnedMesh(geometry,material);
  mesh.name='BTC bilateral embedded spherical eyes on native Head joint';
  applySkin(mesh,source);
