@@ -56,6 +56,7 @@ No fusionar ni activar hasta pasar la suite de integración con la base definiti
 
 ### Agentes concurrentes y control de cambios
 - PR #67 (billetera y cuenta demo) está en DRAFT y declara colisión potencial entre identidad Google y billetera de escuderías. Este módulo no fusiona #67 ni crea un segundo saldo.
+- PR #119 (pronósticos) utiliza todavía `session_start()` y `$_SESSION['user_id']` de la autenticación antigua; **P0 BLOQUEANTE**: debe consultar `crp_users_current($pdo)` con la misma cookie `__Host-crp_users` y misma BD para aplicar revocaciones. Se publicó una observación técnica en la conversación de #119; no mezclar cuentas ni permitir operaciones tras logout_all.
 - PR #40 perfiles de comunidad están rotulados como demo; no migrarlos a usuarios reales sin reconciliar su ownership.
 - PR #115 estadio, PR #95 fixture y ramas BTC trabajan en otras zonas; esta rama no modifica esos ficheros.
 - Sincronizar de nuevo desde main y revisar diffs antes de cualquier merge.
