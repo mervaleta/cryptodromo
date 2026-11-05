@@ -167,6 +167,9 @@ function signalReady(expectedSerial=serial){
  lastTuneError='';successfulTuneCount++;
  clearTimeout(loadTimer);clearInterval(framePoller);
  frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
+ // Begin CSS fade as soon as the verified 3D scene is ready; do not rely
+ // exclusively on a future animation frame under heavy software WebGL load.
+ uncover();
  const release=()=>{if(expectedSerial===serial)uncover();};
  setTimeout(release,350);
  requestAnimationFrame(()=>requestAnimationFrame(release));
