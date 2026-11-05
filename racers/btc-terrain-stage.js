@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {createHoofTerrainFX} from '../visual-lab/hoofTerrainFX.js?v=hoof-btc-fiche-20261104-v1';
+import {createHoofTerrainFX} from '../visual-lab/hoofTerrainFX.js?v=btc-ground-prints-scale-20261105-v1';
 
 /**
  * Independent, showroom-sized terrain response for the stationary BTC atelier.
@@ -58,7 +58,7 @@ export function createBTCTerrainStage(scene,{platform,pedestalRing,renderer}={})
    const rail=new THREE.Mesh(borderGeo,seamsMat);
    rail.position.set(0,.028,z);scene.add(rail);borders.push(rail);
  }
- const fx=createHoofTerrainFX(scene,{lanes:1,quality:'balanced',surface:'dirt',seed:100819});
+ const fx=createHoofTerrainFX(scene,{lanes:1,quality:'balanced',surface:'dirt',seed:100819,imprintScale:.32,imprintLimit:36});
  fx.setLayout('straight');
  const textures=new Map();
  let surface='dirt',visible=true,wetness=0,wasRunning=false;
