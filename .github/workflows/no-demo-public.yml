@@ -46,8 +46,21 @@ jobs:
           const paths=['/','/stadiums/crypto/live/','/stadiums/crypto/broadcast/',
             '/visual-lab/','/autodromo/','/stadiums/','/institucional/',
             '/racers/','/stables/','/apuestas/','/fixture/'];
-          const sourcePaths=['/assets/crypto-venue.js','/assets/crypto-stadium-clocks.js',
-            '/assets/stadium-network-ui.js','/assets/crp-global-nav.js','/autodromo/app.js'];
+          // Fetch precisely the versioned assets referenced by the public HTML,
+          // not a fresh ad-hoc query that can pass while the browser stays stale.
+          const expectedScripts={
+            '/stadiums/crypto/live/':'/assets/crypto-venue.js?v=copy-clean-20261105-v1',
+            '/stadiums/crypto/broadcast/':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+            '/visual-lab/':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+            '/autodromo/':'./app.js?v=copy-clean-20261105-v1',
+            '/stadiums/':'/assets/stadium-network-ui.js?v=copy-clean-20261105-v1',
+            '/institucional/':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+            '/racers/':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
+            '/stables/':'/assets/stables.js?v=copy-clean-20261105-v1'
+          };
+          const sourcePaths=[...new Set(Object.entries(expectedScripts).map(([route,src])=>
+            new URL(src,process.env.SITE+route).pathname+new URL(src,process.env.SITE+route).search)
+          )];
           async function check(){
             const failures=[];
             for(const path of paths){
@@ -62,15 +75,20 @@ jobs:
                 const meta=[...withoutScripts.matchAll(/\b(?:content|title|alt|aria-label)=(["'])(.*?)\1/gi)]
                   .map(m=>m[2]).filter(v=>!/^https?:/.test(v)).join(' ');
                 if(/\bdemo\b/i.test(display+' '+meta))failures.push(path+': stale public badge');
+                const expected=expectedScripts[path];
+                if(expected&&!raw.includes(expected))failures.push(path+': HTML still loads stale script instead of '+expected);
               }catch(error){failures.push(path+': '+error.message);}
             }
             for(const path of sourcePaths){
               try{
-                const response=await fetch(process.env.SITE+path+'?crp-copy=20261105',{cache:'no-store'});
+                const response=await fetch(process.env.SITE+path,{cache:'no-store'});
                 if(!response.ok){failures.push(path+': HTTP '+response.status);continue;}
                 const body=await response.text();
                 if(/(?:●|·)\s*DEMO\b|<[^>]+>DEMO<\//.test(body))
                   failures.push(path+': stale dynamic JS badge');
+                if(path.includes('/assets/stadium-network-ui.js')&&
+                   !body.includes('/assets/stadium-network-engine.js?v=copy-clean-20261105-v1'))
+                   failures.push(path+': uses old fixture engine import');
               }catch(error){failures.push(path+': '+error.message);}
             }
             return failures;
