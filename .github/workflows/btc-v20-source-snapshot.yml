@@ -1,0 +1,25 @@
+name: BTC V20 portable real-WebGL source snapshot
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/btc-v20-source-snapshot.yml'
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare portable local-browser files without npm
+        run: |
+          tar -czf /tmp/btc-v20-runtime.tar.gz racers race-lab/source/src race-lab/source/assets assets visual-lab
+          mkdir -p artifacts/btc-v20-snapshot
+          cp /tmp/btc-v20-runtime.tar.gz artifacts/btc-v20-snapshot/
+          du -h artifacts/btc-v20-snapshot/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: btc-v20-runtime-source-for-local-chromium
+          path: artifacts/btc-v20-snapshot/*.tar.gz
+          if-no-files-found: error
