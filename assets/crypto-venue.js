@@ -79,6 +79,9 @@ const setError=detail=>{
  audioButton.disabled=true;
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
+ // A failed but hidden iframe can still consume a WebGL context and RAF time.
+ // Preserve the recovery URL, then release the failed scene before retry.
+ if(frame.getAttribute('src')!=='about:blank')frame.src='about:blank';
 };
 // Bound each HTML probe including response-body transfer. If Hostinger stalls,
 // the TV eventually offers retry rather than spinning forever before iframe load.
