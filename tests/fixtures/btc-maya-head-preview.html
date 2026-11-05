@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BTC · Maya head-only anatomy test</title>
+<style>
+html,body{margin:0;overflow:hidden;background:#0c1420;color:white;font-family:ui-monospace,monospace}
+#view{display:block;width:100vw;height:100vh}
+#name{position:fixed;top:22px;left:25px;padding:7px 13px;border-radius:3px;background:#0b152acc;color:#dfc6a0;letter-spacing:.07em}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+</head><body><canvas id="view"></canvas><div id="name">MAYA 2017 HEAD · ORIGINAL GLB GALLOP · NO AAA APPROVAL</div>
+<script type="module">
+import * as THREE from 'three';
+import {createHorse} from '../../race-lab/source/src/horse.js';
+import {createBTCHeroV5} from '../../racers/btc-hero-v5.js';
+import {createBTCMayaHeadGraft} from '../../racers/experiments/maya-head-graft.js';
+const canvas=document.querySelector('#view');
+const renderer=new THREE.WebGLRenderer({canvas,alpha:false,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(1);renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
+renderer.shadowMap.enabled=true;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#101d2e');
+const camera=new THREE.PerspectiveCamera(35,innerWidth/innerHeight,.1,70);
+const cameras={
+ profile:[2.12,1.97,3.73],front:[3.85,2.12,.13],rear:[-3.52,1.78,1.70],
+ detail:[1.64,2.16,2.89],threeQuarter:[2.85,2.18,2.75],top:[1.02,4.55,1.12]
+};
+const target=new THREE.Vector3(0,1.05,0);
+function setCamera(name){if(!cameras[name])throw Error('Bad camera');camera.position.set(...cameras[name]);camera.lookAt(target);}
+setCamera('profile');
+scene.add(new THREE.HemisphereLight('#e4edf2','#23352b',1.35));
+const key=new THREE.DirectionalLight('#ffe6c4',2.3);key.position.set(-4,8,6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);scene.add(key);
+const fill=new THREE.DirectionalLight('#c5d8ee',1.2);fill.position.set(5,3,-5);scene.add(fill);
+const ground=new THREE.Mesh(new THREE.CylinderGeometry(2.5,2.55,.12,80),
+ new THREE.MeshStandardMaterial({color:'#243427',roughness:.87}));
+ground.position.y=-.07;ground.receiveShadow=true;scene.add(ground);
+const GRAFT=new URLSearchParams(location.search).get('graft')==='1';
+try{
+ const horse=await createHorse({symbol:'BTC',coat:'#a36b4e',accent:'#f7931a',height:2.5,
+  mode:'Gallop',gaitCorrectionStrength:0,maneMotion:false,nativeLookdev:true});
+ horse.root.scale.setScalar(.78);horse.setVisualQuality('cinematic');horse.setCoatFinish(.30);
+ const hero=createBTCHeroV5(horse.root,{pass:10,maneSize:1.15,tailSize:1.15,color:'#30261f'});
+ const head=GRAFT?createBTCMayaHeadGraft(horse.root,{coatColor:'#a36b4e'}):null;
+ scene.add(horse.root);
+ let held=0,paused=false;
+ function step(dt){horse.update(dt,1);hero.update(dt,{wind:.8,speed:1,running:true,phase:horse.hoofPhase});}
+ function setPose(phase){
+  const duration=.5833333134651184;
+  const t=duration*(phase%16)/16,delta=(t-held+duration)%duration;
+  for(let remain=delta;remain>1e-6;){const part=Math.min(remain,.05);step(part);remain-=part;}
+  held=t;paused=true;
+ }
+ window.__btcHeadQA={
+  snapshot:()=>({graft:GRAFT,head:head?.snapshot||null,clips:horse.clips,
+   boneCount:head?.snapshot?.untouchedNativeBones,hero:hero.snapshot,
+   drawCalls:renderer.info.render.calls,glVersion:renderer.capabilities.isWebGL2,
+   headRealMaya:GRAFT&&head?.snapshot?.mayaHeadVertices>1700}),
+  setPose,setCamera,play:()=>{paused=false;}
+ };
+ const clock=new THREE.Clock();
+ renderer.setAnimationLoop(()=>{
+  if(!document.hidden&&!paused)step(Math.min(clock.getDelta(),.04));
+  else clock.getDelta();
+  renderer.render(scene,camera);
+ });
+}catch(e){window.__btcHeadFailure=String(e?.stack||e);document.querySelector('#name').textContent='HEAD ERROR: '+e.message;console.error(e);}
+</script>
+</body></html>
