@@ -44,7 +44,7 @@ try{
  assert.equal(start.heroGroom.crownBridgeLocks,112,'forelock and dorsal mane must be joined across the poll');
  assert.equal(start.heroGroom.heroLocks,56,'sculpted swept hero locks must actually render');
  assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
- assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
+ assert.equal(start.heroGroom.rootBedVertices,0,'no detached scalp strip; native Maya crest itself is sealed');
  assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must remain anatomically sized');
   assert.equal(start.heroGroom.eyeCenterX,.00185,'cornea must be visible beyond the Maya socket');
   assert.equal(start.heroGroom.eyeAssembly,'integrated-maya-eyelid-shading-v15');
