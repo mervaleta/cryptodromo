@@ -1,0 +1,43 @@
+name: BTC actual Maya head-only anatomy · real Gallop WebGL
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/experiments/maya-head-graft.js'
+      - 'tests/fixtures/btc-maya-head-preview.html'
+      - 'tests/btc-maya-head-only-browser.mjs'
+      - '.github/workflows/btc-maya-head-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  maya-head:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Validate Maya head module and browser script
+        run: |
+          node --check racers/experiments/maya-head-graft.js
+          node --check tests/btc-maya-head-only-browser.mjs
+          node --test tests/btc-master-change-policy.mjs
+      - name: Install Chromium with software WebGL fallback
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Render the actual Maya-source head on original native GLB Gallop
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-head-qa-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          node tests/btc-maya-head-only-browser.mjs
+      - name: Preserve original-versus-Maya screenshots for manual inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-maya-head-real-geometry-vs-glb-gallop
+          path: artifacts/btc-maya-head-only/**
+          if-no-files-found: warn
