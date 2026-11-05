@@ -40,7 +40,9 @@ const atelierMode=new URLSearchParams(location.search).get('atelier');
 const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='BTC');
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
 // Normal BTC profile uses the sculpted horse; ?btcMaster=v5 retains the legacy study.
-let atelierVariant=new URLSearchParams(location.search).get('btcMaster')==='v5'?'enhanced':'maya';
+const requestedBTCMaster=new URLSearchParams(location.search).get('btcMaster');
+// Until Maya's hind-leg skinning is repaired, show the intact native rig by default.
+let atelierVariant=requestedBTCMaster==='maya'?'maya':requestedBTCMaster==='v5'?'enhanced':'original';
 let btcRevision=null;
 function renderBTCRevision(){
  const panel=$('#btc-master-revision');
@@ -63,7 +65,7 @@ function renderBTCRevision(){
 }
 async function loadBTCRevision(){
  try{
-  const response=await fetch('/racers/btc-master-revision.json?v=btc-anatomy-feedback-20261105-v1',{cache:'no-store'});
+  const response=await fetch('/racers/btc-master-revision.json?v=btc-safe-master-20261105-v1',{cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
@@ -144,7 +146,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-anatomy-feedback-20261105-v1':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-safe-master-20261105-v1':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
