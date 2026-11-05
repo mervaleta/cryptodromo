@@ -23,12 +23,12 @@ try{
  assert.equal(state.heroGroom?.version,'btc-maya-2017-sculpt-gallop-20261104');
  assert.equal(state.heroGroom?.oldHairHidden,true);
  assert.equal(state.heroGroom?.gallopPreserved,true);
- assert.equal(state.heroGroom?.vertices,5409,'Anatomical body plus skinned tail-root closure and both integrated ear-root caps');
+ assert.equal(state.heroGroom?.vertices,5411,'Anatomical body plus skinned tail-root closure and both integrated ear-root caps');
  assert.equal(state.heroGroom?.earRootCapCenters,2,'closed openings at both ears');
  assert.equal(state.heroGroom?.crownBridgeLocks,112,'poll hair bridge must exist in the standard BTC view');
  assert.equal(state.heroGroom?.heroLocks,56,'default BTC must use hero mane silhouette');
  assert.equal(state.heroGroom?.solidRingSides,6,'hero groom is a rounded skinned loft');
- assert.equal(state.heroGroom?.rootBedVertices,495,'continuous skinned hair surface across crown');
+ assert.equal(state.heroGroom?.rootBedVertices,0,'no detached scalp strip; native Maya crest itself is sealed');
  assert.ok(state.heroGroom?.integratedDockCapTriangles>=20,'no opening under the flowing tail');
  assert.ok(state.heroGroom?.sculptedBodyParts>=1);
  assert.equal(state.heroGroom?.animatedHair,true);

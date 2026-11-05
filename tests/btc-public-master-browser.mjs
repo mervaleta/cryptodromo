@@ -21,7 +21,7 @@ try {
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.symbol==='BTC'&&s?.variant==='maya'&&
     s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
-    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.facialSurfaces>=2&&
+    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.integratedEyeRims===2&&
     s?.clips?.includes('Gallop')&&s?.drawCalls>0;
  },null,{timeout:120000});
  const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
@@ -44,6 +44,14 @@ try {
   undefined,{timeout:60000,polling:400});
  assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain)).surface,'grass');
  await page.selectOption('#btc-terrain-surface','dirt');
+  // Production must serve the **new mesh**, not only the old v12 page.
+ assert.equal(s.heroGroom.harmonyBuild,'btc-master-procedural-hind-groom-20261104-v12-fx2');
+ assert.equal(s.heroGroom.eyeCenterX,.00185,'real cornea depth in canonical BTC fiche');
+ assert.equal(s.heroGroom.facialSurfaces,0,'real eyelids must not be detached pieces');
+ assert.ok(s.heroGroom.pollAnchoredVertices>10,'stable native skinning at skull-crest');
+ assert.ok(s.heroGroom.fineLocks>=1000,'real fine hair density');
+ await page.waitForFunction(()=>Math.abs(window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.tailInertia||0)>.005,
+   null,{timeout:30000});
   assert.equal(s.heroGroom.gallopPreserved,true);
  assert.equal(s.heroGroom.originalRig,true);
  assert.equal(s.heroGroom.sculptedEyes,2);
@@ -51,7 +59,7 @@ try {
  assert.equal(s.heroGroom.crownBridgeLocks,112,'hero mane must be connected across the poll');
  assert.equal(s.heroGroom.heroLocks,56,'the normal public BTC must use raised locks');
  assert.equal(s.heroGroom.solidRingSides,6,'live horse needs rounded 3D locks instead of hair ribbons');
- assert.equal(s.heroGroom.rootBedVertices,495,'the real public horse must have a continuous sculpted hair root bed');
+ assert.equal(s.heroGroom.rootBedVertices,0,'no detached scalp strip; native Maya crest itself is sealed');
  assert.equal(s.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
   assert.equal(s.heroGroom.proceduralHairTexture,true);
   assert.equal(s.heroGroom.hindTextureGenerated,true);
@@ -78,6 +86,15 @@ try {
  await page.locator('#horse-view').screenshot({
   path:'artifacts/btc-live/public-btc-anatomical.png',timeout:90000
  });
+ // Visual QA of the live Hostinger model, not a generated illustration.
+ for(const angle of ['face','poll']){
+  await page.locator('[data-btc-camera="'+angle+'"]').click();
+  await page.waitForTimeout(260);
+  await page.locator('#horse-canvas').screenshot({
+   path:'artifacts/btc-live/btc-v12-fx2-'+angle+'.png',timeout:90000
+  });
+ }
+ await page.locator('[data-btc-camera="profile"]').click();
  await page.locator('button.runner[data-symbol="ETH"]').click({timeout:20000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='ETH',null,{timeout:90000});
  const eth=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());

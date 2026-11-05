@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "symbol": "BTC",
   "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-master-procedural-hind-groom-20261104-v12-fx1",
+  "buildId": "btc-master-procedural-hind-groom-20261104-v12-fx2",
   "status": "pending_deploy",
-  "statusLabel": "BTC v12 · nuevo visor de contacto de pezuñas y terrenos, pendiente de despliegue; anatomía sin cambios",
+  "statusLabel": "FX2: corrección real de ojos, nuca y pelo en Three.js; pendiente de comprobar render público",
   "updatedAt": "2026-11-04",
-  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final. | V12-FX1: la ficha 3D integra un suelo visible con tierra, arena y césped, partículas por los cuatro contactos animados y control de humedad. No cambia la geometría ni los huesos del caballo, ni resuelve todavía el defecto muslo-corvejón; el registro de efectos queda pendiente de validación del Hostinger público.",
+  "note": "Revisión FX2 de la geometría y material real de la ficha BTC, no una imagen: globos oculares recolocados usando la malla Maya, bandas de párpados continuas sin triangulitos negros, pesos de skin suavizados/ancorados a Head en la nuca, volumen superior y crin de menor sección, mayor cantidad de fibras finas, reflexión más áspera y cola con oscilación inercial amortiguada. La fase Gallop y los 99 caballos restantes se preservan. No declarar equivalente al render conceptual hasta inspeccionar las seis cámaras y distintas fases en Hostinger.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Revisar especialmente la transición anatómica muslo-corvejón en todas las fases del Gallop; aún se ven estrechamientos y siluetas poco naturales en perfil",
-    "Cotejar fase a fase con la referencia 212734.mp4 antes de modificar el rig o las curvas de animación de manera coordinada",
-    "Validar proporción, sombreado y continuidad de patas desde cámaras laterales y posteriores en alta resolución",
-    "Mantener crin compacta sin volver a introducir filamentos colgantes y garantizar rendimiento en 12 corredores"
+    "Validar continuidad visual de la nuca y crin a lo largo de todas las fases del Gallop en las cámaras frontal, lateral, trasera y superior",
+    "Comparar la mejora de ojos y sus párpados en el navegador real contra los tres recortes aportados por el usuario; eliminar cualquier artefacto residual",
+    "Confirmar que la nueva respuesta de cola muestra oscilación y recuperación natural a diferentes velocidades y viento",
+    "Seguir afinando volumen muslo-corvejón pendiente en el PR anatómico independiente v13b; NO sobreescribirlo al integrar esta revisión",
+    "Medir coste GPU y 12 corredores a diferentes niveles de calidad; todavía no está certificado acabado AAA"
   ],
   "nextPhase": {
     "status": "blocked",
