@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
+import {captureOptional} from './helpers/optionalScreenshot.mjs';
 const root=process.env.CRP_BASE_URL||'http://127.0.0.1:4173';
 const url=path=>new URL(path,root).toString();
 const browser=await chromium.launch({headless:true,args:[
@@ -24,7 +25,7 @@ try{
  assert.equal(await race.locator('#winner-replay').isVisible(),true);
  assert.equal(await race.locator('#result-overlay').isVisible(),false);
  assert.equal(first.winner,first.replay.winnerSymbol);
- await race.screenshot({path:'artifacts/winner-replay-env/slow-motion-winner.png',timeout:16000});
+ await captureOptional(race,'artifacts/winner-replay-env/slow-motion-winner.png');
  await race.waitForFunction(()=>window.__winnerReplayQA?.snapshot()?.replay.complete===true&&
    window.__winnerReplayQA?.snapshot()?.officialVisible===true,
    null,{timeout:22000});
@@ -32,7 +33,7 @@ try{
  await race.locator('#result-overlay').waitFor({state:'visible',timeout:8000});
  assert.equal(await race.locator('#result-overlay').isVisible(),true);
  assert.equal(await race.locator('#result-list .result-row').count(),12);
- await race.screenshot({path:'artifacts/winner-replay-env/official-after-replay.png',timeout:16000});
+ await captureOptional(race,'artifacts/winner-replay-env/official-after-replay.png');
  console.log('PASS real 3D winner slow-mo begins after last horse, official result after replay, same winner');
 
  const tv=await browser.newPage({viewport:{width:1450,height:900},deviceScaleFactor:1});
@@ -69,7 +70,7 @@ try{
  await tv.locator('[data-tv-stage="grandstand"]').click();
  assert.equal(await value('camera'),'grandstand');
  assert.match(await tv.locator('[data-tv-stadium-link]').getAttribute('href'),/course=muybridge/);
- await tv.screenshot({path:'artifacts/winner-replay-env/director-environment-controls.png',timeout:16000});
+ await captureOptional(tv,'artifacts/winner-replay-env/director-environment-controls.png');
  await tv.locator('[data-tv-switch="genesis"]').click();
  await tv.waitForFunction(()=>{
   const qa=window.__satoshiTvQA?.snapshot();
