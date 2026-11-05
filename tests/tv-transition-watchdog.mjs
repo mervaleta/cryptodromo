@@ -14,6 +14,11 @@ test('channel fade is always released once a verified race canvas is present',()
  assert.match(src,/signalReady\(expectedSerial\)/);
  assert.match(src,/clearInterval\(framePoller\)/);
  assert.match(src,/if\(validFrameDoc\(\)\)\{\s*signalReady\(serial\)/);
+ assert.match(src,/const hasRaceDocument=/);
+ assert.match(src,/const start=doc\?\.getElementById\('start'\)/);
+ assert.match(src,/return start\?\.disabled===false/);
+ assert.match(src,/if\(hasRaceDocument\(\)\)\{\s*watchLoad\(serial\)/);
+ assert.match(src,/if\(\/\^ERROR/);
 });
 test('single verified iframe and existing Hostinger rewrite fallback survive',()=>{
  const html=readFileSync(new URL('../stadiums/crypto/live/index.html',import.meta.url),'utf8');
