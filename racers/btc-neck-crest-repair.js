@@ -1,95 +1,141 @@
 /**
- * Stitch the actual open dorsal neck border of the source Quaternius GLB.
- * Native Main vertices, bones, Gallop, mouth, eyes and legs stay untouched.
- * Coordinates below were measured from the original source boundary. The
- * added triangles become part of the SAME skinned coat, not a floating prop.
+ * Repair the actual 74-edge opening running over BTC's skull, poll and crest.
+ * Earlier V5's eight-station bridge left most of this border exposed.
+ * Join the two original boundary chains in the SAME animated SkinnedMesh.
+ * No extra bones, static covers, face replacements or edits to other racers.
  */
 import * as THREE from 'three';
-export const BTC_CREST_REPAIR_BUILD='btc-crest-closure-20261105-v1';
-const section=[
- [-.02656543,.00078444,.04473275],
- [-.02606626,.00119316,.04467723],
- [-.02483443,.00099535,.04471820],
- [-.02424467,.00174035,.04448752],
- [-.02212494,.00183677,.04269411],
- [-.01863979,.00191262,.03992616],
- [-.01585875,.00204130,.03820063],
- [-.01307800,.00216997,.03647471]
-];
-const tip=[0,-.01178345,.0366338];
-function find(p,x,y,z){
- let n=-1,d=Infinity;
- for(let i=0;i<p.count;i++){
-  const q=(p.getX(i)-x)**2+(p.getY(i)-y)**2+(p.getZ(i)-z)**2;
-  if(q<d){d=q;n=i;}
- }
- if(d>.0011**2)throw Error('BTC crest seam changed: refusing ungrounded repair');
- return n;
-}
-function skinFor(a,b,joints,weights){
- const m=new Map();
- for(const id of [a,b])for(let k=0;k<4;k++){
-  const j=joints.getComponent(id,k),w=weights.getComponent(id,k)*.5;
-  if(w>.000001)m.set(j,(m.get(j)||0)+w);
- }
- const top=[...m].sort((x,y)=>y[1]-x[1]).slice(0,4);
- const total=top.reduce((s,x)=>s+x[1],0)||1;
- return {bones:Array.from({length:4},(_,i)=>top[i]?.[0]||0),
-  weights:Array.from({length:4},(_,i)=>(top[i]?.[1]||0)/total)};
-}
+export const BTC_CREST_REPAIR_BUILD='btc-head-neck-border-closure-20261105-v2';
+const WELD_SCALE=1e7;
+const key3=(x,y,z)=>[x,y,z].map(v=>Math.round(v*WELD_SCALE)).join('/');
+const edgeKey=(a,b)=>a<b?a+':'+b:b+':'+a;
+
 export function closeBTCNeckCrest(mesh){
- if(!mesh?.isSkinnedMesh)throw Error('BTC native crest requires SkinnedMesh');
- const old=mesh.geometry,p=old.getAttribute('position'),n=old.getAttribute('normal'),
-  joints=old.getAttribute('skinIndex'),weights=old.getAttribute('skinWeight'),idx=old.getIndex();
- if(!p||!n||!joints||!weights||!idx||p.count<2500)
-  throw Error('BTC crest requires original skinned Main geometry');
+ if(!mesh?.isSkinnedMesh)throw Error('BTC head and crest require a SkinnedMesh');
+ const old=mesh.geometry,position=old?.getAttribute('position'),normal=old?.getAttribute('normal'),
+  skinIndex=old?.getAttribute('skinIndex'),skinWeight=old?.getAttribute('skinWeight'),index=old?.getIndex();
+ if(!position||!normal||!skinIndex||!skinWeight||!index||position.count<2500)
+  throw Error('BTC head closure needs native indexed Main with its rig');
  if(Object.values(old.attributes).some(a=>a.isInterleavedBufferAttribute))
-  throw Error('BTC crest refuses interleaved attributes');
- const bounds=section.map(([y,x,z])=>[
-  find(p,-x,y,z),find(p,x,y,z)
- ]);
- const finish=find(p,...tip);
- if(p.count+section.length>=65535)throw Error('BTC crest index overflow');
- const geo=new THREE.BufferGeometry(),attributes={};
- for(const [name,a] of Object.entries(old.attributes)){
-  const data=new a.array.constructor((p.count+section.length)*a.itemSize);
-  data.set(a.array);attributes[name]={a,data};
+  throw Error('BTC head closure refuses interleaved geometry');
+
+ // GLB UV/normal splits duplicate positions. Weld only for border discovery.
+ // Faces still reference the existing source vertices with their original skin.
+ const identities=new Map(),coords=[],representative=[],vertexId=new Int32Array(position.count);
+ for(let v=0;v<position.count;v++){
+  const x=position.getX(v),y=position.getY(v),z=position.getZ(v),key=key3(x,y,z);
+  let id=identities.get(key);
+  if(id===undefined){id=coords.length;identities.set(key,id);coords.push([x,y,z]);representative.push(v);}
+  vertexId[v]=id;
  }
- const push=(name,values,i)=>attributes[name].data.set(values,i*attributes[name].a.itemSize);
- for(let i=0;i<section.length;i++){
-  const [l,r]=bounds[i],id=p.count+i;
-  push('position',[(p.getX(l)+p.getX(r))*.5,
-   (p.getY(l)+p.getY(r))*.5,(p.getZ(l)+p.getZ(r))*.5+.00034],id);
-  const nx=n.getX(l)+n.getX(r),ny=n.getY(l)+n.getY(r),
-   nz=Math.max(.15,n.getZ(l)+n.getZ(r)),length=Math.hypot(nx,ny,nz)||1;
-  push('normal',[nx/length,ny/length,nz/length],id);
-  const skin=skinFor(l,r,joints,weights);
-  push('skinIndex',skin.bones,id);push('skinWeight',skin.weights,id);
-  for(const [name,{a,data}] of Object.entries(attributes)){
-   if(['position','normal','skinIndex','skinWeight'].includes(name))continue;
-   for(let k=0;k<a.itemSize;k++)
-    data[id*a.itemSize+k]=.5*(a.getComponent(l,k)+a.getComponent(r,k));
+ const edges=new Map();
+ for(let i=0;i<index.count;i+=3){
+  const a=vertexId[index.getX(i)],b=vertexId[index.getX(i+1)],c=vertexId[index.getX(i+2)];
+  for(const [u,v] of [[a,b],[b,c],[c,a]]){
+   if(u===v)continue;
+   const k=edgeKey(u,v),record=edges.get(k);
+   if(record)record.count++;
+   else edges.set(k,{a:u,b:v,count:1});
   }
  }
- for(const [name,{a,data}] of Object.entries(attributes))
-  geo.setAttribute(name,new THREE.BufferAttribute(data,a.itemSize,a.normalized));
- const indices=Array.from(idx.array),start=idx.count;
- for(let i=0;i<bounds.length-1;i++){
-  const [l,r]=bounds[i],[ln,rn]=bounds[i+1],c=p.count+i,cn=c+1;
-  indices.push(l,c,ln,c,cn,ln,c,r,cn,r,rn,cn);
+ const graph=new Map();
+ for(const edge of edges.values())if(edge.count===1){
+  for(const [a,b] of [[edge.a,edge.b],[edge.b,edge.a]]){
+   if(!graph.has(a))graph.set(a,new Set());
+   graph.get(a).add(b);
+  }
  }
- const [l,r]=bounds[bounds.length-1],c=p.count+bounds.length-1;
- indices.push(l,c,finish,c,r,finish);
- geo.setIndex(new THREE.Uint16BufferAttribute(indices,1));
- for(const group of old.groups)geo.addGroup(group.start,group.count,group.materialIndex);
- if(old.groups.length)geo.addGroup(start,indices.length-start,0);
- geo.computeBoundingSphere();
+ const seen=new Set(),components=[];
+ for(const start of graph.keys()){
+  if(seen.has(start))continue;
+  const todo=[start],component=[];seen.add(start);
+  while(todo.length){
+   const v=todo.pop();component.push(v);
+   for(const next of graph.get(v)||[])if(!seen.has(next)){
+    seen.add(next);todo.push(next);
+   }
+  }
+  components.push(component);
+ }
+ // Hooves, eye sockets and tail have their own original borders: leave them.
+ const outline=components.find(c=>c.length===74&&c.every(v=>(graph.get(v)?.size||0)===2)
+   &&Math.min(...c.map(v=>coords[v][1]))<-.032
+   &&Math.max(...c.map(v=>coords[v][1]))>-.014);
+ if(!outline)throw Error('BTC 74-edge skull/neck opening changed: refusing an ungrounded patch');
+ const front=outline.reduce((best,v)=>
+  coords[v][2]<coords[best][2]-1e-8||
+  (Math.abs(coords[v][2]-coords[best][2])<1e-8&&Math.abs(coords[v][0])<Math.abs(coords[best][0]))?v:best);
+ const rear=outline.reduce((best,v)=>coords[v][1]>coords[best][1]?v:best);
+ const order=[front];let previous=-1;
+ while(order.length<outline.length){
+  const here=order[order.length-1];
+  const next=[...graph.get(here)].find(v=>v!==previous);
+  if(next===undefined||next===front||order.includes(next))
+   throw Error('BTC skull opening no longer forms one simple border');
+  previous=here;order.push(next);
+ }
+ if(!graph.get(order[order.length-1]).has(front))
+  throw Error('BTC skull opening border no longer closes');
+ const rearAt=order.indexOf(rear);
+ if(rearAt<10||rearAt>order.length-10)throw Error('BTC skull boundary sides invalid');
+ const left=order.slice(0,rearAt+1),right=[front,...order.slice(rearAt+1).reverse(),rear];
+ // Front-facing winding is evaluated in the active native Gallop pose.
+ mesh.parent?.updateMatrixWorld(true);mesh.skeleton.update();
+ const triangles=[];let l=0,r=0;
+ const length=(a,b)=>Math.hypot(coords[a][0]-coords[b][0],coords[a][1]-coords[b][1],coords[a][2]-coords[b][2]);
+ while(l<left.length-1||r<right.length-1){
+  const a=left[l],b=right[r];
+  let advanceLeft;
+  if(l===left.length-1)advanceLeft=false;
+  else if(r===right.length-1)advanceLeft=true;
+  else{
+   // Short cross sections preserve the horse's bent face and neck silhouette.
+   const progressL=(l+1)/(left.length-1),progressR=(r+1)/(right.length-1);
+   const costL=length(left[l+1],b)+Math.max(0,progressL-progressR-.05)*.005;
+   const costR=length(a,right[r+1])+Math.max(0,progressR-progressL-.05)*.005;
+   advanceLeft=costL<=costR;
+  }
+  const candidate=advanceLeft?[a,left[++l],b]:[a,b,right[++r]];
+  if(new Set(candidate).size!==3)continue;
+  const [v0,v1,v2]=candidate.map(id=>
+   mesh.applyBoneTransform(representative[id],new THREE.Vector3().fromBufferAttribute(position,representative[id])));
+  const ab=new THREE.Vector3().subVectors(v1,v0),ac=new THREE.Vector3().subVectors(v2,v0);
+  const nz=ab.cross(ac).z;
+  if(!Number.isFinite(nz)||Math.abs(nz)<1e-12)
+   throw Error('BTC head closure found degenerate posed face');
+  if(nz<0)[candidate[1],candidate[2]]=[candidate[2],candidate[1]];
+  triangles.push(...candidate.map(id=>representative[id]));
+ }
+ if(triangles.length!==72*3)throw Error('BTC skull closure needs 72 stitched triangles');
+ // Reject intersections with pre-existing faces / any remaining open seam.
+ const counts=new Map(edges);
+ for(let i=0;i<triangles.length;i+=3){
+  const a=vertexId[triangles[i]],b=vertexId[triangles[i+1]],c=vertexId[triangles[i+2]];
+  for(const [u,v] of [[a,b],[b,c],[c,a]]){
+   const key=edgeKey(u,v),oldRecord=counts.get(key);
+   if(oldRecord)counts.set(key,{...oldRecord,count:oldRecord.count+1});
+   else counts.set(key,{a:u,b:v,count:1});
+  }
+ }
+ for(const v of outline)for(const neighbor of graph.get(v)){
+  if(counts.get(edgeKey(v,neighbor)).count!==2)
+   throw Error('BTC skull closure left an original border unsealed');
+ }
+ if([...counts.values()].some(e=>e.count>2))
+  throw Error('BTC skull closure introduced non-manifold triangles');
+
+ const geo=old.clone(),originalCount=index.count;
+ const IndexArray=index.array.constructor,all=new IndexArray(originalCount+triangles.length);
+ all.set(index.array);all.set(triangles,originalCount);
+ geo.setIndex(new THREE.BufferAttribute(all,1));
+ if(old.groups.length)geo.addGroup(originalCount,triangles.length,0);
+ geo.computeBoundingBox();geo.computeBoundingSphere();
  mesh.geometry=geo;
+ let active=true;
  return {
-  build:BTC_CREST_REPAIR_BUILD,
-  triangles:(indices.length-start)/3,
-  originalGeometryPreserved:true,
-  nativeSkeletonPreserved:true,
-  dispose(){if(mesh.geometry===geo)mesh.geometry=old;geo.dispose();}
+  build:BTC_CREST_REPAIR_BUILD,triangles:triangles.length/3,
+  originalGeometryPreserved:true,nativeSkeletonPreserved:true,
+  sealedOriginalBorderEdges:74,remainingSkullBorderEdges:0,
+  dispose(){if(!active)return;active=false;if(mesh.geometry===geo)mesh.geometry=old;geo.dispose();}
  };
 }

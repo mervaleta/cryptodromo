@@ -25,8 +25,8 @@ test('new V5 build and documentation describe the visible runner, not the Maya p
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
  const v5=read('racers/btc-hero-v5.js');
  assert.equal(manifest.masterId,'btc-original-glb-v5-groom');
- assert.equal(manifest.buildId,'btc-v5-neck-tail-premium-20261105-v4');
- assert.match(v5,/BTC_HERO_V5_PUBLIC_BUILD='btc-v5-neck-tail-premium-20261105-v4'/);
+ assert.equal(manifest.buildId,'btc-v5-head-neck-seal-20261105-v5');
+ assert.match(v5,/BTC_HERO_V5_PUBLIC_BUILD='btc-v5-head-neck-seal-20261105-v5'/);
  assert.equal(manifest.status,'needs_visual_qa');
  assert.match(manifest.visualPass,/Hero V5 pase 10/);
  assert.match(read('docs/BTC-MASTER-CHANGELOG.md'),/Restauraci.n Hero V5 pase 10/);

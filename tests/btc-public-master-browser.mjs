@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
 import {chromium} from 'playwright';
-const BUILD='btc-v5-neck-tail-premium-20261105-v4';
+const BUILD='btc-v5-head-neck-seal-20261105-v5';
 const folder='artifacts/btc-live';
 mkdirSync(folder,{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
@@ -18,7 +18,7 @@ const root='https://race.cryptodromo.com/racers/';
 async function waitForModel(expectPatch=true){
  await page.waitForFunction(({patch,version})=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
-  return s?.symbol==='BTC'&&s?.variant==='enhanced'&&s?.heroGroom?.neckClosureTriangles===(patch?30:0)
+  return s?.symbol==='BTC'&&s?.variant==='enhanced'&&s?.heroGroom?.neckClosureTriangles===(patch?72:0)
     &&s?.heroGroom?.nativeTailBones===7&&s?.drawCalls>0&&s?.clips?.includes('Gallop')
     &&document.querySelector('#btc-master-build')?.textContent?.includes(version);
  },{patch:expectPatch,version:BUILD},{timeout:120000});
@@ -28,7 +28,7 @@ try{
  // No query flags: this is the exact URL the user will open.
  await page.goto(root+'#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  const real=await waitForModel();
- assert.equal(real.heroGroom.neckClosureBuild,'btc-crest-closure-20261105-v1');
+ assert.equal(real.heroGroom.neckClosureBuild,'btc-head-neck-border-closure-20261105-v2');
  assert.equal(real.heroGroom.source,'original-skinned-glb');
  assert.equal(real.heroGroom.gallopPreserved,true);
  assert.equal(real.heroGroom.oldHairHidden,true);

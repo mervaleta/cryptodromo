@@ -1,4 +1,4 @@
-name: Verify BTC V5 v4 actually on Hostinger with real WebGL
+name: Verify BTC V5 head/neck v5 actually on Hostinger with real WebGL
 on:
   push:
     branches: [main]
@@ -23,7 +23,7 @@ jobs:
           set -euo pipefail
           ORIGIN='https://race.cryptodromo.com/racers'
           for attempt in $(seq 1 20); do
-            echo "Checking Hostinger BTC V5 v4 deployment: $attempt/20"
+            echo "Checking Hostinger BTC V5 head/neck v5 deployment: $attempt/20"
             ok=true
             for module in index.html racers.js btc-atelier-preview.js btc-hero-v5.js btc-neck-crest-repair.js btc-silk-shell-v5.js btc-master-revision.json; do
               if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "$ORIGIN/$module?deploy=$GITHUB_SHA-$attempt" -o "/tmp/btc-$module"; then
@@ -31,18 +31,18 @@ jobs:
               fi
             done
             if [[ "$ok" == true ]] &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-index.html &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-racers.js &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-btc-atelier-preview.js &&
+               grep -Fq 'btc-v5-head-neck-seal-20261105-v5' /tmp/btc-index.html &&
+               grep -Fq 'btc-v5-head-neck-seal-20261105-v5' /tmp/btc-racers.js &&
+               grep -Fq 'btc-v5-head-neck-seal-20261105-v5' /tmp/btc-btc-atelier-preview.js &&
                grep -Fq 'closeBTCNeckCrest' /tmp/btc-btc-hero-v5.js &&
-               grep -Fq 'btc-crest-closure-20261105-v1' /tmp/btc-btc-neck-crest-repair.js &&
+               grep -Fq 'btc-head-neck-border-closure-20261105-v2' /tmp/btc-btc-neck-crest-repair.js &&
                grep -Fq '.01640+' /tmp/btc-btc-silk-shell-v5.js &&
-               grep -Fq 'btc-v5-neck-tail-premium-20261105-v4' /tmp/btc-btc-master-revision.json; then
-              echo 'HOSTINGER_ACTUAL_BTC_V4_MODULES_PUBLISHED'
+               grep -Fq 'btc-v5-head-neck-seal-20261105-v5' /tmp/btc-btc-master-revision.json; then
+              echo 'HOSTINGER_ACTUAL_BTC_V5_MODULES_PUBLISHED'
               break
             fi
             if [[ "$attempt" == 20 ]]; then
-              echo '::error::Hostinger has NOT deployed the exact v4 BTC module chain'
+              echo '::error::Hostinger has NOT deployed the exact v5 BTC module chain'
               exit 1
             fi
             sleep 15
@@ -57,6 +57,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-v4-hostinger-public-webgl-visual-qa
+          name: btc-v5-hostinger-public-webgl-visual-qa
           path: artifacts/btc-live/*.png
           if-no-files-found: warn

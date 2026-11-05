@@ -180,3 +180,11 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Se conserva intacto el hocico, los ojos, todas las patas, pesos originales y clip Gallop. Otros 99 corredores, cómputo de carrera y odds no modificados.
 - El visor muestra versión de revisión y no `MODELO MAESTRO` ni promesa AAA. Se agregó `tests/btc-hair-root-geometry.mjs`: prueba de que todas las raíces geométricas de la cola quedan debajo de la superficie de la grupa en el GLB fuente y comparten exactamente el esqueleto nativo.
 - Criterio pendiente: capturas WebGL reales de los cinco ángulos y 16 fases, y aprobación explícita del usuario. **No hay aprobación de modelo maestro.**
+
+
+## 2026-11-05 · `btc-v5-head-neck-seal-20261105-v5` · arreglo geométrico real de cráneo/nuca, pendiente aprobación visual
+- **Antes:** Hero V5 v4 intentaba cubrir con 30 triángulos una abertura cuya orilla original tiene 74 aristas; quedaba suelo visible a través de cabeza y nuca.
+- **Código de producción:** el módulo `racers/btc-neck-crest-repair.js` descubre ese bucle abierto por conectividad y lo cierra dentro del MISMO SkinnedMesh con 72 triángulos, usando sólo los vértices y skin weights originales. Conserva huesos (50), GLB, Gallop y otros 99 caballos; no inserta renders, planos superpuestos ni nuevas partes de extremidades.
+- **Prueba geométrica local:** GLB original abierto con Three.js; 74 bordes sellados, sin nuevas aristas no-manifold, 16 fases del clip nativo sin triángulos invertidos en la pose de prueba. No implica aprobación estética AAA.
+- **Versionado:** btc-v5-head-neck-seal-20261105-v5; ficha pública, importaciones `?v=`, changelog y pruebas actualizadas. Validar captura Chromium real y deploy Hostinger antes de afirmar publicado/verificado.
+- **Estado:** needs_visual_qa. Los ojos, el hocico, pelaje y músculos todavía necesitan nuevas iteraciones. Sin clonación de otros corredores.

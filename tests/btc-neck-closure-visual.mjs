@@ -20,7 +20,7 @@ async function load(url,closed){
   const v=window.__cryptodromoBTCAtelierQA?.();
   return v?.symbol==='BTC'&&v.variant==='enhanced'&&v.drawCalls>0&&
    v.clips.includes('Gallop')&&v.heroGroom?.neckClosureTriangles===expected;
- },closed?30:0,{timeout:120000});
+ },closed?72:0,{timeout:120000});
  const state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(state.heroGroom.gallopPreserved,true);
  assert.equal(state.heroGroom.source,'original-skinned-glb');
@@ -35,8 +35,8 @@ try{
  await page.waitForTimeout(220);
  await page.locator('#horse-canvas').screenshot({path:DIR+'/01-original-v5-profile.png',timeout:90000});
  const candidate=await load('http://127.0.0.1:8799/racers/?btcFreeze=1#BTC',true);
- assert.equal(candidate.heroGroom.neckClosureBuild,'btc-crest-closure-20261105-v1');
- assert.equal(candidate.heroGroom.neckClosureTriangles,30);
+ assert.equal(candidate.heroGroom.neckClosureBuild,'btc-head-neck-border-closure-20261105-v2');
+ assert.equal(candidate.heroGroom.neckClosureTriangles,72);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(350);
  const after=await page.locator('#horse-canvas').screenshot({path:DIR+'/02-repaired-v5-neck-top.png',timeout:90000});
@@ -61,7 +61,7 @@ try{
  assert.deepEqual(errors,[],errors.join('\n'));
  writeFileSync(DIR+'/qa.json',JSON.stringify({
   source:'actual Three.js GLB and original native Gallop',
-  build:'btc-v5-neck-tail-premium-20261105-v4',
+  build:'btc-v5-head-neck-seal-20261105-v5',
   before:baseline.heroGroom.neckClosureTriangles,
   after:candidate.heroGroom.neckClosureTriangles,
   cameras:['profile','front','rear','threeQuarter','top'],

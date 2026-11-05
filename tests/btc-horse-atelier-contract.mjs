@@ -6,14 +6,14 @@ test('normal BTC card loads anatomical master and retains explicit rollback',()=
  const racers=read('racers/racers.js'),html=read('racers/index.html');
  assert.match(racers,/atelierMode==='btc'/);
  assert.match(racers,/atelierMode!=='off'&&selected\.symbol==='BTC'/);
- assert.match(racers,/btc-v5-neck-tail-premium-20261105-v4/);
+ assert.match(racers,/btc-v5-head-neck-seal-20261105-v5/);
  const pilot=read('racers/btc-atelier-preview.js');
- assert.match(pilot,/btc-v5-neck-tail-premium-20261105-v4/);
+ assert.match(pilot,/btc-v5-head-neck-seal-20261105-v5/);
  assert.match(pilot,/createBTCTerrainStage/);
  assert.match(racers,/horse-preview\.js\?v=alpha18-gaitmane-1/);
  assert.match(html,/id="btc-atelier-panel"[^>]*hidden/);
  assert.match(html,/href="\?atelier=btc#BTC"/);
- assert.match(html,/btc-v5-neck-tail-premium-20261105-v4/);
+ assert.match(html,/btc-v5-head-neck-seal-20261105-v5/);
  assert.match(html,/id="btc-terrain-surface"/);
  assert.match(html,/id="btc-terrain-wetness"/);
 });
