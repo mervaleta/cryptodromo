@@ -3,7 +3,7 @@
  *
  * Coordinates are LOCAL to scene.js's existing vip Group at (0,0,-78) in the
  * translated pavilion (-67 Z). This module never moves the track, building,
- * cameras, horses or scoring. No remote assets and no extra light sources.
+ * cameras, horses or scoring. No remote assets; only two shadowless local facade lights.
  *
  * Historic reference: Twin Spires (octagonal cupolas, projecting cornices,
  * iron-supported stands) and Palermo's articulated neoclassical grandstand.
@@ -141,7 +141,23 @@ export function createSatoshiPavilionDetail({THREE,parent,quality='balanced'}={}
  batch('Detail · copper roof seams',roofSeams,boxGeometry,bronze,ornament);
  batch('Detail · balustrade balusters',balusters,boxGeometry,iron,ornament);
  batch('Detail · sconce lenses',glowParts,boxGeometry,amber,ornament);
- let night=false,wetness=0;
+ // Two restrained, shadowless facade wash lights live in VIP-local coordinates.
+ // They are not race floodlights and cannot affect course geometry.
+ const facadeWash=[];
+ for(const x of [-20,20]){
+  const lamp=new THREE.SpotLight(0xffdfae,0,48,Math.PI/3,.74,2);
+  lamp.position.set(x,8.6,15.6);
+  lamp.target.position.set(x,12.6,4.6);
+  lamp.castShadow=false;
+  root.add(lamp,lamp.target);
+  facadeWash.push(lamp);
+ }
+ let night=false,wetness=0,qualityMode=quality;
+ function updateWash(){
+  const enabled=night&&qualityMode!=='eco'&&qualityMode!=='low';
+  for(const lamp of facadeWash)lamp.intensity=enabled?950:0;
+ }
+
  function setEnvironment({night:nextNight=false,wetness:nextWet=0}={}){
   night=Boolean(nextNight);
   wetness=Math.max(0,Math.min(1,Number(nextWet)||0));
@@ -149,14 +165,18 @@ export function createSatoshiPavilionDetail({THREE,parent,quality='balanced'}={}
   glass.roughness=.23-wetness*.09;
   iron.roughness=.57-wetness*.13;
   bronze.roughness=.44-wetness*.08;
+  updateWash();
  }
  function setQuality(next='balanced'){
+  qualityMode=next;
   ornament.visible=next!=='eco'&&next!=='low';
+  updateWash();
  }
  function dispose(){
   root.removeFromParent();root.clear();
   geometries.forEach(item=>item.dispose());
   materials.forEach(item=>item.dispose());
+  facadeWash.forEach(lamp=>lamp.dispose?.());
  }
  setEnvironment();setQuality(quality);
  return {
@@ -167,8 +187,9 @@ export function createSatoshiPavilionDetail({THREE,parent,quality='balanced'}={}
    tracksAffected:0,instances:meshGroups.reduce((sum,m)=>sum+m.count,0),
    batches:meshGroups.length,foundationSupported:true,
    colonnade:columns.length,canopy:true,hasGroundEntrance:true,
+   facadeLights:facadeWash.length,shadowsAdded:0,
    bounds:PAVILION_DETAIL_BOUNDS
   }),
-  get environment(){return {night,wetness};}
+  get environment(){return {night,wetness,washIntensity:facadeWash[0]?.intensity||0};}
  };
 }
