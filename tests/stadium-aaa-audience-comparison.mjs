@@ -1,4 +1,5 @@
 import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 await mkdir('artifacts/stadium-aaa-audience/comparison',{recursive:true});
@@ -6,8 +7,17 @@ const metrics=[];
 try{
  for(const [name,host] of [['before','http://127.0.0.1:4174'],['after','http://127.0.0.1:4173']]){
   const page=await browser.newPage({viewport:{width:1600,height:940}});
+  const pageErrors=[];
+  page.on('pageerror',error=>pageErrors.push(error.message));
   await page.goto(host+'/visual-lab/?track=genesis&finish-qa=alpha06',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>document.querySelector('#start')?.disabled===false,null,{timeout:120000});
+  const renderReady=await page.evaluate(()=>{
+   const canvas=document.querySelector('#raceCanvas');
+   return {width:canvas?.width||0,height:canvas?.height||0,
+    webgl:!!(canvas?.getContext('webgl2')||canvas?.getContext('webgl'))};
+  });
+  assert.ok(renderReady.width>=640&&renderReady.height>=360,`${name}: render canvas not initialized`);
+  assert.ok(renderReady.webgl,`${name}: WebGL context unavailable`);
   await page.evaluate(()=>{
    const control=document.getElementById('graphics-quality');
    control.value='balanced';
@@ -40,6 +50,8 @@ try{
     };
     requestAnimationFrame(frame);
    }));
+   assert.ok(pacing.frames>=2&&pacing.medianFrameMs>0,`${name}/${view}/${weather}: no animation frames`);
+   assert.deepEqual(pageErrors,[],`${name}/${view}/${weather}: browser runtime errors`);
    metrics.push({revision:name,camera:view,weather,engine:'Chromium SwiftShader',
     ...pacing});
 
