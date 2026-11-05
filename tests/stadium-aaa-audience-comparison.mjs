@@ -49,6 +49,18 @@ try{
    });
    assert.equal(visibility.presentationActive,false,`${name}/${view}/${weather}: presentation covers scene`);
    assert.equal(visibility.overlayVisible,false,`${name}/${view}/${weather}: presentation overlay still visible`);
+   // A completed race can replace the scene with the official results overlay.
+   // Such a PNG is not comparable stadium evidence, even if WebGL exists.
+   const blocked=await page.evaluate(()=>{
+     const stage=document.querySelector('#stage');
+     const nodes=[...document.querySelectorAll('body *')].filter(el=>
+       el.children.length===0 && /RESULTADOS CONFIRMADOS/i.test(el.textContent||''));
+     return nodes.some(el=>{
+       const st=getComputedStyle(el),r=el.getBoundingClientRect();
+       return st.display!=='none'&&st.visibility!=='hidden'&&Number(st.opacity)>0&&r.width>0&&r.height>0;
+     });
+   });
+   assert.equal(blocked,false,`${name}/${view}/${weather}: results screen obscures stadium; restart a fresh manual scene before capture`);
    await capture(name+'-'+view+'-'+weather+'.png');
    // Approximate frame pacing only, measured in a software WebGL CI browser.
    // It is useful for relative regression checks, NOT desktop hardware FPS.
