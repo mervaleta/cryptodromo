@@ -8,13 +8,14 @@
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-cuticle-aa-20261104-v13';
-import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
+import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
+import {stabilizeHindSkinWeights,BTC_POSE_VOLUME_BUILD} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261105-v1';
 import {addBTCEquineCoatLookdev,BTC_COAT_LOOKDEV_BUILD} from './btc-maya-coat-lookdev.js?v=btc-master-microfur-20261104-v1';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
-export const BTC_MAYA_RENDER_BUILD='btc-master-procedural-hind-groom-20261104-v12-fx1-lookdev1';
+export const BTC_MAYA_RENDER_BUILD='btc-maya-pose-anatomy-20261105-v1';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -336,6 +337,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   }
   bone.set(freshB);weights.set(freshW);
  }
+ const hindWeightReport=stabilizeHindSkinWeights(
+  skinRest,bone,weights,source.skeleton.bones.map(b=>b.name)
+ );
  const skinIndex=[],hoofIndex=[];
  for(let i=0;i<indices.length;i+=3){
   const a=indices[i],b=indices[i+1],c=indices[i+2];
@@ -370,7 +374,6 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const accent=new THREE.Color(/^#[0-9a-f]{6}$/i.test(brandAccent||'')?brandAccent:'#f7931a');
  coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.055));
  coat.flatShading=false;coat.side=THREE.FrontSide;
- const hindGait={value:0};
  const prior=coat.onBeforeCompile;
  const cacheKey=coat.customProgramCacheKey?.bind(coat);
  coat.onBeforeCompile=function(shader,renderer){
@@ -387,11 +390,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
    '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.020*coatDirection+.030*amberBreak,.50,.82);');
   addBTCHindquarterCoatTexture(shader);
   addBTCEquineCoatLookdev(shader);
-  addBTCHindquarterGaitShader(shader,hindGait);
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
    '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.002,amberBreak*.0017,coatDirection*.0015));');
  };
- coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-harmony-sculpt-face-generated-hind-v12|'+BTC_COAT_LOOKDEV_BUILD;
+ coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-harmony-sculpt-face-generated-hind-v12|'+BTC_COAT_LOOKDEV_BUILD+'|'+BTC_POSE_VOLUME_BUILD;
  const hoof=new THREE.MeshStandardMaterial({
   name:'BTC original Maya four integrated hoof walls',
   color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#694937',
@@ -416,7 +418,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,poweredHindVertices,hindMaxExpansion:hindSculpt.maxExpansion,generatedHindCoat:true,hindGait,...removed};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,poweredHindVertices,hindMaxExpansion:hindSculpt.maxExpansion,generatedHindCoat:true,hindWeightReport,...removed};
 }
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
@@ -552,7 +554,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
-   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:true,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
+   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,volumeSkinMethod:'side-stabilized-native-linear',hindWrongSideBefore:anatomy.hindWeightReport.crossSideBefore,hindWrongSideAfter:anatomy.hindWeightReport.crossSideAfter,hindWeightAdjustedVertices:anatomy.hindWeightReport.adjusted,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,poseBuild:BTC_POSE_VOLUME_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    animatedHair:true,maneVertices:groom.vertices,fineLocks:groom.locks,neckOutliers:groom.neckOutliers,crownBridgeLocks:groom.bridgeLocks,heroLocks:groom.heroLocks,solidRingSides:groom.solidRingSides,rootBedVertices:groom.rootBedVertices,looseNeckFibers:groom.looseNeckFibers,proceduralHairTexture:groom.proceduralHairTexture,tailRootPatchTriangles:rumpPatch.triangles,sculptedEyes:2,facialSurfaces:face.surfaces,facialTriangles:face.triangles,heroHooves:4,hoofMeshVertices:anatomy.beveledHoofVertices,integratedMayaHooves:true,sculptedEars:ears.count,earTriangles:ears.triangles,
@@ -563,7 +565,6 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    if(disposed)return;
    time+=clamp(dt,0,.06)*clamp(speed,.2,2);
    phase=gait;
-   anatomy.hindGait.value=gait;
    groom.update(dt,{wind,speed,phase:gait,running});
   },
   setColor(next){
