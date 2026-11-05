@@ -66,10 +66,17 @@ test('Satoshi architectural detail attaches to existing VIP, closes floating und
  assert.equal(PAVILION_OFFSET_Z,-67);
  assert.ok(clubhouseCourseClearance('oval')>30);
  const all=[];
- for(const layer of details.root.children)for(const object of layer.children){
+ for(const layer of details.root.children){
+  if(!Array.isArray(layer.children)){
+   assert.ok(layer instanceof THREE.SpotLight,'Only facade spotlights may be direct non-group children');
+   assert.equal(layer.castShadow,false,'Facade lights must not add shadow passes');
+   continue;
+  }
+  for(const object of layer.children){
   assert.equal(object.count,object.matrices.length,object.name+' batch complete');
   assert.ok(object.count>0);
   all.push(object.name);
+  }
  }
  assert.ok(all.some(name=>name.includes('ground floor')));
  assert.ok(all.some(name=>name.includes('columns')));
