@@ -1449,7 +1449,8 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
      detailSupported:pavilionDetail.stats.foundationSupported,
      detailBounds:pavilionDetail.stats.bounds,
      detailNight:pavilionDetail.environment.night,
-     detailOrnamentVisible:pavilionDetail.root.children[1]?.visible===true
+     detailOrnamentVisible:pavilionDetail.root.children[1]?.visible===true,
+     detailWashIntensity:pavilionDetail.environment.washIntensity
    })
  });
 }
