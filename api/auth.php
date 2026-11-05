@@ -127,18 +127,21 @@ try {
     respond(503, ['status' => 'error', 'message' => 'Acceso temporalmente no disponible']);
 }
 
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-session_start();
-session_regenerate_id(true);
-$_SESSION['user_id'] = (int) $user['id'];
-$_SESSION['google_sub'] = $googleId;
+// Share the canonical revocable session store with email/password accounts.
+require_once __DIR__ . '/users-lib.php';
+try {
+    crp_users_secret();
+    crp_users_schema_ready($pdo);
+    crp_users_ensure_profile($pdo, (int) $user['id'], $avatar, true);
+    crp_users_login($pdo, (int) $user['id']);
+    crp_users_event($pdo, (int) $user['id'], 'google_login');
+    $me = crp_users_current($pdo);
+    if (!$me) throw new RuntimeException('Login session could not be established');
+} catch (Throwable $e) {
+    error_log('Cryptodromo Google identity session unavailable');
+    respond(503, ['status' => 'error', 'message' => 'Sesiones no disponibles']);
+}
 respond(200, ['status' => 'success', 'user' => [
-    'id' => (int) $user['id'], 'email' => $email, 'name' => $name, 'avatar_url' => $avatar,
-    'balance_credits' => (float) ($user['balance_credits'] ?? 0)
+    'id' => (int) $me['id'], 'email' => $me['email'],
+    'name' => $me['name'], 'alias' => $me['alias']
 ]]);
