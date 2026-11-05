@@ -1397,6 +1397,7 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
      ...pavilionPlacementAudit(),
      livePavilionGroupZ:pavilion.position.z,
      liveVIPWorldZ:vip.getWorldPosition(new THREE.Vector3()).z,
+     grandstandCameraZ:PAVILION_GRANDSTAND_CAMERA_Z,
      currentLayout:layoutMode,
      visible:pavilion.visible,
      finishMarkerVisible:finishSign.visible
