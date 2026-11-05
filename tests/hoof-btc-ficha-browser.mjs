@@ -18,7 +18,7 @@ try{
   undefined,{timeout:90000,polling:500});
  const state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(state.symbol,'BTC');
- assert.equal(state.variant,'maya');
+ assert.equal(state.variant,'original','BTC public fiche must use intact original Gallop while Maya is quarantined');
  assert.equal(state.terrain.visible,true);
  assert.equal(state.terrain.surface,'dirt');
  assert.ok(['skeleton','master'].includes(state.terrain.contactSource),

@@ -1,19 +1,18 @@
 {
   "schemaVersion": 1,
   "symbol": "BTC",
-  "masterId": "btc-maya-2017-sculpt-gallop-20261104",
-  "buildId": "btc-maya-pose-anatomy-20261105-v1",
-  "status": "pending_deploy",
-  "statusLabel": "Corrección anatómica implementada en rama, requiere capturas reales del galope y verificación del sitio",
+  "masterId": "btc-original-glb-gallop",
+  "buildId": "btc-native-horse-20261105-v1",
+  "status": "needs_visual_qa",
+  "statusLabel": "Motor nativo sin sprites implementado en PR, requiere inspección de 16 fases WebGL antes de aprobar calidad y desplegar",
   "updatedAt": "2026-11-05",
-  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final. | V12-FX1: la ficha 3D integra un suelo visible con tierra, arena y césped, partículas por los cuatro contactos animados y control de humedad. No cambia la geometría ni los huesos del caballo, ni resuelve todavía el defecto muslo-corvejón; el registro de efectos queda pendiente de validación del Hostinger público. | LOOKDEV V1: micropelaje direccional filtrado por fwidth para evitar ruido en cámara, crin/cola con rugosidad elevada y grano de cutícula antialias. No se declara AAA; todavía deben consolidarse los PR #89, #99 y #100 y validar capturas reales antes de publicación. | 2026-11-05 ANATOMÍA V13: se quitó el offset sinusoidal artificial del músculo posterior; se estabilizaron las influencias de skinning de patas derecha e izquierda sin DQS; se ancló gradualmente la cresta occipital a Head; huellas de la ficha reducidas y limitadas. Basado en defectos observados en captura del usuario. No declarar AAA hasta revisar 16 fases y validar visualmente.",
+  "note": "v12 modifica la geometría real del caballo en la ficha BTC: reduce hebras sueltas de la crin, acorta y adhiere mechones dorsales a la raíz, añade volumen anatómico continuo en grupa, glúteos y muslos e incorpora detalle muscular y microcutícula por shaders. Conserva huesos y clip Gallop. No declarar publicado hasta prueba de producción. Ajuste posterior: volumen visible también de perfil (eje longitudinal) y flexión muscular sutil animada en GPU siguiendo la fase Gallop nativa sin retocar clips. VERIFICACIÓN REAL 2026-11-04: workflow GitHub Actions 41895376031 aprobó CDN/origen Hostinger, prueba Chromium/WebGL, Gallop y aislamiento de otros 99 corredores. Captura del servidor inspeccionada: crin limpia, pero la unión y flexión de las patas posteriores no alcanzan todavía nivel AAA. No se marca la estética como final. | V12-FX1: la ficha 3D integra un suelo visible con tierra, arena y césped, partículas por los cuatro contactos animados y control de humedad. No cambia la geometría ni los huesos del caballo, ni resuelve todavía el defecto muslo-corvejón; el registro de efectos queda pendiente de validación del Hostinger público. | LOOKDEV V1: micropelaje direccional filtrado por fwidth para evitar ruido en cámara, crin/cola con rugosidad elevada y grano de cutícula antialias. No se declara AAA; todavía deben consolidarse los PR #89, #99 y #100 y validar capturas reales antes de publicación. | 2026-11-05 ANATOMÍA V13: se quitó el offset sinusoidal artificial del músculo posterior; se estabilizaron las influencias de skinning de patas derecha e izquierda sin DQS; se ancló gradualmente la cresta occipital a Head; huellas de la ficha reducidas y limitadas. Basado en defectos observados en captura del usuario. No declarar AAA hasta revisar 16 fases y validar visualmente. | CONTROL 2026-11-05: Capturas del usuario muestran una rotura importante de las ancas y fragmentos oculares flotantes. La variante Maya deja de ser la principal, se muestra el rig original intacto. El candidato Maya sigue sólo disponible para diagnóstico explícito. No equivale a reconstrucción AAA. | BTC NATIVE 2026-11-05: se conserva GLB 3D con rig y Gallop nativos; en vista BTC se deshabilita gaitRefiner aditivo, se activa crin animada original y se agrega micropelaje PBR procedimental antialias sin alterar geometría. Maya permanece referencia anatómica, no mesh de producción. No confundir funcionalidad 3D con calidad AAA verificada.",
   "publicUrl": "https://race.cryptodromo.com/racers/#BTC",
   "openIssues": [
-    "Validar las 16 fases Gallop en perfil, frente, atrás y tres cuartos: no admitir recortes de muslo ni torsiones de corvejón",
-    "Revisar transición nuca-crin con luz rasante, evitando raíces levantadas, huecos y hebras rígidas",
-    "Reparar el modelado de las ancas y el volumen del muslo si persisten defectos después de estabilizar pesos",
-    "Verificar que huellas de la ficha tengan escala de pezuña y no se acumulen como manchas grandes",
-    "Consolidar geometría de ojos y crin de PR #99/#100 después de comparar capturas, sin pisar esta mejora"
+    "Validar visualmente 16 fases Gallop desde perfil, frente, tres cuartos y atrás en GLB original sin deformaciones",
+    "Comparar galope real y referencia Three.js Horse morph target sin transponer mallas incompatibles",
+    "Mejorar ojos y silueta sobre la malla nativa sólo si no introduce geometría flotante",
+    "Verificar perf GPU y materiales PBR en Chromium WebGL y Hostinger"
   ],
   "nextPhase": {
     "status": "blocked",
@@ -21,5 +20,5 @@
     "prerequisite": "Aceptar nueva topología y deformación en ficha pública y cotejar contra 212734.mp4",
     "reference": "212734.mp4"
   },
-  "visualPass": "Anatomía v13 · nuca y ancas · huellas corregidas"
+  "visualPass": "GLB nativo · Gallop sin correcciones aditivas · PBR procedural"
 }

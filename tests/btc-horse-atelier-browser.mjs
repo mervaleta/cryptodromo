@@ -14,6 +14,12 @@ try{
  assert.equal(await page.evaluate(()=>Boolean(window.__cryptodromoBTCAtelierQA)),false);
  await page.goto('http://127.0.0.1:8799/racers/#BTC',{waitUntil:'domcontentloaded',timeout:50000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:120000});
+ const safe=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
+ assert.equal(safe.variant,'original','public BTC must not display malformed hind legs');
+ assert.equal(safe.heroGroom,null,'quarantined Maya must not be the public default');
+ assert.ok(safe.clips.includes('Gallop'));
+ await page.goto('http://127.0.0.1:8799/racers/?btcMaster=maya#BTC',{waitUntil:'domcontentloaded',timeout:50000});
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:120000});
  let state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(state.originalAsset,true);
  assert.equal(state.jockey,false);

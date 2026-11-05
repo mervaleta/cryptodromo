@@ -137,3 +137,24 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Nuca: máscara suave de pesos hacia el hueso original Head en cresta occipital y borde de órbita, basada en la rama del PR #100; no añade props ni modifica clips.
 - Terreno de la ficha: impresiones reducidas a 32% y máximo de 36 marcas; los defaults del estadio no cambian.
 - Cadena de cachés y ficha `/racers/#BTC` actualizadas a versión v13. Pruebas y capturas todavía necesarias. Estado `pending_deploy`, no `verified` ni `AAA`.
+
+## 2026-11-05 · `btc-maya-safety-original-20261105-v1` · control de calidad por captura del usuario
+- Capturas de producción aportadas muestran iris y componentes oculares flotantes y deformaciones severas en muslo, babilla y corvejón. No marcar esta anatomía como AAA.
+- Referencias veterinarias sobre la secuencia grupa/babilla/pierna/corvejón confirman que el corte abrupto no corresponde a una articulación real. La transferencia espacial desde un rig Quaternius a la superficie Maya no demuestra un skinning aceptable.
+- **Medida inmediata en la ficha `/racers/#BTC`:** render predeterminado = modelo GLB original con su skinning y Gallop intactos; modelo Maya deja de ser el render principal, disponible únicamente con `?btcMaster=maya` para diagnóstico. Se retiraron sus overlays de esfera ocular/pupila/lagrimal flotantes.
+- **Estado:** `needs_fix`: es un rollback anatómico seguro, no una solución completa del rig Maya ni mejora AAA. Restaurar Maya sólo después de 16 fases verificadas visualmente desde perfil, frente y atrás, con volumen y articulaciones correctas.
+
+## 2026-11-05 · Referencia Three.js `webgl_morphtargets_horse` · diagnóstico de locomoción
+- El usuario aclara que el archivo Maya sólo era referencia anatómica, **nunca** la malla obligatoria de producción. Se usará la anatomía de referencia para evaluar el caballo de Cryptódromo.
+- Three.js muestra `Horse.glb` con GLTFLoader + `AnimationMixer` sobre una animación importada. El movimiento y las formas se evalúan como una secuencia authored, no a partir de rotaciones manuales independientes.
+- Cryptódromo ya tiene un clip `Gallop` original, pero `race-lab/source/src/gaitRefiner.js` agrega correcciones de rotación a patas delanteras y traseras. Para aislar posibles sobrecorrecciones, **sólo el visor BTC** pasa `gaitCorrectionStrength:0` a `createHorse`; los corredores del estadio conservan el valor por defecto `.40`.
+- Los `morph targets` de Horse.glb no se pueden trasplantar a otra malla con distinta topología sin correspondencia de vértices y una nueva secuencia de poses; no son un arreglo automático de las ancas. Antes de transferir cualquier sistema, cotejar las 16 fases de galope contra imágenes reales y los 4 apoyos.
+- Conserva la cuarentena del modelo Maya defectuoso del PR #107 y la desactivación de sus piezas oculares flotantes. Este cambio no representa aprobación estética AAA.
+- Fuente: https://github.com/mrdoob/three.js/blob/dev/examples/webgl_morphtargets_horse.html
+
+## 2026-11-05 · `btc-native-horse-20261105-v1` · arquitectura 3D unificada
+- Prioridad del usuario: modelo 3D en runtime, jamás sprites ni secuencias de imágenes, calidad visual primero.
+- Una sola base fiable: GLB Quaternius nativo, bones + clip Gallop original (sin duplicar correcciones de articulaciones en visor BTC).
+- `btcNativeLookdev.js`: capa PBR de microfibra direccional y pigmento, con filtro derivativo por píxel; sin textura de pelaje, sin planos/sprites, sin deformar vértices ni compartir mallas entre animales.
+- `windMane.js` existente: anima los vértices originales de la crin con viento; se habilita en la vista BTC, no se agrega geometría falsa.
+- Otros 99 corredores y motor de carrera conservan defaults y flags anteriores. Los experimentos Maya siguen aislados para referencias anatómicas. El objetivo AAA continúa pendiente de capturas humanas de 16 fases y análisis de calidad.

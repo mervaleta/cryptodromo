@@ -4,6 +4,7 @@ import {createFurIdentity} from './horseLivery.js?v=alpha14-ticker-1';
 import {smoothHorseNormals} from './horseSurface.js?v=alpha08-1';
 import {createWindMane} from './windMane.js?v=alpha18-gaitmane-1';
 import {createHorseSurfaceFinish} from './horseVisualQuality.js';
+import {installBTCNativeLookdev} from './btcNativeLookdev.js?v=btc-native-lookdev-20261105-v1';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
@@ -27,7 +28,7 @@ async function loadHorseAsset(){
   return assetPromise;
 }
 
-export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop',maneMotion=true,maneGait=null}={}){
+export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop',maneMotion=true,maneGait=null,gaitCorrectionStrength=.40,nativeLookdev=false}={}){
   const asset=await loadHorseAsset(),model=clone(asset.scene);model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model,true),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
   const visual=new THREE.Group();model.position.set(-center.x,-bounds.min.y,-center.z);visual.add(model);visual.scale.setScalar(height/size.y);visual.rotation.y=Math.PI/2;
@@ -46,7 +47,8 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   });
   // The token identity is pigment in the model's own fur, never a hovering sign.
   const identity=createFurIdentity(colorBindings);
-  const surfaceFinish=createHorseSurfaceFinish(colorBindings,{quality:'balanced'});
+  const surfaceFinish=createHorseSurfaceFinish(colorBindings,{quality:nativeLookdev?'cinematic':'balanced'});
+  const btcLookdev=nativeLookdev&&symbol==='BTC'?installBTCNativeLookdev(colorBindings):null;
   // Wind animates only the existing Hair vertices before skeletal skinning.
   // The GLB, gait clips, horse silhouette and livery textures stay intact.
   const mane=createWindMane(colorBindings,{seed:phase});
@@ -63,7 +65,8 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
     surfaceFinish.setWetness(currentWetness);
   }
   const mixer=new THREE.AnimationMixer(model),clips=asset.animations.filter(clip=>!clip.name.includes('|'));let action;
-  const gait=createGaitRefiner(model,{strength:.40});
+  // Preserve the authored Gallop when desired; race callers keep .40 by default.
+  const gait=createGaitRefiner(model,{strength:THREE.MathUtils.clamp(Number.isFinite(gaitCorrectionStrength)?gaitCorrectionStrength:.40,0,1)});
   const api={
     root,clips:clips.map(clip=>clip.name),
     get hoofPhase(){return gait.phase;},
@@ -92,7 +95,7 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
       }
       mane.update(step,{wind:maneWind,speed:rate,gait:maneGait||action?.getClip().name,motionEnabled:maneMotion,reducedMotion:!!reducedMotion?.matches});
     },
-    dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();surfaceFinish.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
+    dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();btcLookdev?.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();surfaceFinish.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };
   api.setAppearance({coat,accent,symbol});
   api.play(mode,0);mixer.update(phase);return api;

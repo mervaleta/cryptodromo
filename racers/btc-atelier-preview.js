@@ -5,11 +5,11 @@
  */
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
+import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-anatomy-feedback-20261105-v1';
-import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-anatomy-feedback-20261105-v1';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-native-horse-20261105-v1';
+import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-native-horse-20261105-v1';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
@@ -57,7 +57,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const terrain=createBTCTerrainStage(scene,{platform,pedestalRing,renderer});
  let terrainSurface='dirt',terrainWetness=0;
 
- let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
+ let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='v5'?'enhanced':'original',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#29232a';
  const resize=()=>{
@@ -82,10 +82,14 @@ export function createPreview(canvas,onFailure=()=>{}){
   try{
    const next=await createHorse({
     coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
-    mode:paused?'Idle':'Gallop',maneMotion:false
+    mode:paused?'Idle':'Gallop',maneMotion:true,nativeLookdev:token.symbol==='BTC',
+    // Three.js Horse.glb reference: evaluate the authored gait as one coherent clip.
+    // No secondary gaitRefiner joint offsets on the BTC anatomy QA viewer.
+    gaitCorrectionStrength:0
    });
    if(disposed||request!==selection){next.dispose();return;}
    next.root.scale.setScalar(.78);
+   if(token.symbol==='BTC')next.setVisualQuality?.('cinematic');
    // Hair is an isolated preview-layer upgrade: original body, gait, pigmentation.
    let nextHero=null;
    try{

@@ -1,0 +1,32 @@
+name: BTC safe anatomy release guard
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-maya-master.js'
+      - 'racers/racers.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/btc-master-revision.json'
+      - 'tests/btc-safe-fallback-contract.mjs'
+      - 'tests/btc-native-gallop-reference-contract.mjs'
+      - 'race-lab/source/src/horse.js'
+      - 'race-lab/source/src/btcNativeLookdev.js'
+      - 'tests/btc-native-procedural-lookdev-contract.mjs'
+      - '.github/workflows/btc-safe-fallback.yml'
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --check racers/btc-maya-master.js
+          node --check racers/racers.js
+          node --check racers/btc-atelier-preview.js
+          node --check race-lab/source/src/horse.js
+          node --check race-lab/source/src/btcNativeLookdev.js
+          node --test tests/btc-native-procedural-lookdev-contract.mjs tests/btc-native-gallop-reference-contract.mjs tests/btc-safe-fallback-contract.mjs tests/btc-horse-atelier-contract.mjs tests/btc-v12-anatomy-contract.mjs

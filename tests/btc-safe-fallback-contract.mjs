@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('public BTC chooses native original GLB, Maya is explicit opt-in',()=>{
+ const racers=read('racers/racers.js');
+ const preview=read('racers/btc-atelier-preview.js');
+ const html=read('racers/index.html');
+ assert.match(racers,/requestedBTCMaster==='maya'\?'maya'/);
+ assert.match(preview,/stageParams\.get\('btcMaster'\)==='maya'\?'maya'/);
+ assert.match(html,/data-btc-variant="original" aria-pressed="true"/);
+ assert.match(html,/data-btc-variant="maya" aria-pressed="false"/);
+ const master=read('racers/btc-maya-master.js');
+ assert.doesNotMatch(master,/const eyes=makeAnatomicalEyes\(best/);
+ assert.doesNotMatch(master,/const face=createBTCMayaFaceDetails\(best/);
+ assert.match(master,/globes:0,eyeRadius:0/);
+ const manifest=JSON.parse(read('racers/btc-master-revision.json'));
+ assert.equal(manifest.buildId,'btc-native-horse-20261105-v1');
+ assert.equal(manifest.status,'needs_visual_qa');
+});
