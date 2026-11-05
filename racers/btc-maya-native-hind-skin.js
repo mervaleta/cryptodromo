@@ -52,26 +52,38 @@ function nativeCandidates(source) {
  const ids=geo.getIndex(),joints=source.skeleton.bones.map(b=>b.name);
  if(!position||!joint||!weight||!ids)throw Error('BTC V18 native leg projection requires indexed original skinned Gallop mesh');
  const triangles=[[],[]],grid=[new Map(),new Map()],cell=.0026;
+ const diagnostic={sourceVertices:position.count,sourceIndices:ids.count,
+  firstHindBones:joints.filter(n=>/Back|FFB/.test(n)).slice(0,16),
+  spatialCandidates:0,sideCandidates:0,hindCandidates:0,
+  samples:[]};
  for(let t=0;t<ids.count;t+=3){
   const vi=[ids.getX(t),ids.getX(t+1),ids.getX(t+2)];
   const xyz=vi.map(i=>vec(position,i));
   const avg=xyz.reduce((s,p)=>[s[0]+p[0]/3,s[1]+p[1]/3,s[2]+p[2]/3],[0,0,0]);
   if(avg[1]<.002||avg[2]>.034||avg[2]<-.001)continue;
+  diagnostic.spatialCandidates++;
   const sign=avg[0]>0?1:-1,side=sign>0?1:0;
   if(Math.abs(avg[0])<.001)continue;
+  diagnostic.sideCandidates++;
   let hindInfluence=0;
   for(const id of vi)for(let k=0;k<4;k++){
    const name=joints[joint.getComponent(id,k)]||'';
    if((name.startsWith('Back')||name.startsWith('IKBackLeg')||name.startsWith('FFB'))&&
     name.endsWith(sign>0?'.L':'.R'))hindInfluence+=weight.getComponent(id,k)/3;
   }
-  if(hindInfluence<.30)continue;
+  if(hindInfluence<.30){
+   if(diagnostic.samples.length<3)diagnostic.samples.push({avg,
+    weights:vi.map(id=>[joints[joint.getComponent(id,0)],weight.getComponent(id,0)]),
+    hindInfluence});
+   continue;
+  }
+  diagnostic.hindCandidates++;
   const record={vi,xyz,avg,side},index=triangles[side].push(record)-1;
   const key=voxel(...avg,cell);
   if(!grid[side].has(key))grid[side].set(key,[]);
   grid[side].get(key).push(index);
  }
- return {triangles,grid,cell,joint,weight};
+ return {triangles,grid,cell,joint,weight,diagnostic};
 }
 
 /** Mutates weights only in the posterior leg region; original Gallop retained. */
@@ -79,7 +91,7 @@ export function projectHindWeightsFromNative(source,targetRest,bones,weights){
  if(!(targetRest instanceof Float32Array)||!(bones instanceof Uint16Array)||
    !(weights instanceof Float32Array)||targetRest.length/3*4!==bones.length||
    bones.length!==weights.length)throw Error('BTC V18 posterior projection invalid target attributes');
- const {triangles,grid,cell,joint,weight}=nativeCandidates(source);
+ const {triangles,grid,cell,joint,weight,diagnostic}=nativeCandidates(source);
  let adjusted=0,skipped=0,totalError=0,maxError=0;
  for(let i=0;i<targetRest.length/3;i++){
   const p=[targetRest[i*3],targetRest[i*3+1],targetRest[i*3+2]];
@@ -138,5 +150,5 @@ export function projectHindWeightsFromNative(source,targetRest,bones,weights){
  }
  return {adjusted,skipped,meanProjectionError:adjusted?totalError/adjusted:0,
   maxProjectionError:maxError,nativeHindTriangles:triangles[0].length+triangles[1].length,
-  originalGallop:true,topologyUntouched:true};
+  originalGallop:true,topologyUntouched:true,diagnostic};
 }
