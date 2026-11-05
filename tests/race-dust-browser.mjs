@@ -27,7 +27,14 @@ try{
   return q?.running&&q.raceDustVisible&&q.raceDustCount>0;
  },null,{timeout:25000,polling:300});
  for(const surface of ['dirt','sand','grass']){
-  await page.locator('#surface').selectOption(surface);
+  // In a named race the surface selector is intentionally locked to its
+  // course. QA may dispatch the real change handler directly to cover the
+  // same renderer on all three substrates without rewriting the race fixture.
+  await page.evaluate(s=>{
+   const el=document.getElementById('surface');
+   el.value=s;
+   el.dispatchEvent(new Event('change',{bubbles:true}));
+  },surface);
   await page.waitForFunction(s=>{
    const q=window.__cryptodromoHoofQA?.snapshot();
    return q?.surface===s&&q?.raceDustVisible&&!q?.visibleGroundStains;
