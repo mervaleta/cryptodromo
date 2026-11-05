@@ -21,6 +21,10 @@ try {
  await page.waitForFunction(()=>document.querySelector('#start')?.disabled===false && window.__cryptodromoAudienceQA?.snapshot()?.groups?.length===8,null,{timeout:120000});
  const first=await page.evaluate(()=>window.__cryptodromoAudienceQA.snapshot());
  assert.equal(first.articulated,true);
+ assert.equal(first.remoteGrandstand.parts,8);
+ assert.equal(first.remoteGrandstand.originalCoordinatesRetained,true);
+ assert.equal(first.remoteGrandstand.trackModified,false);
+ assert.equal(first.remoteVisible,first.remoteGrandstand.people);
  assert.equal(first.layout,'straight');
  assert.equal(first.groups.find(x=>x.name.endsWith('arms')).count,first.crowd*2);
  assert.ok(first.drawCalls>0);
