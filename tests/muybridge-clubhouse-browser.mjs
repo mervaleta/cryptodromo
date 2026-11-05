@@ -35,6 +35,19 @@ try{
    assert.ok(result.detailInstances>100,'building contains actual modelled elements');
    assert.ok(result.detailBounds.minZ>=-13.5 && result.detailBounds.maxZ<=15.5,
      'architectural detail may not escape the established pavilion/forecourt footprint');
+   // Do not photograph an auto-night scene and call it "day". Force real
+   // daylight and full structural detail, even on headless SwiftShader.
+   await page.evaluate(()=>{
+     for(const [id,value] of [['graphics-quality','balanced'],['weather','noon']]){
+       const control=document.getElementById(id);
+       if(!control)throw new Error('Missing visual QA control '+id);
+       control.value=value;
+       control.dispatchEvent(new Event('change',{bubbles:true}));
+     }
+   });
+   await page.waitForFunction(()=>window.__cryptodromoPavilionQA.snapshot().detailOrnamentVisible===true &&
+     window.__cryptodromoPavilionQA.snapshot().detailNight===false,
+    null,{timeout:15000});
    // LIVE can disable manual camera dropdown while following a broadcast.
    // For screenshot QA change its value without waiting for user enablement.
    await page.evaluate(()=>{
