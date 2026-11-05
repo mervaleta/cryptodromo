@@ -28,7 +28,7 @@ try{
  assert.equal(state.heroGroom?.crownBridgeLocks,112,'poll hair bridge must exist in the standard BTC view');
  assert.equal(state.heroGroom?.heroLocks,56,'default BTC must use hero mane silhouette');
  assert.equal(state.heroGroom?.solidRingSides,6,'hero groom is a rounded skinned loft');
- assert.equal(state.heroGroom?.rootBedVertices,495,'continuous skinned hair surface across crown');
+ assert.equal(state.heroGroom?.rootBedVertices,0,'no detached scalp strip; native Maya crest itself is sealed');
  assert.ok(state.heroGroom?.integratedDockCapTriangles>=20,'no opening under the flowing tail');
  assert.ok(state.heroGroom?.sculptedBodyParts>=1);
  assert.equal(state.heroGroom?.animatedHair,true);
