@@ -34,7 +34,7 @@ export function createStadiumBackdrop(scene,{softwareGPU=false,mobile=false}={})
  const windowGeo=new THREE.BoxGeometry(1,1,1),windowPositions=[];
  for(let buildingIndex=0;buildingIndex<buildings.length;buildingIndex++){
   const {x,z,w,h,d}=buildings[buildingIndex];
-  dummy.position.set(x,h+.26,z);
+  dummy.position.set(x,h+.01,z); // parapet bottom matches building top: h - .25
   dummy.rotation.set(0,0,0);
   dummy.scale.set(w+.9,.52,d+1.1);
   dummy.updateMatrix();
