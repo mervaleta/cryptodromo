@@ -18,6 +18,7 @@ try{
    const result=await page.evaluate(()=>window.__cryptodromoPavilionQA.snapshot());
    assert.equal(result.livePavilionGroupZ,-67,'wrong visible building group displacement');
    assert.equal(result.liveVIPWorldZ,-145,'real spires/roof not relocated');
+   assert.equal(result.grandstandCameraZ,-119,'broadcast must look from the actual spectator bank');
    assert.equal(result.currentLayout,mode);
    assert.ok(result.ovalClearance>25,'building still on oval backstraight');
    assert.ok(result.standGap>=4,'no rear spectator walkway');

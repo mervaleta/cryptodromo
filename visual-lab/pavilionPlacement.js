@@ -10,6 +10,8 @@
  */
 import {trackPoint} from './trackMath.js';
 export const PAVILION_OFFSET_Z=-67;
+// Broadcast camera must stand behind the backstretch rail, not on the dirt.
+export const PAVILION_GRANDSTAND_CAMERA_Z=-119;
 export const PAVILION_BASE_LOCAL=Object.freeze({
   centerX:0,centerZ:-78,width:93,depth:27
 });
