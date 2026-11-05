@@ -18,3 +18,7 @@ Implementar Google Identity Services en la página que realmente requiera inicio
 3. Prueba positiva: un token legítimo emitido para el client ID correcto crea sesión Secure, HttpOnly.
 4. Revisión de esquema, migración, CSRF en cualquier operación de modificación posterior y política de conservación de datos.
 5. Smoke de regresión de carrera y de editor de caballos. El endpoint es independiente del motor de carreras.
+
+## Actualización 2026-11-05 · PR #118 (todavía DRAFT)
+
+La nueva pantalla `/cuenta/` implementa cliente Google Identity Services cuando `GOOGLE_OAUTH_CLIENT_ID` está configurado; el token se verifica por `api/auth.php` y la sesión revocable se crea mediante `api/users-lib.php` en la misma tabla `users`. Requiere ejecutar `scripts/users-migrate.php`, configurar `CRP_USERS_SECRET` fuera de Git y probar base, cookies y token Google legítimo. **No confundir este código del PR con un despliegue verificado.** El módulo de pronósticos debe llamar a `crp_users_current()` en cada operación privada, no usar directamente la sesión antigua.
