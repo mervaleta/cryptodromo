@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
 
 const root=process.env.BTC_FAST_ORIGIN||'http://127.0.0.1:8799';
@@ -20,9 +20,16 @@ try{
  for(const camera of ['face','poll','profile']){
   await page.locator('[data-btc-camera="'+camera+'"]').click();
   await page.waitForTimeout(300);
-  await page.screenshot({
-   path:'artifacts/btc-ocular-fast/'+camera+'.png',timeout:80000
+  // Capture the existing WebGL drawing buffer directly to avoid Chromium's
+  // animated-page screenshot stability wait. Empty frames are rejected.
+  const raw=await page.evaluate(()=>{
+   const canvas=document.querySelector('#horse-canvas');
+   if(!canvas||canvas.width<100||canvas.height<100)throw Error('BTC WebGL canvas invalid');
+   return canvas.toDataURL('image/png');
   });
+  assert.ok(raw.startsWith('data:image/png;base64,')&&raw.length>10000,'WebGL drawing buffer not captured');
+  writeFileSync('artifacts/btc-ocular-fast/'+camera+'.png',
+   Buffer.from(raw.split(',')[1],'base64'));
  }
  assert.deepEqual(faults,[],faults.join('; '));
  console.log('BTC_ORBITAL_TOPOLOGY_REAL_WEBGL',JSON.stringify({
