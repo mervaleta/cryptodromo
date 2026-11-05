@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
+import {captureOptional} from './helpers/optionalScreenshot.mjs';
 
 const base=process.env.HOOF_FX_TEST_ORIGIN||'http://127.0.0.1:8799';
 const browser=await chromium.launch({headless:true,args:[
@@ -46,7 +47,7 @@ try{
  });
  assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA())).terrain.wetness,.65);
  await mkdir('artifacts',{recursive:true});
- await page.screenshot({path:'artifacts/hoof-btc-ficha-grass.png',timeout:45000});
+ await captureOptional(page,'artifacts/hoof-btc-ficha-grass.png');
  await page.click('#motion');
  const paused=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  await page.waitForTimeout(750);
