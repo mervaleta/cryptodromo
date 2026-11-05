@@ -50,10 +50,20 @@ const phaseText=phase=>phase==='race'?'● CARRERA EN CURSO':
 const localTime=new Intl.DateTimeFormat('es-AR',{
  timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
 });
-const validFrameDoc=()=>{
+const hasRaceDocument=()=>{
  try{
   const doc=frame.contentDocument;
   return !!doc?.querySelector('#raceCanvas')&&!doc?.querySelector('#stadium-broadcast');
+ }catch{return false;}
+};
+const validFrameDoc=()=>{
+ if(!hasRaceDocument())return false;
+ try{
+  // A canvas element exists before the async 12-horse scene is ready.
+  // Never uncover a still-loading/failed 3D feed as if it were on air.
+  const doc=frame.contentDocument;
+  const start=doc?.getElementById('start');
+  return start?.disabled===false;
  }catch{return false;}
 };
 const setBusy=()=>{
@@ -123,7 +133,15 @@ function showProgramGuide(){
  $('tv-local-time').textContent=localTime.format(new Date())+' UTC−3';
 }
 function signalReady(expectedSerial=serial){
- if(expectedSerial!==serial||!validFrameDoc())return false;
+ if(expectedSerial!==serial)return false;
+ try{
+  const message=frame.contentDocument?.getElementById('status')?.textContent?.trim()||'';
+  if(/^ERROR\b/i.test(message)){
+   setError('El motor 3D informó un error de carga. Abrí la carrera directamente o reintentá la señal.');
+   return false;
+  }
+ }catch{}
+ if(!validFrameDoc())return false;
  if(frameReadySerial===expectedSerial)return true;
  frameReadySerial=expectedSerial;
  clearTimeout(loadTimer);clearInterval(framePoller);
@@ -192,6 +210,12 @@ frame.addEventListener('load',async()=>{
  try{if(frame.contentWindow.location.href==='about:blank')return;}catch{}
  if(validFrameDoc()){
   signalReady(serial);
+  return;
+ }
+ // Correct markup is not the same as a ready WebGL scene. Loading horses
+ // is asynchronous: keep polling, do not send a valid page into the fallback.
+ if(hasRaceDocument()){
+  watchLoad(serial);
   return;
  }
  // A hosting rewrite may serve /live/ with status 200 at /broadcast/.
