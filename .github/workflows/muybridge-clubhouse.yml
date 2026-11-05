@@ -4,9 +4,11 @@ on:
     paths:
       - 'visual-lab/scene.js'
       - 'visual-lab/pavilionPlacement.js'
+      - 'visual-lab/satoshiPavilionDetail.js'
       - 'visual-lab/index.html'
       - 'stadiums/crypto/broadcast/index.html'
       - 'tests/muybridge-clubhouse*'
+      - 'tests/satoshi-pavilion-detail.mjs'
       - '.github/workflows/muybridge-clubhouse.yml'
   push:
     branches: [main]
@@ -33,6 +35,8 @@ jobs:
           node --check visual-lab/pavilionPlacement.js
       - name: Verify 3 course envelopes, stands, foundations, roof and signs
         run: node --experimental-default-type=module --test tests/muybridge-clubhouse-clearance.mjs
+      - name: Verify physical VIP portico, footprint, materials and GPU cleanup
+        run: node --experimental-default-type=module --test tests/satoshi-pavilion-detail.mjs
   webgl:
     runs-on: ubuntu-24.04
     timeout-minutes: 12

@@ -11,10 +11,13 @@ import {createWinnerSlowMotion} from './winnerSlowMotion.js?v=photo-finish-tv-pa
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
-import {createStadiumDensity} from './stadiumDensity.js?v=photo-finish-tv-params-20261104-v1';
+import {createStadiumDensity} from './stadiumDensity.js?v=satoshi-aaa-audience-20261105-v1';
+import {createSatoshiPavilionDetail} from './satoshiPavilionDetail.js?v=satoshi-aaa-pavilion-frieze-night-20261105-v2';
+import {createSatoshiGrandstandCrowd} from './stadiumGrandstandCrowd.js?v=satoshi-grandstand-people-20261105-v1';
+import {createStraightCourseBatches,createForestBatches} from './stadiumStaticBatches.js?v=satoshi-static-batches-v1';
 import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
-import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
+import {createStadiumBackdrop} from './stadiumBackdrop.js?v=satoshi-backdrop-facades-20261105-v1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha15-runout-1';
@@ -172,34 +175,46 @@ for(let i=0;i<12;i++){
  const z=-14.9+i*2.65;
  box(809,.016,.027,0,.025,z,lanePaint).castShadow=false;
 }
-for(let x=-380;x<=380;x+=20)for(const z of [-17,17]){
- const slab=box(.34,.017,1.3,x,.025,z,mat('#efe4c6'));slab.castShadow=false;
-}
+// Dedicated static-mesh batches replace hundreds of individual geometry
+// allocations. Their dimensions and positions reproduce the original posts,
+// marks and fence, and they follow the straight-only visibility switch.
 function rail(z){
  for(const y of [.65,1.23])box(812,.115,.115,0,y,z,C.rail);
- for(let x=-402;x<=402;x+=4)cyl(.055,.065,1.36,x,.60,z,C.rail);
 }
 rail(-20.2);rail(20.2);
-// Outer track lawn, sculpted hedges and paddock fencing.
 // Turf beside the safety rail stays flush: no raised hedge blocks.
-for(let x=-399;x<=399;x+=8){box(.09,1.4,.10,x,.65,53,C.steel);}
 box(812,.12,.13,0,1.25,53,C.steel);
+const courseStaticBatches=createStraightCourseBatches({
+ THREE,parent:scene,railMaterial:C.rail,steelMaterial:C.steel
+});
 const straightCourse=new THREE.Group();straightCourse.name='Straight track assets';
 const straightChildren=scene.children.slice(straightSceneIndex);scene.add(straightCourse);
 straightChildren.forEach(child=>straightCourse.add(child));
 // Tree silhouettes with actual 3D cones, variation in depth, no billboard.
 const treeTrunk=mat('#655d47'),treeNeedle=mat('#315d3a'),treeLight=mat('#51784a');
-createStadiumBackdrop(scene,{softwareGPU,mobile});
+const distantBackdrop=createStadiumBackdrop(scene,{softwareGPU,mobile});
 const treeGroup=new THREE.Group();scene.add(treeGroup);
-const treeN=softwareGPU?55:mobile?90:155;
+const treeN=softwareGPU?55:mobile?90:155,forestTrees=[];
 for(let i=0;i<treeN;i++){
  const r=seeded(i*761+49),x=r()*820-410,back=r()>.40,z=back?-153-r()*16:132+r()*22;
  // No trees emerging through the relocated pavilion or VIP forecourt.
  if(back&&Math.abs(x)<60&&z>-181&&z<-126)continue;
- const h=5+r()*9;
- cyl(.22,.4,h*.45,x,h*.21,z,treeTrunk,treeGroup,6);
- cone(h*.22,h*.64,x,h*.57,z,r()>.5?treeNeedle:treeLight,treeGroup,7);
- cone(h*.16,h*.53,x,h*.82,z,treeNeedle,treeGroup,7);
+ const h=5+r()*9,light=r()>.5;
+ forestTrees.push({x,z,h,light});
+}
+const forestBatches=createForestBatches({THREE,parent:treeGroup,trees:forestTrees,
+ trunkMaterial:treeTrunk,needleMaterial:treeNeedle,lightMaterial:treeLight});
+// Instrumentation only: existing racer positions, timing and result are never
+// read or changed by static-scene batching.
+if(broadcastQuery.get('stadium-perf-qa')==='1'){
+ window.__cryptodromoStaticQA=Object.freeze({
+  snapshot:()=>Object.freeze({
+   straight:courseStaticBatches.stats,woodland:forestBatches.stats,
+   skyline:distantBackdrop.stats,
+   drawCalls:renderer.info.render.calls,
+   straightVisible:straightCourse.visible,treesVisible:treeGroup.visible
+  })
+ });
 }
 // Alpha16: preserve Satoshi's landmark VIP pavilion but NOT its previous
 // uninterrupted 810m tribune. Three short modular stands live in Parade Village.
@@ -239,6 +254,7 @@ for(const x of [-24,24]){
  cone(3.2,8.4,0,11.05,0,C.roof,tower,12);
  cyl(.11,.15,2,0,16.2,0,C.bronze,tower);
 }
+const pavilionDetail=createSatoshiPavilionDetail({THREE,parent:vip,quality:softwareGPU||mobile?'eco':'balanced'});
 function sign(text,x,y,z,w=24,h=3,parent=venue,fg='#f3ecd7',bg='#0e3028'){
  const c=document.createElement('canvas');c.width=1024;c.height=148;const ctx=c.getContext('2d');
  ctx.fillStyle=bg;ctx.fillRect(0,0,1024,148);ctx.fillStyle='#cca969';ctx.fillRect(0,0,1024,9);
@@ -247,23 +263,25 @@ function sign(text,x,y,z,w=24,h=3,parent=venue,fg='#f3ecd7',bg='#0e3028'){
  const surface=mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}),parent);
  surface.position.set(x,y,z);return surface;
 }
-sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7,pavilion);
+// A compact frieze plaque belongs above the portico, not in front of the upper-story glazing.
+sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,7.7,-67.5,42,1.65,pavilion);
 sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0,pavilion);
-// Spectators: shared-instanced bodies and heads, individual colors, multi-tier seating.
-const crowdN=softwareGPU?260:mobile?440:980,bodyG=new THREE.CylinderGeometry(.21,.26,.62,5),headG=new THREE.SphereGeometry(.21,7,5);
-const crowds=[new THREE.InstancedMesh(bodyG,mat('#eeeeee'),crowdN),new THREE.InstancedMesh(headG,mat('#dbb78b'),crowdN)];
-const dummy=new THREE.Object3D(),palette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
-const rnd=seeded(641903);
+// Remote grandstands retain their exact seeded coordinates and dress colors,
+// but are no longer two isolated primitive torso/head meshes.
+const crowdN=softwareGPU?260:mobile?440:980;
+const crowdPalette=['#c9ac88','#23816b','#a3caac','#f5e1bd','#cd7256','#388ba3','#264e5c','#ba957b','#e7e6dc'];
+const rnd=seeded(641903),remotePeople=[];
 for(let i=0;i<crowdN;i++){
  const section=i%3,row=Math.floor(rnd()*7);
  const x=standCenters[section]+(rnd()-.5)*(standWidths[section]-8);
  const z=-107-row*2.6+(section===2?9:0),y=4.62+row*.93;
- dummy.position.set(x,y,z);dummy.rotation.y=(rnd()-.5)*.6;dummy.updateMatrix();crowds[0].setMatrixAt(i,dummy.matrix);
- dummy.position.y+=.52;dummy.updateMatrix();crowds[1].setMatrixAt(i,dummy.matrix);
- crowds[0].setColorAt(i,new THREE.Color(palette[Math.floor(rnd()*palette.length)]));
- crowds[1].setColorAt(i,new THREE.Color(rnd()>.55?'#d9b798':'#b99573'));
+ const yaw=(rnd()-.5)*.6;
+ const coat=crowdPalette[Math.floor(rnd()*crowdPalette.length)];
+ const skin=rnd()>.55?'#d9b798':'#b99573';
+ remotePeople.push({x,y,z,yaw,coat,skin});
 }
-for(const inst of crowds){inst.castShadow=false;inst.receiveShadow=false;inst.instanceMatrix.needsUpdate=true;venue.add(inst);}
+const grandstandCrowd=createSatoshiGrandstandCrowd({THREE,parent:venue,people:remotePeople});
+const crowds=grandstandCrowd.meshes;
 // The stands erupt at the finish: 128 tiny waving pennants in one draw call.
 const flagsN=softwareGPU?48:128;
 const flagGeom=new THREE.PlaneGeometry(.82,.55),flagMat=new THREE.MeshBasicMaterial({color:'#f1cf86',side:THREE.DoubleSide,transparent:true,opacity:.92});
@@ -340,11 +358,25 @@ trackFX.marks.visible=false;trackFX.shadows.visible=false;
 const hoofFX=createHoofTerrainFX(scene,{lanes:12,quality:softwareGPU?'eco':mobile?'balanced':'cinematic'});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode=selectedTrack?.layout||'straight';
+// Read-only visual diagnostics: the actual LIVE audience, never score or race state.
+if(new URLSearchParams(location.search).get('audience-qa')==='1'){
+ window.__cryptodromoAudienceQA=Object.freeze({
+  snapshot:()=>Object.freeze({
+   ...stadiumDensity.stats,layout:layoutMode,visible:stadiumDensity.root.visible,
+   drawCalls:renderer.info.render.calls,
+   remoteGrandstand:grandstandCrowd.stats,
+   remoteVisible:grandstandCrowd.visibleCount,
+   groups:stadiumDensity.root.children.filter(item=>item.name.startsWith('Stands · audience'))
+    .map(item=>({name:item.name,count:item.count,visible:item.visible}))
+  })
+ });
+}
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
 const scenicSettings={crowd:true,trees:true,splits:true,details:true};
 function applyScenery(){
  for(const actor of crowds)actor.visible=scenicSettings.crowd;
  treeGroup.visible=scenicSettings.trees;
+ distantBackdrop.setTreeVisible(scenicSettings.trees);
  trackSplitMarkers.setVisible(scenicSettings.splits);
  liveVillage.root.traverse(object=>{
   if(/Público|audience/i.test(object.name))object.visible=scenicSettings.crowd;
@@ -810,7 +842,9 @@ function setWeather(mode){
  for(const x of venue.children){if(x.userData?.lamp)x.userData.lamp.intensity=night?85:0;}
  nightLights.configure({night});
  liveDistrict.setEnvironment({hour,type:wet?'rain':night?'night':'clear',wetness:trackFX.wetness});
+ distantBackdrop.setEnvironment({night,wetness:trackFX.wetness});
  liveVillage.setEnvironment({night,wetness:trackFX.wetness});
+ pavilionDetail.setEnvironment({night,wetness:trackFX.wetness});
 }
 weatherSelect.value='auto';
 weatherSelect.addEventListener('change',()=>{setWeather(weatherSelect.value);applyLightingControls();});
@@ -895,7 +929,7 @@ function applyQualityPreset(next){
  const p=rendererSettings(next,{devicePixelRatio:window.devicePixelRatio||1});
  renderer.setPixelRatio(Math.min(p.pixelRatio,softwareGPU?.78:mobile?1.1:1.6));
  const audienceCount=Math.max(120,Math.min(crowdN,Math.floor(crowdN*p.crowdFactor)));
- for(const inst of crowds)inst.count=audienceCount;
+ grandstandCrowd.setPopulation(audienceCount);
  hoofFX.setQuality(next);
  rainGeo.setDrawRange(0,Math.max(70,Math.floor(rainN*p.particleFactor)));
  if(!softwareGPU){
@@ -911,6 +945,8 @@ function applyQualityPreset(next){
  liveDistrict.setQuality(next);
  liveVillage.setQuality(next);
  stadiumDensity.setQuality(next);
+ pavilionDetail.setQuality(next);
+ distantBackdrop.setQuality(next);
  graphicsFpsReadout.textContent='FPS · '+activeQuality.toUpperCase()+
   (graphicsModeSelect.value==='auto'?' · AUTO':'');
  resize();
@@ -1086,7 +1122,13 @@ function adjustCamera(dt){
    }
    mode=selectedTvShot;
  }
- if(mode==='paddock'){
+ if(mode==='architecture'){
+   // Film the REAL VIP building from above the backstretch spectator edge.
+   // High enough to keep the camera out of the course envelope, with the
+   // landmark towers, porch, front columns and balcony all in the frame.
+   goal.set(0,31,-90);
+   target.set(0,17,-145);
+ }else if(mode==='paddock'){
    goal.set(point.x+nx*38,12,point.z+nz*38);
    target.set(point.x,2.1,point.z);
  }else if(mode==='aerial'){
@@ -1400,11 +1442,19 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
      grandstandCameraZ:PAVILION_GRANDSTAND_CAMERA_Z,
      currentLayout:layoutMode,
      visible:pavilion.visible,
-     finishMarkerVisible:finishSign.visible
+     finishMarkerVisible:finishSign.visible,
+     detailVersion:pavilionDetail.stats.version,
+     detailBatches:pavilionDetail.stats.batches,
+     detailInstances:pavilionDetail.stats.instances,
+     detailSupported:pavilionDetail.stats.foundationSupported,
+     detailBounds:pavilionDetail.stats.bounds,
+     detailNight:pavilionDetail.environment.night,
+     detailOrnamentVisible:pavilionDetail.root.children[1]?.visible===true,
+     detailWashIntensity:pavilionDetail.environment.washIntensity
    })
  });
 }
-window.addEventListener('pagehide',()=>hoofFX.dispose(),{once:true});
+window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();grandstandCrowd.dispose();courseStaticBatches.dispose();forestBatches.dispose();distantBackdrop.dispose();},{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});

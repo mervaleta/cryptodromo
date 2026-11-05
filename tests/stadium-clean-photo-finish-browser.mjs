@@ -7,12 +7,14 @@ const browser=await chromium.launch({headless:true,args:[
 ]});
 await mkdir('artifacts/stadium-clean-photo-finish',{recursive:true});
 const problems=[];
-async function waitReady(page){
- await page.waitForFunction(()=>{
+async function waitReady(page,track=null){
+ await page.waitForFunction(expected=>{
   const f=document.querySelector('#stadium-broadcast');
-  return !!f&&!f.hidden&&f.contentDocument?.querySelector('#start')?.disabled===false&&
-   f.contentDocument?.querySelector('#raceCanvas')?.width>300;
- },null,{timeout:130000});
+  const content=f?.contentDocument;
+  const actual=(()=>{try{return new URL(f.contentWindow.location.href).searchParams.get('track');}catch{return null;}})();
+  return !!f&&!f.hidden&&content?.querySelector('#start')?.disabled===false&&
+   content?.querySelector('#raceCanvas')?.width>300&&(!expected||actual===expected);
+ },track,{timeout:130000});
 }
 const value=(page,id)=>page.evaluate(id=>{
  const el=document.querySelector('#stadium-broadcast')?.contentDocument?.getElementById(id);
@@ -47,8 +49,21 @@ try{
  await page.locator('#director-tv-replay-hold').fill('3');
  await page.screenshot({path:'artifacts/stadium-clean-photo-finish/parameter-submenus.png',timeout:17000});
  await page.locator('[data-tv-switch="genesis"]').click();
- await waitReady(page);
- await page.waitForFunction(()=>!window.__satoshiTvQA.snapshot().transition,null,{timeout:15000});
+ // A twelve-horse WebGL iframe may take longer to initialize on SwiftShader.
+ // Check the NEW channel rather than accidentally accepting the OLD iframe.
+ await waitReady(page,'genesis');
+ try {
+  await page.waitForFunction(()=>{
+   const s=window.__satoshiTvQA?.snapshot();
+   return s?.track==='genesis'&&s.ready&&!s.transition;
+  },null,{timeout:45000});
+ } catch(error) {
+  const state=await page.evaluate(()=>window.__satoshiTvQA?.snapshot());
+  console.error('GENESIS_CHANNEL_DIAGNOSTIC',JSON.stringify({
+   track:state?.track,ready:state?.ready,transition:state?.transition,src:state?.src
+  }));
+  throw error;
+ }
  await page.waitForFunction(()=>{
   const doc=document.querySelector('#stadium-broadcast')?.contentDocument;
   return doc?.getElementById('light-dimmer')?.value==='40'&&

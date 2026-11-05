@@ -48,15 +48,24 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
  const geos=[],mats=[],objects=[];
  const geometry=g=>(geos.push(g),g),material=m=>(mats.push(m),m);
  const cube=geometry(new THREE.BoxGeometry(1,1,1));
- const body=geometry(new THREE.CylinderGeometry(.22,.29,.66,5));
- const head=geometry(new THREE.SphereGeometry(.22,6,5));
+ // A spectator is a recognizable, articulated silhouette: head, hair, jacket,
+ // sleeves, hands, trousers and shoes. All parts share just eight draw calls,
+ // regardless of audience size, rather than one draw call per person.
+ const body=geometry(new THREE.CylinderGeometry(.245,.28,.68,7));
+ const head=geometry(new THREE.SphereGeometry(.21,8,7));
+ const limb=geometry(new THREE.CylinderGeometry(.077,.098,1,6));
+ const hairCap=geometry(new THREE.SphereGeometry(.216,8,5,0,Math.PI*2,0,Math.PI*.51));
+ const shoe=geometry(new THREE.BoxGeometry(1,1,1));
  const M={
   iron:material(new THREE.MeshStandardMaterial({color:0x405b50,roughness:.72,metalness:.22})),
   gold:material(new THREE.MeshStandardMaterial({color:0xc8a86e,roughness:.61,metalness:.22})),
   stone:material(new THREE.MeshStandardMaterial({color:0x8d9584,roughness:.96})),
   seat:material(new THREE.MeshStandardMaterial({color:0x245244,roughness:.94})),
-  cloth:material(new THREE.MeshStandardMaterial({color:0xede0c3,roughness:1})),
-  skin:material(new THREE.MeshStandardMaterial({color:0xc9a484,roughness:1})),
+  // White bases permit deterministic per-instance skin, clothing and hair colors.
+  cloth:material(new THREE.MeshStandardMaterial({color:0xffffff,roughness:.98})),
+  skin:material(new THREE.MeshStandardMaterial({color:0xffffff,roughness:.98})),
+  trousers:material(new THREE.MeshStandardMaterial({color:0xffffff,roughness:.99})),
+  hair:material(new THREE.MeshStandardMaterial({color:0xffffff,roughness:.98})),
   turf:material(new THREE.MeshStandardMaterial({color:0x315b3e,roughness:1}))
  };
  const dummy=new THREE.Object3D();
@@ -65,8 +74,8 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
   const mesh=new THREE.InstancedMesh(geo,mat,items.length);
   mesh.name=name;mesh.castShadow=false;mesh.receiveShadow=false;
   for(let i=0;i<items.length;i++){
-   const [x,y,z,w,h,d,rot=0]=items[i];
-   dummy.position.set(x,y,z);dummy.rotation.set(0,rot,0);
+   const [x,y,z,w,h,d,rot=0,pitch=0,roll=0]=items[i];
+   dummy.position.set(x,y,z);dummy.rotation.set(pitch,rot,roll);
    dummy.scale.set(w,h,d);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
    if(colors)mesh.setColorAt(i,new THREE.Color(colors[i%colors.length]));
   }
@@ -75,6 +84,12 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
   root.add(mesh);objects.push(mesh);return mesh;
  }
  const rails=[],goldRails=[],railPosts=[],steps=[],seats=[],bodies=[],heads=[],flags=[];
+ const sleeves=[],hands=[],trouserLegs=[],shoes=[],hair=[],hats=[];
+ const coatColors=[],skinColors=[],sleeveColors=[],handColors=[],trouserColors=[],shoeColors=[],hairColors=[],hatColors=[];
+ const coats=['#e8d9b9','#326a63','#b45e4c','#c8c0ab','#3f5e87','#667b52','#694c6a','#e5ad73','#d6d6d1'];
+ const skins=['#b68b6b','#d8b38e','#96745f','#e1bda0','#714d37','#c79a78'];
+ const hairPalette=['#322720','#66503a','#1e2325','#a18b6d','#c4ad82','#54362d'];
+ const pants=['#3b4147','#4c5746','#725947','#263e4c','#756e65','#4b4b54'];
  // Safety rail remains 5.3 m outside the course. Trackside spectator barrier
  // sits at -31.5, leaving a safe 6 m gap behind the rail.
  for(const z of [-25.5,-31.5]){
@@ -106,14 +121,38 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
    flags.push([sx,5.0,-32.9,1.15,.55,.08]);
   }
   for(let i=0;i<preset.crowdPerStand;i++){
-   // Seeded deterministic population. No frame updates, no random flicker.
-   const seed=(i*16807+Math.floor((x+250)*97))>>>0;
+   // Seeded, reproducible wardrobe and gestures. No Math.random or frame flicker.
+   const seed=(Math.imul(i+1,16807)+Math.floor((x+250)*97))>>>0;
    const row=seed%preset.seatRows;
    const u=((Math.imul(seed,1664525)+1013904223)>>>0)/4294967296;
    const sx=x+(u-.5)*(width-7),sz=-36.5-row*2.2;
-   const sy=3.65+row*.57;
-   bodies.push([sx,sy,sz,1,1,1]);
-   heads.push([sx,sy+.49,sz,1,1,1]);
+   const sy=3.67+row*.57;
+   const coat=coats[(seed>>>3)%coats.length];
+   const skin=skins[(seed>>>5)%skins.length];
+   const ink=hairPalette[(seed>>>7)%hairPalette.length];
+   const pant=pants[(seed>>>9)%pants.length];
+   const standing=seed%5===0;
+   const cheering=seed%11===0;
+   const yaw=((seed%9)-4)*.035;
+   bodies.push([sx,sy+.06,sz,.94,1,.90,yaw]);coatColors.push(coat);
+   heads.push([sx,sy+.57,sz+.025,1,1,1]);skinColors.push(skin);
+   hair.push([sx,sy+.57,sz+.025,1,1,1]);hairColors.push(ink);
+   for(const side of [-1,1]){
+    const lift=cheering&&(side===1||seed%3===0);
+    const armY=lift?sy+.49:sy-.045;
+    const armX=sx+side*(lift?.39:.315);
+    sleeves.push([armX,armY,sz+.035,.90,lift?.62:.51,.90,0,0,side*(lift?.55:.13)]);
+    sleeveColors.push(coat);
+    hands.push([sx+side*(lift?.56:.35),lift?sy+.77:sy-.32,sz+.07,.34,.34,.34]);
+    handColors.push(skin);
+    trouserLegs.push([sx+side*.14,standing?sy-.59:sy-.44,sz+(standing?0:.19),.93,standing?.70:.47,.94,0,standing?0:-.34]);
+    trouserColors.push(pant);
+    shoes.push([sx+side*.14,standing?sy-.98:sy-.70,sz+(standing?.10:.43),.22,.13,.36]);
+    shoeColors.push('#302e2c');
+   }
+   if(seed%7===0){
+    hats.push([sx,sy+.795,sz+.035,.49,.10,.49]);hatColors.push(coat);
+   }
   }
  }
  // Raised planter blocks removed to keep a clear spectator concourse.
@@ -122,10 +161,14 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
  instance('Track rail · balusters',cube,M.iron,railPosts);
  instance('Stands · stepped apron',cube,M.stone,steps);
  instance('Stands · tiered seating',cube,M.seat,seats);
- instance('Stands · audience torsos',body,M.cloth,bodies,
-  ['#e9dbbc','#326e65','#c06e4d','#d9c99c','#68929d','#72916d']);
- instance('Stands · audience heads',head,M.skin,heads,
-  ['#b68b6b','#d8b38e','#96745f','#e1bda0']);
+ instance('Stands · audience torsos',body,M.cloth,bodies,coatColors);
+ instance('Stands · audience heads',head,M.skin,heads,skinColors);
+ instance('Stands · audience hair',hairCap,M.hair,hair,hairColors);
+ instance('Stands · audience arms',limb,M.cloth,sleeves,sleeveColors);
+ instance('Stands · audience hands',head,M.skin,hands,handColors);
+ instance('Stands · audience legs',limb,M.trousers,trouserLegs,trouserColors);
+ instance('Stands · audience shoes',shoe,M.trousers,shoes,shoeColors);
+ instance('Stands · audience hats',shoe,M.cloth,hats,hatColors);
  instance('Stands · pennants',cube,M.gold,flags);
 
  scene.add(root);
@@ -145,6 +188,7 @@ export function createStadiumDensity({THREE,scene,quality='balanced',softwareGPU
  return {root,dispose,setQuality,setLayout,stats:{
   additiveOnly:true,courseModified:false,horseModified:false,cameraModified:false,
   stands:DENSITY_STANDS.length,instanceGroups:objects.length,
-  crowd:bodies.length,seatPieces:seats.length,rails:railPosts.length
+  crowd:bodies.length,articulated:true,crowdDrawGroups:8,deterministic:true,
+  seatPieces:seats.length,rails:railPosts.length
  }};
 }

@@ -153,6 +153,40 @@ html.tv-embed .result-overlay.is-visible:not([hidden]){opacity:1;visibility:visi
  html.tv-embed .lowerthird p{font-size:9px}
  html.tv-embed .broadcast{font-size:8px}
 }
+
+/* AAA broadcast composition: keep real 3D venue visible while presenting runners. */
+.presentation-overlay{
+ background:linear-gradient(90deg,rgba(4,14,12,.87),rgba(5,20,15,.72) 24%,rgba(6,22,18,.28) 48%,rgba(6,22,18,.07) 72%,transparent 90%);
+ pointer-events:none;
+}
+.present-spotlight{
+ width:min(370px,42%);max-width:100%;padding:14px 17px 16px;
+ border-left:3px solid rgba(231,194,128,.78);
+ border-top:1px solid rgba(229,199,145,.28);
+ border-bottom:1px solid rgba(229,199,145,.18);
+ background:linear-gradient(100deg,rgba(3,15,12,.67),rgba(3,15,12,.32),transparent);
+ box-shadow:12px 12px 34px rgba(0,0,0,.12);gap:2px;
+}
+.present-spotlight strong{font-size:clamp(45px,6.1vw,86px);line-height:1.04}
+.present-spotlight #present-name{font-size:clamp(14px,1.75vw,21px)}
+.present-spotlight small{font-size:11px;line-height:1.45;color:#e4eade}
+.present-top{padding:3px 0 10px;text-shadow:0 2px 8px #00130ee0}
+.present-roster{
+ border-top:1px solid rgba(232,204,154,.34);
+ border-bottom:1px solid rgba(232,204,154,.18);
+ background:linear-gradient(90deg,rgba(5,19,15,.55),rgba(5,19,15,.23));padding:7px 0;
+}
+.present-roster>div{background:rgba(7,21,18,.61)}
+.present-footer{text-shadow:0 2px 7px #001a16}
+@media(max-width:680px){
+ .presentation-overlay{background:linear-gradient(90deg,rgba(3,15,12,.84),rgba(3,15,12,.52) 48%,rgba(3,15,12,.08))}
+ .present-spotlight{width:min(72%,290px);padding:9px 10px;gap:1px}
+ .present-spotlight strong{font-size:clamp(38px,10vw,57px)}
+ .present-spotlight #present-name{font-size:14px}
+ .present-spotlight #present-horse-3d{width:120px!important;height:88px!important}
+ .present-top{font-size:9px}.present-top strong{font-size:26px}
+ .present-roster>div{min-height:28px}
+}
 </style>
 </head><body>
 <header class="top"><a class="brand" href="/"><img src="/assets/cryptodromo-logo.png" alt="" class="brand-mark" width="38" height="38">CRYPTÓ<span>DROMO</span></a><nav><a href="/">Carrera LIVE</a><a href="/racers/">Corredores</a><a href="/estadio/">Estadio</a><a href="/parade/">Modo Parade</a><a href="/fixture/">Fixture</a><a href="/resultados/">Resultados</a><a href="/estadisticas/">Estadísticas</a><a href="/cronicas/">Crónicas</a><a href="/apuestas/">Apuestas</a><a href="/institucional/">Proyecto</a></nav><span class="overline">CINEMATIC LAB · ALPHA 16</span></header>
@@ -224,7 +258,7 @@ html.tv-embed .result-overlay.is-visible:not([hidden]){opacity:1;visibility:visi
 <div class="camera-deck" id="camera-deck">
  <div class="camera-intro"><div><h3>Dirección de cámaras · Alpha 17</h3><p>Un solo panel para todas las vistas. Los ajustes son manuales y no cambian la carrera ni los resultados.</p></div><span class="camera-reading" id="camera-reading">CÁMARA · TV</span></div>
  <div class="camera-grid">
-  <label>Vista / plano<select id="camera" aria-label="Plano de cámara"><option value="broadcast">Dirección TV automática</option><option value="rail">Railcam · a pie de pista</option><option value="low">Casco · plano bajo</option><option value="aerial">Cenital · óvalo entero</option><option value="overview">Panorámica del estadio</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta · foto finish</option><option value="startline">Puerta de largada</option><option value="side">Lateral · velocidad</option><option value="reverse">Contraplano</option><option value="leader">Líder · persecución</option><option value="pack">Pelotón · gran angular</option><option value="grandstand">Desde tribuna</option><option value="orbit">Órbita del estadio</option><option value="paddock">Paddock y edificios</option></select></label>
+  <label>Vista / plano<select id="camera" aria-label="Plano de cámara"><option value="broadcast">Dirección TV automática</option><option value="rail">Railcam · a pie de pista</option><option value="low">Casco · plano bajo</option><option value="aerial">Cenital · óvalo entero</option><option value="overview">Panorámica del estadio</option><option value="drone">Dron · seguimiento</option><option value="finish">Meta · foto finish</option><option value="startline">Puerta de largada</option><option value="side">Lateral · velocidad</option><option value="reverse">Contraplano</option><option value="leader">Líder · persecución</option><option value="pack">Pelotón · gran angular</option><option value="grandstand">Desde tribuna</option><option value="orbit">Órbita del estadio</option><option value="paddock">Paddock y edificios</option><option value="architecture">Pabellón VIP · arquitectura</option></select></label>
   <label>Giro horizontal <output id="camera-angle-label">0°</output><input id="camera-angle" data-camera-field="yaw" data-unit="°" data-default="0" type="range" min="-180" max="180" value="0" step="1" aria-label="Giro horizontal"/></label>
   <label>Inclinación vertical <output id="camera-pitch-label">0°</output><input id="camera-pitch" data-camera-field="pitch" data-unit="°" data-default="0" type="range" min="-75" max="75" value="0" step="1" aria-label="Ángulo vertical"/></label>
   <label>Altura adicional <output id="camera-height-label">0 m</output><input id="camera-height" data-camera-field="height" data-unit=" m" data-default="0" type="range" min="-20" max="140" value="0" step="1" aria-label="Altura de cámara"/></label>
@@ -275,4 +309,4 @@ html.tv-embed .result-overlay.is-visible:not([hidden]){opacity:1;visibility:visi
 </section>
 <section class="panel info-panel"><h2>Los protagonistas</h2><p>Historias y estadísticas calculadas para los cien caballos del Cryptódromo. Cada identidad es ficticia; las victorias y los podios corresponden a las 3.360 carreras sintéticas.</p><div id="race-biography" aria-live="polite">Seleccioná un caballo en la clasificación para ver su biografía.</div><a href="/racers/">Explorar los 100 caballos y sus estadísticas ↗</a></section>
 <footer class="foot">CRYPTÓDROMO · laboratorio visual. MVP con precios ficticios y carreras precalculadas. No transmite cotizaciones reales, no habilita apuestas ni representa resultados de mercado futuros. <a href="/">Volver al sitio principal</a>.</footer>
-</main><script type="module" src="./scene.js?v=muybridge-clearance-20261104-v3"></script></body></html>
+</main><script type="module" src="./scene.js?v=satoshi-pavilion-frieze-night-20261105-v7"></script></body></html>
