@@ -78,11 +78,13 @@ try{
   return qa?.track==='genesis'&&qa.ready&&!qa.transition&&
    f.contentDocument?.querySelector('#start')?.disabled===false;
  },null,{timeout:120000});
+ // Software WebGL may throttle requestAnimationFrame. Poll actual scene
+ // form values on a wall-clock interval; never waive the persistence check.
  await tv.waitForFunction(()=>{
   const d=document.querySelector('#stadium-broadcast')?.contentDocument;
   return d?.querySelector('#daytime')?.value==='1050'&&
    d?.querySelector('#light-power')?.checked===false;
- },null,{timeout:16000});
+ },null,{timeout:30000,polling:250});
  assert.match(await tv.locator('[data-tv-stadium-link]').getAttribute('href'),/course=genesis/);
  assert.equal(await tv.locator('iframe').count(),1);
  console.log('PASS environment remote edits real WebGL settings and persists across TV channel changes');
