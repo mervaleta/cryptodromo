@@ -9,10 +9,10 @@ const resetToken=params.get('reset');
 const verifyToken=params.get('verify');
 function visible(id,value){$(id).hidden=!value;}
 function notice(text,bad=false){const el=$('message');el.textContent=text||'';el.classList.toggle('error',bad);}
-async function api(action,data){
+async function api(action,data,query={}){
   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),15000);
   try{
-    const response=await fetch('/api/users.php?action='+encodeURIComponent(action),{
+    const response=await fetch('/api/users.php?'+new URLSearchParams({action,...query}),{
       method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:{'Accept':'application/json'},
       body:data?JSON.stringify({...data,csrf}):undefined,
       credentials:'same-origin',cache:'no-store',signal:ctrl.signal
@@ -44,7 +44,7 @@ function line(parent,text,extra){
 async function loadPublic(){
   visible('guest',false);visible('dashboard',false);visible('public-profile',true);
   try{
-    const result=await api('profile&alias='+encodeURIComponent(publicAlias));
+    const result=await api('profile',null,{alias:publicAlias});
     const box=$('public-content');box.replaceChildren();
     const h=document.createElement('h3');h.textContent='@'+result.profile.alias;box.append(h);
     line(box,'Ingreso',new Date(result.profile.joined_at*1000).toLocaleDateString('es-AR'));
