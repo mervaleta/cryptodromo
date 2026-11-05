@@ -340,6 +340,17 @@ trackFX.marks.visible=false;trackFX.shadows.visible=false;
 const hoofFX=createHoofTerrainFX(scene,{lanes:12,quality:softwareGPU?'eco':mobile?'balanced':'cinematic'});
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode=selectedTrack?.layout||'straight';
+// Read-only visual diagnostics: the actual LIVE audience, never score or race state.
+if(new URLSearchParams(location.search).get('audience-qa')==='1'){
+ window.__cryptodromoAudienceQA=Object.freeze({
+  snapshot:()=>Object.freeze({
+   ...stadiumDensity.stats,layout:layoutMode,visible:stadiumDensity.root.visible,
+   drawCalls:renderer.info.render.calls,
+   groups:stadiumDensity.root.children.filter(item=>item.name.startsWith('Stands · audience'))
+    .map(item=>({name:item.name,count:item.count,visible:item.visible}))
+  })
+ });
+}
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
 const scenicSettings={crowd:true,trees:true,splits:true,details:true};
 function applyScenery(){
