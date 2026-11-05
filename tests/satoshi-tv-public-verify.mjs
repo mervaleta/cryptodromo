@@ -3,14 +3,14 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 
 const origin=process.env.CRP_BASE_URL||'https://race.cryptodromo.com';
-const stamp='satoshi-tv-deploy-20261104';
+const stamp='satoshi-tv-immutable-20261105-r1';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const resources=[
  ['/stadiums/crypto/live/',/Cryptódromo\s*<em>TV/],
- ['/stadiums/crypto/live/index.html',/id="tv-player"/],
+ ['/stadiums/crypto/live/index.html',/crypto-venue-aaa-20261105-r1\.js/],
  ['/stadiums/crypto/broadcast/index.html',/id="raceCanvas"/],
  ['/visual-lab/index.html',/id="raceCanvas"/],
- ['/assets/crypto-venue.js',/PROBE_TIMEOUT_MS=12000/],
+ ['/assets/crypto-venue-aaa-20261105-r1.js',/PROBE_TIMEOUT_MS=12000/],
  ['/alpha15/director.js',/coverage-variety/],
  ['/assets/crypto-archive.js',/Ver repetición en TV/],
  ['/race-lab/source/src/data/tripleRaceFixture.js',/alpha19-triple-v2-continuous-week/],
