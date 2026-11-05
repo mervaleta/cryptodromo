@@ -38,7 +38,7 @@ test('No publicly rendered HTML, accessibility label or metadata contains the ba
 });
 test('Broadcast JS and scoreboards never inject that badge',()=>{
  const paths=[
-  'assets/crp-global-nav.js','assets/crypto-venue.js','assets/crypto-stadium-clocks.js',
+  'assets/crp-global-nav.js','assets/crypto-venue.js','assets/crypto-venue-aaa-20261105-r1.js','assets/crypto-stadium-clocks.js',
   'assets/stadium-network-ui.js','assets/stadium-network-engine.js','autodromo/app.js',
   'assets/stables.js','race-lab/source/src/churchillStadium.js',
   'race-lab/source/src/stadium/venue.js'
@@ -65,7 +65,7 @@ test('Key public pages retain transparent synthetic-price disclosures',()=>{
 // browser-cached script URL from the previous branding.
 test('public race entrypoints use cache-busted scripts for cleaned broadcast copy',()=>{
  const expected={
-  'stadiums/crypto/live/index.html':'/assets/crypto-venue.js?v=copy-clean-20261105-v1',
+  'stadiums/crypto/live/index.html':'/assets/crypto-venue-aaa-20261105-r1.js',
   'autodromo/index.html':'./app.js?v=copy-clean-20261105-v1',
   'stadiums/index.html':'/assets/stadium-network-ui.js?v=copy-clean-20261105-v1',
   'stadiums/crypto/broadcast/index.html':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
