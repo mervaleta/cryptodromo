@@ -8,10 +8,13 @@ const PI=Math.PI,TAU=2*PI;
 const smooth=v=>{const t=Math.max(0,Math.min(1,v));return t*t*(3-2*t);};
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const noise=n=>{const x=Math.sin(n*73.2271+14.91)*34987.2;return x-Math.floor(x);};
+// Calibrated against actual upper vertices of BTC_EQUINE_MESH, with
+// the small positive offset introduced by Maya's sculpted neck/poll skin.
+// The previous hand-drawn curve both buried and floated scalp roots.
 const TOPLINE=[
- [-.0290,.04555],[-.026,.04510],[-.023,.0445],
- [-.020,.04285],[-.017,.0409],[-.014,.0392],
- [-.011,.0374],[-.008,.0355],[-.005,.0340],[-.003,.0337]
+ [-.0290,.04572],[-.026,.04605],[-.024,.04535],
+ [-.021,.04317],[-.018,.04159],[-.015,.03912],
+ [-.012,.03743],[-.009,.03609],[-.006,.03489],[-.003,.03406]
 ];
 function crest(y) {
  if(y<=TOPLINE[0][0])return TOPLINE[0][1];
@@ -237,55 +240,12 @@ function createHairMass(source,skinAt,{
  // A smooth, skinned root bed closes gaps between the forehead, ear roots
  // and mane. Sculpted cross-sections remain below the individual flowing
  // locks, not a floating billboard or a flat solid curtain.
- let rootBedVertices=0;
- const hairIndexCount=indices.length;
- if(!tail){
-  const bedRows=44,bedWidth=10,bedBase=positions.length/3;
-  for(let row=0;row<=bedRows;row++){
-   const t=row/bedRows,y=-.02755+.0230*t;
-   const fullness=.42+.58*Math.sin(PI*Math.pow(t,.75));
-   const halfWidth=.00062+.00049*fullness;
-   for(let col=0;col<=bedWidth;col++){
-    const across=col/bedWidth*2-1;
-    const sideRound=Math.sqrt(Math.max(0,1-across*across));
-    const x=across*halfWidth;
-    const z=crest(y)-.00014+
-      (.00045+.00102*fullness)*sideRound+
-      .00009*Math.sin(12*PI*t+across*2)*sideRound;
-    positions.push(x,y,z);
-    colors.push(.96+.06*sideRound,.92+.07*sideRound,.89+.07*sideRound);
-    tip.push(0);ids.push(0);region.push(0);
-    // Gently transfer the bed from the Head to the native neck skeleton.
-    // Retain Head anchoring across the poll, then blend softly onto the neck.
-    // The old transition started before the skull crown ended and opened a
-    // visible seam every time the horse flexed its head.
-    const blend=smooth((y+.0247)/.0046);
-    const native=skinAt(x,y,z),sums=new Map([[headJoint,1-blend]]);
-    for(let k=0;k<4;k++){
-     const joint=native.joints[k]||0,weight=(native.weights[k]||0)*blend;
-     sums.set(joint,(sums.get(joint)||0)+weight);
-    }
-    const top=[...sums].sort((a,b)=>b[1]-a[1]).slice(0,4);
-    const sum=top.reduce((n,p)=>n+p[1],0)||1;
-    for(let k=0;k<4;k++){
-     bones.push(top[k]?.[0]||0);
-     weights.push((top[k]?.[1]||0)/sum);
-    }
-    rootBedVertices++;
-   }
-  }
-  for(let row=0;row<bedRows;row++)for(let col=0;col<bedWidth;col++){
-   const a=bedBase+row*(bedWidth+1)+col,b=a+1,
-     c=a+bedWidth+1,d=c+1;
-   indices.push(a,c,b,b,c,d);
-  }
- }
+ // Native Maya body is now manifold: tail dock, both ears and BOTH eyes
+ // are sealed in the anatomical SkinnedMesh. A detached hair-colored scalp
+ // bed only produced a flat ridge/sunken strip during head flexion.
+ const rootBedVertices=0;
  const geo=new THREE.BufferGeometry();
  geo.setIndex(indices);
- if(!tail){
-  geo.addGroup(0,hairIndexCount,0);
-  geo.addGroup(hairIndexCount,indices.length-hairIndexCount,1);
- }
  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
@@ -315,16 +275,9 @@ function createHairMass(source,skinAt,{
    '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.022;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\nfloat hairBand=sin(vMayaHairRest.y*9300.+vMayaHairRest.z*11200.+vMayaHair.y*4.3);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.055*btcCuticle+.027*btcFineCoat+.036*hairBand,.82,1.16);');
  };
  mat.customProgramCacheKey=()=>tail?'btc-natural-tail-spring-v14':'btc-feathered-mane-poll-v14';
- // The scalp beneath the hair is skin, not a dark hair mesh. Recolor the
- // true skinned poll root bed with the animal's coat to eliminate the dark
- // polygonal patches seen above both eyes during native Gallop.
- const scalpMat=tail?null:new THREE.MeshStandardMaterial({
-  name:'BTC anatomical poll bed',
-  color:scalpColor instanceof THREE.Color?scalpColor:new THREE.Color('#a46239'),
-  roughness:.87,metalness:0,side:THREE.DoubleSide
- });
- const mesh=attach(source,geo,tail?mat:[mat,scalpMat],
-  tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
+ const scalpMat=null;
+ const mesh=attach(source,geo,mat,
+  tail?'BTC Maya rooted long tail':'BTC Maya natural rooted flowing mane');
  return {mesh,geo,mat,scalpMat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112,heroLocks:tail?0:56,rootBedVertices,solidRingSides:SIDES,looseNeckFibers:tail?0:neckOutliers,proceduralHairTexture:!tail};
 }
 
