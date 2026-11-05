@@ -45,16 +45,16 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   const f=(index+.33+.22*seed)/count;
   const tail=!mane;
   const isMain=tier===0;
-  const rootY=mane?(-.0291+.0172*f):(.0188+.0009*(seed-.5));
-  const rootZ=mane?(.0411-.0053*f):(.0320+.0005*(secondary-.5));
+  const rootY=mane?(-.0291+.0172*f):(.01640+.00036*(seed-.5));
+  const rootZ=mane?(.0411-.0053*f):(.03060+.00030*(secondary-.5));
   const maneSkin=mane?bindMane(f):null;
   // A deliberate silhouette change: full athletic crest and a long weighted
   // tail, rather than the short V5 tubes. All lengths remain in GLB rest space.
   const length=(mane?
-    (.0130+.0042*Math.sin(PI*f))*(.88+.26*seed)*maneSize:
-    (.0255+.0060*seed)*tailSize)*(isMain?1:.80);
-  const vWidth=(mane?.00073:.00091)*(isMain?1:.50)*(.79+.30*seed);
-  const dWidth=vWidth*(mane?.52:.58);
+    (.0109+.0035*Math.sin(PI*f))*(.88+.26*seed)*maneSize:
+    (.0230+.0053*seed)*tailSize)*(isMain?1:.80);
+  const vWidth=(mane?.00061:.00086)*(isMain?1:.50)*(.79+.30*seed);
+  const dWidth=vWidth*(mane?.54:.65);
   if(mane){if(isMain)quality.majorMane++;else quality.detailMane++;}
   else{if(isMain)quality.majorTail++;else quality.detailTail++;}
   const start=positions.length/3;
@@ -68,7 +68,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
    // Large low-frequency bends build shape; higher-frequency wisps are secondary.
    const lift=mane?
     (.0017+.0006*seed)*Math.sin(PI*u)+(.0010+.0006*secondary)*t:
-    (.0026+.0010*seed)*Math.sin(PI*u)+(.0032+.0011*secondary)*t;
+    (.00165+.00075*seed)*Math.sin(PI*u)+(.0022+.00085*secondary)*t;
    const wave=.00070*Math.sin(u*TAU*.92+seed*PI*1.4)*t*t;
    const curl=(mane?.00062:.00125)*t*Math.sin(u*TAU*1.05+seed*PI);
    const cy=rootY+length*(u+.080*Math.sin(PI*u))+
@@ -76,7 +76,7 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
    // Rest-pose tail follows a descending arc, rather than flaring upward.
    // Match the original GLB tail's downward sweep while the native tail rig
    // provides secondary swish through limited, distributed skin weights.
-   const cz=rootZ+lift+curl+wave-(mane?.00080*t*t:.0086*t);
+   const cz=rootZ+lift+curl+wave-(mane?.00074*t*t:.0106*t);
    const cx=mane?
     flank*(.00018+.00047*belly+.00112*t*t)*(tier===0?1:.78):
     (secondary-.5)*(.0014+.0045*belly)+
@@ -124,10 +124,10 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
  geometry.setAttribute('silkStrand',new THREE.Float32BufferAttribute(ids,1));
  geometry.computeVertexNormals();geometry.computeBoundingSphere();
  const material=new THREE.MeshPhysicalMaterial({
-  color,vertexColors:true,roughness:pass>=6?.55:.65,
-  sheen:pass>=6?.76:.70,metalness:0,
+  color,vertexColors:true,roughness:pass>=6?.70:.76,
+  sheen:pass>=6?.50:.46,metalness:0,
   sheenColor:new THREE.Color('#a98168'),sheenRoughness:.57,
-  clearcoat:.055,clearcoatRoughness:.69,
+  clearcoat:.018,clearcoatRoughness:.82,
   side:THREE.DoubleSide,shadowSide:THREE.DoubleSide
  });
  material.onBeforeCompile=shader=>{
@@ -154,9 +154,9 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCSilk;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat striae=sin(vBTCSilk.y*23.7+vBTCSilk.x*91.0)*sin(vBTCSilk.y*8.2+vBTCSilk.x*37.0);\ndiffuseColor.rgb*=mix(.58,1.075,smoothstep(.0,.47,vBTCSilk.x))*(.970+.055*striae);');
+   '#include <color_fragment>\nfloat striae=sin(vBTCSilk.y*23.7+vBTCSilk.x*91.0)*sin(vBTCSilk.y*8.2+vBTCSilk.x*37.0);\ndiffuseColor.rgb*=mix(.78,1.055,smoothstep(.0,.47,vBTCSilk.x))*(.970+.055*striae);');
  };
- material.customProgramCacheKey=()=>String(pass)+'|btc-silk-shell-v5';
+ material.customProgramCacheKey=()=>String(pass)+'|btc-silk-shell-v5-attached-v4';
  const mesh=new THREE.SkinnedMesh(geometry,material);
  mesh.name='BTC V5 continuous silky lock masses';
  mesh.frustumCulled=false;mesh.castShadow=true;mesh.receiveShadow=true;

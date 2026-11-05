@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
-import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
+import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-restore-v5-hair-gallop-20261105-v1';
 import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-restore-v5-hair-gallop-20261105-v1';
@@ -28,7 +28,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.055;
+ renderer.toneMappingExposure=.94;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();
  const camera=new THREE.PerspectiveCamera(33,1,.1,55);
@@ -57,9 +57,10 @@ export function createPreview(canvas,onFailure=()=>{}){
  const terrain=createBTCTerrainStage(scene,{platform,pedestalRing,renderer});
  let terrainSurface='dirt',terrainWetness=0;
 
+ let heldPoseTime=0,heldPoseIndex=null;
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='original'?'original':'enhanced',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#29232a';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#30261f';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
@@ -81,7 +82,8 @@ export function createPreview(canvas,onFailure=()=>{}){
   const candidate=(variant==='enhanced'||variant==='baseline'||variant==='maya')&&token.symbol==='BTC';
   try{
    const next=await createHorse({
-    coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
+    coat:token.symbol==='BTC'?(/^#[0-9a-f]{6}$/i.test(token.mayaAppearance?.coatColor||'')?token.mayaAppearance.coatColor:'#a36b4e'):token.coat,
+    accent:token.color,symbol:token.symbol,height:2.5,
     mode:paused?'Idle':'Gallop',maneMotion:variant==='original',nativeLookdev:token.symbol==='BTC',
     // Three.js Horse.glb reference: evaluate the authored gait as one coherent clip.
     // No secondary gaitRefiner joint offsets on the BTC anatomy QA viewer.
@@ -105,13 +107,13 @@ export function createPreview(canvas,onFailure=()=>{}){
       color:profile.maneColor||hairColor,
       tailColor:profile.tailColor||hairColor,
       eyeColor:profile.eyeColor
-     }:{maneSize,tailSize,color:hairColor,pass:btcPass};
+     }:{maneSize,tailSize,color:hairColor,pass:btcPass,neckRepair:stageParams.get('btcNeckRepair')!=='off'};
      nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,coatOptions);
     }
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHero=hero;
-   horse=next;hero=nextHero;frameHeld=false;
+   horse=next;hero=nextHero;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
    terrain.reset();
    terrain.setVisible(token.symbol==='BTC'&&terrainSurface!=='off');
    renderedSymbol=token.symbol;renderedVariant=candidate?variant:'original';
@@ -119,6 +121,22 @@ export function createPreview(canvas,onFailure=()=>{}){
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
   }
+ }
+ function advancePoseClock(seconds){
+  if(!horse)return;
+  for(let remain=Math.max(0,seconds);remain>.000001;){
+   const step=Math.min(remain,.08);horse.update(step,1);remain-=step;
+  }
+ }
+ // Diagnostic only: direct galope phase comparisons without editing source clips.
+ function setPose(index){
+  if(!fixedFrame||!horse)return;
+  const next=Math.min(15,Math.max(0,Math.floor(Number(index)||0)));
+  const clipDuration=.5833333134651184;
+  const target=clipDuration*next/16;
+  const delta=(target-heldPoseTime+clipDuration)%clipDuration;
+  advancePoseClock(delta);
+  heldPoseTime=target;heldPoseIndex=next;frameHeld=true;
  }
  function select(token){selected=token;return rebuild();}
  function setStage(next){const p=Math.floor(clamp(next,1,10));if(p!==btcPass){btcPass=p;rebuild();}}
@@ -147,7 +165,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   const dt=Math.min(clock.getDelta(),.05);
   if(!document.hidden){
    if(fixedFrame){
-    if(horse&&!frameHeld){for(let i=0;i<3;i++)horse.update(.1,1);frameHeld=true;}
+    if(horse&&!frameHeld){advancePoseClock(.3);heldPoseTime=.3;frameHeld=true;}
    }else{
     horse?.update(dt,speed);
    }
@@ -157,9 +175,9 @@ export function createPreview(canvas,onFailure=()=>{}){
   controls.update();renderer.render(scene,camera);
  });
  return {
-  select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
+  select,pause,setVariant,setPose,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
   snapshot:()=>({
-   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
+   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
    originalAsset:true,jockey:false,maneEnabled:!!hero,
    maneMotion:hero?'animated':null,tailMotion:hero?'animated':null,
    hairSystem:null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
