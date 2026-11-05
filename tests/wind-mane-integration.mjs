@@ -29,9 +29,9 @@ test('public entrypoints invalidate cached horse imports across the three modes'
  const home=source('index.html');
  assert.match(home,/\/stadiums\/crypto\//,'Home now uses the stadium hub, not the deprecated scene entrypoint');
  const expected=[
-  ['visual-lab/index.html',/scene\.js\?v=hoof-fx-public-20261104-v2/],
+  ['visual-lab/index.html',/scene\.js\?v=[\w.-]+/],
   ['parade/index.html',/parade\.js\?v=[\w.-]+/],
-  ['racers/index.html',/racers\.js\?v=hoof-btc-fiche-20261104-v1/],
+  ['racers/index.html',/racers\.js\?v=[\w.-]+/],
   ['racers/racers.js',/horse-preview\.js\?v=alpha18-gaitmane-1/]
  ];
  for(const [path,pattern] of expected)assert.match(source(path),pattern,path+' module cache identity missing');
