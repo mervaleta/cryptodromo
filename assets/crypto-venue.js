@@ -42,6 +42,8 @@ let active=selected.id;
 let replay=readTvReplay(params,active);
 let source=null,serial=0,loadTimer=null,framePoller=null,frameReadySerial=-1;
 let sourcePromise=null;
+// Read-only tuning telemetry, exposed only in ?tv-qa=1; no sporting state.
+let tuneStartedAt=0,lastTuneLatencyMs=null,successfulTuneCount=0,failedTuneCount=0,lastTuneError='';
 const format=n=>String(Math.max(0,Math.floor(n))).padStart(2,'0');
 const clock=n=>format(n/60)+':'+format(n%60);
 const phaseFor=seconds=>seconds<60?'race':seconds<120?'results':'presentation';
@@ -71,6 +73,7 @@ const setBusy=()=>{
  soundEnabled=false;audioButton.disabled=true;audioButton.setAttribute('aria-pressed','false');audioButton.textContent='🔊 Activar sonido';
 };
 const setError=detail=>{
+ failedTuneCount++;lastTuneError=String(detail);lastTuneLatencyMs=null;
  clearTimeout(loadTimer);clearInterval(framePoller);uncover();
  frame.hidden=true;frame.style.visibility='hidden';loading.hidden=true;errorBox.hidden=false;
  audioButton.disabled=true;
@@ -157,6 +160,8 @@ function signalReady(expectedSerial=serial){
  if(!validFrameDoc())return false;
  if(frameReadySerial===expectedSerial)return true;
  frameReadySerial=expectedSerial;
+ lastTuneLatencyMs=Math.max(0,Math.round(performance.now()-tuneStartedAt));
+ lastTuneError='';successfulTuneCount++;
  clearTimeout(loadTimer);clearInterval(framePoller);
  frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
  const release=()=>{if(expectedSerial===serial)uncover();};
@@ -193,6 +198,7 @@ async function tune(id,requestedReplay=null,changeUrl=true){
  const track=getTrack(id);if(!track)return;
  active=track.id;replay=requestedReplay;
  const current=++serial;
+ tuneStartedAt=performance.now();lastTuneLatencyMs=null;lastTuneError='';
  clearTimeout(loadTimer);clearInterval(framePoller);
  frameReadySerial=-1;
  syncPanel();showProgramGuide();
@@ -285,7 +291,9 @@ showProgramGuide();
 if(new URLSearchParams(location.search).get('tv-qa')==='1'){
  window.__satoshiTvQA=Object.freeze({
   snapshot:()=>({track:active,shot:activeShot,transition:screen.classList.contains('is-switching'),
-   src:frame.getAttribute('src'),ready:validFrameDoc(),environment:environmentDeck.snapshot(),parameters:parameterDeck.snapshot()}),
+   src:frame.getAttribute('src'),ready:validFrameDoc(),
+   tuning:Object.freeze({lastTuneLatencyMs,successfulTuneCount,failedTuneCount,lastTuneError}),
+   environment:environmentDeck.snapshot(),parameters:parameterDeck.snapshot()}),
   shot:setShot
  });
 }
