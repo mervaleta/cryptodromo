@@ -120,3 +120,13 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - **Versiones visibles:** cadena HTML → `racers.js` → `btc-atelier-preview.js` → `btc-maya-master.js` versionada con `hoof-btc-fiche-20261104-v1`; manifiesto `btc-master-revision.json` actualizado a la versión FX1 en estado `pending_deploy`.
 - **QA:** pruebas específicas de la ficha `tests/hoof-btc-ficha-browser.mjs` para las tres superficies, humedad, pausa y contadores reales de impacto, además de pruebas del motor y compatibilidad del viejo maestro. El PR #89 del otro agente conserva íntegra su evolución anatómica v13b pendiente.
 - **Pendiente:** confirmar build y nueva ficha pública servida por Hostinger, capturar pruebas visuales finales y después integrar de forma coordinada el maestro v13b sin sobrescribir el stage.
+
+## 2026-11-04 · `btc-master-procedural-hind-groom-20261104-v12-fx1-lookdev1` · PR #105 · iteraciones de materiales y ficha
+- **Antes:** BTC v12-fx1 con alta frecuencia procedural en pelaje/crin que puede generar aliasing en planos de TV y brillo artificial en contraluz. La ficha permanecía fijada a imports de caché de v12.
+- **Iteración 1, cuerpo:** `racers/btc-maya-coat-lookdev.js` añade micropelaje orientado y tono de zonas con filtrado derivativo `fwidth`; se integra en el shader PBR del verdadero maestro Maya, no en un plano ni render de imagen.
+- **Iteración 2, crin y cola:** el shader de fibras filtra la cutícula a distancia y reduce brillo especular; conserva las geometrías volumétricas, el vínculo al rig y la animación Gallop original.
+- **Iteración 3, ficha:** `racers/index.html`, `racers/racers.js` y `racers/btc-atelier-preview.js` cargan y describen esta revisión por claves nuevas de caché; `racers/btc-master-revision.json` presenta el build y deuda visual explícita.
+- **Aislamiento:** no se modifican datos financieros, apuestas, fixture, 99 caballos restantes ni el modelo de la pista.
+- **QA:** contrato automático de lookdev y pruebas de regresión de la ficha; se requieren capturas reales Chromium/WebGL desde perfil/frente/atrás, galope, rendimiento y luego verificación de Hostinger.
+- **Compatibilidad pendiente:** consolidar cambios anatómicos de PR #89, ojos/crin/cola de #99 y #100. No sobrescribirlos por merge automático.
+- **Resultado:** `pending_deploy`; aprobado por código NO significa calidad AAA ni publicación en la ficha del sitio hasta merge y verificación del host.

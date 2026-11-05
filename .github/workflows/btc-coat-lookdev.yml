@@ -1,0 +1,25 @@
+name: BTC master · procedural microfur contract
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-maya-coat-lookdev.js'
+      - 'tests/btc-coat-lookdev-contract.mjs'
+      - '.github/workflows/btc-coat-lookdev.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  coat-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Verify shader module parses and BTC-only contract
+        run: |
+          node --check racers/btc-maya-coat-lookdev.js
+          node --check racers/btc-maya-master.js
+          node --test tests/btc-coat-lookdev-contract.mjs

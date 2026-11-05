@@ -287,8 +287,8 @@ function createHairMass(source,skinAt,{
  geo.computeVertexNormals();geo.computeBoundingSphere();
  const mat=new THREE.MeshPhysicalMaterial({
   name:tail?'BTC tail - tapered layered hair':'BTC neck mane - feathered layers',
-  color,vertexColors:true,metalness:0,roughness:tail?.60:.57,
-  sheen:.54,sheenColor:new THREE.Color('#765f67'),
+  color,vertexColors:true,metalness:0,roughness:tail?.69:.65,
+  sheen:.34,sheenColor:new THREE.Color('#67575d'),
   sheenRoughness:.76,clearcoat:0,side:THREE.DoubleSide
  });
  mat.onBeforeCompile=shader=>{
@@ -302,9 +302,9 @@ function createHairMass(source,skinAt,{
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.028*btcCuticle+.012*btcFineCoat,.88,1.10);');
+   '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.010;\nfloat btcCuticleCoord=vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65;\nfloat btcCuticleFootprint=fwidth(btcCuticleCoord);\nfloat btcCuticleFade=1.0-smoothstep(1.0,3.0,btcCuticleFootprint);\nfloat btcCuticle=sin(btcCuticleCoord)*btcCuticleFade;\nfloat btcFineCoord=vMayaHairRest.y*5100.-vMayaHairRest.x*2800.;\nfloat btcFineFade=1.0-smoothstep(1.0,3.0,fwidth(btcFineCoord));\nfloat btcFineCoat=sin(btcFineCoord)*btcFineFade;\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.018*btcCuticle+.009*btcFineCoat,.90,1.07);');
  };
- mat.customProgramCacheKey=()=>tail?'btc-hero-solid-tail-v12':'btc-compact-sculpted-mane-cuticle-v12';
+ mat.customProgramCacheKey=()=>tail?'btc-hero-solid-tail-cuticle-aa-v13':'btc-compact-sculpted-mane-cuticle-aa-v13';
  const mesh=attach(source,geo,mat,tail?'BTC Maya rooted long tail':'BTC Maya sculpted crest and sweeping mane');
  return {mesh,geo,mat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112,heroLocks:tail?0:56,rootBedVertices,solidRingSides:SIDES,looseNeckFibers:tail?0:neckOutliers,proceduralHairTexture:!tail};
 }

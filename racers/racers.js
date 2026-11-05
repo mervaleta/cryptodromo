@@ -54,8 +54,8 @@ function renderBTCRevision(){
   list.replaceChildren();
   return;
  }
- header.textContent='Maestro BTC · build '+btcRevision.buildId;
- status.textContent=(btcRevision.status==='verified'?'Verificado':btcRevision.status==='pending_deploy'?'Pendiente de despliegue':'En revisión, defectos pendientes')+' · '+btcRevision.updatedAt;
+ header.textContent='Maestro BTC · build '+btcRevision.buildId+(btcRevision.visualPass?' · '+btcRevision.visualPass:'');
+ status.textContent=(btcRevision.status==='verified'?'Verificado':btcRevision.status==='pending_deploy'?'Pendiente de despliegue':'En revisión, defectos pendientes')+' · '+btcRevision.updatedAt+(btcRevision.statusLabel?' · '+btcRevision.statusLabel:'');
  const items=(Array.isArray(btcRevision.openIssues)?btcRevision.openIssues:[]).map(issue=>{
   const li=document.createElement('li');li.textContent=issue;return li;
  });
@@ -63,7 +63,7 @@ function renderBTCRevision(){
 }
 async function loadBTCRevision(){
  try{
-  const response=await fetch('/racers/btc-master-revision.json?v=hoof-btc-fiche-20261104-v1',{cache:'no-store'});
+  const response=await fetch('/racers/btc-master-revision.json?v=btc-master-visual-pass-20261104-v1',{cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
@@ -144,7 +144,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=hoof-btc-fiche-20261104-v1':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-master-visual-pass-20261104-v1':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
@@ -208,7 +208,7 @@ import(previewModule).then(({createPreview})=>{
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
  }
- $('#preview-state').textContent=btcAtelier?'BTC · CONTACTO DE PEZUÑAS · TIERRA / ARENA / CÉSPED':'MODELO 3D ANIMADO · SIN JOCKEY';
+ $('#preview-state').textContent=btcAtelier?'BTC · MASTER 3D · PELAJE PROCEDURAL · GALOPE ORIGINAL':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
  console.warn('Cryptodromo profile preview unavailable:',error);
  $('#preview-fallback').hidden=false;$('#horse-canvas').hidden=true;$('#motion').hidden=true;
