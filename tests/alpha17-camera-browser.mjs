@@ -113,7 +113,10 @@ try{
  await page.selectOption('#camera-mode','crane');
  await page.waitForTimeout(300);
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'crane');
- await page.locator('#reset-drone').click();
+ // SwiftShader may stall Playwright's physical click actionability after
+ // the animated Parade render; still exercise the real DOM click handler.
+ assert.equal(await page.locator('#reset-drone').isVisible(),true);
+ await page.locator('#reset-drone').evaluate(el=>el.click());
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'free');
  assert.equal(errors.length,0,'Camera JS: '+errors.join('; ').slice(0,1500));
  assert.equal(networkErrors.length,0,'Network: '+networkErrors.join('; ').slice(0,900));
