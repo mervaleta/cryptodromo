@@ -78,7 +78,7 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.doesNotMatch(groom,/TextureLoader|\.jpg|\.png|\.webp|PlaneGeometry/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
  assert.equal(manifest.buildId,'btc-maya-safety-original-20261105-v1');
- assert.match(manifest.visualPass,/Anatomía v13/);
- assert.equal(manifest.status,'pending_deploy');
+ assert.match(manifest.visualPass,/Rollback de seguridad/);
+ assert.equal(manifest.status,'needs_fix');
  assert.equal(module.BTC_HINDQUARTER_BUILD,'btc-hindquarters-rump-gaskin-20261104-v12');
 });
