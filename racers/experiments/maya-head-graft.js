@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from '../btc-maya-body-data.js?v=btc-master-procedural-hind-groom-20261104-v12';
 
-export const BTC_MAYA_HEAD_GRAFT_BUILD='btc-v19-native-gallop-maya-face-stitch-20261105';
+export const BTC_MAYA_HEAD_GRAFT_BUILD='btc-v19b-native-neck-continuity-20261105';
 // V19: the neck/body mesh and genuine face meet at nearly the SAME plane;
 // V1's 0.0029m overlap caused bright triangular polygons and z-fighting.
 const MAYA_HEAD_CUT=-.02065,GLB_FACE_CUT=-.02055;
@@ -90,10 +90,11 @@ function cropNativeHead(main){
  const keep=[];
  for(let i=0;i<idx.count;i+=3){
   const a=idx.getX(i),b=idx.getX(i+1),c=idx.getX(i+2);
-  // Reject any triangle that crosses into the genuine Maya facial region.
-  // Centroid-only removal left long native neck triangles visible over the face.
-  const minY=Math.min(p.getY(a),p.getY(b),p.getY(c));
-  if(minY>=GLB_FACE_CUT)keep.push(a,b,c);
+  // Keep the native neck intact rather than removing huge triangles whose
+  // corner merely crosses the crop plane. The V19a all-vertex cutoff
+  // exposed an unacceptable neck hole in real Chromium captures.
+  const centerY=(p.getY(a)+p.getY(b)+p.getY(c))/3;
+  if(centerY>=GLB_FACE_CUT)keep.push(a,b,c);
  }
  if(keep.length<1200||keep.length>=idx.count)throw Error('Native face crop removed unexpected geometry');
  const trimmed=old.clone();
