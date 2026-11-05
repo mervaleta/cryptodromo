@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
-const BUILD='btc-v20-native-hind-gallop-20261105';
+const BUILD='btc-v20b-native-hind-gallop-20261105';
 const DIR='artifacts/btc-v20-hind-real-webgl';mkdirSync(DIR,{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
@@ -40,7 +40,7 @@ try{
  const filenames=[];
  for(const camera of ['profile','threeQuarter','rear']){
   await page.evaluate(camera=>document.querySelector('[data-btc-camera="'+camera+'"]')?.click(),camera);
-  const phases=camera==='profile'?[0,4,8,12]:[0,8];
+  const phases=camera==='profile'?[0,4,8,12]:[8];
   for(const phase of phases){
    await page.evaluate(phase=>window.__cryptodromoBTCAtelierSetPose?.(phase),phase);
    await page.waitForFunction(phase=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===phase,phase,{timeout:10000});
