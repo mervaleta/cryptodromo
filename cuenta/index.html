@@ -25,6 +25,10 @@
     <label for="login-password">Contraseña</label><input id="login-password" name="password" type="password" autocomplete="current-password" required>
     <button type="submit">Entrar a mi cuenta</button></form>
     <button id="show-reset" class="textbutton" type="button">Olvidé mi contraseña</button>
+    <div id="google-area" class="google-area" hidden>
+      <p class="hint">O ingresá con Google</p>
+      <div id="google-signin"></div>
+    </div>
   </section>
   <section class="panel"><div class="section-head"><h2>Crear cuenta</h2><span class="hint">Sin créditos ni transacciones</span></div>
     <form id="register-form" autocomplete="on"><label for="reg-alias">Alias público</label><input id="reg-alias" name="alias" pattern="[A-Za-z0-9_]{3,24}" maxlength="24" placeholder="ej: jinete_btc" autocomplete="nickname" required>
