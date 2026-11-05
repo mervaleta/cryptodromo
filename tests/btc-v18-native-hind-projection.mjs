@@ -43,7 +43,7 @@ test('native Gallop hind leg weights stay on their OWN side; front legs unaffect
    getIndex(){return attributes([0,1,2,3,4,5],1);}
   },
   skeleton:{bones:[
-   {name:'Body'},{name:'BackUpperLeg.L'},{name:'BackUpperLeg.R'}
+   {name:'Body'},{name:'BackUpperLegL'},{name:'BackUpperLegR'}
   ]}
  };
  const rest=new Float32Array([.0035,.012,.0172,-.0035,.012,.0172,.0035,-.012,.0172]);
@@ -52,6 +52,7 @@ test('native Gallop hind leg weights stay on their OWN side; front legs unaffect
  const report=native.projectHindWeightsFromNative(src,rest,bones,weights);
  assert.equal(report.adjusted,2,'both hind legs projected');
  assert.equal(report.originalGallop,true);
+ assert.ok(report.diagnostic.hindCandidates>=2,'native no-dot GLTFLoader joints must be accepted');
  assert.ok(report.nativeHindTriangles===2);
  assert.ok(report.meanProjectionError<.003);
  const mass=(i,j)=>Array.from({length:4},(_,k)=>bones[i*4+k]===j?weights[i*4+k]:0).reduce((a,b)=>a+b,0);
