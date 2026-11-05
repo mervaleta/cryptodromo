@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+test('restores the real V5 geometry and motion rather than original GLB-only fallback',()=>{
+ const racers=read('racers/racers.js');
+ const preview=read('racers/btc-atelier-preview.js');
+ const html=read('racers/index.html');
+ const v5=read('racers/btc-hero-v5.js');
+ const shell=read('racers/btc-silk-shell-v5.js');
+ assert.match(racers,/requestedBTCMaster==='original'\?'original':'enhanced'/);
+ assert.match(preview,/stageParams\.get\('btcMaster'\)==='original'\?'original':'enhanced'/);
+ assert.match(html,/data-btc-variant="enhanced" aria-pressed="true"/);
+ assert.match(preview,/createBTCHeroV5/);
+ assert.match(preview,/maneMotion:variant==='original'/);
+ assert.match(preview,/gaitCorrectionStrength:0/);
+ assert.match(v5,/damped-gallop-coupled-spring/);
+ assert.match(v5,/createBTCSilkShell/);
+ assert.match(v5,/nativeTailBones/);
+ assert.match(shell,/Tail'\+\(index\+1\)/);
+ assert.match(shell,/SkinnedMesh/);
+ assert.doesNotMatch(shell,/SpriteMaterial|CanvasTexture|TextureLoader|\.png|\.jpg|\.webp/);
+});
+test('new V5 build and documentation describe the visible runner, not the Maya prototype',()=>{
+ const manifest=JSON.parse(read('racers/btc-master-revision.json'));
+ const v5=read('racers/btc-hero-v5.js');
+ assert.equal(manifest.masterId,'btc-original-glb-v5-groom');
+ assert.equal(manifest.buildId,'btc-restore-v5-hair-gallop-20261105-v1');
+ assert.match(v5,/BTC_HERO_V5_PUBLIC_BUILD='btc-restore-v5-hair-gallop-20261105-v1'/);
+ assert.equal(manifest.status,'needs_visual_qa');
+ assert.match(manifest.visualPass,/Hero V5 pase 10/);
+ assert.match(read('docs/BTC-MASTER-CHANGELOG.md'),/Restauraci.n Hero V5 pase 10/);
+});

@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCSilkShell} from './btc-silk-shell-v5.js?v=btc-silk-shell-v5-20261103';
 export const BTC_HERO_V5='btc-v5-motion-study-20261103';
+export const BTC_HERO_V5_PUBLIC_BUILD='btc-restore-v5-hair-gallop-20261105-v1';
 const PI=Math.PI,TAU=PI*2;
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,Number(v)||0));
 const smooth=v=>{const x=clamp(v,0,1);return x*x*(3-2*x);};

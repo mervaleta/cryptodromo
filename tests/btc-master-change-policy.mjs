@@ -11,7 +11,13 @@ const racers=read('racers/racers.js');
 test('master revision matches the actually selected BTC 3D render build',()=>{
  assert.equal(revision.symbol,'BTC');
  assert.match(revision.buildId,/^[a-z0-9-]+$/i);
- if(revision.masterId==='btc-original-glb-gallop'){
+ if(revision.masterId==='btc-original-glb-v5-groom'){
+  const groom=read('racers/btc-hero-v5.js');
+  const match=groom.match(/export const BTC_HERO_V5_PUBLIC_BUILD='([^']+)'/);
+  assert.ok(match,'V5 master build identifier missing');
+  assert.equal(revision.buildId,match[1],'The fiche must match the actual V5 groom build');
+  assert.match(racers,/requestedBTCMaster==='original'\?'original':'enhanced'/);
+ }else if(revision.masterId==='btc-original-glb-gallop'){
   const native=read('race-lab/source/src/btcNativeLookdev.js');
   const match=native.match(/export const BTC_NATIVE_MASTER_BUILD='([^']+)'/);
   assert.ok(match,'native GLB lookdev build identifier missing');
