@@ -68,8 +68,12 @@ function nativeCandidates(source) {
   let hindInfluence=0;
   for(const id of vi)for(let k=0;k<4;k++){
    const name=joints[joint.getComponent(id,k)]||'';
-   if((name.startsWith('Back')||name.startsWith('IKBackLeg')||name.startsWith('FFB'))&&
-    name.endsWith(sign>0?'.L':'.R'))hindInfluence+=weight.getComponent(id,k)/3;
+   // Three.js GLTFLoader flattens joint names to BackUpperLegL/BackUpperLegR,
+   // whereas Maya and the historic source may use BackUpperLeg.L/.R.
+   // Both label conventions must be treated as the SAME signed limb.
+   const normalized=name.replace(/\./g,'');
+   if((normalized.startsWith('Back')||normalized.startsWith('IKBackLeg')||normalized.startsWith('FFB'))&&
+    normalized.endsWith(sign>0?'L':'R'))hindInfluence+=weight.getComponent(id,k)/3;
   }
   if(hindInfluence<.30){
    if(diagnostic.samples.length<3)diagnostic.samples.push({avg,
