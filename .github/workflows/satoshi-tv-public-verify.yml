@@ -7,6 +7,7 @@ on:
       - 'stadiums/crypto/archive/index.html'
       - 'stadiums/crypto/broadcast/index.html'
       - 'assets/crypto-venue.js'
+      - 'assets/crypto-venue-aaa-20261105-r1.js'
       - 'assets/crypto-archive.js'
       - 'assets/satoshi-tv.css'
       - 'assets/satoshi-tv-contract.js'
