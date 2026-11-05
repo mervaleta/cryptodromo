@@ -26,6 +26,9 @@ try {
  assert.equal(staticQA?.straight?.racingSurfaceModified,false);
  assert.ok(staticQA?.woodland?.previousObjectCount>0);
  assert.ok(staticQA?.woodland?.instancedDrawGroups<=4);
+ assert.ok(staticQA?.skyline?.buildings>0);
+ assert.ok(staticQA?.skyline?.windowBays>staticQA.skyline.buildings);
+ assert.equal(staticQA?.skyline?.affectsRace,false);
  assert.equal(first.articulated,true);
  assert.equal(first.remoteGrandstand.parts,8);
  assert.equal(first.remoteGrandstand.originalCoordinatesRetained,true);
