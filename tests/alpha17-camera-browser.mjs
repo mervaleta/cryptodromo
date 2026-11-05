@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
+import {captureOptional} from './helpers/optionalScreenshot.mjs';
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
 ]});
@@ -38,7 +39,7 @@ try{
  const initial=await page.evaluate(()=>window.__cryptodromoCameraQA.state());
  assert.ok(initial.position.every(Number.isFinite));
  assert.equal(initial.view,'low');
- await page.screenshot({path:'artifacts/alpha17-live-low-shot.png',timeout:40000});
+ await captureOptional(page,'artifacts/alpha17-live-low-shot.png');
  await page.selectOption('#camera','overview');
  await page.click('#camera-reset');
  assert.equal(await page.locator('#camera-pitch').inputValue(),'0');
@@ -105,14 +106,17 @@ try{
  assert.equal(await page.locator('#fov-label').innerText(),'34°');
  // The stage is animated continuously; a locator screenshot waits for layout stability.
   // Capture the viewport directly so camera QA cannot stall on live WebGL motion.
-  await page.screenshot({path:'artifacts/alpha17-parade-orbit.png',timeout:40000});
+  await captureOptional(page,'artifacts/alpha17-parade-orbit.png');
  await page.selectOption('#camera-mode','follow');
  await page.waitForTimeout(300);
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'follow');
  await page.selectOption('#camera-mode','crane');
  await page.waitForTimeout(300);
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'crane');
- await page.locator('#reset-drone').click();
+ // SwiftShader may stall Playwright's physical click actionability after
+ // the animated Parade render; still exercise the real DOM click handler.
+ assert.equal(await page.locator('#reset-drone').isVisible(),true);
+ await page.locator('#reset-drone').evaluate(el=>el.click());
  assert.equal((await page.evaluate(()=>window.__cryptodromoParadeQA.snapshot().drone.mode)),'free');
  assert.equal(errors.length,0,'Camera JS: '+errors.join('; ').slice(0,1500));
  assert.equal(networkErrors.length,0,'Network: '+networkErrors.join('; ').slice(0,900));

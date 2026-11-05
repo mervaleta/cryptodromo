@@ -42,6 +42,9 @@ let active=selected.id;
 let replay=readTvReplay(params,active);
 let source=null,serial=0,loadTimer=null,framePoller=null,frameReadySerial=-1;
 let sourcePromise=null;
+let readyObserver=null;
+// Read-only tuning telemetry, exposed only in ?tv-qa=1; no sporting state.
+let tuneStartedAt=0,lastTuneLatencyMs=null,successfulTuneCount=0,failedTuneCount=0,lastTuneError='';
 const format=n=>String(Math.max(0,Math.floor(n))).padStart(2,'0');
 const clock=n=>format(n/60)+':'+format(n%60);
 const phaseFor=seconds=>seconds<60?'race':seconds<120?'results':'presentation';
@@ -50,10 +53,20 @@ const phaseText=phase=>phase==='race'?'● CARRERA EN CURSO':
 const localTime=new Intl.DateTimeFormat('es-AR',{
  timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
 });
-const validFrameDoc=()=>{
+const hasRaceDocument=()=>{
  try{
   const doc=frame.contentDocument;
   return !!doc?.querySelector('#raceCanvas')&&!doc?.querySelector('#stadium-broadcast');
+ }catch{return false;}
+};
+const validFrameDoc=()=>{
+ if(!hasRaceDocument())return false;
+ try{
+  // A canvas element exists before the async 12-horse scene is ready.
+  // Never uncover a still-loading/failed 3D feed as if it were on air.
+  const doc=frame.contentDocument;
+  const start=doc?.getElementById('start');
+  return start?.disabled===false;
  }catch{return false;}
 };
 const setBusy=()=>{
@@ -61,13 +74,31 @@ const setBusy=()=>{
  soundEnabled=false;audioButton.disabled=true;audioButton.setAttribute('aria-pressed','false');audioButton.textContent='🔊 Activar sonido';
 };
 const setError=detail=>{
+ disconnectReadyObserver();
+ failedTuneCount++;lastTuneError=String(detail);lastTuneLatencyMs=null;
  clearTimeout(loadTimer);clearInterval(framePoller);uncover();
  frame.hidden=true;frame.style.visibility='hidden';loading.hidden=true;errorBox.hidden=false;
  audioButton.disabled=true;
  errorDetail.textContent=detail;
  directError.href=buildTvPlayerUrl(RACE_PLAYER_SOURCES[1],active,replay);
+ // A failed but hidden iframe can still consume a WebGL context and RAF time.
+ // Preserve the recovery URL, then release the failed scene before retry.
+ if(frame.getAttribute('src')!=='about:blank')frame.src='about:blank';
 };
-const probe=()=>findRacePlayerSource(path=>fetch(path+'?build=photo-finish-tv-params-20261104-v1',{cache:'no-store',redirect:'follow'}));
+// Bound each HTML probe including response-body transfer. If Hostinger stalls,
+// the TV eventually offers retry rather than spinning forever before iframe load.
+const PROBE_TIMEOUT_MS=12000;
+const probe=()=>findRacePlayerSource(async path=>{
+ const controller=new AbortController();
+ const deadline=setTimeout(()=>controller.abort(),PROBE_TIMEOUT_MS);
+ try{
+  const response=await fetch(path+'?build=photo-finish-tv-params-20261104-v1',{
+   cache:'no-store',redirect:'follow',signal:controller.signal
+  });
+  const html=response.ok?await response.text():'';
+  return {ok:response.ok,text:async()=>html};
+ }finally{clearTimeout(deadline);}
+});
 function setUrl(){
  const url=new URL(location.href);
  url.searchParams.set('track',active);
@@ -123,11 +154,25 @@ function showProgramGuide(){
  $('tv-local-time').textContent=localTime.format(new Date())+' UTC−3';
 }
 function signalReady(expectedSerial=serial){
- if(expectedSerial!==serial||!validFrameDoc())return false;
- if(frameReadySerial===expectedSerial)return true;
+ if(expectedSerial!==serial)return false;
+ try{
+  const message=frame.contentDocument?.getElementById('status')?.textContent?.trim()||'';
+  if(/^ERROR\b/i.test(message)){
+   setError('El motor 3D informó un error de carga. Abrí la carrera directamente o reintentá la señal.');
+   return false;
+  }
+ }catch{}
+ if(!validFrameDoc())return false;
+ if(frameReadySerial===expectedSerial){uncover();return true;}
  frameReadySerial=expectedSerial;
+ disconnectReadyObserver();
+ lastTuneLatencyMs=Math.max(0,Math.round(performance.now()-tuneStartedAt));
+ lastTuneError='';successfulTuneCount++;
  clearTimeout(loadTimer);clearInterval(framePoller);
  frame.hidden=false;frame.style.visibility='visible';loading.hidden=true;errorBox.hidden=true;
+ // Begin CSS fade as soon as the verified 3D scene is ready; do not rely
+ // exclusively on a future animation frame under heavy software WebGL load.
+ uncover();
  const release=()=>{if(expectedSerial===serial)uncover();};
  setTimeout(release,350);
  requestAnimationFrame(()=>requestAnimationFrame(release));
@@ -146,6 +191,23 @@ function signalReady(expectedSerial=serial){
  try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
  return true;
 }
+function disconnectReadyObserver(){readyObserver?.disconnect();readyObserver=null;}
+// DOM-ready is not 3D-ready: the async horse loader enables #start only
+// after all twelve actors have been constructed. Observe that exact signal,
+// keeping the existing timer as a recovery path for rewritten/slow documents.
+function connectReadyObserver(expectedSerial){
+ disconnectReadyObserver();
+ try{
+  const start=frame.contentDocument?.getElementById('start');
+  if(!start)return;
+  readyObserver=new MutationObserver(()=>{
+   if(expectedSerial!==serial){disconnectReadyObserver();return;}
+   signalReady(expectedSerial);
+  });
+  readyObserver.observe(start,{attributes:true,attributeFilter:['disabled']});
+  signalReady(expectedSerial);
+ }catch{}
+}
 function watchLoad(expectedSerial){
  clearTimeout(loadTimer);clearInterval(framePoller);
  framePoller=setInterval(()=>{
@@ -162,6 +224,8 @@ async function tune(id,requestedReplay=null,changeUrl=true){
  const track=getTrack(id);if(!track)return;
  active=track.id;replay=requestedReplay;
  const current=++serial;
+ disconnectReadyObserver();
+ tuneStartedAt=performance.now();lastTuneLatencyMs=null;lastTuneError='';
  clearTimeout(loadTimer);clearInterval(framePoller);
  frameReadySerial=-1;
  syncPanel();showProgramGuide();
@@ -192,6 +256,13 @@ frame.addEventListener('load',async()=>{
  try{if(frame.contentWindow.location.href==='about:blank')return;}catch{}
  if(validFrameDoc()){
   signalReady(serial);
+  return;
+ }
+ // Correct markup is not the same as a ready WebGL scene. Loading horses
+ // is asynchronous: keep polling, do not send a valid page into the fallback.
+ if(hasRaceDocument()){
+  watchLoad(serial);
+  connectReadyObserver(serial);
   return;
  }
  // A hosting rewrite may serve /live/ with status 200 at /broadcast/.
@@ -243,12 +314,14 @@ $('tv-fullscreen').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)showProgramGuide();});
 const ticker=setInterval(showProgramGuide,1000);
-window.addEventListener('pagehide',()=>{clearInterval(ticker);clearInterval(framePoller);clearTimeout(loadTimer);environmentDeck.dispose();parameterDeck.dispose();frame.src='about:blank';},{once:true});
+window.addEventListener('pagehide',()=>{clearInterval(ticker);clearInterval(framePoller);clearTimeout(loadTimer);disconnectReadyObserver();environmentDeck.dispose();parameterDeck.dispose();frame.src='about:blank';},{once:true});
 showProgramGuide();
 if(new URLSearchParams(location.search).get('tv-qa')==='1'){
  window.__satoshiTvQA=Object.freeze({
   snapshot:()=>({track:active,shot:activeShot,transition:screen.classList.contains('is-switching'),
-   src:frame.getAttribute('src'),ready:validFrameDoc(),environment:environmentDeck.snapshot(),parameters:parameterDeck.snapshot()}),
+   src:frame.getAttribute('src'),ready:validFrameDoc(),
+   tuning:Object.freeze({lastTuneLatencyMs,successfulTuneCount,failedTuneCount,lastTuneError}),
+   environment:environmentDeck.snapshot(),parameters:parameterDeck.snapshot()}),
   shot:setShot
  });
 }

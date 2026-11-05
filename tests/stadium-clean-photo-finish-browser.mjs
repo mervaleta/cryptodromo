@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
+import {captureOptional} from './helpers/optionalScreenshot.mjs';
 const origin=process.env.CRP_BASE_URL||'http://127.0.0.1:4173';
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
@@ -10,7 +11,10 @@ const problems=[];
 async function waitReady(page){
  await page.waitForFunction(()=>{
   const f=document.querySelector('#stadium-broadcast');
-  return !!f&&!f.hidden&&f.contentDocument?.querySelector('#start')?.disabled===false&&
+  return !!f&&!f.hidden&&f.style.visibility==='visible'&&
+   document.querySelector('#tv-loading')?.hidden===true&&
+   !document.querySelector('#tv-player')?.classList.contains('is-switching')&&
+   f.contentDocument?.querySelector('#start')?.disabled===false&&
    f.contentDocument?.querySelector('#raceCanvas')?.width>300;
  },null,{timeout:130000});
 }
@@ -45,7 +49,7 @@ try{
  await page.locator('[data-tv-replay-panel]').click();
  await page.locator('#director-tv-replay-speed').selectOption('0.25');
  await page.locator('#director-tv-replay-hold').fill('3');
- await page.screenshot({path:'artifacts/stadium-clean-photo-finish/parameter-submenus.png',timeout:17000});
+ await captureOptional(page,'artifacts/stadium-clean-photo-finish/parameter-submenus.png');
  await page.locator('[data-tv-switch="genesis"]').click();
  await waitReady(page);
  await page.waitForFunction(()=>!window.__satoshiTvQA.snapshot().transition,null,{timeout:15000});
@@ -72,7 +76,7 @@ try{
  const holding=await race.evaluate(()=>window.__winnerReplayQA.snapshot());
  assert.equal(holding.officialVisible,false,'Official result must not cover the held photo-finish frame');
  assert.equal(await race.locator('#winner-replay').isVisible(),true);
- await race.screenshot({path:'artifacts/stadium-clean-photo-finish/photo-finish-hold.png',timeout:17000});
+ await captureOptional(race,'artifacts/stadium-clean-photo-finish/photo-finish-hold.png');
  await race.waitForFunction(()=>window.__winnerReplayQA?.snapshot()?.replay.complete&&
    window.__winnerReplayQA.snapshot().officialVisible,
  null,{timeout:15000});

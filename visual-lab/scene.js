@@ -5,7 +5,7 @@ import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
 import {cameraBlend} from './cinematicCamera.js?v=alpha10-1';
 import {reframeCamera,countdownVisibility} from './cameraRig.js?v=alpha17-1';
 import {bindCameraPanel} from './cameraPanel.js?v=alpha17-1';
-import {createBroadcastDirector} from '../alpha15/director.js?v=alpha15-1';
+import {createBroadcastDirector} from '../alpha15/director.js?v=broadcast-aaa-20261105-v1';
 import {createFinishOrchestrator} from '../alpha15/finishOrchestrator.js?v=alpha15-1';
 import {createWinnerSlowMotion} from './winnerSlowMotion.js?v=photo-finish-tv-params-20261104-v1';
 import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha15/quality.js?v=alpha15-1';
@@ -17,7 +17,7 @@ import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
-import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha15-runout-1';
+import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=broadcast-aaa-20261105-v1';
 import {broadcastPhase,PHASES,allRunnersCrossed,finishReveal} from './broadcastTimeline.js?v=alpha09-1';
 import {buildRosterStats,horseBiography} from './rosterStats.js?v=alpha06-1';
 import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1';
@@ -407,7 +407,7 @@ if(horseEngineMode==='procedural'&&new URLSearchParams(location.search).get('pro
  });
 }
 let maneWind=.55; // matches stadium cloud wind; never affects the race engine
-let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='';
+let officialSnapshot=null,finishShown=false,lastNarrationSlot=-1,lastAnnouncedLeader='',lastLeaderNarrationAt=-Infinity;
 let lastCrossedAt=null,previousCrossCount=0,finishRoarPlayed=false;
 const finishController=createFinishOrchestrator({holdAfterLast:2.4,maxVisualSeconds:19});
 const winnerReplay=createWinnerSlowMotion();
@@ -544,7 +544,7 @@ function setRace(index){
  broadcastProfiles=buildBroadcastProfiles(profiles);
  splitPanel.setRace(broadcastProfiles,{mode:splitModeSelect.value});
  overtakeCount=0;previousOrder='';elapsed=0;running=false;finished=false;finishShown=false;
- lastNarrationSlot=-1;lastAnnouncedLeader='';officialSnapshot=null;
+ lastNarrationSlot=-1;lastAnnouncedLeader='';lastLeaderNarrationAt=-Infinity;officialSnapshot=null;
  lastCrossedAt=null;previousCrossCount=0;finishRoarPlayed=false;
  winnerReplay.reset();finishGateElapsed=0;winnerReplayOverlay.hidden=true;
  finishController.reset();tvDirector.reset();lastDirectorUpdate=-Infinity;selectedTvShot='pack';
@@ -1243,8 +1243,9 @@ function animate(now,draw=true){
     }
    }
    if(lead.entry.symbol!==lastAnnouncedLeader){
-    if(lastAnnouncedLeader&&elapsed>3&&elapsed<55&&Math.floor(elapsed)%9===0){
+    if(lastAnnouncedLeader&&elapsed>3&&elapsed<55&&elapsed-lastLeaderNarrationAt>=8){
      speakBroadcast(narrateEvent({type:'lead',leader:lead.entry.symbol,previous:lastAnnouncedLeader}));
+     lastLeaderNarrationAt=elapsed;
     }
     lastAnnouncedLeader=lead.entry.symbol;
    }
