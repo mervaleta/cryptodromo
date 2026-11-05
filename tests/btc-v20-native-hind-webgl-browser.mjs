@@ -16,11 +16,20 @@ page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))error
 try{
  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1#BTC',
   {waitUntil:'domcontentloaded',timeout:90000});
- await page.waitForFunction(build=>{
-  const s=window.__cryptodromoBTCAtelierQA?.();
-  return s?.symbol==='BTC'&&s.variant==='maya'&&
-   s.heroGroom?.harmonyBuild===build&&s.drawCalls>0&&s.clips?.includes('Gallop');
- },BUILD,{timeout:120000});
+ try{
+  await page.waitForFunction(build=>{
+   const s=window.__cryptodromoBTCAtelierQA?.();
+   return s?.symbol==='BTC'&&s.variant==='maya'&&
+    s.heroGroom?.harmonyBuild===build&&s.drawCalls>0&&s.clips?.includes('Gallop');
+  },BUILD,{timeout:25000});
+ }catch(error){
+  console.log('BTC_V20_INIT_FAILURE',error.message,'JS_ERRORS',JSON.stringify(errors));
+  console.log('BTC_V20_DEBUG_STATE',JSON.stringify(await page.evaluate(()=>({
+   qa:window.__cryptodromoBTCAtelierQA?.(),body:document.body.innerText.slice(0,1500),
+   fallback:document.querySelector('#preview-fallback')?.textContent
+  }))));
+  throw error;
+ }
  const qa=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  const hind=qa.heroGroom.hindRestoration;
  assert.ok(hind?.sameOriginalSkeleton,'Donor hind limbs must share true native Gallop skeleton');
