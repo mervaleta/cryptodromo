@@ -1,0 +1,56 @@
+name: Satoshi AAA audience - real browser and crowd geometry
+on:
+  pull_request:
+    paths:
+      - 'visual-lab/stadiumDensity.js'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/index.html'
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'tests/stadium-aaa-audience*'
+      - '.github/workflows/stadium-aaa-audience.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  geometry:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate ES modules
+        run: |
+          node --experimental-default-type=module --check visual-lab/stadiumDensity.js
+          node --experimental-default-type=module --check visual-lab/scene.js
+          node --experimental-default-type=module --check tests/stadium-aaa-audience.mjs
+      - name: Validate audience geometry and existing safety contracts
+        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-clean-photo-finish-tv.mjs
+  webgl:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Render actual 3D scene and capture evidence
+        env:
+          CRP_BASE_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/stadium-audience-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          node tests/stadium-aaa-audience-browser.mjs
+      - name: Preserve real browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: satoshi-aaa-audience-render
+          path: artifacts/stadium-aaa-audience/
+          if-no-files-found: ignore
