@@ -9,7 +9,7 @@ const browser=await chromium.launch({headless:true,args:[
 try{
  const page=await browser.newPage({viewport:{width:1450,height:950},deviceScaleFactor:1,reducedMotion:'no-preference'});
  const faults=[];page.on('pageerror',e=>faults.push(e.stack||e.message));
- await page.goto(root+'/racers/#BTC',{waitUntil:'domcontentloaded',timeout:90000});
+ await page.goto(root+'/racers/?btcCapture=1&btcFreeze=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>{const s=window.__cryptodromoBTCAtelierQA?.();return s?.variant==='maya'&&s?.heroGroom?.harmonyBuild==='btc-master-procedural-hind-groom-20261104-v12-fx2'&&s?.drawCalls>0;},null,{timeout:120000});
  const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(s.heroGroom.eyeApertureBorders,22);
@@ -27,7 +27,7 @@ try{
    if(!canvas||canvas.width<100||canvas.height<100)throw Error('BTC WebGL canvas invalid');
    return canvas.toDataURL('image/png');
   });
-  assert.ok(raw.startsWith('data:image/png;base64,')&&raw.length>10000,'WebGL drawing buffer not captured');
+  assert.ok(raw.startsWith('data:image/png;base64,')&&raw.length>40000,'WebGL screenshot must contain painted pixels, not an empty buffer');
   writeFileSync('artifacts/btc-ocular-fast/'+camera+'.png',
    Buffer.from(raw.split(',')[1],'base64'));
  }

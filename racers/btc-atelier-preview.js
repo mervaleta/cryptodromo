@@ -26,7 +26,7 @@ const stageParams=new URLSearchParams(location.search);
 let btcPass=Math.floor(clamp(stageParams.get('btcPass')??10,1,10));
 const fixedFrame=stageParams.get('btcFreeze')==='1';
 export function createPreview(canvas,onFailure=()=>{}){
- const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
+ const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:stageParams.get('btcCapture')==='1'});
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
