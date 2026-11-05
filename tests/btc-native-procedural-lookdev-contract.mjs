@@ -11,7 +11,9 @@ test('native BTC coat layers real rest-space PBR without sprites or replacement 
  assert.match(master,/symbol==='BTC'\?installBTCNativeLookdev/);
  assert.match(pilot,/nativeLookdev:token\.symbol==='BTC'/);
  assert.match(pilot,/gaitCorrectionStrength:0/);
- assert.match(pilot,/maneMotion:true/);
+ assert.match(pilot,/maneMotion:variant==='original'/);
+ assert.match(pilot,/createBTCHeroV5/);
+ assert.match(pilot,/variant=stageParams\.get\('btcMaster'\)==='maya'\?'maya':stageParams\.get\('btcMaster'\)==='original'\?'original':'enhanced'/);
  assert.doesNotMatch(moduleText,/TextureLoader|CanvasTexture|SpriteMaterial|PlaneGeometry|DataTexture|\.png|\.jpg|\.webp/);
  assert.match(moduleText,/fwidth\(btcFiberCoord\)/);
  assert.match(moduleText,/fwidth\(btcFurRest\*110\.0\)/);
