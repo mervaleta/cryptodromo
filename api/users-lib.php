@@ -213,8 +213,9 @@ function crp_users_consume_token(PDO $db, string $token, string $purpose): ?int 
         $q->execute([hash('sha256',$token),$purpose,time()]);
         $row=$q->fetch();
         if (!$row) { $db->rollBack(); return null; }
-        $db->prepare('UPDATE user_action_tokens SET used_at=? WHERE token_hash=? AND used_at IS NULL')
-          ->execute([time(),hash('sha256',$token)]);
+        $mark = $db->prepare('UPDATE user_action_tokens SET used_at=? WHERE token_hash=? AND used_at IS NULL');
+        $mark->execute([time(),hash('sha256',$token)]);
+        if ($mark->rowCount() !== 1) { $db->rollBack(); return null; }
         $db->commit();
         return (int)$row['user_id'];
     } catch (Throwable $e) { if($db->inTransaction())$db->rollBack(); throw $e; }
