@@ -30,7 +30,7 @@ jobs:
       - name: Public labels and synthetic disclosure regression
         run: |
           node --experimental-default-type=module --test tests/public-no-demo-copy.mjs
-          for file in assets/crypto-venue.js assets/stadium-network-ui.js assets/stadium-network-engine.js autodromo/app.js; do node --check "$file"; done
+          for file in assets/crypto-venue.js assets/crypto-venue-broadcast-aaa-20261105.js assets/stadium-network-ui.js assets/stadium-network-engine.js autodromo/app.js; do node --check "$file"; done
 
   production:
     if: github.event_name == 'push'
@@ -49,7 +49,7 @@ jobs:
           // Fetch precisely the versioned assets referenced by the public HTML,
           // not a fresh ad-hoc query that can pass while the browser stays stale.
           const expectedScripts={
-            '/stadiums/crypto/live/':'/assets/crypto-venue.js?v=copy-clean-20261105-v1',
+            '/stadiums/crypto/live/':'/assets/crypto-venue-broadcast-aaa-20261105.js',
             '/stadiums/crypto/broadcast/':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
             '/visual-lab/':'/assets/crp-global-nav.js?v=copy-clean-20261105-v1',
             '/autodromo/':'./app.js?v=copy-clean-20261105-v1',
