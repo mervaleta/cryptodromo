@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const source = readFileSync(new URL('../api/auth.php', import.meta.url), 'utf8');
+const sessionSource = readFileSync(new URL('../api/users-lib.php', import.meta.url), 'utf8');
 const root = new URL('../', import.meta.url);
 function php(code, env={}) {
   return execFileSync('php', ['-r', code], {
@@ -29,8 +30,9 @@ test('only a Google-verified ID token can establish identity', () => {
   for(const marker of [
     "id_token", "oauth2.googleapis.com/tokeninfo", "email_verified",
     "hash_equals", "claims['sub']", "claims['aud']", "claims['exp']",
-    "session_regenerate_id", "httponly"
+    "crp_users_login", "crp_users_schema_ready"
   ]) assert.ok(source.includes(marker), 'Missing safeguard: '+marker);
+  for(const marker of ['session_regenerate_id','httponly','user_sessions','crp_users_current']) assert.ok(sessionSource.includes(marker), 'Missing session safeguard: '+marker);
   assert.doesNotMatch(source, /Access-Control-Allow-Origin:\s*\*/i);
   assert.doesNotMatch(source, /trim\(\$input\['google_id'\]/);
   assert.doesNotMatch(source, /mkdir\(/);
