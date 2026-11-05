@@ -23,7 +23,7 @@ export const BTC_COAT_LOOKDEV_FRAGMENT=String.raw`
  // Material-only: this does not create geometry or fake moving muscles.
  float btcWarmZones=sin(btcRest.y*145.0+btcRest.z*48.0)*
                     sin(btcRest.x*220.0-btcRest.y*75.0);
- float btcBelly=smoothstep(0.019,0.012,btcRest.z);
+ float btcBelly=(1.0-smoothstep(0.012,0.019,btcRest.z));
  float btcFurVariation=clamp(1.0+0.014*btcFiber+
    0.012*btcWarmZones-0.018*btcBelly,0.94,1.06);
  diffuseColor.rgb*=btcFurVariation;
