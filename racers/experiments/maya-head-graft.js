@@ -7,9 +7,10 @@
  * not a certified AAA model or a new production baseline.
  */
 import * as THREE from 'three';
+import {createBTCNeckCollarStitch} from './maya-neck-collar-stitch.js?v=btc-v19c-native-maya-collar-20261105';
 import {BTC_EQUINE_MESH} from '../btc-maya-body-data.js?v=btc-master-procedural-hind-groom-20261104-v12';
 
-export const BTC_MAYA_HEAD_GRAFT_BUILD='btc-v19b-native-neck-continuity-20261105';
+export const BTC_MAYA_HEAD_GRAFT_BUILD='btc-v19c-anatomical-neck-collar-20261105';
 // V19: the neck/body mesh and genuine face meet at nearly the SAME plane;
 // V1's 0.0029m overlap caused bright triangular polygons and z-fighting.
 const MAYA_HEAD_CUT=-.02065,GLB_FACE_CUT=-.02055;
@@ -180,6 +181,7 @@ export function createBTCMayaHeadGraft(root,{coatColor}={}){
  head.bindMatrixInverse.copy(main.bindMatrixInverse);
  head.frustumCulled=false;head.castShadow=true;head.receiveShadow=true;
  const replaced=cropNativeHead(main);
+ const collar=createBTCNeckCollarStitch(main,head);
  const originalVisibility=facialParts.map(obj=>({obj,visible:obj.visible}));
  for(const item of originalVisibility)item.obj.visible=false;
  let disposed=false;
@@ -190,6 +192,7 @@ export function createBTCMayaHeadGraft(root,{coatColor}={}){
    mayaHeadVertices:used.size,mayaHeadTriangles:triangles.length/3,
    untouchedNativeBones:main.skeleton.bones.length,
    nativeHeadTrianglesRemoved:replaced.faceTrianglesRemoved,
+   collar:collar.snapshot,
    originalGallopUnchanged:true,
    mayFaceOnly:true,
    detachedEyeOverlays:0
@@ -197,7 +200,7 @@ export function createBTCMayaHeadGraft(root,{coatColor}={}){
   dispose(){
    if(disposed)return;disposed=true;
    for(const item of originalVisibility)item.obj.visible=item.visible;
-   replaced.restore();head.removeFromParent();geometry.dispose();material.dispose();
+   collar.dispose();replaced.restore();head.removeFromParent();geometry.dispose();material.dispose();
   }
  };
 }
