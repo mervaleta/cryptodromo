@@ -129,7 +129,7 @@ function showStandings(seconds){
  $('leader').textContent=standings[0]?.symbol||'···';
  $('entries-count').textContent=standings.length+' monoplazas';
  $('classification-note').textContent=finished
-  ?'Llegada definitiva: clasificación del motor oficial CRP-DOSE-FAIR-V1; esta demo usa precios sintéticos.'
+  ?'Llegada definitiva: clasificación del motor oficial CRP-DOSE-FAIR-V1; esta carrera usa precios sintéticos.'
   :(seconds<1
     ?'Grilla de partida: pole calculada con las variaciones sintéticas de los 3 minutos anteriores. Seis filas escalonadas de dos autos.'
     :'Orden de pista basado en las doce dosis de cinco segundos y la posición de grilla. Las distancias oficiales y el ganador nunca se modifican.');

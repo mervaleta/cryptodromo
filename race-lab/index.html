@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#06120f" />
-    <meta name="description" content="Demo 3D de carreras Cryptodromo con clima y mercado configurables." />
+    <meta name="description" content="Simulación 3D de carreras Cryptodromo con clima y mercado configurables." />
     <title>Cryptodromo — 3D Race Lab</title>
     <script type="module" crossorigin src="./assets/index-B8MfVpCh.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-CBhyMvUz.css">
@@ -28,7 +28,7 @@
           <div>
             <div class="eyebrow"><span class="live-dot"></span> TRANSMISIÓN DE PRUEBA</div>
             <h1>Gran Premio <em>Cripto</em></h1>
-            <p class="race-meta">12 corredores <span>·</span> Demo de mercado <span>·</span> <span id="raceStatus">EN VIVO</span></p>
+            <p class="race-meta">12 corredores <span>·</span> Simulación de mercado <span>·</span> <span id="raceStatus">EN VIVO</span></p>
           </div>
           <div class="race-clock"><span>VUELTA</span><strong id="raceClock">00:00</strong></div>
         </section>
@@ -38,7 +38,7 @@
             <div class="viewer-card">
               <div class="viewer-topline">
                 <div class="view-title"><span class="signal">●</span> CRYPTODROMO LIVE <span class="tag">3D</span></div>
-                <div class="viewer-actions"><span class="market-state"><b></b> MOTOR DE PRECIOS · DEMO</span><button id="soundToggle" class="icon-button" aria-label="Activar o desactivar sonido" title="Silenciar / activar audio">♫</button><button id="fullscreen" class="icon-button" aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
+                <div class="viewer-actions"><span class="market-state"><b></b> MOTOR DE PRECIOS · SIMULACIÓN</span><button id="soundToggle" class="icon-button" aria-label="Activar o desactivar sonido" title="Silenciar / activar audio">♫</button><button id="fullscreen" class="icon-button" aria-label="Pantalla completa" title="Pantalla completa">⛶</button></div>
               </div>
               <div id="sceneWrap" class="scene-wrap">
                 <div class="scene-vignette"></div>
@@ -67,7 +67,7 @@
 
           <aside class="side-column">
             <section class="market-card">
-              <div class="section-head compact"><div><div class="eyebrow">INPUT DE MERCADO</div><h2>Pulso de precios</h2></div><span class="demo-pill">DEMO</span></div>
+              <div class="section-head compact"><div><div class="eyebrow">INPUT DE MERCADO</div><h2>Pulso de precios</h2></div></div>
               <p class="helper-text">La variación impulsa el ritmo de cada corredor. Ajustá el pulso para ver cómo cambia la carrera.</p>
               <label class="market-input-label" for="marketMove">Variación de muestra <strong id="moveValue">+1.2%</strong></label>
               <input id="marketMove" class="market-slider" type="range" min="-50" max="50" value="12" />

@@ -63,7 +63,7 @@ function selection(){
  write('plan-hint',state?.stable?
     max>state.stable.capacity?'Ampliación: '+fmt(cost-previous)+' créditos ficticios; sólo pagás la diferencia.'
      :'Se permiten hasta dos reemplazos semanales, efectivos desde la próxima largada.'
-    :'Licencia: '+fmt(cost)+' créditos demo. Ninguna compra altera las carreras.');
+    :'Licencia: '+fmt(cost)+' créditos ficticios. Ninguna compra altera las carreras.');
  write('save-stable',state?.stable?(max>state.stable.capacity?'Ampliar escudería':'Guardar plantilla'):'Fundar escudería');
 }
 function renderTokens(){

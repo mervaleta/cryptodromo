@@ -96,7 +96,7 @@ function mount(container) {
    input=el('textarea','textarea');input.rows=3;input.maxLength=700;input.value='Persona A\nPersona B\nPersona C\nPersona D';
    field(controls,'Lista ficticia cerrada (2–30, una persona por línea)',input,'rng-uc-'+kind+'-input');
   }
-  const result=el('div','result','Generá una demo para ver el resultado.');result.setAttribute('aria-live','polite');host.append(result);
+  const result=el('div','result','Generá una simulación para ver el resultado.');result.setAttribute('aria-live','polite');host.append(result);
   const retry=button('Intentar de nuevo',()=>generate.click()); retry.classList.add('rng-uc-retry'); retry.hidden=true; host.append(retry);
   const details=el('details','audit'); details.append(el('summary','summary','Verificar ex post · JSON y descarga'));
   const recorded=el('textarea','textarea'); recorded.readOnly=true;recorded.rows=8;
