@@ -153,7 +153,7 @@ try {
         crp_users_login($db,$uid);
         $sent=crp_users_send_link($db,$uid,$email,'verify');
         $me=crp_users_current($db);
-        crp_users_reply(201,['ok'=>true,'user'=>crp_users_private($me),'verification_email_sent'=>$sent]);
+        crp_users_reply(201,['ok'=>true,'user'=>crp_users_private($me),'verification_email_sent'=>$sent,'csrf'=>$_SESSION['csrf']]);
       case 'login':
         crp_users_throttle($db,'login-ip',$ip,12);
         $email=crp_users_email($data['email'] ?? null);
