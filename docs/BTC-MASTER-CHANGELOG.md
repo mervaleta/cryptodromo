@@ -1,3 +1,15 @@
+## 2026-11-05 · BTC V20b · tren posterior original del GLB (candidato aislado)
+
+**Defecto reportado por el usuario:** en el build público V16 las patas traseras de Maya se deforman y la caña/corvejón parece quebrarse en una fase del Gallop. La malla `Horse_VR_2017.ma` tiene 10.790 caras trianguladas y sus pesos fueron transferidos por proximidad desde el GLB Quaternius; esa malla no fue modelada ni skineada específicamente para la animación Quaternius de 50 huesos. V18 mejoró pesos pero no resolvió la ruptura visual.
+
+**Cambio real, sólo en BTC:** `racers/btc-native-hind-limb-repair.js` recorta el miembro distal posterior de la malla Maya y repone 484 triángulos originales del cuerpo del GLB + 44 triángulos originales de ambos cascos posteriores con los *exactos* índices/pesos del esqueleto que reproduce el Gallop original. La grupa y el muslo superior, la cabeza Maya, los ojos, crin y cola se preservan. No se edita el clip, los huesos, ni los otros 99 corredores. El módulo tiene rollback/dispose.
+
+- **V20 inicial:** 2.322 triángulos Maya retirados, 484 triángulos de miembro + 44 de cascos donados, misma skeleton/bind original. Capturas Chromium/WebGL reales (perfil 0/4/8/12, tres cuartos, posterior): https://github.com/mervaleta/cryptodromo/actions/runs/42087504641. Mejor articulación inferior, pero borde dentado en parte alta del muslo. **Rechazada**.
+- **V20b:** recorte inferior y más selectivo, conserva mayor superficie del muslo auténtico Maya. 1.977 triángulos Maya retirados, mismas piezas GLB originales y rig, sin cambios en otros 99. Capturas reales: https://github.com/mervaleta/cryptodromo/actions/runs/42088399846. Se conserva mejor la continuidad superior de la grupa, y se reduce el fallo extremo de los corvejones visible en V16. Un fragmento oscuro de la vista de perfil debe distinguirse de FX de tierra antes de considerar que no hay restos de geometría.
+- **Validación adicional pendiente:** corrida completa de las 16 fases del Gallop en dos cámaras y detalle posterior. Se debe juzgar el resultado real contra capturas del usuario y el MP4 `212734.mp4`. Nunca declarar AAA sólo por una prueba verde.
+
+**Estado:** rama aislada `feat/btc-v20-native-hind-legs-20261105` / PR #132, `needs_visual_qa`. **NO desplegada ni modelo maestro.** La calidad de ojos, textura, pelo, viento y la continuidad anatómica global sigue pendiente y exige activos/grooming artísticos reales.
+
 # Bitácora obligatoria de versiones · Maestro BTC
 
 **Referencia única para cotejar cambios:** https://race.cryptodromo.com/racers/#BTC

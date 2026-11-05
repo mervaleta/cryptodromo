@@ -10,9 +10,9 @@ const master=readFileSync(new URL('../racers/btc-maya-master.js',import.meta.url
 const fragment='#include <common>\nvarying vec3 vBTCMayaRest;\nvoid main(){\n#include <color_fragment>\n#include <roughnessmap_fragment>\n}';
 
 test('BTC master integrates the isolated procedural coat through the existing PBR shader',()=>{
- assert.match(master,/import \{addBTCEquineCoatLookdev,BTC_COAT_LOOKDEV_BUILD\}/);
- assert.match(master,/addBTCEquineCoatLookdev\(shader\)/);
- assert.match(master,/BTC_COAT_LOOKDEV_BUILD/);
+ assert.match(master,/addBTCHindquarterCoatTexture\(shader\)/,'The visible Maya coat must use the actual registered PBR shader');
+ assert.match(master,/roughnessFactor=clamp/,'PBR roughness filtering must remain in production');
+ assert.match(master,/createBTCNativeHindLimbRepair/,'The native Gallop donor must inherit the actual Maya coat material');
  assert.match(master,/createBTCHeroMaya/);
  assert.match(master,/Gallop/);
 });
