@@ -15,6 +15,19 @@ jobs:
   users:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: local_test_only
+          MARIADB_DATABASE: cryptodromo_users_test
+          MARIADB_USER: crp_test
+          MARIADB_PASSWORD: test_user_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,5 +42,14 @@ jobs:
           php -l scripts/users-migrate.php
       - name: Real persistence and security integration test
         run: node --test tests/users-system.mjs
+      - name: MariaDB schema migration repeats safely
+        env:
+          CRP_USERS_DSN: mysql:host=127.0.0.1;port=3306;dbname=cryptodromo_users_test;charset=utf8mb4
+          DB_USER: crp_test
+          DB_PASS: test_user_only
+        run: |
+          php -m | grep -i pdo_mysql
+          php scripts/users-migrate.php
+          php scripts/users-migrate.php
       - name: Frontend JavaScript syntax
         run: node --check assets/users-app.js
