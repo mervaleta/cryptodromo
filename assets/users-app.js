@@ -2,7 +2,7 @@ import {TOKEN_ROSTER} from '/race-lab/source/src/data/tokenRoster.js?v=coat-2026
 import {getTripleRaceFixture} from '/race-lab/source/src/data/tripleRaceFixture.js';
 const $=id=>document.getElementById(id);
 const roster=new Map(TOKEN_ROSTER.map(t=>[t.symbol,t]));
-let csrf='',me=null,favorites=[],mailEnabled=false;
+let csrf='',me=null,favorites=[],mailEnabled=false,googleClient='',googleInitialized=false;
 const params=new URLSearchParams(location.search);
 const publicAlias=params.get('perfil');
 const resetToken=params.get('reset');
@@ -137,8 +137,42 @@ async function loadDashboard(){
  }
  await loadUpcoming();
 }
+async function initializeGoogle(){
+ if (!googleClient || googleInitialized) return;
+ googleInitialized=true;
+ const script=document.createElement('script');
+ script.src='https://accounts.google.com/gsi/client';
+ script.async=true;script.defer=true;
+ script.onload=()=>{
+   if(!window.google?.accounts?.id){notice('Google Identity no está disponible.',true);return;}
+   window.google.accounts.id.initialize({
+     client_id:googleClient, auto_select:false,
+     callback:async({credential})=>{
+       if(typeof credential!=='string'||!credential) return;
+       try{
+         const response=await fetch('/api/auth.php?action=login_google',{
+           method:'POST',credentials:'same-origin',cache:'no-store',
+           headers:{'Content-Type':'application/json'},body:JSON.stringify({id_token:credential})
+         });
+         const result=await response.json();
+         if(!response.ok||result.status!=='success')throw Error(result.message||'Google no pudo iniciar la sesión.');
+         notice('Sesión iniciada con Google.');
+         await reload();
+       }catch(e){notice(e.message||'Error de inicio de sesión Google.',true);}
+     }
+   });
+   window.google.accounts.id.renderButton($('google-signin'),{
+     type:'standard',theme:'outline',size:'large',text:'signin_with',shape:'pill'
+   });
+ };
+ script.onerror=()=>notice('No se pudo cargar el acceso Google.',true);
+ document.head.append(script);
+}
 async function reload(){
  const data=await api('bootstrap');csrf=data.csrf;me=data.user;mailEnabled=data.mail_enabled;
+ googleClient=data.google_client_id||'';
+ visible('google-area',!me&&!!googleClient);
+ if(!me&&googleClient)initializeGoogle();
  visible('service-error',false);visible('guest',!me);visible('dashboard',!!me);
  if(me){fillProfile();await loadDashboard();}
 }
