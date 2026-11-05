@@ -151,3 +151,10 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Los `morph targets` de Horse.glb no se pueden trasplantar a otra malla con distinta topología sin correspondencia de vértices y una nueva secuencia de poses; no son un arreglo automático de las ancas. Antes de transferir cualquier sistema, cotejar las 16 fases de galope contra imágenes reales y los 4 apoyos.
 - Conserva la cuarentena del modelo Maya defectuoso del PR #107 y la desactivación de sus piezas oculares flotantes. Este cambio no representa aprobación estética AAA.
 - Fuente: https://github.com/mrdoob/three.js/blob/dev/examples/webgl_morphtargets_horse.html
+
+## 2026-11-05 · `btc-native-horse-20261105-v1` · arquitectura 3D unificada
+- Prioridad del usuario: modelo 3D en runtime, jamás sprites ni secuencias de imágenes, calidad visual primero.
+- Una sola base fiable: GLB Quaternius nativo, bones + clip Gallop original (sin duplicar correcciones de articulaciones en visor BTC).
+- `btcNativeLookdev.js`: capa PBR de microfibra direccional y pigmento, con filtro derivativo por píxel; sin textura de pelaje, sin planos/sprites, sin deformar vértices ni compartir mallas entre animales.
+- `windMane.js` existente: anima los vértices originales de la crin con viento; se habilita en la vista BTC, no se agrega geometría falsa.
+- Otros 99 corredores y motor de carrera conservan defaults y flags anteriores. Los experimentos Maya siguen aislados para referencias anatómicas. El objetivo AAA continúa pendiente de capturas humanas de 16 fases y análisis de calidad.
