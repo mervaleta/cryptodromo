@@ -35,6 +35,8 @@
 ## Pruebas y cambios verificados
 
 - Auditoría de fuente y fixture de main realizada; manifiestos de siete días creados y subidos directamente desde los mismos módulos JavaScript del repositorio.
+- Verificación independiente en V8: releídos los siete JSON publicados desde la rama y comparados **los 10.080 registros**, uno por uno, con las funciones canónicas `resolveWorldRace`, `officialRace`, `tripleRaceFixture` de `main`: **10.080 concordancias, 0 diferencias**, incluyendo pista, slot, corredores, clave y clasificación. Esta comprobación directa NO sustituye CI Node ni QA PHP.
+- Pruebas reforzadas con rollback por fallo de escritura a mitad de una transacción, 20 apuestas simultáneas de un mismo usuario para detectar doble gasto y cierre revalidado con tiempo del servidor tras adquirir el bloqueo en peticiones HTTP.
 - Tests de modos, fraude de cliente, ausencia de usuario, recuperación, reintentos, anulación, doble liquidación y 100 usuarios concurrentes redactados.
 - **No declarar que los tests corrieron exitosamente:** GitHub Actions estuvo en cola al finalizar el corte. Un error YAML inicial de título de workflow fue corregido.
 - **No hay prueba de Google positivo, CSRF real en navegador, WebGL UI, base MySQL de Hostinger ni cron real todavía.**
