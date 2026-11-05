@@ -57,6 +57,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const terrain=createBTCTerrainStage(scene,{platform,pedestalRing,renderer});
  let terrainSurface='dirt',terrainWetness=0;
 
+ let heldPoseTime=0,heldPoseIndex=null;
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='original'?'original':'enhanced',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#29232a';
@@ -111,7 +112,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    }catch(error){next.dispose();throw error;}
    scene.add(next.root);
    const prev=horse,prevHero=hero;
-   horse=next;hero=nextHero;frameHeld=false;
+   horse=next;hero=nextHero;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
    terrain.reset();
    terrain.setVisible(token.symbol==='BTC'&&terrainSurface!=='off');
    renderedSymbol=token.symbol;renderedVariant=candidate?variant:'original';
@@ -119,6 +120,22 @@ export function createPreview(canvas,onFailure=()=>{}){
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
   }
+ }
+ function advancePoseClock(seconds){
+  if(!horse)return;
+  for(let remain=Math.max(0,seconds);remain>.000001;){
+   const step=Math.min(remain,.08);horse.update(step,1);remain-=step;
+  }
+ }
+ // Diagnostic only: direct galope phase comparisons without editing source clips.
+ function setPose(index){
+  if(!fixedFrame||!horse)return;
+  const next=Math.min(15,Math.max(0,Math.floor(Number(index)||0)));
+  const clipDuration=.5833333134651184;
+  const target=clipDuration*next/16;
+  const delta=(target-heldPoseTime+clipDuration)%clipDuration;
+  advancePoseClock(delta);
+  heldPoseTime=target;heldPoseIndex=next;frameHeld=true;
  }
  function select(token){selected=token;return rebuild();}
  function setStage(next){const p=Math.floor(clamp(next,1,10));if(p!==btcPass){btcPass=p;rebuild();}}
@@ -147,7 +164,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   const dt=Math.min(clock.getDelta(),.05);
   if(!document.hidden){
    if(fixedFrame){
-    if(horse&&!frameHeld){for(let i=0;i<3;i++)horse.update(.1,1);frameHeld=true;}
+    if(horse&&!frameHeld){advancePoseClock(.3);heldPoseTime=.3;frameHeld=true;}
    }else{
     horse?.update(dt,speed);
    }
@@ -157,9 +174,9 @@ export function createPreview(canvas,onFailure=()=>{}){
   controls.update();renderer.render(scene,camera);
  });
  return {
-  select,pause,setVariant,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
+  select,pause,setVariant,setPose,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
   snapshot:()=>({
-   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
+   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
    originalAsset:true,jockey:false,maneEnabled:!!hero,
    maneMotion:hero?'animated':null,tailMotion:hero?'animated':null,
    hairSystem:null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
