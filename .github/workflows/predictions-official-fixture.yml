@@ -1,0 +1,43 @@
+name: "Predictions fixture: materialize and verify official Alpha19"
+on:
+  push:
+    branches: [feat/predictions-virtual-ledger-20261105]
+    paths:
+      - 'scripts/export-prediction-fixture.mjs'
+      - 'race-lab/source/src/data/**'
+      - '.github/workflows/predictions-official-fixture.yml'
+  pull_request:
+    paths:
+      - 'scripts/export-prediction-fixture.mjs'
+      - 'race-lab/source/src/data/**'
+      - 'predictions/fixtures/**'
+      - 'tests/predictions-official-fixture.mjs'
+      - '.github/workflows/predictions-official-fixture.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --experimental-default-type=module scripts/export-prediction-fixture.mjs
+      - run: node --experimental-default-type=module --test tests/predictions-official-fixture.mjs
+      - name: Commit generated fixtures on isolated development branch only
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/predictions-virtual-ledger-20261105'
+        run: |
+          if ! git diff --quiet -- predictions/fixtures/ || test -n "$(git ls-files --others --exclude-standard predictions/fixtures/)"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add predictions/fixtures/day-*.json
+            git commit -m "build(predictions): snapshot official synthetic Alpha19 results"
+            git push origin HEAD:feat/predictions-virtual-ledger-20261105
+          fi
+      - name: On PR require checked-in results to be current
+        if: github.event_name == 'pull_request'
+        run: git diff --exit-code -- predictions/fixtures/ && test -z "$(git ls-files --others --exclude-standard predictions/fixtures/)"
