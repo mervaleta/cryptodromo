@@ -5,6 +5,7 @@ on:
       - 'visual-lab/stadiumDensity.js'
       - 'visual-lab/stadiumGrandstandCrowd.js'
       - 'visual-lab/stadiumStaticBatches.js'
+      - 'visual-lab/stadiumBackdrop.js'
       - 'visual-lab/scene.js'
       - 'visual-lab/index.html'
       - 'stadiums/crypto/broadcast/index.html'
@@ -28,6 +29,7 @@ jobs:
           node --experimental-default-type=module --check visual-lab/stadiumDensity.js
           node --experimental-default-type=module --check visual-lab/stadiumGrandstandCrowd.js
           node --experimental-default-type=module --check visual-lab/stadiumStaticBatches.js
+          node --experimental-default-type=module --check visual-lab/stadiumBackdrop.js
           node --experimental-default-type=module --check visual-lab/scene.js
           node --experimental-default-type=module --check tests/stadium-aaa-audience.mjs
           node --experimental-default-type=module --check tests/stadium-grandstand-crowd.mjs
