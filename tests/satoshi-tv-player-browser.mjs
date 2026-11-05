@@ -30,6 +30,8 @@ async function requirePlayer(page,track){
  await page.waitForFunction(()=>{
   const child=document.querySelector('#stadium-broadcast')?.contentDocument;
   return !!child&&child.querySelector('#start')?.disabled===false&&
+   document.querySelector('#tv-loading')?.hidden===true&&
+   !document.querySelector('#tv-player')?.classList.contains('is-switching')&&
    child.querySelector('#raceCanvas')?.width>300&&
    !/CARGANDO ESCENARIO 3D|ERROR EN ESCENA/.test(child.querySelector('#status')?.textContent||'');
  },null,{timeout:110000});
