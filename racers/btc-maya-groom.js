@@ -42,9 +42,9 @@ function attach(source,geometry,material,name){
 function createHairMass(source,skinAt,{
  tail,majorCount,fineCount,size,color,motion,scalpColor
 }){
- const positions=[],colors=[],tip=[],ids=[],region=[],bones=[],weights=[],indices=[];
+ const positions=[],colors=[],tip=[],ids=[],region=[],zones=[],bones=[],weights=[],indices=[];
  // More independent roots, fewer segments/card: better silhouette and lower GPU cost.
- const ROWS=24,SIDES=6;
+ const ROWS=20,SIDES=6; // 16.7% fewer rings: preserve rounded 6-sided silhouette
  const total=majorCount+fineCount;
  let strandCount=0,neckOutliers=0;
  const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
@@ -209,7 +209,7 @@ function createHairMass(source,skinAt,{
     positions.push(...v);
     const tint=(.79+.22*seed+.027*(1-u));
     colors.push(tint*1.04,tint*.99,tint*.95);
-    tip.push(u);ids.push(id*1.71);region.push(tail?1:0);
+    tip.push(u);ids.push(id*1.71);region.push(tail?1:0);zones.push(tail?3:forelock?2:crown?1:0);
     const skin=skinFor(sk,u);
     for(let k=0;k<4;k++){
      bones.push(skin.joints[k]||0);weights.push(skin.weights[k]||0);
@@ -253,6 +253,7 @@ function createHairMass(source,skinAt,{
  geo.setAttribute('mayaHairTip',new THREE.Float32BufferAttribute(tip,1));
  geo.setAttribute('mayaHairId',new THREE.Float32BufferAttribute(ids,1));
  geo.setAttribute('mayaHairTail',new THREE.Float32BufferAttribute(region,1));
+ geo.setAttribute('mayaHairZone',new THREE.Float32BufferAttribute(zones,1));
  geo.computeVertexNormals();geo.computeBoundingSphere();
  const mat=new THREE.MeshPhysicalMaterial({
   name:tail?'BTC tail - tapered layered hair':'BTC neck mane - feathered layers',
@@ -265,16 +266,18 @@ function createHairMass(source,skinAt,{
   shader.uniforms.mayaWind=motion.wind;
   shader.uniforms.mayaGait=motion.gait;
   shader.uniforms.mayaTailInertia=motion.tailInertia;
+  shader.uniforms.mayaManeInertia=motion.maneInertia;
+  shader.uniforms.mayaForelockInertia=motion.forelockInertia;
   shader.vertexShader=shader.vertexShader.replace('#include <common>',
-   '#include <common>\nattribute float mayaHairTip;\nattribute float mayaHairId;\nattribute float mayaHairTail;\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;\nuniform float mayaTime;\nuniform float mayaWind;\nuniform float mayaGait;\nuniform float mayaTailInertia;');
+   '#include <common>\nattribute float mayaHairTip;\nattribute float mayaHairId;\nattribute float mayaHairTail;\nattribute float mayaHairZone;\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;\nuniform float mayaTime;\nuniform float mayaWind;\nuniform float mayaGait;\nuniform float mayaTailInertia;\nuniform float mayaManeInertia;\nuniform float mayaForelockInertia;');
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-   '#include <begin_vertex>\nvMayaHairRest=position;\nvMayaHair=vec2(mayaHairTip,mayaHairId);\nfloat hairElastic=pow(smoothstep(.04,.98,mayaHairTip),2.25);\nfloat fiberPhase=mayaHairId*.377+mayaHairTip*3.4;\nfloat air1=sin(mayaTime*5.7-fiberPhase);\nfloat air2=sin(mayaTime*3.1+mayaHairId*.19-mayaHairTip*8.1);\nfloat fineMotion=.58*air1+.42*air2;\nfloat gallop=sin(mayaGait*6.283185307-mayaHairTip*2.6+mayaHairId*.07);\nfloat maneShift=(.00009*mayaWind*fineMotion+.00014*gallop);\nfloat tailSwing=(.00037*mayaWind*fineMotion+.00091*mayaTailInertia+.00025*gallop);\nfloat rootLock=mayaHairTail*tailSwing+(1.-mayaHairTail)*maneShift;\ntransformed.x+=hairElastic*rootLock;\ntransformed.y+=hairElastic*(mix(.00009,.00042,mayaHairTail)*gallop+mayaWind*fineMotion*.00010);\ntransformed.z+=hairElastic*(mayaHairTail*(.00048*mayaTailInertia+.00019*air2)+.00007*air1);');
+   '#include <begin_vertex>\nvMayaHairRest=position;\nvMayaHair=vec2(mayaHairTip,mayaHairId);\nfloat hairElastic=pow(smoothstep(.075,.96,mayaHairTip),1.85);\nfloat maneRegion=1.-mayaHairTail;\nfloat forelock=step(1.5,mayaHairZone);\nfloat crown=step(.5,mayaHairZone)*(1.-forelock);\nfloat group=fract(mayaHairId*.147)*2.-1.;\nfloat flutter=sin(mayaTime*5.2-mayaHairTip*3.1+mayaHairId*.18);\nfloat air=mayaWind*(.5+.5*flutter);\nfloat maneLag=mayaManeInertia;\nfloat foreLag=mayaForelockInertia;\nfloat crownScale=mix(1.,.55,crown);\nfloat maneDrift=hairElastic*maneRegion*(1.-forelock)*(.00014*mayaWind+.00030*maneLag*crownScale+.00005*air*group);\nfloat foreDrift=hairElastic*forelock*(.00009*mayaWind+.00018*foreLag+.000025*air);\nfloat tailDrift=hairElastic*mayaHairTail*(.00032*mayaWind+.00084*mayaTailInertia+.00009*flutter);\ntransformed.y+=maneDrift+foreDrift+tailDrift;\ntransformed.z+=hairElastic*(maneRegion*(1.-forelock)*(.00012*maneLag*crownScale+.000035*flutter)+forelock*(.000065*foreLag)+mayaHairTail*(.0004*mayaTailInertia+.00012*flutter));\ntransformed.x+=hairElastic*(maneRegion*(.000035*group*flutter)+mayaHairTail*(.00012*group*flutter));');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec2 vMayaHair;\nvarying vec3 vMayaHairRest;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
    '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.022;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\nfloat hairBand=sin(vMayaHairRest.y*9300.+vMayaHairRest.z*11200.+vMayaHair.y*4.3);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.055*btcCuticle+.027*btcFineCoat+.036*hairBand,.82,1.16);');
  };
- mat.customProgramCacheKey=()=>tail?'btc-natural-tail-spring-v14':'btc-feathered-mane-poll-v14';
+ mat.customProgramCacheKey=()=>tail?'btc-tail-mp4-inertia-v17':'btc-mane-forelock-mp4-inertia-v17';
  const scalpMat=null;
  const mesh=attach(source,geo,mat,
   tail?'BTC Maya rooted long tail':'BTC Maya natural rooted flowing mane');
@@ -284,8 +287,9 @@ function createHairMass(source,skinAt,{
 export function createMayaGroom(source,skinAt,{
  maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e',scalpColor
 }={}){
- const motion={time:{value:0},wind:{value:1},gait:{value:0},tailInertia:{value:0}};
- let lastPhase=0,tailVelocity=0;
+ const motion={time:{value:0},wind:{value:1},gait:{value:0},tailInertia:{value:0},
+  maneInertia:{value:0},forelockInertia:{value:0}};
+ let lastPhase=0,tailVelocity=0,maneVelocity=0,forelockVelocity=0;
  const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:480,
   size:clamp(maneSize,.6,1.9),color:maneColor,motion,scalpColor});
  const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:500,
@@ -304,18 +308,37 @@ export function createMayaGroom(source,skinAt,{
   get tailInertia(){return motion.tailInertia.value;},
   update(dt,{wind=1,speed=1,phase=0,running=true}={}){
    if(disposed)return;
-   motion.time.value+=Math.min(.05,Math.max(0,dt))*clamp(speed,.3,2);
-   motion.wind.value=running?clamp(wind,0,2):.13;
+   const step=clamp(Number(dt)||0,0,.05);
+   if(!step)return;
+   motion.time.value+=step*clamp(speed,.3,2);
+   motion.wind.value=clamp(wind,0,2)*(running?1:.22);
    motion.gait.value=phase;
-    // Damped tail-lag follows native gait acceleration, not a rigid oscillator.
-    // Preserve continuity at phase wrap and settle quickly at rest.
-    const step=clamp(dt,.0001,.05);
-    const delta=((phase-lastPhase+1.5)%1)-.5;
-    lastPhase=phase;
-    const desired=running?clamp(delta/step,-7,7)*.095+Math.sin(phase*TAU-1.1)*.62:0;
-    tailVelocity+=(desired-motion.tailInertia.value)*step*17;
-    tailVelocity*=Math.exp(-step*7.5);
-    motion.tailInertia.value=clamp(motion.tailInertia.value+tailVelocity*step*9,-1.4,1.4);
+   // 212734.mp4: rooted mane follows the nod, with delayed tips and
+   // separately damped forelock; no matching-frequency sine per strand.
+   // Two bounded substeps keep this stable during frame-rate changes.
+   const targetMane=running?clamp(speed,.5,1.6)*(.62*Math.sin(phase*TAU-.65)+
+    .12*Math.sin(phase*TAU*2-1.1)):0;
+   const targetForelock=running?clamp(speed,.5,1.6)*(.66*Math.sin(phase*TAU-1.22)+
+    .14*Math.sin(phase*TAU*2-1.35)):0;
+   const h=step*.5,omegaM=10.5,omegaF=13.0;
+   for(let sub=0;sub<2;sub++){
+    maneVelocity+=(omegaM*omegaM*(targetMane-motion.maneInertia.value)-
+     1.65*omegaM*maneVelocity)*h;
+    motion.maneInertia.value+=maneVelocity*h;
+    forelockVelocity+=(omegaF*omegaF*(targetForelock-motion.forelockInertia.value)-
+     1.72*omegaF*forelockVelocity)*h;
+    motion.forelockInertia.value+=forelockVelocity*h;
+   }
+   motion.maneInertia.value=clamp(motion.maneInertia.value,-1.2,1.2);
+   motion.forelockInertia.value=clamp(motion.forelockInertia.value,-1.2,1.2);
+   // Retain the independent native-tail lag, never edit Gallop bones.
+   const delta=((phase-lastPhase+1.5)%1)-.5;
+   lastPhase=phase;
+   const desired=running?clamp(delta/step,-7,7)*.095+
+    Math.sin(phase*TAU-1.1)*.62:0;
+   tailVelocity+=(desired-motion.tailInertia.value)*step*17;
+   tailVelocity*=Math.exp(-step*7.5);
+   motion.tailInertia.value=clamp(motion.tailInertia.value+tailVelocity*step*9,-1.4,1.4);
   },
   setColor(color){
    if(/^#[0-9a-f]{6}$/i.test(color)){mane.mat.color.set(color);tail.mat.color.set(color);}
