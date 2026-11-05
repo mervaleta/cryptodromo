@@ -12,7 +12,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=satoshi-aaa-audience-20261105-v1';
-import {createSatoshiPavilionDetail} from './satoshiPavilionDetail.js?v=satoshi-aaa-pavilion-20261105-v1';
+import {createSatoshiPavilionDetail} from './satoshiPavilionDetail.js?v=satoshi-aaa-pavilion-frieze-night-20261105-v2';
 import {createSatoshiGrandstandCrowd} from './stadiumGrandstandCrowd.js?v=satoshi-grandstand-people-20261105-v1';
 import {createStraightCourseBatches,createForestBatches} from './stadiumStaticBatches.js?v=satoshi-static-batches-v1';
 import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
