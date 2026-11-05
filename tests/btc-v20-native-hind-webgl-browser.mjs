@@ -52,6 +52,12 @@ try{
    console.log('BTC_V20_GALLOP_CAPTURED',file);
   }
  }
+ // A BTC-only hotfix must not leak to the 99 other token horses.
+ await page.locator('button.runner[data-symbol="ETH"]').click();
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='ETH',{},{timeout:30000});
+ const eth=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
+ assert.equal(eth.variant,'original','ETH must keep original model');
+ assert.equal(eth.heroGroom,null,'No BTC Maya donor should be visible for ETH');
  writeFileSync(DIR+'/qa.json',JSON.stringify({
   build:BUILD,hind,clips:qa.clips,screenshots:filenames,
   source:'original GLB / authored skinning + authored Gallop, Maya upper torso',
