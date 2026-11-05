@@ -61,7 +61,7 @@ try{
  assert.deepEqual(errors,[],errors.join('\n'));
  writeFileSync(DIR+'/qa.json',JSON.stringify({
   source:'actual Three.js GLB and original native Gallop',
-  build:'btc-v5-native-crest-closure-20261105-v3',
+  build:'btc-v5-neck-tail-premium-20261105-v4',
   before:baseline.heroGroom.neckClosureTriangles,
   after:candidate.heroGroom.neckClosureTriangles,
   cameras:['profile','front','rear','threeQuarter','top'],
