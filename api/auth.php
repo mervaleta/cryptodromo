@@ -101,6 +101,10 @@ try {
         $pdo = new PDO('sqlite:' . $sqlitePath);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
+    // Refuse Google account writes unless the unified identity storage is ready.
+    require_once __DIR__ . '/users-lib.php';
+    crp_users_secret();
+    crp_users_schema_ready($pdo);
     $pdo->beginTransaction();
     $get = $pdo->prepare('SELECT * FROM users WHERE google_id = ?');
     $get->execute([$googleId]);
