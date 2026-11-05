@@ -12,7 +12,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=photo-finish-tv-params-20261104-v1';
-import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-2';
+import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
