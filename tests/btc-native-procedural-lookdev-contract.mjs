@@ -13,7 +13,8 @@ test('native BTC coat layers real rest-space PBR without sprites or replacement 
  assert.match(pilot,/gaitCorrectionStrength:0/);
  assert.match(pilot,/maneMotion:variant==='original'/);
  assert.match(pilot,/createBTCHeroV5/);
- assert.match(pilot,/variant=stageParams\.get\('btcMaster'\)==='maya'\?'maya':stageParams\.get\('btcMaster'\)==='original'\?'original':'enhanced'/);
+ assert.match(pilot,/stageParams\.get\('btcMaster'\)==='v5'\?'enhanced':'maya'/);
+ assert.match(pilot,/createBTCHeroMaya/,'Current public BTC uses Maya upper body plus native donor hind legs');
  assert.doesNotMatch(moduleText,/TextureLoader|CanvasTexture|SpriteMaterial|PlaneGeometry|DataTexture|\.png|\.jpg|\.webp/);
  assert.match(moduleText,/fwidth\(btcFiberCoord\)/);
  assert.match(moduleText,/fwidth\(btcFurRest\*110\.0\)/);
