@@ -4,7 +4,8 @@ import {readFileSync} from 'node:fs';
 const src=readFileSync(new URL('../assets/crypto-venue.js',import.meta.url),'utf8');
 test('channel fade is always released once a verified race canvas is present',()=>{
  assert.match(src,/function signalReady\(expectedSerial=serial\)/);
- assert.match(src,/if\(expectedSerial!==serial\|\|!validFrameDoc\(\)\)return false/);
+ assert.match(src,/if\(expectedSerial!==serial\)return false/);
+ assert.match(src,/if\(!validFrameDoc\(\)\)return false/);
  assert.match(src,/frameReadySerial===expectedSerial/);
  assert.match(src,/setTimeout\(release,350\)/);
  assert.match(src,/requestAnimationFrame\(release\)/);
