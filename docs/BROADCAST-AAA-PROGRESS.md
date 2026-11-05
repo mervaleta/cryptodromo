@@ -94,3 +94,11 @@ Triple canal visible; cambios de cámara legibles; cambios de líder relatados s
 **Estado:** la nueva prueba browser/contratos **no debe darse por aprobada** sin leer el resultado del workflow del HEAD de esta iteración. Los dos fallos de capturas pertenecen a suites de otros ámbitos, y se mantienen documentados sin alterar los tests de BTC ni Parade.
 
 **Convivencia:** `main` cambió al menos cinco veces respecto de `339ec31` durante la iteración, en áreas BTC y wallet. No fusionar hasta releer compare y CI. Todos los cambios de esta fase siguen en el alcance de televisión y tests de TV.
+
+## Iteración 1e · telemetría verificable y limpieza del WebGL fallido
+
+- En modo `?tv-qa=1`, `__satoshiTvQA.snapshot().tuning` informa `lastTuneLatencyMs`, `successfulTuneCount`, `failedTuneCount` y `lastTuneError`. Lectura exclusiva; no cambia el rendimiento financiero ni expone usuario/sesión.
+- Un error de sintonización conserva el link directo, muestra el error e **invalida el iframe fallido con `about:blank`** para liberar su GPU/WebGL y las tareas RAF. El botón de reintento preservado vuelve a abrir la fuente.
+- En `tests/satoshi-tv-player-browser.mjs`: además de la simulación de descarga demorada, se comprueban tres sintonizaciones exitosas medibles, cero errores en zapping normal, y liberación + error medible cuando ambas rutas devuelven páginas inválidas.
+- `stadiums/crypto/live/index.html` invalida la caché del controlador (`broadcast-telemetry4`).
+- **Pendiente:** CI completa del HEAD nuevo, capturas visuales en todas las condiciones y ensayo sostenido móvil. No confundir métricas disponibles con métricas de rendimiento medidas.
