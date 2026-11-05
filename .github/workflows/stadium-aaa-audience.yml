@@ -4,10 +4,12 @@ on:
     paths:
       - 'visual-lab/stadiumDensity.js'
       - 'visual-lab/stadiumGrandstandCrowd.js'
+      - 'visual-lab/stadiumStaticBatches.js'
       - 'visual-lab/scene.js'
       - 'visual-lab/index.html'
       - 'stadiums/crypto/broadcast/index.html'
       - 'tests/stadium-aaa-audience*'
+      - 'tests/stadium-static-batches.mjs'
       - '.github/workflows/stadium-aaa-audience.yml'
   workflow_dispatch:
 permissions:
@@ -24,11 +26,13 @@ jobs:
         run: |
           node --experimental-default-type=module --check visual-lab/stadiumDensity.js
           node --experimental-default-type=module --check visual-lab/stadiumGrandstandCrowd.js
+          node --experimental-default-type=module --check visual-lab/stadiumStaticBatches.js
           node --experimental-default-type=module --check visual-lab/scene.js
           node --experimental-default-type=module --check tests/stadium-aaa-audience.mjs
           node --experimental-default-type=module --check tests/stadium-grandstand-crowd.mjs
+          node --experimental-default-type=module --check tests/stadium-static-batches.mjs
       - name: Validate audience geometry and existing safety contracts
-        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-clean-photo-finish-tv.mjs
+        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-static-batches.mjs tests/stadium-clean-photo-finish-tv.mjs
   webgl:
     runs-on: ubuntu-24.04
     timeout-minutes: 22
