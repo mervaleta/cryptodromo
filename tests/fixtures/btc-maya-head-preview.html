@@ -41,7 +41,7 @@ try{
  const hero=createBTCHeroV5(horse.root,{pass:10,maneSize:1.15,tailSize:1.15,color:'#30261f'});
  const head=GRAFT?createBTCMayaHeadGraft(horse.root,{coatColor:'#a36b4e'}):null;
  scene.add(horse.root);
- let held=0,paused=false;
+ let held=0,paused=true; // Browser captures start at exact native clip phase zero.
  function step(dt){horse.update(dt,1);hero.update(dt,{wind:.8,speed:1,running:true,phase:horse.hoofPhase});}
  function setPose(phase){
   const duration=.5833333134651184;
