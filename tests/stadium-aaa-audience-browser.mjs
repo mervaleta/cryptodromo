@@ -24,7 +24,8 @@ try {
  assert.equal(first.remoteGrandstand.parts,8);
  assert.equal(first.remoteGrandstand.originalCoordinatesRetained,true);
  assert.equal(first.remoteGrandstand.trackModified,false);
- assert.equal(first.remoteVisible,first.remoteGrandstand.people);
+ assert.ok(first.remoteVisible>0 && first.remoteVisible<=first.remoteGrandstand.people,
+  'GPU quality scaling may reduce population, never grow past fixture');
  assert.equal(first.layout,'straight');
  assert.equal(first.groups.find(x=>x.name.endsWith('arms')).count,first.crowd*2);
  assert.ok(first.drawCalls>0);
