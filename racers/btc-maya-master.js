@@ -7,14 +7,15 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-face-native-gallop-20261105-v16';
+import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-native-rig-hind-skin-20261105-v18';
+import {projectHindWeightsFromNative} from './btc-maya-native-hind-skin.js?v=btc-v18-anatomy-hind-20261105';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-v18-hind-neck-eye-20261105';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
-import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-face-native-gallop-20261105-v16';
+import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-v18-hind-neck-eye-20261105';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
-export const BTC_MAYA_RENDER_BUILD='btc-maya-face-native-gallop-20261105-v16';
+export const BTC_MAYA_RENDER_BUILD='btc-maya-v18-hind-neck-eye-20261105';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -373,6 +374,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // Unlike the older shader oscillator, this changes only skin weights in rest pose.
  const hindWeightReport=stabilizeHindSkinWeights(skinRest,bone,weights,
   source.skeleton.bones.map(b=>b.name));
+ // V18: restore exact native hinge constraints using barycentric projection
+ // of Quaternius' authored Gallop weights onto the Maya rest surface.
+ // This must run after topology smoothing and left/right filtering.
+ const hindNativeReport=projectHindWeightsFromNative(source,skinRest,bone,weights);
  // Stabilize skull-to-crest skin binding while preserving native Gallop.
  const headIndex=source.skeleton.bones.findIndex(b=>b.name==='Head');
  if(headIndex<0)throw Error('BTC requires native Head joint');
@@ -421,10 +426,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.72;
+ coat.metalness=0;coat.roughness=.64;
  coat.defines={STANDARD:'',PHYSICAL:''};
- coat.clearcoat=.028;coat.clearcoatRoughness=.83;
- coat.sheen=.17;coat.sheenColor.set('#977458');coat.sheenRoughness=.93;
+ coat.clearcoat=.065;coat.clearcoatRoughness=.72;
+ coat.sheen=.29;coat.sheenColor.set('#977458');coat.sheenRoughness=.87;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
@@ -462,7 +467,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
    '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.002,amberBreak*.0017,coatDirection*.0015));');
  };
- coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-integrated-eyelids-v15-hind-native';
+ coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-anisotropic-coat-corneas-v18';
  const hoof=new THREE.MeshStandardMaterial({
   name:'BTC original Maya four integrated hoof walls',
   color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#694937',
@@ -487,7 +492,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const mesh=new THREE.SkinnedMesh(geo,[coat,hoof]);
  mesh.name='BTC 2017 sculpted anatomical replacement, original Gallop rig';
  applySkin(mesh,source);
- return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,pollAnchoredVertices,poweredHindVertices,hindMaxExpansion:hindSculpt.maxExpansion,generatedHindCoat:true,hindGait,hindWeightReport,...removed};
+ return {mesh,geometry:geo,materials:[coat,hoof],vertices:positions.length/3,triangles:indices.length/3,positions,beveledHoofVertices,elevatedEarVertices,pollAnchoredVertices,poweredHindVertices,hindMaxExpansion:hindSculpt.maxExpansion,generatedHindCoat:true,hindGait,hindWeightReport,hindNativeReport,...removed};
 }
 
 function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
@@ -496,7 +501,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
  if(headJoint<0)throw Error('BTC eye globes require native Head joint');
  // Smaller globes sit INSIDE the two actual sockets; previous spheres floated ahead of the eyelid.
- const radius=.000285,template=new THREE.SphereGeometry(radius,48,32);
+ const radius=.000355,template=new THREE.SphereGeometry(radius,48,32);
  const xyz=[],normals=[],local=[],sides=[],bones=[],weights=[],indices=[];
  const point=template.getAttribute('position'),normal=template.getAttribute('normal');
  const tris=template.getIndex();
@@ -507,9 +512,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
    // Eye cornea calibrated to Maya's actual outer socket, x approximately .00240.
     // Ellipsoidal ocular surface follows the ORIGINAL eye aperture,
     // centered ~x=.00145,y=-.02831,z=.04268, not the outer cheek.
-    xyz.push(side*(.001825+x),-.02831+y*1.60,.04268+z*1.67);
-   const nx=side*normal.getX(i),ny=normal.getY(i)/1.60,
-     nz=normal.getZ(i)/1.67,nl=Math.hypot(nx,ny,nz)||1;
+    xyz.push(side*(.00191+x),-.02831+y*1.55,.04268+z*1.56);
+   const nx=side*normal.getX(i),ny=normal.getY(i)/1.55,
+     nz=normal.getZ(i)/1.56,nl=Math.hypot(nx,ny,nz)||1;
     normals.push(nx/nl,ny/nl,nz/nl);
    local.push(x/radius,y/radius,z/radius);
    sides.push(side);
@@ -532,8 +537,8 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const irisColor=new THREE.Color(chosen);
  const material=new THREE.MeshPhysicalMaterial({
   name:'BTC inset natural eye globes with independently colored irises',
-  color:'#251711',metalness:0,roughness:.53,
-  clearcoat:.075,clearcoatRoughness:.68,side:THREE.FrontSide
+  color:'#251711',metalness:0,roughness:.26,
+  clearcoat:.78,clearcoatRoughness:.12,side:THREE.FrontSide
  });
  material.onBeforeCompile=shader=>{
   shader.uniforms.btcIrisColor={value:irisColor};
@@ -544,9 +549,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCEyeRest;\nvarying float vBTCEyeSide;\nuniform vec3 btcIrisColor;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=(btcIrisColor*.74+vec3(.075,.036,.019))*mix(.86,1.16,smoothstep(.22,1.,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
+   '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nfloat btcEyeStreak=sin(atan(vBTCEyeRest.z,vBTCEyeRest.y)*67.+vBTCEyeRest.x*5.)*.085;\nvec3 btcEyeIrisShading=(btcIrisColor*.80+vec3(.07,.036,.022))*mix(.78,1.21,smoothstep(.10,.96,btcEyeIrisRadius))*(1.+btcEyeStreak);\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);\nfloat btcLimbus=smoothstep(.78,.93,btcEyeIrisRadius)*(1.-smoothstep(.99,1.08,btcEyeIrisRadius))*btcEyeFacing;\ndiffuseColor.rgb*=1.-.32*btcLimbus;');
  };
- material.customProgramCacheKey=()=> 'btc-eye-small-matte-corneas-20261105-v5';
+ material.customProgramCacheKey=()=> 'btc-eye-wet-cornea-horizontal-pupil-20261105-v18';
  const mesh=new THREE.SkinnedMesh(geometry,material);
  mesh.name='BTC bilateral embedded spherical eyes on native Head joint';
  applySkin(mesh,source);
@@ -609,6 +614,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
  const rumpPatch=sculptRumpSurfacePatch(best,anatomy.materials[0]);
  const groom=createMayaGroom(best,skinAt,{
+  scalpGeometry:anatomy.geometry,
   maneSize,tailSize,maneColor:color,tailColor:tailColor||color,
   scalpColor:anatomy.materials[0].color
  });
@@ -631,9 +637,9 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
-   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
+   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'barycentric-native-Gallop-linear-v18',hindNativeProjection:anatomy.hindNativeReport,hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'native-Gallop-weighted-hinge',hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.001825,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
+   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.00191,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
    eyeAssembly:face.eyeAssembly,
    integratedEyeRims:face.integratedEyeRims,

@@ -40,13 +40,17 @@ export function stabilizeHindSkinWeights(positions,bones,weights,boneNames){
   const x=positions[v*3],y=positions[v*3+1],z=positions[v*3+2];
   const region=hindSkinRegion(x,y,z);
   if(region<=.005)continue;
-  const correctSide=x>0?'.L':'.R',otherSide=x>0?'.R':'.L';
+  // Actual GLTFLoader joints are BackLegL/BackLegR with no dot; the
+  // published filter only matched .L/.R, silently allowing crossed weights.
+  const correctSide=x>0?'L':'R',otherSide=x>0?'R':'L';
   let removed=0,available=0,originalTotal=0;
   const original=[],wrong=[];
   for(let k=0;k<4;k++){
    const j=bones[v*4+k],name=boneNames[j]||'',w=weights[v*4+k];
-   const invalid=(name.startsWith('Back')&&name.endsWith(otherSide)) ||
-      name.startsWith('Front') || name.startsWith('Tail');
+   const normalized=name.replace(/\./g,'');
+   const invalid=((normalized.startsWith('Back')||normalized.startsWith('IKBackLeg')||
+       normalized.startsWith('FFB'))&&normalized.endsWith(otherSide)) ||
+      normalized.startsWith('Front') || normalized.startsWith('Tail');
    original.push(w);wrong.push(invalid);
    originalTotal+=w;
    if(invalid)removed+=w;
