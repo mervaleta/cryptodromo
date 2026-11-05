@@ -37,7 +37,7 @@ function cropMayaHind(anatomy) {
   }
   groups.push({start,count:next.length-start,materialIndex:group.materialIndex});
  }
- if(removed<150||removed>1500)throw Error('BTC V20 Maya posterior crop outside expected anatomy range: '+removed);
+ if(removed<1200||removed>3600)throw Error('BTC V20 Maya posterior crop outside expected anatomy range: '+removed);
  geo.setIndex(new THREE.Uint16BufferAttribute(new Uint16Array(next),1));
  geo.clearGroups();
  for(const g of groups)geo.addGroup(g.start,g.count,g.materialIndex);
