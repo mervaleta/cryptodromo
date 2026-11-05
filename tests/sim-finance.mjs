@@ -28,7 +28,7 @@ test('simulated withdrawal settlement and rejection are double-entry',()=>{
  assert.equal(l.balance('user/test','USDT'),3990000);
 });
 test('asset catalogue and validation',()=>{
- assert.equal(Object.keys(ASSETS).length,20);
+ assert.equal(Object.keys(ASSETS).length,21);
  assert.throws(()=>quote({from:'CR',to:'BTC',amount:1,usdMicroPerUnit:prices}),/small/);
  assert.throws(()=>quote({from:'CR',to:'XYZ',amount:10000,usdMicroPerUnit:prices}),/Unsupported/);
 });
