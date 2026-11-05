@@ -51,6 +51,14 @@ async function loadPublic(){
   }catch(e){notice(e.message,true);}
 }
 function fillProfile(){
+  const avatar=$('dashboard-avatar');
+  avatar.replaceChildren();
+  if(typeof me.avatar_url==='string' && /^https:\/\//i.test(me.avatar_url)){
+    const img=document.createElement('img');img.src=me.avatar_url;
+    img.alt='';img.referrerPolicy='no-referrer';
+    img.onerror=()=>{avatar.textContent=me.alias.slice(0,1).toUpperCase();};
+    avatar.append(img);
+  } else avatar.textContent=me.alias.slice(0,1).toUpperCase();
   safeText($('dashboard-alias'),'@'+me.alias);
   safeText($('dashboard-email'),me.email);
   safeText($('verification-status'),me.email_verified?'Correo verificado':'Correo sin verificar');
