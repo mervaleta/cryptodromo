@@ -120,3 +120,9 @@
 [ ] Evidencia de ninguna regresión respecto del baseline.
 
 **No declarar `Candidato AAA` por pruebas de Node; sólo después de la revisión visual completa.**
+
+## Iteración 5 · guardas de evidencia WebGL (2026-11-05)
+- Main verificado en `fbb115a69136dc767930f809905cbb4c927ed1ad`, dos commits posteriores al ancestro común `b5b0bd673a4a4827f74f360f55976e9d9b66917a`; se trata de un cambio BTC revertido, no rebasar ni modificar el trabajo de ese agente sin revisión.
+- PR #115 sigue draft y sin merge. El endpoint de estado combinado no reportó statuses para HEAD `6552d406ef708891da3690dc828e9cb05e62667f`; esto NO confirma ni niega los resultados de GitHub Actions, que deben revisarse en la pestaña Checks.
+- Defecto crítico del proceso de QA: `stadium-aaa-audience-comparison.mjs` podía producir seis PNG y JSON de pacing aun con WebGL no inicializado o errores JavaScript. Se incorporaron aserciones de contexto WebGL, tamaño de canvas, fotogramas y errores de ejecución en cada vista. Commit `9ac65bdda5f0288a9e0a26d99323da598262a79f`.
+- Esta corrección es de test, NO corrige ni certifica estética, arquitectura o rendimiento del estadio. Capturas nuevas, inspección humana, tres pistas y GPU real siguen pendientes. Mantener PR en draft; no fusionar ni publicar.
