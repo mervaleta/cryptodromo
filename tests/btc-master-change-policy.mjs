@@ -8,14 +8,22 @@ const master=read('racers/btc-maya-master.js');
 const page=read('racers/index.html');
 const racers=read('racers/racers.js');
 
-test('master revision matches the actual Maya render build',()=>{
+test('master revision matches the actually selected BTC 3D render build',()=>{
  assert.equal(revision.symbol,'BTC');
  assert.match(revision.buildId,/^[a-z0-9-]+$/i);
- const match=master.match(/export const BTC_MAYA_RENDER_BUILD='([^']+)'/);
- assert.ok(match,'Maya build identifier missing');
- assert.equal(revision.buildId,match[1],'The visible fiche must not promise another build');
- assert.equal(revision.masterId,master.match(/export const BTC_MAYA_MASTER='([^']+)'/)?.[1]);
- assert.ok(['verified','pending_deploy','needs_fix'].includes(revision.status));
+ if(revision.masterId==='btc-original-glb-gallop'){
+  const native=read('race-lab/source/src/btcNativeLookdev.js');
+  const match=native.match(/export const BTC_NATIVE_MASTER_BUILD='([^']+)'/);
+  assert.ok(match,'native GLB lookdev build identifier missing');
+  assert.equal(revision.buildId,match[1],'Public BTC fiche must describe the native GLB master');
+  assert.match(racers,/requestedBTCMaster==='maya'\?'maya'/,'Maya remains explicit debug only');
+ }else{
+  const match=master.match(/export const BTC_MAYA_RENDER_BUILD='([^']+)'/);
+  assert.ok(match,'Maya build identifier missing');
+  assert.equal(revision.buildId,match[1],'The visible fiche must not promise another build');
+  assert.equal(revision.masterId,master.match(/export const BTC_MAYA_MASTER='([^']+)'/)?.[1]);
+ }
+ assert.ok(['verified','pending_deploy','needs_fix','needs_visual_qa'].includes(revision.status));
  assert.match(revision.publicUrl,/https:\/\/race\.cryptodromo\.com\/racers\/#BTC/);
  assert.ok(Array.isArray(revision.openIssues));
 });
