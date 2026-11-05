@@ -21,7 +21,7 @@ try {
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.symbol==='BTC'&&s?.variant==='maya'&&
     s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
-    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.facialSurfaces>=2&&
+    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.facialSurfaces===0&&
     s?.clips?.includes('Gallop')&&s?.drawCalls>0;
  },null,{timeout:120000});
  const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
@@ -47,7 +47,7 @@ try {
   assert.equal(s.heroGroom.gallopPreserved,true);
  assert.equal(s.heroGroom.originalRig,true);
  assert.equal(s.heroGroom.sculptedEyes,2);
- assert.equal(s.heroGroom.eyeGlobes,2,'two actual spherical eyes must be present');
+ assert.equal(s.heroGroom.eyeGlobes,0,'floating eye meshes must be absent');
  assert.equal(s.heroGroom.crownBridgeLocks,112,'hero mane must be connected across the poll');
  assert.equal(s.heroGroom.heroLocks,56,'the normal public BTC must use raised locks');
  assert.equal(s.heroGroom.solidRingSides,6,'live horse needs rounded 3D locks instead of hair ribbons');
@@ -58,8 +58,8 @@ try {
   assert.equal(s.heroGroom.hindGaitCorrective,true);
   assert.ok(s.heroGroom.hindMaxExpansion>.10);
   assert.equal(s.heroGroom.neckOutliers,0,'no hair vertices outside dorsal neck envelope');
- assert.ok(s.heroGroom.eyeRadius<.0004,'eyes should not protrude out of socket');
- assert.equal(s.heroGroom.irisEditable,true,'the public iris must accept eyeColor');
+ assert.equal(s.heroGroom.eyeRadius,0,'eyes are quarantined');
+ assert.equal(s.heroGroom.irisEditable,false,'no floating iris');
  assert.equal(s.heroGroom.blackEquinePupils,true);
  assert.equal(s.heroGroom.sculptedEars,2,'stylized pinnae should appear on the public horse');
  assert.equal(s.heroGroom.integratedMayaHooves,true);
