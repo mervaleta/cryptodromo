@@ -8,6 +8,12 @@ try{
  for(const [name,host] of [['before','http://127.0.0.1:4174'],['after','http://127.0.0.1:4173']]){
   const page=await browser.newPage({viewport:{width:1600,height:940}});
   const pageErrors=[];
+  const cdp=await page.context().newCDPSession(page);
+  const capture=async filename=>{
+   const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
+   assert.ok(data?.length>1000,`${name}: screenshot returned no pixels`);
+   await writeFile('artifacts/stadium-aaa-audience/comparison/'+filename,Buffer.from(data,'base64'));
+  };
   page.on('pageerror',error=>pageErrors.push(error.message));
   await page.goto(host+'/visual-lab/?track=genesis&finish-qa=alpha06',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>document.querySelector('#start')?.disabled===false,null,{timeout:120000});
@@ -43,7 +49,7 @@ try{
    });
    assert.equal(visibility.presentationActive,false,`${name}/${view}/${weather}: presentation covers scene`);
    assert.equal(visibility.overlayVisible,false,`${name}/${view}/${weather}: presentation overlay still visible`);
-   await page.screenshot({path:'artifacts/stadium-aaa-audience/comparison/'+name+'-'+view+'-'+weather+'.png',timeout:45000});
+   await capture(name+'-'+view+'-'+weather+'.png');
    // Approximate frame pacing only, measured in a software WebGL CI browser.
    // It is useful for relative regression checks, NOT desktop hardware FPS.
    const pacing=await page.evaluate(()=>new Promise(resolve=>{
