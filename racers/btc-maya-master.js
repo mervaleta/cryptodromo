@@ -11,6 +11,7 @@ import {createMayaGroom} from './btc-maya-groom.js?v=btc-master-procedural-hind-
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
+import {addBTCEquineCoatLookdev,BTC_COAT_LOOKDEV_BUILD} from './btc-maya-coat-lookdev.js?v=btc-master-microfur-20261104-v1';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
 export const BTC_MAYA_RENDER_BUILD='btc-master-procedural-hind-groom-20261104-v12-fx1';
@@ -385,11 +386,12 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
    '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.020*coatDirection+.030*amberBreak,.50,.82);');
   addBTCHindquarterCoatTexture(shader);
+  addBTCEquineCoatLookdev(shader);
   addBTCHindquarterGaitShader(shader,hindGait);
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
    '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(coatDirection*.002,amberBreak*.0017,coatDirection*.0015));');
  };
- coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-harmony-sculpt-face-generated-hind-v12';
+ coat.customProgramCacheKey=()=>String(cacheKey?.()||'')+'|btc-harmony-sculpt-face-generated-hind-v12|'+BTC_COAT_LOOKDEV_BUILD;
  const hoof=new THREE.MeshStandardMaterial({
   name:'BTC original Maya four integrated hoof walls',
   color:/^#[0-9a-f]{6}$/i.test(hoofColor||'')?hoofColor:'#694937',
