@@ -60,6 +60,26 @@
 - Estado de CI: ejecuciones de esta iteración disparadas, algunas en cola; no afirmar aprobación visual ni datos de rendimiento por el solo cambio.
 - Pendiente: inspección de las capturas reales, chequeo de que los nuevos brazos y sombreros no ocluyen a los caballos, y métricas FPS en dispositivos reales.
 
+## Iteración 4 · inspección REAL, corrección de transmisión y presupuesto de draw calls (2026-11-05)
+
+**Evidencia examinada, no inventada:** se descargaron y revisaron los PNG reales de GitHub Actions `#41960445118` (artefacto `13385815192`: panorama, railcam día/noche y óvalo) y de `#41962178792` (artefacto `13386620743`: tres recorridos día/noche). Esas capturas iniciales NO permiten aprobar AAA: el pase de lista cubría la escena con una máscara casi negra, la automática podía estar en noche cuando el archivo decía 'day', la cámara aérea no fotografiaba el pabellón de cerca y el perfil software GPU omitía ornamentación.
+
+**Implementado en la rama, pendiente de nueva captura visual certificada:**
+- `visual-lab/index.html` y `stadiums/crypto/broadcast/index.html`: composición de presentación con velo oscuro concentrado a izquierda, transparencia progresiva hacia 3D, tarjeta de corredor menor, franja de roster más ligera, versión móvil. La máscara previa de fondo completo hacía inútiles varias capturas.
+- `visual-lab/scene.js`: toma de arquitectura `architecture` apuntando al pabellón VIP; se añade a los dos selectores de cámara. No altera director de transmisión ni posiciones oficiales. QA de ornamento activado y diagnóstico de lotes escenográficos.
+- `tests/muybridge-clubhouse-browser.mjs`: ahora activa modo manual de QA sin pase de lista, fuerza verdadero mediodía y calidad equilibrada, registra fachada y cuatro vistas por trazado en día/noche y exige ornamentación realmente renderizada.
+- `tests/stadium-aaa-audience-browser.mjs`, `tests/stadium-aaa-audience-comparison.mjs`: manual y calidad equilibrada para no confundir una máscara o modo eco con escena aprobada. Comparación baseline/candidato y medición aproximada de frame pacing SwiftShader, expresamente NO equivalente a FPS en GPU real.
+- `tests/stadium-presentation-visibility-browser.mjs`: pasa la presentación real de corredor por el DOM/Three y comprueba el velo 90° que respeta el estadio, de día y noche.
+
+**Rendimiento escenográfico medible en teoría (ahorro no medido todavía con GPU):**
+- `visual-lab/stadiumStaticBatches.js` reemplaza exactamente 404 parantes de baranda, 100 postes de cierre exterior y 78 marcadores individuales (582 objetos) por tres InstancedMesh, conservando x/y/z y dimensiones. El ahorro potencial es de 579 grupos de dibujo.
+- Los árboles perimetrales que antes eran hasta 3 piezas por árbol (155 árboles, hasta 465 meshes en escritorio) pasan a no más de cuatro InstancedMesh; se conserva distribución por semilla y márgenes de pista. Ahorro potencial de hasta 461 grupos extra.
+- `tests/stadium-static-batches.mjs` verifica posiciones extremas, dimensiones, liberación de recursos y no ocupación de carriles. En navegador, `?stadium-perf-qa=1` expone estadísticas de solo lectura.
+- `visual-lab/stadiumBackdrop.js` da parapetos asentados sin huecos y vidrieras instanciadas al horizonte de edificios; emisión nocturna controlable, ocultación de arbolado por control TV y liberación de geometrías. Se agregan sólo dos lotes 3D para parapetos/ventanas en comparación con las cajas sin detalle.
+- Se agregó cancelación de ejecuciones obsoletas **solo** al workflow propio `stadium-aaa-audience.yml` para reducir saturación de CI por commits sucesivos; ningún workflow de otros agentes fue alterado.
+
+**Barreras actuales, no negociar:** los jobs de GitHub Actions más recientes permanecían EN COLA a la última consulta. El éxito `#41962178792` certificó carga WebGL/contratos pero sus PNG aún estaban oscurecidos por presentación y cámara inadecuada; la nueva batería corrige la cobertura, pero NO se puede declarar que ya pasó sin nuevos resultados. Falta revisar la estética de las capturas posteriores al ajuste, FPS con GPU real, y validar el deploy de Hostinger; PR #115 sigue draft y sin publicar. Auto seguimiento de hora activado por pedido del usuario.
+
 ## Estado de pruebas concurrentes
 - Audiencia y geometría: PASS en Actions #41960445118; cuatro capturas Chromium reales.
 - Satoshi Nakamoto Stadium: PASS en #41960445027.
