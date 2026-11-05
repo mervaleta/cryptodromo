@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Cryptódromo · Vista de usuario de prueba</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Segoe UI,sans-serif;background:#07140f;color:#f1ebd8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% 0,#1c4935,#07140f 65%);min-height:100vh}
+main{max-width:1050px;margin:auto;padding:28px 20px 80px}a{color:#e5cb8e}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.pill{border:1px solid #a88c52;border-radius:40px;padding:8px 14px;color:#e7c87d;font-size:12px;font-weight:800;letter-spacing:.08em}
+h1{font-size:clamp(2rem,5vw,3.7rem);margin:36px 0 6px}p{color:#bbcabd;line-height:1.6}
+.notice{padding:16px 20px;border:1px solid #ad8c48;border-radius:14px;background:#3a321c;color:#f5db9b;margin:24px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin:26px 0}
+.card{background:#11271d;border:1px solid #2f4e3c;border-radius:18px;padding:23px;box-shadow:0 14px 35px #0004}
+.k{font-size:12px;color:#b9cdbd;text-transform:uppercase;letter-spacing:.13em}.value{font-size:2.2rem;font-weight:800;color:#f2d99a;margin:12px 0}.small{font-size:13px;color:#bbcabd}
+button{border:1px solid #d7bb7d;background:#e6c981;color:#102318;border-radius:10px;padding:12px 18px;font-weight:800;cursor:pointer}
+button.secondary{background:transparent;color:#e6c981}
+ul{padding-left:18px;line-height:2}.foot{font-size:13px;margin-top:38px}
+</style></head><body><main>
+<div class="top"><a href="/"><strong>CRYPTÓDROMO</strong></a><span class="pill">VISTA DEMO · SIN AUTENTICACIÓN</span></div>
+<h1>Tu palco en Cryptódromo</h1><p>Así se verá la experiencia de un usuario registrado cuando la identidad y los pronósticos estén integrados.</p>
+<div class="notice"><strong>Cuenta de exhibición, no cuenta real.</strong> Esta pantalla no inicia sesión, no crea usuarios, no consulta ni modifica una base de datos y no habilita pronósticos. Los 100.000.000 CR son ficticios y existen solo en esta vista.</div>
+<div class="grid">
+<section class="card"><div class="k">Perfil de prueba</div><div class="value" style="font-size:1.7rem">Santoro y Donoso</div><div>santoroydonoso@gmail.com</div><p class="small">Rol: espectador de demostración</p></section>
+<section class="card"><div class="k">Saldo ilustrativo</div><div class="value">100.000.000 CR</div><div class="small">Créditos ficticios, sin valor monetario ni persistencia</div></section>
+<section class="card"><div class="k">Actividad de prueba</div><div class="value">0 tickets</div><div class="small">No hay pronósticos ni movimientos reales</div></section>
+</div>
+<div class="grid"><section class="card"><h2>Mis caballos</h2><p>Una selección visual de los corredores que podrías seguir.</p><ul><li>BTC · Bitcoin</li><li>ETH · Ethereum</li><li>SOL · Solana</li></ul><p class="small">Ejemplos de interfaz, no favoritos guardados.</p></section>
+<section class="card"><h2>Próxima experiencia</h2><p>Desde tu cuenta real podrás gestionar favoritos, historial y pronósticos ficticios, sujetos al fixture oficial y a la validación de sesiones.</p><a href="/cuenta/"><button>Ir al acceso real</button></a></section></div>
+<section class="card" style="margin-top:24px"><h2>Laboratorio de conversión · Simulación</h2><p>Todos los saldos y precios son ilustrativos. No se envían fondos, no se registran operaciones ni se habilitan retiros.</p>
+<div class="grid"><div><label class="k" for="amount">Créditos a convertir (CR)</label><p><input id="amount" type="number" min="1" max="100000000" value="100000" step="1" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p></div>
+<div><label class="k" for="asset">Moneda de destino</label><p><select id="asset" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></select></p></div></div>
+<div class="grid"><div><label class="k" for="spread">Spread de venta de la plataforma (%)</label><p><input id="spread" type="number" min="0" max="20" step=".1" value="1.5" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p></div>
+<div><label class="k" for="fee">Comisión de conversión (%)</label><p><input id="fee" type="number" min="0" max="20" step=".1" value=".75" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p></div></div>
+<div class="grid"><div><div class="k">Cotización ilustrativa</div><div class="value" style="font-size:1.4rem" id="rate"></div></div><div><div class="k">Importe neto estimado</div><div class="value" style="font-size:1.4rem" id="net"></div></div></div>
+<div id="breakdown" class="small" aria-live="polite"></div><p><button type="button" id="simulate">Agregar al libro simulado</button> <button type="button" class="secondary" id="clear">Reiniciar simulación</button></p>
+<h3>Ingresos simulados de la plataforma</h3><div class="grid"><div><div class="k">Comisiones</div><div class="value" id="fees-total">0 CR</div></div><div><div class="k">Spread bruto</div><div class="value" id="spread-total">0 CR</div></div><div><div class="k">Saldo CR de prueba restante</div><div class="value" id="remaining">100.000.000 CR</div></div></div>
+<div class="small" id="ledger">Sin conversiones simuladas.</div></section>
+<section class="card" style="margin-top:24px"><h2>Billetera ballena · Retiro simulado</h2><p>El retiro descuenta el saldo de la moneda elegida, registra un comprobante ficticio y marca el envío como confirmado. No hay transacción externa.</p><div class="grid"><div><label class="k" for="withdraw-asset">Activo</label><p><select id="withdraw-asset" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></select></p></div><div><label class="k" for="withdraw-amount">Monto a retirar</label><p><input id="withdraw-amount" type="number" min="0" step="any" value="100" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p></div></div><label class="k" for="withdraw-destination">Destino ficticio (etiqueta, no dirección real)</label><p><input id="withdraw-destination" maxlength="100" placeholder="Billetera externa de prueba" style="width:100%;padding:12px;background:#07140f;color:white;border:1px solid #6b846d;border-radius:8px"></p><p><button id="withdraw-submit" type="button">Simular envío y descontar saldo</button></p><div id="withdraw-message" class="small" aria-live="polite"></div><h3>Saldos multimoneda</h3><div id="wallet-balances" class="grid"></div><h3>Comprobantes de retiro</h3><div id="withdraw-history" class="small">Todavía no hay retiros simulados.</div></section><p class="foot">Prototipo de exhibición aislado del sistema de autenticación y de la contabilidad. No usar como comprobante de registro, saldo o acceso.</p>
+</main><script>
+(()=>{'use strict';
+const assets=[
+['USD','Dólar estadounidense',1],['EUR','Euro',1.09],['ARS','Peso argentino',0.00075],
+['USDT','Tether',1],['USDC','USD Coin',1],['BTC','Bitcoin',95000],['ETH','Ethereum',3400],['SOL','Solana',165],
+['BNB','BNB',650],['XRP','XRP',2.2],['ADA','Cardano',0.65],['DOGE','Dogecoin',0.17],['LTC','Litecoin',105],
+['TRX','TRON',0.27],['AVAX','Avalanche',29],['DOT','Polkadot',5],['LINK','Chainlink',18],
+['XLM','Stellar',0.35],['BCH','Bitcoin Cash',420],['DAI','DAI',1]
+];
+const el=id=>document.getElementById(id), select=el('asset');
+assets.forEach(([symbol,name])=>select.add(new Option(name+' · '+symbol,symbol)));
+let remaining=100000000,commissionTotal=0,spreadTotal=0,entries=[]; const holdings=new Map(assets.map(([sym])=>[sym,0]));const withdrawals=[];
+const fmt=(n,max=8)=>Number(n).toLocaleString('es-AR',{maximumFractionDigits:max});
+function quote(){
+ const amount=Number(el('amount').value),spread=Number(el('spread').value)/100,fee=Number(el('fee').value)/100;
+ const asset=assets.find(a=>a[0]===select.value),unit=asset[2];
+ const valid=Number.isFinite(amount)&&amount>0&&amount<=remaining&&Number.isFinite(spread)&&spread>=0&&spread<=.2&&Number.isFinite(fee)&&fee>=0&&fee<=.2;
+ // Purely illustrative assumption: 1 CR = 0.01 USD at mid-market.
+ const usd=amount*.01,spreadCr=amount*spread,feeCr=amount*fee,netCr=amount-spreadCr-feeCr,netAsset=netCr*.01/unit;
+ el('rate').textContent='1 '+asset[0]+' = '+fmt(unit/.01,4)+' CR (referencia)';
+ el('net').textContent=valid?fmt(netAsset,12)+' '+asset[0]:'Importe inválido';
+ el('breakdown').textContent=valid?'Bruto: '+fmt(amount)+' CR · Comisión: '+fmt(feeCr)+' CR · Spread: '+fmt(spreadCr)+' CR · Neto equivalente: '+fmt(netCr)+' CR · Sin costo de red ni impuestos.':'Ingresá un monto dentro del saldo disponible y tasas entre 0% y 20%.';
+ el('simulate').disabled=!valid;
+ return valid?{amount,spreadCr,feeCr,netAsset,symbol:asset[0]}:null;
+}
+function renderWallet(){
+ const wallet=el('wallet-balances');wallet.replaceChildren();
+ const cr=document.createElement('div');cr.className='card';cr.textContent='CR · '+fmt(remaining,4);wallet.append(cr);
+ for(const [sym] of assets){const b=document.createElement('div');b.className='card';b.textContent=sym+' · '+fmt(holdings.get(sym)||0,12);wallet.append(b);}
+ const history=el('withdraw-history');history.replaceChildren();
+ if(!withdrawals.length){history.textContent='Todavía no hay retiros simulados.';return;}
+ const list=document.createElement('ol');
+ for(const w of withdrawals){const li=document.createElement('li');li.textContent=w.id+' · '+fmt(w.amount,12)+' '+w.symbol+' → '+w.destination+' · CONFIRMADO (SIMULADO)';list.append(li);}history.append(list);
+}
+function render(){
+ el('fees-total').textContent=fmt(commissionTotal,4)+' CR';
+ el('spread-total').textContent=fmt(spreadTotal,4)+' CR';
+ el('remaining').textContent=fmt(remaining,4)+' CR';
+ renderWallet();
+ el('ledger').replaceChildren();
+ if(!entries.length){el('ledger').textContent='Sin conversiones simuladas.';return;}
+ const list=document.createElement('ol');
+ entries.forEach(e=>{const li=document.createElement('li');li.textContent=fmt(e.amount)+' CR → '+fmt(e.netAsset,12)+' '+e.symbol+' · comisión '+fmt(e.feeCr,4)+' CR · spread '+fmt(e.spreadCr,4)+' CR';list.append(li);});
+ el('ledger').append(list);
+}
+['amount','spread','fee','asset'].forEach(id=>el(id).addEventListener('input',quote));
+el('simulate').addEventListener('click',()=>{const q=quote();if(!q)return;remaining=Number((remaining-q.amount).toFixed(8));commissionTotal+=q.feeCr;spreadTotal+=q.spreadCr;entries.push(q);holdings.set(q.symbol,(holdings.get(q.symbol)||0)+q.netAsset);render();quote();});
+el('clear').addEventListener('click',()=>{remaining=100000000;commissionTotal=0;spreadTotal=0;entries=[];holdings.clear();assets.forEach(([sym])=>holdings.set(sym,0));withdrawals.length=0;render();quote();});
+assets.forEach(([sym,name])=>el('withdraw-asset').add(new Option(name+' · '+sym,sym)));
+el('withdraw-asset').add(new Option('Créditos · CR','CR'));
+el('withdraw-submit').addEventListener('click',()=>{
+ const symbol=el('withdraw-asset').value,amount=Number(el('withdraw-amount').value),destination=el('withdraw-destination').value.trim();
+ const available=symbol==='CR'?remaining:(holdings.get(symbol)||0);
+ const precision=symbol==='CR'?4:(symbol==='BTC'||symbol==='ETH'?8:6);
+ const unit=10**precision;
+ const atomic=Math.round(amount*unit),availableAtomic=Math.floor(available*unit+1e-6);
+ const message=el('withdraw-message');
+ if(!destination||!Number.isSafeInteger(atomic)||atomic<=0||atomic>availableAtomic||Math.abs(atomic/unit-amount)>1e-9){
+  message.textContent='Revisá el destino ficticio, el saldo disponible y la precisión del activo.';return;
+ }
+ const finalAmount=atomic/unit;
+ if(symbol==='CR')remaining=Number((remaining-finalAmount).toFixed(4));
+ else holdings.set(symbol,Number((available-finalAmount).toFixed(precision)));
+ const id='SIM-WD-'+String(withdrawals.length+1).padStart(5,'0');
+ withdrawals.unshift({id,symbol,amount:finalAmount,destination});
+ message.textContent=id+' · Envío simulado confirmado. Saldo descontado: '+fmt(finalAmount,12)+' '+symbol+'.';
+ render();quote();
+});
+render();quote();
+})();
+</script>
+</body></html>
