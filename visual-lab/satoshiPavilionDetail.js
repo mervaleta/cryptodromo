@@ -10,7 +10,7 @@
  * This is an original interpretation, not a replica.
  */
 export const PAVILION_DETAIL_BOUNDS=Object.freeze({
- minX:-35.5,maxX:35.5,minY:1.16,maxY:23.4,minZ:-4.6,maxZ:14.6
+ minX:-35.5,maxX:35.5,minY:1.16,maxY:23.4,minZ:-5.2,maxZ:14.6
 });
 export const PAVILION_DETAIL_ID='satoshi-vip-architecture-20261105-v1';
 
@@ -60,7 +60,7 @@ export function createSatoshiPavilionDetail({THREE,parent,quality='balanced'}={}
   object.computeBoundingSphere();
   group.add(object);meshGroups.push(object);return object;
  }
- const stoneParts=[],ivoryParts=[],metalParts=[],glassParts=[],glowParts=[];
+ const stoneParts=[],ivoryParts=[],metalParts=[],bronzeParts=[],glassParts=[],glowParts=[];
  const columns=[],caps=[],roofSeams=[],dentils=[],balusters=[];
  const add=(array,x,y,z,w,h,d,rot=0,pitch=0,roll=0)=>{
   array.push([x,y,z,w,h,d,rot,pitch,roll]);
@@ -128,13 +128,14 @@ export function createSatoshiPavilionDetail({THREE,parent,quality='balanced'}={}
  for(const x of [-34,-9,9,34]){
   add(glowParts,x,5.0,5.04,.36,.77,.21);
  }
- function bronzeStrip(){return metalParts;}
+ function bronzeStrip(){return bronzeParts;}
  function ironParts(){return metalParts;}
  batch('Structure · ground floor and balcony',stoneParts,boxGeometry,stone);
  batch('Structure · limestone trim and architraves',ivoryParts,boxGeometry,ivory);
  batch('Structure · arcade columns',columns,columnGeometry,stone);
  batch('Structure · capitals and bases',caps,boxGeometry,bronze);
  batch('Structure · portal and rail hardware',metalParts,boxGeometry,iron);
+ batch('Structure · gilded arch accents',bronzeParts,boxGeometry,bronze);
  batch('Structure · recessed glass and doors',glassParts,boxGeometry,glass);
  batch('Detail · crown dentils',dentils,boxGeometry,ivory,ornament);
  batch('Detail · copper roof seams',roofSeams,boxGeometry,bronze,ornament);
