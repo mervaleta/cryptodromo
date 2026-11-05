@@ -10,6 +10,8 @@ on:
       - 'tests/stadium-live-integration.mjs'
       - 'visual-lab/scene.js'
       - 'visual-lab/stadiumDistrict.js'
+      - 'visual-lab/pavilionPlacement.js'
+      - 'tests/muybridge-clubhouse-clearance.mjs'
       - 'visual-lab/index.html'
       - 'docs/stadium/**'
       - '.github/workflows/stadium-check.yml'
@@ -42,9 +44,12 @@ jobs:
           node --check estadio/estadio.js
           node --check visual-lab/scene.js
           node --check visual-lab/stadiumDistrict.js
+          node --check visual-lab/pavilionPlacement.js
           node --check race-lab/source/src/stadium/presets.js
           node --check race-lab/source/src/stadium/venue.js
           node --check race-lab/source/src/stadium/surfaces.js
+      - name: Validate Muybridge clubhouse geometry against every racing course
+        run: node --experimental-default-type=module --test tests/muybridge-clubhouse-clearance.mjs
       - name: Build race application
         working-directory: race-lab/source
         run: |
