@@ -40,7 +40,7 @@ test('building, forecourt and signs all move together, finish line stays indepen
  assert.match(scene,/box\(93,1\.35,27,0,PAVILION_FOUNDATION_Y,-78,C\.concrete,pavilion\)/);
  assert.match(scene,/box\(105,\.35,11,0,1\.15,-68,C\.stone,pavilion\)/);
  assert.match(scene,/vip\.position\.set\(0,0,-78\);pavilion\.add\(vip\)/);
- assert.match(scene,/sign\('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18\.2,-72,64,4\.7,pavilion\)/);
+ assert.match(scene,/sign\('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,7\.7,-67\.5,42,1\.65,pavilion\)/);
  assert.match(scene,/sign\('PISTA EADWEARD MUYBRIDGE',0,3\.1,-36,52,3\.0,pavilion\)/);
  assert.match(scene,/const finishSign=sign\('META · FINISH',VISUAL_FINISH_X,13\.0,-3,18,2\.5\)/);
  assert.match(scene,/finishSign\.visible=mode==='straight'/);
