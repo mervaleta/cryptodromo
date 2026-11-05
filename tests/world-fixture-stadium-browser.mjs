@@ -29,8 +29,17 @@ try {
   assert.ok((await page.locator('#world-results').innerText()).includes('Estadio MERVAL'));
   await page.screenshot({path:'artifacts/world-fixture-mundial.png',timeout:30000});
   assert.ok(responses.length>=3,'browser must fetch MIME-safe entrypoint + engine');
-  for(const r of responses){assert.equal(r.status,200,JSON.stringify(r));
-    assert.match(r.mime,/javascript|ecmascript/,JSON.stringify(r));}
+  // Chromium may return 304 for the second venue after a successful 200
+  // on the first page. That is a valid browser-cache revalidation.
+  for(const kind of ['ui','engine']){
+    assert.ok(responses.some(r=>r.url.includes('stadium-network-'+kind+'.js')&&
+      r.status===200&&/javascript|ecmascript/.test(r.mime)),
+      'At least one 200 with JS MIME is required for '+kind+': '+JSON.stringify(responses));
+  }
+  for(const r of responses){
+    assert.ok(r.status===200||r.status===304,JSON.stringify(r));
+    if(r.status===200)assert.match(r.mime,/javascript|ecmascript/,JSON.stringify(r));
+  }
   assert.deepEqual(errors,[],'world-browser-errors: '+errors.join('; '));
   console.log('WORLD_MODULES_OK',JSON.stringify(responses));
   await page.close();

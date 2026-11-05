@@ -9,7 +9,7 @@ const check=date=>allLiveTracks(new Date(date)).map(projectChannelCountdown);
 test('Satoshi stadium landing has dedicated venue clocks and no TV iframe controller',()=>{
  const page=read('stadiums/crypto/index.html');
  const controller=read('assets/crypto-stadium-clocks.js');
- assert.match(page,/src="\/assets\/crypto-stadium-clocks\.js\?v=satoshi-venue-clocks-20261104-v1"/);
+ assert.match(page,/src="\/assets\/crypto-stadium-clocks\.js\?v=copy-clean-20261105-v1"/);
  assert.doesNotMatch(page,/src="\/assets\/crypto-venue\.js/);
  assert.equal((page.match(/data-countdown/g)||[]).length,3);
  assert.equal((page.match(/data-track="(?:muybridge|genesis|vint-cerf)"/g)||[]).length,3);
