@@ -45,16 +45,16 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   const f=(index+.33+.22*seed)/count;
   const tail=!mane;
   const isMain=tier===0;
-  const rootY=mane?(-.0291+.0172*f):(.0188+.0009*(seed-.5));
-  const rootZ=mane?(.0411-.0053*f):(.0320+.0005*(secondary-.5));
+  const rootY=mane?(-.0291+.0172*f):(.01735+.00048*(seed-.5));
+  const rootZ=mane?(.0411-.0053*f):(.03072+.00038*(secondary-.5));
   const maneSkin=mane?bindMane(f):null;
   // A deliberate silhouette change: full athletic crest and a long weighted
   // tail, rather than the short V5 tubes. All lengths remain in GLB rest space.
   const length=(mane?
-    (.0130+.0042*Math.sin(PI*f))*(.88+.26*seed)*maneSize:
+    (.0108+.00325*Math.sin(PI*f))*(.88+.26*seed)*maneSize:
     (.0255+.0060*seed)*tailSize)*(isMain?1:.80);
-  const vWidth=(mane?.00073:.00091)*(isMain?1:.50)*(.79+.30*seed);
-  const dWidth=vWidth*(mane?.52:.58);
+  const vWidth=(mane?.00063:.00086)*(isMain?1:.50)*(.79+.30*seed);
+  const dWidth=vWidth*(mane?.56:.60);
   if(mane){if(isMain)quality.majorMane++;else quality.detailMane++;}
   else{if(isMain)quality.majorTail++;else quality.detailTail++;}
   const start=positions.length/3;
@@ -124,10 +124,10 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
  geometry.setAttribute('silkStrand',new THREE.Float32BufferAttribute(ids,1));
  geometry.computeVertexNormals();geometry.computeBoundingSphere();
  const material=new THREE.MeshPhysicalMaterial({
-  color,vertexColors:true,roughness:pass>=6?.55:.65,
-  sheen:pass>=6?.76:.70,metalness:0,
+  color,vertexColors:true,roughness:pass>=6?.67:.73,
+  sheen:pass>=6?.56:.50,metalness:0,
   sheenColor:new THREE.Color('#a98168'),sheenRoughness:.57,
-  clearcoat:.055,clearcoatRoughness:.69,
+  clearcoat:.032,clearcoatRoughness:.78,
   side:THREE.DoubleSide,shadowSide:THREE.DoubleSide
  });
  material.onBeforeCompile=shader=>{
@@ -154,9 +154,9 @@ export function createBTCSilkShell(source,{pass=10,maneSize=1.22,tailSize=1.16,c
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
    '#include <common>\nvarying vec3 vBTCSilk;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-   '#include <color_fragment>\nfloat striae=sin(vBTCSilk.y*23.7+vBTCSilk.x*91.0)*sin(vBTCSilk.y*8.2+vBTCSilk.x*37.0);\ndiffuseColor.rgb*=mix(.58,1.075,smoothstep(.0,.47,vBTCSilk.x))*(.970+.055*striae);');
+   '#include <color_fragment>\nfloat striae=sin(vBTCSilk.y*23.7+vBTCSilk.x*91.0)*sin(vBTCSilk.y*8.2+vBTCSilk.x*37.0);\ndiffuseColor.rgb*=mix(.70,1.075,smoothstep(.0,.47,vBTCSilk.x))*(.970+.055*striae);');
  };
- material.customProgramCacheKey=()=>String(pass)+'|btc-silk-shell-v5';
+ material.customProgramCacheKey=()=>String(pass)+'|btc-silk-shell-v5-luxury-v2';
  const mesh=new THREE.SkinnedMesh(geometry,material);
  mesh.name='BTC V5 continuous silky lock masses';
  mesh.frustumCulled=false;mesh.castShadow=true;mesh.receiveShadow=true;

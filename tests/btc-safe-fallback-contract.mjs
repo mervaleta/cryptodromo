@@ -15,6 +15,6 @@ test('public BTC shows rigged V5 on native GLB, Maya is explicit opt-in',()=>{
  assert.doesNotMatch(master,/const face=createBTCMayaFaceDetails\(best/);
  assert.match(master,/globes:0,eyeRadius:0/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- assert.equal(manifest.buildId,'btc-restore-v5-hair-gallop-20261105-v1');
- assert.equal(manifest.status,'needs_visual_qa');
+ assert.equal(manifest.buildId,'btc-v5-luxury-profile-20261105-v2');
+ assert.equal(manifest.status,'pending_deploy');
 });
