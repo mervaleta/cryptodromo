@@ -137,3 +137,9 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Nuca: máscara suave de pesos hacia el hueso original Head en cresta occipital y borde de órbita, basada en la rama del PR #100; no añade props ni modifica clips.
 - Terreno de la ficha: impresiones reducidas a 32% y máximo de 36 marcas; los defaults del estadio no cambian.
 - Cadena de cachés y ficha `/racers/#BTC` actualizadas a versión v13. Pruebas y capturas todavía necesarias. Estado `pending_deploy`, no `verified` ni `AAA`.
+
+## 2026-11-05 · `btc-maya-safety-original-20261105-v1` · control de calidad por captura del usuario
+- Capturas de producción aportadas muestran iris y componentes oculares flotantes y deformaciones severas en muslo, babilla y corvejón. No marcar esta anatomía como AAA.
+- Referencias veterinarias sobre la secuencia grupa/babilla/pierna/corvejón confirman que el corte abrupto no corresponde a una articulación real. La transferencia espacial desde un rig Quaternius a la superficie Maya no demuestra un skinning aceptable.
+- **Medida inmediata en la ficha `/racers/#BTC`:** render predeterminado = modelo GLB original con su skinning y Gallop intactos; modelo Maya deja de ser el render principal, disponible únicamente con `?btcMaster=maya` para diagnóstico. Se retiraron sus overlays de esfera ocular/pupila/lagrimal flotantes.
+- **Estado:** `needs_fix`: es un rollback anatómico seguro, no una solución completa del rig Maya ni mejora AAA. Restaurar Maya sólo después de 16 fases verificadas visualmente desde perfil, frente y atrás, con volumen y articulaciones correctas.
