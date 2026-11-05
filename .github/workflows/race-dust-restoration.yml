@@ -53,3 +53,48 @@ jobs:
           trap 'kill $server_pid || true' EXIT
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8799/ >/dev/null && break; sleep 1; done
           node tests/race-dust-browser.mjs
+
+  production:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - name: Verify real Hostinger race JS restored original dust, not stale cache
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const base='https://race.cryptodromo.com';
+          const marker='scene.js?v=broadcast-aaa-20261105-v1-racedust2';
+          const sceneUrl=base+'/visual-lab/'+marker;
+          const entries=['/visual-lab/index.html','/stadiums/crypto/broadcast/index.html'];
+          const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+          let failures=[];
+          for(let attempt=1;attempt<=8;attempt++){
+            failures=[];
+            for(const path of entries){
+              try{
+                const response=await fetch(base+path+'?dust-release='+attempt,{
+                  headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(20000)
+                });
+                const html=await response.text();
+                if(response.status!==200||!html.includes(marker)){
+                  failures.push(path+': HTTP '+response.status+'; stale scene HTML');
+                }
+              }catch(error){failures.push(path+': '+error.message)}
+            }
+            try{
+              const response=await fetch(sceneUrl,{headers:{'Cache-Control':'no-cache'},
+                signal:AbortSignal.timeout(20000)});
+              const js=await response.text();
+              if(response.status!==200||!js.includes("dust.name='Broadcast · original trailing gallop dust'")||
+                !js.includes('hoofFX.marks.visible=false')||!js.includes('dust.visible=true')){
+                failures.push('visual-lab scene: stale source, missing plume or hoof stain fix');
+              }
+            }catch(error){failures.push('visual-lab scene: '+error.message)}
+            if(failures.length===0)break;
+            console.log('Deploy check',attempt,failures.join('; '));
+            if(attempt<8)await sleep(13000);
+          }
+          assert.deepEqual(failures,[],'Hostinger did not deploy restored race dust');
+          console.log('PASS HOSTINGER GALL0P DUST: live + lab use new source, plume restored, ground stains hidden');
+          JS
