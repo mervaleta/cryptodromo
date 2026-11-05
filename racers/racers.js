@@ -211,6 +211,7 @@ import(previewModule).then(({createPreview})=>{
   preview.setTerrainWetness?.(Number($('#btc-terrain-wetness')?.value||0)/100);
   window.__cryptodromoBTCAtelierQA=()=>preview?.snapshot?.()||null;
   window.__cryptodromoBTCAtelierSetStage=n=>preview?.setStage?.(n);
+  window.__cryptodromoBTCAtelierSetPose=n=>preview?.setPose?.(n);
  }
  $('#preview-state').textContent=btcAtelier?'BTC · HERO V5 · CRIN Y COLA 3D · GALOPE NATIVO':'MODELO 3D ANIMADO · SIN JOCKEY';
 }).catch(error=>{
