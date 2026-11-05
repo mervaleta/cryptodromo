@@ -48,6 +48,14 @@ test('users system: complete HTTP flow against a real SQLite database', {skip:!h
    r=await alice.call('register',{email:'alice@example.test',alias:'corredora_1',password:'correct horse battery 2026'});
    assert.equal(r.status,201,JSON.stringify(r.body));assert.equal(r.body.user.alias,'corredora_1');
    assert.equal(r.body.user.email_verified,false);assert.equal(r.body.verification_email_sent,false);
+   r=await alice.call('notifications');assert.equal(r.status,200);
+   assert.equal(r.body.notifications[0].kind,'register','Welcome notification must come from a real account event');
+   const noticeId=Number(r.body.notifications[0].id);
+   r=await alice.call('read_notification',{id:noticeId});assert.equal(r.status,200);
+   r=await alice.call('notifications');assert.ok(r.body.notifications[0].read_at);
+   const badCsrf=await fetch(base+'favorite',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({symbol:'BTC',enabled:true})});
+   assert.equal(badCsrf.status,403,'Mutations require a session CSRF token');
    r=await alice.call('bootstrap');assert.equal(r.body.user.email,'alice@example.test');
    r=await alice.call('favorite',{symbol:'BTC',enabled:true});assert.equal(r.status,200,JSON.stringify(r.body));
    r=await alice.call('favorite',{symbol:'NOT-A-HORSE',enabled:true});assert.equal(r.status,400);
