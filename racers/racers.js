@@ -41,6 +41,7 @@ const btcAtelier=atelierMode==='btc'||(atelierMode!=='off'&&selected.symbol==='B
 document.body.classList.toggle('btc-hair-preview',btcAtelier);
 // Normal BTC profile uses the sculpted horse; ?btcMaster=v5 retains the legacy study.
 const requestedBTCMaster=new URLSearchParams(location.search).get('btcMaster');
+document.body.classList.toggle('btc-maya-debug',requestedBTCMaster==='maya');
 // Until Maya's hind-leg skinning is repaired, show the intact native rig by default.
 let atelierVariant=requestedBTCMaster==='maya'?'maya':requestedBTCMaster==='v5'?'enhanced':'original';
 let btcRevision=null;
