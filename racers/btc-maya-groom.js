@@ -16,7 +16,7 @@ const TOPLINE=[
  [-.021,.04317],[-.018,.04159],[-.015,.03912],
  [-.012,.03743],[-.009,.03609],[-.006,.03489],[-.003,.03406]
 ];
-function crest(y) {
+function fallbackCrest(y) {
  if(y<=TOPLINE[0][0])return TOPLINE[0][1];
  for(let i=1;i<TOPLINE.length;i++){
   const a=TOPLINE[i-1],b=TOPLINE[i];
@@ -27,6 +27,37 @@ function crest(y) {
  }
  return TOPLINE.at(-1)[1];
 }
+
+/** V18: anchor the groom to the POST-SCULPTED Maya scalp, not a hand
+ * drawn centerline from an earlier version. The original curve remains
+ * as a clamped fallback when no upper-surface vertices are found. */
+function measureSculptedCrest(geometry){
+ const position=geometry?.getAttribute('position');
+ if(!position)return fallbackCrest;
+ const count=26,start=-.0290,end=-.0030,offset=[];
+ for(let step=0;step<=count;step++){
+  const y=start+(end-start)*step/count,baseline=fallbackCrest(y);
+  const values=[];
+  for(let i=0;i<position.count;i++){
+   const x=position.getX(i),py=position.getY(i),z=position.getZ(i);
+   if(Math.abs(x)>.00102||Math.abs(py-y)>.0013||z<baseline-.0026||z>baseline+.0019)continue;
+   values.push(z);
+  }
+  values.sort((a,b)=>b-a);
+  if(values.length<3){offset.push(0);continue;}
+  const best=values.slice(0,Math.min(8,values.length));
+  const avg=best.reduce((a,b)=>a+b,0)/best.length;
+  offset.push(clamp(avg-baseline,-.00025,.00075));
+ }
+ const filtered=offset.map((v,i)=>(offset[Math.max(0,i-1)]+v*2+
+  offset[Math.min(count,i+1)])/4);
+ return y=>{
+  const v=clamp((y-start)/(end-start),0,1)*count;
+  const a=Math.min(count-1,Math.floor(v)),t=smooth(v-a);
+  return fallbackCrest(y)+filtered[a]*(1-t)+filtered[a+1]*t;
+ };
+}
+
 function attach(source,geometry,material,name){
  const mesh=new THREE.SkinnedMesh(geometry,material);
  mesh.name=name;
@@ -40,8 +71,9 @@ function attach(source,geometry,material,name){
  return mesh;
 }
 function createHairMass(source,skinAt,{
- tail,majorCount,fineCount,size,color,motion,scalpColor
+ tail,majorCount,fineCount,size,color,motion,scalpColor,scalpGeometry
 }){
+ const crest=measureSculptedCrest(scalpGeometry);
  const positions=[],colors=[],tip=[],ids=[],region=[],zones=[],bones=[],weights=[],indices=[];
  // More independent roots, fewer segments/card: better silhouette and lower GPU cost.
  const ROWS=20,SIDES=6; // 16.7% fewer rings: preserve rounded 6-sided silhouette
@@ -76,7 +108,8 @@ function createHairMass(source,skinAt,{
   const root=tail?
    [(seed-.5)*.00056,.01472+.00084*crossSeed,.03195-.00047*seed]:
    forelock?
-    [side*(.00010+.00025*seed),-.02765+.00070*f,.04575-.00010*seed]:
+    [side*(.00010+.00025*seed),-.02765+.00070*f,
+     crest(-.02765+.00070*f)+.00022]:
    crown?
     [side*(.00010+.00034*crossSeed),-.02755+.00310*f,
      crest(-.02755+.00310*f)+.00022]:
@@ -84,14 +117,30 @@ function createHairMass(source,skinAt,{
     [side*.00013,-.02635+.01510*f,crest(-.02635+.01510*f)+.00016]:
     [side*.00011,-.02625+.02185*f,crest(-.02625+.02185*f)+.00012];
   // The crown shares Head weights with the forelock: no visible separation when nodding.
-  const sk=(forelock||crown)?
-   {joints:[headJoint,0,0,0],weights:[1,0,0,0]}:
-   skinAt(...root);
+  const baseSkin=skinAt(...root);
+  // Forelock stays with Head; the crown gradually shares the EXACT skin
+  // joints of the neck/root area. Full Head-weight for the entire crown
+  // caused the back half to dive into the nape during head nods.
+  let sk=baseSkin;
+  if(forelock){
+   sk={joints:[headJoint,0,0,0],weights:[1,0,0,0]};
+  }else if(crown){
+   const headShare=.90*smooth((-.0225-root[1])/.0047);
+   const contributions=new Map([[headJoint,headShare]]);
+   for(let k=0;k<4;k++){
+    const index=baseSkin.joints[k],w=(1-headShare)*baseSkin.weights[k];
+    if(w>1e-7)contributions.set(index,(contributions.get(index)||0)+w);
+   }
+   const ranked=[...contributions].sort((a,b)=>b[1]-a[1]).slice(0,4);
+   const sum=ranked.reduce((acc,p)=>acc+p[1],0)||1;
+   sk={joints:Array.from({length:4},(_,i)=>ranked[i]?.[0]||0),
+    weights:Array.from({length:4},(_,i)=>(ranked[i]?.[1]||0)/sum)};
+  }
   const id=++strandCount;
   // Physically plausible hair: shorter layered crest, tapered fine fibers and
   // a weighted tail fan. Previous groom was an oversized solid brown curtain.
   const length=(forelock
-   ?(major?.00155+.00052*seed:.00110+.00065*seed)
+   ?(major?.00255+.00070*seed:.00190+.00065*seed)
    :crown
     ?(major?.00255+.00125*seed:.00210+.00105*seed)
    :hero
@@ -134,7 +183,7 @@ function createHairMass(source,skinAt,{
     // True short forelock between the pinnae, rooted to the existing head
     // and tapered downward onto the forehead, not a mesh glued in screen space.
     x=root[0]+side*(.00015+.00018*seed)*t2;
-    y=root[1]-(.00060+.00020*seed)*t;
+    y=root[1]-(.00110+.00045*seed)*(t*.55+.45*t2);
     z=root[2]-length*(.72*t+.28*t2);
     if(ribbon===0)x+=cross*breadth*.55*w;
     else y+=cross*breadth*.35*w;
@@ -277,7 +326,7 @@ function createHairMass(source,skinAt,{
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
    '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.022;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\nfloat hairBand=sin(vMayaHairRest.y*9300.+vMayaHairRest.z*11200.+vMayaHair.y*4.3);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.055*btcCuticle+.027*btcFineCoat+.036*hairBand,.82,1.16);');
  };
- mat.customProgramCacheKey=()=>tail?'btc-tail-mp4-inertia-v17':'btc-mane-forelock-mp4-inertia-v17';
+ mat.customProgramCacheKey=()=>tail?'btc-tail-mp4-inertia-v18':'btc-mane-forelock-poll-skin-v18';
  const scalpMat=null;
  const mesh=attach(source,geo,mat,
   tail?'BTC Maya rooted long tail':'BTC Maya natural rooted flowing mane');
@@ -285,15 +334,15 @@ function createHairMass(source,skinAt,{
 }
 
 export function createMayaGroom(source,skinAt,{
- maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e',scalpColor
+ maneSize=1,tailSize=1,maneColor='#36231e',tailColor='#30211e',scalpColor,scalpGeometry
 }={}){
  const motion={time:{value:0},wind:{value:1},gait:{value:0},tailInertia:{value:0},
   maneInertia:{value:0},forelockInertia:{value:0}};
  let lastPhase=0,tailVelocity=0,maneVelocity=0,forelockVelocity=0;
  const mane=createHairMass(source,skinAt,{tail:false,majorCount:112,fineCount:480,
-  size:clamp(maneSize,.6,1.9),color:maneColor,motion,scalpColor});
+  size:clamp(maneSize,.6,1.9),color:maneColor,motion,scalpColor,scalpGeometry});
  const tail=createHairMass(source,skinAt,{tail:true,majorCount:144,fineCount:500,
-  size:clamp(tailSize,.6,1.9),color:tailColor,motion});
+  size:clamp(tailSize,.6,1.9),color:tailColor,motion,scalpGeometry});
  let disposed=false;
  return {
   locks:mane.locks+tail.locks,
