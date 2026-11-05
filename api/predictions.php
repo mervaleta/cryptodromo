@@ -37,7 +37,7 @@ try {
         if($action==='races') {
             predictionsRespond(200,['status'=>'success','simulation'=>true,
                 'notice'=>'Pronósticos con créditos ficticios sin valor ni canje.',
-                'races'=>$service->upcoming(time()),
+                'races'=>$service->upcoming(time()),'server_time'=>time(),
                 'multipliers'=>['winner'=>4,'podium'=>25,'exacta'=>30,'trifecta'=>150]]);
         }
         $user=predictionsSessionUser();
