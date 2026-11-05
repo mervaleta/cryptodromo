@@ -1,4 +1,4 @@
-name: Predictions fixture: materialize and verify official Alpha19
+name: "Predictions fixture: materialize and verify official Alpha19"
 on:
   push:
     branches: [feat/predictions-virtual-ledger-20261105]
