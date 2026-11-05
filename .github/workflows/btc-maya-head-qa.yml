@@ -6,6 +6,7 @@ on:
       - 'racers/experiments/maya-head-graft.js'
       - 'tests/fixtures/btc-maya-head-preview.html'
       - 'tests/btc-maya-head-only-browser.mjs'
+      - 'tests/btc-maya-head-rig-contract.mjs'
       - '.github/workflows/btc-maya-head-qa.yml'
   workflow_dispatch:
 permissions:
@@ -22,11 +23,14 @@ jobs:
         run: |
           node --check racers/experiments/maya-head-graft.js
           node --check tests/btc-maya-head-only-browser.mjs
+          node --check tests/btc-maya-head-rig-contract.mjs
           node --test tests/btc-master-change-policy.mjs
       - name: Install Chromium with software WebGL fallback
         run: |
-          npm install --no-save --no-package-lock playwright@1.58.2
+          npm install --no-save --no-package-lock playwright@1.58.2 three@0.187.0
           npx playwright install chromium --with-deps
+      - name: Prove original 50-bone skin, all 16 poses and reversibility from actual Maya 2017 source
+        run: node --test tests/btc-maya-head-rig-contract.mjs
       - name: Render the actual Maya-source head on original native GLB Gallop
         run: |
           python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-head-qa-http.log 2>&1 &
