@@ -338,6 +338,11 @@ const trackFX=createTrackSurfaceEffects(scene,{start:VISUAL_START_X,finish:VISUA
 // Terrain collisions are pure VFX. Keep legacy puddle/wetness, hide fake prints.
 trackFX.marks.visible=false;trackFX.shadows.visible=false;
 const hoofFX=createHoofTerrainFX(scene,{lanes:12,quality:softwareGPU?'eco':mobile?'balanced':'cinematic'});
+// Restore the original race dust plume. Hoof FX still computes contact events
+// and transient grit, but its persistent dark ground decals are unsuitable for
+// the broadcast: on-screen they look like artificial stains, not gallop dust.
+hoofFX.marks.visible=false;
+hoofFX.shadows.visible=false;
 const alternateTracks=createAlternativeTracks(scene,earth,C.rail);
 let layoutMode=selectedTrack?.layout||'straight';
 const trackSplitMarkers=createSplitTrackMarkers({THREE,scene,trackPoint,initialLayout:layoutMode});
@@ -359,6 +364,16 @@ function applyScenery(){
  liveDistrict.setQuality(quality);liveVillage.setQuality(quality);
  stadiumDensity.setQuality(quality);
 }
+// Original per-peloton dust cloud (pre Nov 4 hoof-imprint replacement).
+// Purely visual: follows rendered horse roots, NEVER official positions/results.
+const dustN=softwareGPU?110:mobile?160:450,dustData=new Float32Array(dustN*3);
+const dustGeo=new THREE.BufferGeometry();
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustData,3));
+const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({
+ color:0xe4c69a,size:.23,transparent:true,opacity:.58,depthWrite:false
+}));
+dust.name='Broadcast · original trailing gallop dust';
+dust.visible=false;scene.add(dust);
 const rainN=softwareGPU?260:mobile?450:1050,rainPos=new Float32Array(rainN*3),rr=seeded(624);
 for(let i=0;i<rainN;i++){rainPos[i*3]=(rr()-.5)*820;rainPos[i*3+1]=rr()*32;rainPos[i*3+2]=(rr()-.5)*130;}
 const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPos,3));
@@ -897,6 +912,7 @@ function applyQualityPreset(next){
  const audienceCount=Math.max(120,Math.min(crowdN,Math.floor(crowdN*p.crowdFactor)));
  for(const inst of crowds)inst.count=audienceCount;
  hoofFX.setQuality(next);
+ dustGeo.setDrawRange(0,Math.max(20,Math.floor(dustN*p.particleFactor)));
  rainGeo.setDrawRange(0,Math.max(70,Math.floor(rainN*p.particleFactor)));
  if(!softwareGPU){
   const shadowSize=p.shadowResolution;
@@ -1154,7 +1170,21 @@ function adjustCamera(dt){
  camera.lookAt(cameraFocus);
 }
 function particles(dt){
- // Keep rain from the original weather render; terrain debris is in hoofFX.
+ // Keep the original visible airborne dirt/sand plume BEHIND the peloton.
+ // Ground-stain decals stay hidden; true hoof collisions still emit fine grit.
+ if(running&&horses.length){
+  const attr=dustGeo.attributes.position;
+  for(let i=0;i<dustN;i++){
+   const h=horses[i%horses.length],r=seeded(i*13+Math.floor(elapsed*15));
+   const direction=trackPoint(layoutMode,h.progress,h.index);
+   const trail=1+r()*7,lateral=(r()-.5)*1.3;
+   attr.setXYZ(i,h.model.root.position.x-direction.tangentX*trail+direction.sideX*lateral,
+     r()*.40,h.model.root.position.z-direction.tangentZ*trail+direction.sideZ*lateral);
+  }
+  attr.needsUpdate=true;dust.visible=true;
+  dust.material.opacity=weatherSelect.value==='rain'?.08:
+   (trackType.value==='grass'?.14:trackType.value==='synthetic'?.08:.48);
+ }else dust.visible=false;
  if(rain.visible){const attr=rainGeo.attributes.position;for(let i=0;i<rainN;i++){
   let y=attr.getY(i)-dt*25;
   if(y<0)y=29;attr.setY(i,y);
@@ -1387,6 +1417,8 @@ if(new URLSearchParams(location.search).get('finish-qa')==='alpha06'){
 if(new URLSearchParams(location.search).get('hoof-qa')==='1'){
  window.__cryptodromoHoofQA=Object.freeze({snapshot:()=>Object.freeze({
   ...hoofFX.stats,running,elapsed,horseRenderer:horseEngineMode,layout:layoutMode,
+  raceDustVisible:dust.visible,raceDustCount:dustGeo.drawRange.count===Infinity?dustN:dustGeo.drawRange.count,
+  visibleGroundStains:hoofFX.marks.visible||hoofFX.shadows.visible,
   officialRanking:officialRanking(profiles).map(e=>e.entry?.symbol||e.symbol)
  })});
 }
@@ -1405,7 +1437,7 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
    })
  });
 }
-window.addEventListener('pagehide',()=>hoofFX.dispose(),{once:true});
+window.addEventListener('pagehide',()=>{hoofFX.dispose();dustGeo.dispose();dust.material.dispose();}, {once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
 bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
