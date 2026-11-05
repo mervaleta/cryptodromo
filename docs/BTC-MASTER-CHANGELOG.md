@@ -143,3 +143,11 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Referencias veterinarias sobre la secuencia grupa/babilla/pierna/corvejón confirman que el corte abrupto no corresponde a una articulación real. La transferencia espacial desde un rig Quaternius a la superficie Maya no demuestra un skinning aceptable.
 - **Medida inmediata en la ficha `/racers/#BTC`:** render predeterminado = modelo GLB original con su skinning y Gallop intactos; modelo Maya deja de ser el render principal, disponible únicamente con `?btcMaster=maya` para diagnóstico. Se retiraron sus overlays de esfera ocular/pupila/lagrimal flotantes.
 - **Estado:** `needs_fix`: es un rollback anatómico seguro, no una solución completa del rig Maya ni mejora AAA. Restaurar Maya sólo después de 16 fases verificadas visualmente desde perfil, frente y atrás, con volumen y articulaciones correctas.
+
+## 2026-11-05 · Referencia Three.js `webgl_morphtargets_horse` · diagnóstico de locomoción
+- El usuario aclara que el archivo Maya sólo era referencia anatómica, **nunca** la malla obligatoria de producción. Se usará la anatomía de referencia para evaluar el caballo de Cryptódromo.
+- Three.js muestra `Horse.glb` con GLTFLoader + `AnimationMixer` sobre una animación importada. El movimiento y las formas se evalúan como una secuencia authored, no a partir de rotaciones manuales independientes.
+- Cryptódromo ya tiene un clip `Gallop` original, pero `race-lab/source/src/gaitRefiner.js` agrega correcciones de rotación a patas delanteras y traseras. Para aislar posibles sobrecorrecciones, **sólo el visor BTC** pasa `gaitCorrectionStrength:0` a `createHorse`; los corredores del estadio conservan el valor por defecto `.40`.
+- Los `morph targets` de Horse.glb no se pueden trasplantar a otra malla con distinta topología sin correspondencia de vértices y una nueva secuencia de poses; no son un arreglo automático de las ancas. Antes de transferir cualquier sistema, cotejar las 16 fases de galope contra imágenes reales y los 4 apoyos.
+- Conserva la cuarentena del modelo Maya defectuoso del PR #107 y la desactivación de sus piezas oculares flotantes. Este cambio no representa aprobación estética AAA.
+- Fuente: https://github.com/mrdoob/three.js/blob/dev/examples/webgl_morphtargets_horse.html
