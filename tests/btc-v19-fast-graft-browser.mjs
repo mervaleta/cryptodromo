@@ -9,7 +9,7 @@ try{
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>window.__btcHeadQA?.snapshot()?.headRealMaya&&window.__btcHeadQA?.snapshot()?.drawCalls>0,null,{timeout:120000});
  const state=await page.evaluate(()=>window.__btcHeadQA.snapshot());
- assert.equal(state.head.build,'btc-v19-native-gallop-maya-face-stitch-20261105');
+ assert.equal(state.head.build,'btc-v19b-native-neck-continuity-20261105');
  assert.ok(state.head.mayaHeadVertices>1500&&state.head.mayaHeadTriangles>3000);
  for(const view of ['profile','threeQuarter','detail']){
   await page.evaluate(view=>{window.__btcHeadQA.setCamera(view);window.__btcHeadQA.setPose(8);},view);
