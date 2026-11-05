@@ -8,11 +8,92 @@ import * as THREE from 'three';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCSilkShell} from './btc-silk-shell-v5.js?v=btc-silk-shell-v5-20261103';
 export const BTC_HERO_V5='btc-v5-motion-study-20261103';
-export const BTC_HERO_V5_PUBLIC_BUILD='btc-restore-v5-hair-gallop-20261105-v1';
+export const BTC_HERO_V5_PUBLIC_BUILD='btc-v5-luxury-profile-20261105-v2';
 const PI=Math.PI,TAU=PI*2;
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,Number(v)||0));
 const smooth=v=>{const x=clamp(v,0,1);return x*x*(3-2*x);};
 const gauss=(v,c,r)=>Math.exp(-Math.pow((v-c)/r,2));
+
+/**
+ * Surface-only Loop edge refinement for the skinned Quaternius coat.
+ * Original vertices and their exact skinning influences remain untouched.
+ * The new curvature samples average adjacent topology; boundaries use linear
+ * midpoints to keep separate body primitives and seams watertight.
+ * This is not a retarget or an additive bone animation.
+ */
+function refineSkinnedCoat(source,levels=2){
+ if(!source?.index||!source.getAttribute('skinIndex')||!source.getAttribute('skinWeight'))return null;
+ let geometry=source;
+ for(let pass=0;pass<levels;pass++){
+  const position=geometry.getAttribute('position');
+  const normal=geometry.getAttribute('normal');
+  const joints=geometry.getAttribute('skinIndex');
+  const weights=geometry.getAttribute('skinWeight');
+  const indices=geometry.index.array;
+  const points=Array.from(position.array);
+  const normals=normal?Array.from(normal.array):[];
+  const jointData=Array.from(joints.array),weightData=Array.from(weights.array);
+  const edges=new Map(),faces=[];
+  function edge(a,b,opposite){
+   const key=a<b?a+':'+b:b+':'+a;
+   let item=edges.get(key);
+   if(!item){item={a:Math.min(a,b),b:Math.max(a,b),opposites:[]};edges.set(key,item);}
+   item.opposites.push(opposite);
+   return key;
+  }
+  for(let i=0;i<indices.length;i+=3){
+   const a=indices[i],b=indices[i+1],c=indices[i+2];
+   faces.push([a,b,c,edge(a,b,c),edge(b,c,a),edge(c,a,b)]);
+  }
+  for(const [key,item] of edges){
+   const {a,b,opposites}=item;
+   item.vertex=points.length/3;
+   const inside=opposites.length===2&&opposites[0]!==opposites[1];
+   for(let axis=0;axis<3;axis++){
+    const midpoint=(points[a*3+axis]+points[b*3+axis])*.5;
+    const curved=inside?
+     .375*(points[a*3+axis]+points[b*3+axis])+
+     .125*(points[opposites[0]*3+axis]+points[opposites[1]*3+axis]):midpoint;
+    points.push(midpoint*.2+curved*.8);
+   }
+   if(normal){
+    const x=normals[a*3]+normals[b*3],y=normals[a*3+1]+normals[b*3+1],z=normals[a*3+2]+normals[b*3+2];
+    const d=Math.hypot(x,y,z)||1;
+    normals.push(x/d,y/d,z/d);
+   }
+   // Blend the four dominant native weights; never invent a bone index.
+   const influences=new Map();
+   for(const index of [a,b])for(let k=0;k<4;k++){
+    const weight=weightData[index*4+k]*.5;
+    const boneIndex=jointData[index*4+k];
+    if(weight>0)influences.set(boneIndex,(influences.get(boneIndex)||0)+weight);
+   }
+   const dominant=[...influences].sort((x,y)=>y[1]-x[1]).slice(0,4);
+   const sum=dominant.reduce((v,t)=>v+t[1],0)||1;
+   for(let k=0;k<4;k++){
+    jointData.push(dominant[k]?.[0]||0);
+    weightData.push((dominant[k]?.[1]||0)/sum);
+   }
+   edges.set(key,item);
+  }
+  const triangles=[];
+  for(const [a,b,c,ab,bc,ca] of faces){
+   const p=edges.get(ab).vertex,q=edges.get(bc).vertex,r=edges.get(ca).vertex;
+   triangles.push(a,p,r,b,q,p,c,r,q,p,q,r);
+  }
+  const next=new THREE.BufferGeometry();
+  next.setIndex(triangles);
+  next.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+  next.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(jointData,4));
+  next.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weightData,4));
+  if(normal)next.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+  else next.computeVertexNormals();
+  next.computeBoundingSphere();
+  if(geometry!==source)geometry.dispose();
+  geometry=next;
+ }
+ return geometry;
+}
 
 export function createBTCHeroV5(root,options={}){
  const pass=Math.floor(clamp(options.pass??10,1,10));
@@ -112,9 +193,12 @@ export function createBTCHeroV5(root,options={}){
  }
 
  // Preserve imported vertex normals to avoid the faceting regression in V4.
- const backups=[];
+ const backups=[],refinedCoats=[];
  if(pass>=5){
   for(const coat of coats){
+   const original=coat.geometry;
+   const finer=refineSkinnedCoat(original,2);
+   if(finer){coat.geometry=finer;refinedCoats.push({coat,original,finer});}
    const p=coat.geometry.getAttribute('position');
    if(!p)continue;
    const coords=p.array.slice();
@@ -256,7 +340,7 @@ export function createBTCHeroV5(root,options={}){
   get snapshot(){return {...base.snapshot,version:BTC_HERO_V5,pass,passes,
    hairMotion:{mane:m.mane,tail:m.tail,energy:m.energy,time:m.time,gait:m.gait,wind:m.wind},
    motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,silkTopology:silk?.quality||null,nativeTailBones:silk?.nativeTailBones||0,source:'original-skinned-glb',
-   noTextures:true,vertexCount:position.count};},
+   noTextures:true,vertexCount:position.count,refinedBodyMeshes:refinedCoats.length,refinedBodyVertices:refinedCoats.reduce((n,item)=>n+item.finer.getAttribute('position').count,0)};},
   update(dt,{wind=1,speed=1,running=true,phase=0}={}){
    if(disposed)return;
    base.update(dt,{wind:Math.min(wind,.85),speed,running});
@@ -268,6 +352,7 @@ export function createBTCHeroV5(root,options={}){
    silk?.dispose();groom.castShadow=previousFiberShadow;restoreMats();
    for(const o of coatFinish){o.material.roughness=o.roughness;o.material.metalness=o.metalness;}
    for(const o of backups){o.p.array.set(o.coords);o.p.needsUpdate=true;o.geometry.computeBoundingSphere();}
+   for(const item of refinedCoats){item.coat.geometry=item.original;item.finer.dispose();}
    base.dispose();
   }
  };
