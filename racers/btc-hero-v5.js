@@ -7,8 +7,9 @@
 import * as THREE from 'three';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCSilkShell} from './btc-silk-shell-v5.js?v=btc-silk-shell-v5-20261103';
+import {closeBTCNeckCrest} from './btc-neck-crest-repair.js?v=btc-crest-closure-20261105-v1';
 export const BTC_HERO_V5='btc-v5-motion-study-20261103';
-export const BTC_HERO_V5_PUBLIC_BUILD='btc-restore-v5-hair-gallop-20261105-v1';
+export const BTC_HERO_V5_PUBLIC_BUILD='btc-v5-native-crest-closure-20261105-v3';
 const PI=Math.PI,TAU=PI*2;
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,Number(v)||0));
 const smooth=v=>{const x=clamp(v,0,1);return x*x*(3-2*x);};
@@ -142,6 +143,13 @@ export function createBTCHeroV5(root,options={}){
   passes.push('05 Anatomía V5: escápulas, caja torácica, grupa y línea dorsal esculpidas');
  }
 
+ // P0: seam closure is done on the source coat itself, not by a prop or shader.
+ // The high-quality existing muzzle/eye geometry is never replaced here.
+ const crestRepairs=[];
+ if(pass>=5){
+  for(const coat of coats)if([coat.material].flat().some(m=>m?.name==='Main'))
+   crestRepairs.push(closeBTCNeckCrest(coat));
+ }
  const hairMat=groom.material;
  const previousFiberShadow=groom.castShadow;
  saveMat(hairMat);
@@ -255,7 +263,7 @@ export function createBTCHeroV5(root,options={}){
  return {
   get snapshot(){return {...base.snapshot,version:BTC_HERO_V5,pass,passes,
    hairMotion:{mane:m.mane,tail:m.tail,energy:m.energy,time:m.time,gait:m.gait,wind:m.wind},
-   motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,silkTopology:silk?.quality||null,nativeTailBones:silk?.nativeTailBones||0,source:'original-skinned-glb',
+   motionType:'damped-gallop-coupled-spring',silkShellVertices:silk?.vertexCount||0,silkLocks:silk?.lockCount||0,silkTopology:silk?.quality||null,nativeTailBones:silk?.nativeTailBones||0,neckClosureTriangles:crestRepairs.reduce((n,r)=>n+r.triangles,0),neckClosureBuild:crestRepairs[0]?.build||null,source:'original-skinned-glb',
    noTextures:true,vertexCount:position.count};},
   update(dt,{wind=1,speed=1,running=true,phase=0}={}){
    if(disposed)return;
@@ -268,6 +276,7 @@ export function createBTCHeroV5(root,options={}){
    silk?.dispose();groom.castShadow=previousFiberShadow;restoreMats();
    for(const o of coatFinish){o.material.roughness=o.roughness;o.material.metalness=o.metalness;}
    for(const o of backups){o.p.array.set(o.coords);o.p.needsUpdate=true;o.geometry.computeBoundingSphere();}
+   for(const repair of crestRepairs)repair.dispose();
    base.dispose();
   }
  };
