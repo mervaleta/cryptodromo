@@ -1117,7 +1117,13 @@ function adjustCamera(dt){
    }
    mode=selectedTvShot;
  }
- if(mode==='paddock'){
+ if(mode==='architecture'){
+   // Film the REAL VIP building from above the backstretch spectator edge.
+   // High enough to keep the camera out of the course envelope, with the
+   // landmark towers, porch, front columns and balcony all in the frame.
+   goal.set(0,31,-90);
+   target.set(0,17,-145);
+ }else if(mode==='paddock'){
    goal.set(point.x+nx*38,12,point.z+nz*38);
    target.set(point.x,2.1,point.z);
  }else if(mode==='aerial'){
