@@ -1,0 +1,33 @@
+name: Public wording contract
+on:
+  pull_request:
+    paths:
+      - '**/*.html'
+      - 'assets/**/*.js'
+      - 'autodromo/**/*.js'
+      - 'race-lab/source/src/**/*.js'
+      - 'tests/public-no-demo-copy.mjs'
+      - '.github/workflows/no-demo-public.yml'
+  push:
+    branches: [main]
+    paths:
+      - '**/*.html'
+      - 'assets/**/*.js'
+      - 'autodromo/**/*.js'
+      - 'race-lab/source/src/**/*.js'
+      - 'tests/public-no-demo-copy.mjs'
+      - '.github/workflows/no-demo-public.yml'
+permissions:
+  contents: read
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Public labels and synthetic disclosure regression
+        run: |
+          node --experimental-default-type=module --test tests/public-no-demo-copy.mjs
+          for file in assets/crypto-venue.js assets/stadium-network-ui.js assets/stadium-network-engine.js autodromo/app.js; do node --check "$file"; done

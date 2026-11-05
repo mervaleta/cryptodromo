@@ -25,9 +25,9 @@ function render(date){
   const countdown=card.querySelector('[data-countdown]');
   const race=card.querySelector('[data-race-label]');
   if(!phase||!countdown||!race)continue;
-  const text=show.phase==='race'?'● CARRERA EN CURSO · DEMO':
-   show.phase==='results'?'LLEGADA Y RESULTADOS · DEMO':
-   'PRESENTACIÓN DE CORREDORES · DEMO';
+  const text=show.phase==='race'?'● CARRERA EN CURSO':
+   show.phase==='results'?'LLEGADA Y RESULTADOS':
+   'PRESENTACIÓN DE CORREDORES';
   phase.textContent=text;
   countdown.textContent=asClock(show.secondsToNext);
   countdown.setAttribute('aria-label',

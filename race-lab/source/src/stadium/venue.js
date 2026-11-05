@@ -259,8 +259,8 @@ export function createStadiumVenue({THREE,scene,stadiumId='satoshi',quality='med
   // Live scoreboard: demo sample only. Can accept official readonly score payload.
   box(areas.services,303,14,-116,1,28,1,M.stone);
   box(areas.services,303,31,-116,35,22,1.6,M.roof,'Marcador');
-  const board=sign(areas.services,'EXHIBICIÓN · DEMO',303,30,-114.8,31,12);
-  let score={raceNumber:'001',leader:'-',time:'00:00',status:'DEMO / DATOS SINTÉTICOS'};
+  const board=sign(areas.services,'EXHIBICIÓN',303,30,-114.8,31,12);
+  let score={raceNumber:'001',leader:'-',time:'00:00',status:'DATOS SINTÉTICOS'};
   function setScoreboard(next={}){
     score={...score,...next};
     if(board.material.map){const c=board.material.map.image,ctx=c.getContext('2d');

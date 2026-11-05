@@ -45,8 +45,8 @@ let sourcePromise=null;
 const format=n=>String(Math.max(0,Math.floor(n))).padStart(2,'0');
 const clock=n=>format(n/60)+':'+format(n%60);
 const phaseFor=seconds=>seconds<60?'race':seconds<120?'results':'presentation';
-const phaseText=phase=>phase==='race'?'● CARRERA EN CURSO · DEMO':
- phase==='results'?'LLEGADA Y RESULTADOS · DEMO':'PRESENTACIÓN DE CORREDORES · DEMO';
+const phaseText=phase=>phase==='race'?'● CARRERA EN CURSO':
+ phase==='results'?'LLEGADA Y RESULTADOS':'PRESENTACIÓN DE CORREDORES';
 const localTime=new Intl.DateTimeFormat('es-AR',{
  timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
 });
@@ -83,7 +83,7 @@ function setUrl(){
 function syncPanel(){
  const track=getTrack(active);
  activeLabel.textContent='CANAL '+track.name.toUpperCase();
- modeBadge.textContent=replay?'REPLAY · ARCHIVO':'● EN VIVO · DEMO';
+ modeBadge.textContent=replay?'REPLAY · ARCHIVO':'● EN VIVO';
  document.querySelector('.tv-brand').classList.toggle('is-replay',!!replay);
  liveButton.disabled=!replay;
  liveButton.textContent=replay?'● VOLVER AL VIVO':'● ESTÁS EN VIVO';
@@ -118,7 +118,7 @@ function showProgramGuide(){
  if(current){
   $('tv-current-race').textContent=replay?
    'DÍA '+(replay.day+1)+' · CARRERA '+String(Math.floor(replay.minute/3)+1).padStart(3,'0')+'/480':
-   'CARRERA '+String(current.slot+1).padStart(3,'0')+'/480 · '+phaseText(phaseFor(current.slotSeconds)).replace(' · DEMO','');
+   'CARRERA '+String(current.slot+1).padStart(3,'0')+'/480 · '+phaseText(phaseFor(current.slotSeconds));
  }
  $('tv-local-time').textContent=localTime.format(new Date())+' UTC−3';
 }

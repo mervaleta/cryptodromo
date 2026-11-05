@@ -154,7 +154,7 @@ export function createChurchillStadium({THREE,scene,mode='race',quality='medium'
     ctx.fillStyle='#a8e3c4';ctx.font='bold 27px Arial';
     ctx.fillText('CARRERA '+scoreInfo.raceNumber+' · '+scoreInfo.time,320,146);
     ctx.fillStyle='#ebc47b';ctx.font='bold 67px Arial';ctx.fillText(scoreInfo.leader,320,248);
-    ctx.fillStyle='#9fae9f';ctx.font='bold 24px Arial';ctx.fillText('DATOS SINTÉTICOS · DEMO',320,323);
+    ctx.fillStyle='#9fae9f';ctx.font='bold 24px Arial';ctx.fillText('DATOS SINTÉTICOS',320,323);
     texture.needsUpdate=true;
   }
   drawBoard();
