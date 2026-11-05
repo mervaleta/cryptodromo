@@ -120,3 +120,15 @@ Correcciones en rama:
 **Colaboración:** PR #115 del estadio modifica varios de los mismos HTML, `scene.js` y tests. Integrar secuencialmente, con actualización de #115 después de cerrar #117 y revisión de conflictos; no sustituir una de las ramas por la otra. PR #122 del maestro BTC no comparte archivos con la rama TV. No tocar modelos ni datasets.
 
 **Salida requerida:** GitHub Actions del HEAD de esta iteración en verde, luego integración, smoke test real contra `https://race.cryptodromo.com/stadiums/crypto/live/`. Hasta entonces, NO dar por desplegado.
+
+## Cierre de integración · 2026-11-05 (reemplaza los estados previos)
+
+- **PR #117 FUSIONADO a `main`** mediante squash `691ba3c322868b84ca1749b7f3e63bab1bbe376f`. Los pasos anteriores etiquetados "no fusionado", "sigue en draft", "sin publicación", etc. son **históricos**, no el estado actual.
+- Último HEAD de PR antes del merge: `ce08b5d7f3666ea28ee00a27d06ef6dba16bf15d`: **24 checks exitosos, 2 pasos no aplicables a pull_request, 0 fallos**.
+- Efectos integrados: director y relato observacional, canal ready tras 12 actores, observador del botón de arranque, límites de sondeo HTTP, control de transición, desmontaje de iframe fallido, métricas de sintonización en `?tv-qa=1`, contratos y aceptación Chromium.
+- **Hostinger:** se observó en una prueba pública el módulo `/visual-lab/scene.js?v=broadcast-aaa-20261105-v1` y doce corredores preparados. El workflow `Satoshi interactive flight and TV · public acceptance` del commit de integración **aprobó**. La verificación pública específica de tres canales/archivo de TV (workflow `Satoshi TV · public Hostinger verification`) seguía **en ejecución** al registrar este checkpoint. No afirmar aprobado hasta ver su conclusión.
+- Una prueba Alpha16 de `public-pages` falló por exigir el token histórico `hoof-fx-public-20261104-v2` en vez del nuevo módulo. Se corrigió esa expectativa, sin tocar la aserción de 12 caballos, con commit `99cc858113c46b242a5e856deaeff468c5a801ad` en `main`.
+- PR #115 estadio/público continúa separado. Se publicó en su conversación la referencia exacta de la integración `691ba3c`; debe rebasarse/reconciliarse antes del merge para conservar ambas mejoras.
+- Pendientes fuera de la certificación funcional del PR: mediciones continuas de GPU/FPS en hardware real, comparación estética AAA en móvil, y despliegue/CI integral del agente del estadio. Ninguno modifica los resultados oficiales.
+
+Para evaluar la publicación real, seguir `.github/workflows/satoshi-tv-public-verify.yml` y `tests/satoshi-tv-public-verify.mjs`.
