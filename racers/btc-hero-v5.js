@@ -146,7 +146,7 @@ export function createBTCHeroV5(root,options={}){
  // P0: seam closure is done on the source coat itself, not by a prop or shader.
  // The high-quality existing muzzle/eye geometry is never replaced here.
  const crestRepairs=[];
- if(pass>=5){
+ if(pass>=5&&options.neckRepair!==false){
   for(const coat of coats)if([coat.material].flat().some(m=>m?.name==='Main'))
    crestRepairs.push(closeBTCNeckCrest(coat));
  }
