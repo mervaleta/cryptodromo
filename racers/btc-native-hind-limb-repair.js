@@ -14,7 +14,7 @@
  */
 import * as THREE from 'three';
 
-const isRearVertex=(x,y,z)=>y>.00425&&z<.0248&&Math.abs(x)>.0010;
+const isRearVertex=(x,y,z)=>y>.0052&&z<.0208&&Math.abs(x)>.0015;
 const isRearTriangle=(a,b,c)=>{
  const cx=(a[0]+b[0]+c[0])/3,cy=(a[1]+b[1]+c[1])/3,
   cz=(a[2]+b[2]+c[2])/3;
@@ -122,7 +122,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
  let disposed=false;
  return {
   snapshot:{
-   build:'btc-v20-native-hind-gallop-20261105',
+   build:'btc-v20b-native-hind-gallop-20261105',
    originalNativeSkeleton:true,originalGallopPreserved:true,
    donorHindTriangles:bodyCut.triangles,
    donorHoofTriangles:hoovesCut.triangles,
