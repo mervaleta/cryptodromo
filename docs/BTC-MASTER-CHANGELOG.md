@@ -1,3 +1,11 @@
+## 2026-11-05 · `btc-maya-mp4-groom-inertia-20261105-v17` · **candidato en PR aislado, pendiente QA**
+
+- **Referencia real inspeccionada:** `212734.mp4` H.264 1920×1080, 10.5 s (~30 fps); hoja comparativa con 12 fases de nuca y flequillo 0.00–1.83 s. Ver `docs/BTC-MP4-212734-HAIR-REFERENCE-20261105.md`.
+- **Arte recuperable del Maya 2017:** `ManePolyShapeOrig` y `TailPolyShapeOrig` originales, además de `hairSystem1_Mane_LongShape` y folículos. Hay una extracción GLB estática para diagnóstico fuera de producción; falta skinning/bake y revisión artística.
+- **Cambio concreto en ficha candidata:** `btc-maya-groom.js` separa crin y flequillo por región, añade inercia amortiguada distinta y orienta el aire hacia la grupa; raíces fijadas y punta con peso creciente. El galope original, el rig, la piel y los otros 99 caballos no se tocan.
+- **Costo geométrico teórico:** 24→20 segmentos por guía (−16.7% de anillos), manteniendo 6 lados. No hay medición de FPS ni aprobación de silueta.
+- **Cadena de import y manifiesto:** se versiona con `btc-maya-mp4-groom-inertia-20261105-v17` sólo en la rama candidata. Estado `needs_visual_qa`. **NO declarado desplegado en Hostinger, NO AAA, NO maestro.** Exige capturas reales Chromium/WebGL y contraste con MP4 antes de fusionar.
+
 # Bitácora obligatoria de versiones · Maestro BTC
 
 **Referencia única para cotejar cambios:** https://race.cryptodromo.com/racers/#BTC
