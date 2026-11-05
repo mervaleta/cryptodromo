@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
  PAVILION_OFFSET_Z,PAVILION_BASE_BOUNDS,PAVILION_FORECOURT_BOUNDS,
- PAVILION_FOUNDATION_Y,PAVILION_UPPER_ROOF_Y,
+ PAVILION_FOUNDATION_Y,PAVILION_UPPER_ROOF_Y,PAVILION_GRANDSTAND_CAMERA_Z,
  pavilionPlacementAudit,clubhouseCourseClearance
 } from '../visual-lab/pavilionPlacement.js';
 import {trackPoint} from '../visual-lab/trackMath.js';
@@ -22,6 +22,10 @@ test('Muybridge clubhouse must be behind spectator structures, not across the ba
  assert.ok(audit.straightClearance>25);
  assert.ok(audit.sBendClearance>25);
  assert.equal(audit.trackSignWorldZ,-103);
+ assert.equal(PAVILION_GRANDSTAND_CAMERA_Z,-119);
+ assert.ok(PAVILION_GRANDSTAND_CAMERA_Z<-104,'camera must be behind rail and spectator bank');
+ assert.match(scene,/goal\.set\(0,27,PAVILION_GRANDSTAND_CAMERA_Z\)/);
+ assert.doesNotMatch(scene,/goal\.set\(0,27,-68\)/);
  // An extra dense sample protects against track math refinement later.
  for(const layout of ['oval','straight','s-bend'])
    assert.ok(clubhouseCourseClearance(layout,1000)>25,layout+' intersects the pavilion');
