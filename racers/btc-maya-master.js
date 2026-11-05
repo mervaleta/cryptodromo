@@ -15,7 +15,7 @@ import {stabilizeHindSkinWeights,BTC_POSE_VOLUME_BUILD} from './btc-maya-pose-vo
 import {addBTCEquineCoatLookdev,BTC_COAT_LOOKDEV_BUILD} from './btc-maya-coat-lookdev.js?v=btc-master-microfur-20261104-v1';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
-export const BTC_MAYA_RENDER_BUILD='btc-maya-pose-anatomy-20261105-v1';
+export const BTC_MAYA_RENDER_BUILD='btc-maya-safety-original-20261105-v1';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -563,8 +563,10 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  const groom=createMayaGroom(best,skinAt,{
   maneSize,tailSize,maneColor:color,tailColor:tailColor||color
  });
- const eyes=makeAnatomicalEyes(best,skinAt,{eyeColor});
- const face=createBTCMayaFaceDetails(best,skinAt,anatomy.positions);
+ // Quarantine the failed eye overlays: no pupil globe, tear-duct triangles or
+ // floating eyelid strips are attached to the experimental Maya sculpt.
+ const eyes={globes:0,eyeRadius:0,irisEditable:false,blackEquinePupils:false};
+ const face={surfaces:0,triangles:0,dispose(){}};
  const ears=createBTCHarmonyEars(best,{coatColor});
  for(const h of hidden)h.obj.visible=false;
  // The original plastic eyes are hidden in favor of two inset glossy
@@ -601,7 +603,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    if(disposed)return;disposed=true;
    for(const h of originalVisibility)h.obj.visible=h.visible;
    groom.dispose();face.dispose();ears.dispose();rumpPatch.dispose();
-   eyes.mesh.removeFromParent();eyes.geometry.dispose();eyes.material.dispose();
+   // No detached eye meshes exist in this safety build.
    anatomy.mesh.removeFromParent();anatomy.geometry.dispose();
    anatomy.materials.forEach(m=>m.dispose());
   }
