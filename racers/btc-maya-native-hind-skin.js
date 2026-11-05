@@ -115,12 +115,7 @@ export function projectHindWeightsFromNative(source,targetRest,bones,weights){
   // A gradual transition from native high-fidelity limb weighting to Maya
   // rump binding avoids abrupt segment/mesh seams at the stifle.
   const blend=.96*mask;
-  for(let k=0;k<4;k++){
-   const id=bones[i*4+k],w=weights[i*4+k]*(1-blend);
-   if(w>1e-8)incoming.set(id,(incoming.get(id)||0)+w);
-  }
-  // Scale projected weights separately, preserving the source's true skin.
-  // Rebuild the map instead of adding the already-unscaled values twice.
+  // Blend original region boundaries against interpolated native weights.
   const mixed=new Map();
   for(let k=0;k<3;k++){
    const id=nearest.tri.vi[k],bary=nearest.abc[k];
