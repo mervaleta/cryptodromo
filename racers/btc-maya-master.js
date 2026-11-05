@@ -7,7 +7,7 @@
  */
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
-import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b';
+import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-native-rig-hind-skin-20261105-v18';
 import {projectHindWeightsFromNative} from './btc-maya-native-hind-skin.js?v=btc-v18-anatomy-hind-20261105';
 import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-v18-hind-neck-eye-20261105';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
