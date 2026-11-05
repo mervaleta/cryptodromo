@@ -158,3 +158,10 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - `btcNativeLookdev.js`: capa PBR de microfibra direccional y pigmento, con filtro derivativo por píxel; sin textura de pelaje, sin planos/sprites, sin deformar vértices ni compartir mallas entre animales.
 - `windMane.js` existente: anima los vértices originales de la crin con viento; se habilita en la vista BTC, no se agrega geometría falsa.
 - Otros 99 corredores y motor de carrera conservan defaults y flags anteriores. Los experimentos Maya siguen aislados para referencias anatómicas. El objetivo AAA continúa pendiente de capturas humanas de 16 fases y análisis de calidad.
+
+## 2026-11-05 · Restauración Hero V5 pase 10 tras regresión de variante
+- **Causa:** `/racers/#BTC` había elegido `original` por defecto y dejó invisible el renderer geométrico V4/V5 ya implementado. No se perdieron los módulos.
+- Se restaura **Hero V5 pase 10** en la ficha canónica BTC: malla y rig GLB originales, silueta corporal V4+V5, mechones sólidos y continuos de crin/cola, 7 huesos nativos de cola, 10 fases incrementales V5 y resorte/inercia procedural GPU acoplados al Gallop.
+- El GLB original conserva el clip Gallop; el visor desactiva `gaitRefiner` aditivo para evitar torsiones. Con V5, `maneMotion=false` en la crin de shader GLB para impedir doble movimiento sobre el pelo; V5 gestiona su propia inercia.
+- `?btcMaster=original` conserva rollback; `?btcMaster=maya` sigue exclusivamente diagnóstico. Los demás 99 corredores y el motor de apuestas/carrera no se modifican.
+- No declarar AAA ni publicar como maestro de todos sin capturas Chromium/WebGL de 16 fases y aceptación visual del usuario.
