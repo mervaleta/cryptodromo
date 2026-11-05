@@ -15,9 +15,14 @@ try{
  await page.goto('http://127.0.0.1:8799/racers/#BTC',{waitUntil:'domcontentloaded',timeout:50000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:120000});
  const safe=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
- assert.equal(safe.variant,'original','public BTC must not display malformed hind legs');
- assert.equal(safe.heroGroom,null,'quarantined Maya must not be the public default');
+ assert.equal(safe.variant,'enhanced','public BTC must restore V5, not silently fall back to original');
+ assert.equal(safe.heroGroom?.version,'btc-v5-motion-study-20261103');
+ assert.equal(safe.heroGroom?.pass,10);
+ assert.ok(safe.heroGroom?.silkLocks>=100,'volumetric V5 mane and tail missing');
+ assert.equal(safe.heroGroom?.nativeTailBones,7,'native GLB tail chain must animate groom');
+ assert.equal(safe.heroGroom?.motionType,'damped-gallop-coupled-spring');
  assert.ok(safe.clips.includes('Gallop'));
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.hairMotion?.time>.1,null,{timeout:25000});
  await page.goto('http://127.0.0.1:8799/racers/?btcMaster=maya#BTC',{waitUntil:'domcontentloaded',timeout:50000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:120000});
  let state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
