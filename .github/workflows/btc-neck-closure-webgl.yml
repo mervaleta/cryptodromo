@@ -9,6 +9,7 @@ on:
       - 'racers/racers.js'
       - 'racers/index.html'
       - 'tests/btc-neck-closure-visual.mjs'
+      - 'tests/btc-native-neck-geometry.mjs'
       - '.github/workflows/btc-neck-closure-webgl.yml'
   workflow_dispatch:
 permissions:
@@ -28,11 +29,14 @@ jobs:
           node --check racers/btc-atelier-preview.js
           node --check racers/racers.js
           node --check tests/btc-neck-closure-visual.mjs
+          node --check tests/btc-native-neck-geometry.mjs
           node --test tests/btc-master-change-policy.mjs
       - name: Install Chromium / SwiftShader
         run: |
-          npm install --no-save --no-package-lock playwright@1.58.2
+          npm install --no-save --no-package-lock playwright@1.58.2 three@0.187.0
           npx playwright install chromium --with-deps
+      - name: Check closure against REAL GLB and 16 authored Gallop poses
+        run: node --test tests/btc-native-neck-geometry.mjs
       - name: Render old V5 and repaired V5 through the same browser
         run: |
           python3 -m http.server 8799 --bind 127.0.0.1 > /tmp/btc-neck-visual-http.log 2>&1 &
