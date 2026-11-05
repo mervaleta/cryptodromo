@@ -11,7 +11,7 @@ No fusionar ni activar hasta pasar la suite de integración con la base definiti
 - Para persistencia utiliza PDO con MariaDB/MySQL del hosting por DB_HOST, DB_NAME, DB_USER y DB_PASS, o CRP_USERS_DSN. SQLite es SOLO opción local/entornos compatibles con pdo_sqlite, siempre con ruta absoluta FUERA del document root.
 - La documentación pública de Hostinger confirma MariaDB para Web/Cloud y PDO MySQL. AÚN NO se comprobó qué plan, versión PHP, credenciales o base usa race.cryptodromo.com.
 - La UI de /cuenta/ es un frontend real que consume api/users.php. No crea sesiones ni guarda contraseñas en localStorage.
-- Sin credenciales/configuración correctas, la API falla cerrada y el panel muestra error de servicio, en vez de presentar cuentas simuladas.
+- Sin credenciales/configuración correctas, la API falla cerrada y el panel muestra error de servicio, en vez de presentar cuentas simuladas. Se corrigió el parser para aceptar los objetos JSON vacíos de logout y otras acciones sin datos.
 - Modelo persistente: users existente; user_profiles, user_credentials, user_sessions, user_favorites, user_notifications, user_security_events, user_action_tokens y user_rate_limits. Claves foráneas a users.id, claves únicas por alias y por par usuario/caballo.
 - Las contraseñas usan PASSWORD_ARGON2ID. El session id solamente vive en cookie HttpOnly Secure SameSite=Lax y en el almacén de sesiones de PHP; la tabla guarda un SHA-256 del session id para revocaciones. CSRF por sesión y comprobación de origen en todas las escrituras. Se controla abuso por IP y cuenta usando hash HMAC; CRP_USERS_SECRET es obligatorio.
 
@@ -19,7 +19,7 @@ No fusionar ni activar hasta pasar la suite de integración con la base definiti
 - Registro email/contraseña, login, logout, logout global, sesiones múltiples persistentes por siete días, modificación de perfil y de contraseña.
 - Protección de acceso entre cuentas, vistas públicas opt-in por alias, idioma/zona horaria, preferencias de notificaciones, actividad de seguridad.
 - Favoritos con símbolos validados contra los 100 integrantes del archivo oficial stables/official-week-v1.json. Panel que importa el fixture Alpha19 oficial para consultar futuras carreras, sin inventar resultados.
-- API para guardar/listar/marcar notificaciones in-app; aún falta el productor de eventos de carreras y enlaces con el módulo futuro de pronósticos.
+- API para guardar/listar/marcar notificaciones in-app. Los eventos reales de registro, verificación y cambio de contraseña ahora crean mensajes en la bandeja del usuario. Aún falta el productor de eventos deportivos y enlaces con pronósticos.
 - Tokens de recuperación/verificación de email con 30 minutos de expiración y un solo uso. Para el envío real se contempla Resend con credenciales fuera del repositorio. Sin proveedor autorizado, request_reset devuelve 503 y no finge un correo enviado.
 - Fichas y panel responsive, controles etiquetados, estados vacíos/errores, sin exponer datos privados en perfiles públicos.
 
@@ -40,16 +40,16 @@ No fusionar ni activar hasta pasar la suite de integración con la base definiti
 6. Verificar configuración de despliegue Hostinger del repositorio y rutas /cuenta/ y /api/users.php. Un commit no demuestra deploy.
 
 ### Pruebas
-- Fuente de CI: .github/workflows/users-system.yml. Test HTTP + PDO SQLite: tests/users-system.mjs. Incluye registro, sesiones simultáneas, revocación, privacidad, ownership de favoritos, edición de perfil, bloqueo de correo sin proveedor y validaciones.
+- Fuente de CI: .github/workflows/users-system.yml. Test HTTP + PDO SQLite: tests/users-system.mjs; migración repetible también validada por pasos MariaDB de CI. Las ejecuciones de GitHub Actions verificadas hasta el último acceso seguían en estado queued, no aprobadas. Incluye registro, sesiones simultáneas, revocación, privacidad, ownership de favoritos, edición de perfil, bloqueo de correo sin proveedor y validaciones.
 - PHP 8.4 y Node 22 disponibles en el entorno de elaboración. No está instalada la extensión pdo_sqlite ni pdo_mysql, por lo que **el test de BD E2E no puede ejecutarse localmente aquí**. Se requiere resultado verde del workflow antes de merge.
 - No se ejecutó QA Chromium, accesibilidad automatizada ni pruebas de Hostinger real. No se presenta una captura como prueba.
 - No hubo despliegue ni modificación de base de datos de producción.
 
 ### Problemas pendientes conocidos
-1. CRÍTICO: api/auth.php legacy continúa creando sesiones PHP normales que NO están vinculadas a user_sessions. Un intento de unificarlo en esta rama fue bloqueado por el control de escritura del conector; no considerar Google integrado hasta corregirlo, revisarlo y probarlo.
-2. El enlazado frontend de perfiles públicos tiene un defecto de serialización de parámetros en assets/users-app.js: compone la consulta de perfil como parte del parámetro action y requiere corregirlo antes de merge.
-3. Volver idempotente la creación de índices de scripts/users-migrate.php y comprobar compatibilidad real MariaDB, restricciones, migración de datos legacy y backups.
-4. Agregar pruebas de reset/verificación con un proveedor de correo autorizado y pruebas de concurrencia/rate limits. Falta integración directa del login federado.
+1. La ruta api/auth.php de Google ahora utiliza crp_users_login, el almacén revocable y el perfil canónico y se niega a crear usuarios si faltan migración o secreto. **Pendiente prueba positiva con un ID token real y OAuth en Hostinger**. La UI muestra Google Identity Services solo si GOOGLE_OAUTH_CLIENT_ID está configurado.
+2. Resuelto: el frontend transmite correctamente los parámetros del perfil público; resta validación real desde browser y control de acceso entre cuentas.
+3. Resuelto en código: creación de índices idempotente, y test de dos pasadas en MariaDB; RESTA ejecutar CI y verificar restricciones, migración de datos legacy y backups.
+4. Faltan pruebas de reset/verificación con proveedor de correo autorizado, concurrencia/rate limits y login federado real en navegador. La API Google está enlazada en código, no verificada contra producción.
 5. Crear eventos reales de notificación desde carreras y enlazar historial y estadísticas personales cuando el motor de pronósticos publique sus contratos; no fingir actividad ni logros.
 6. Falta CTA a /cuenta/ en la navegación principal del portal. Evitar sobrescribir modificaciones concurrentes del agente del portal.
 7. Hacer QA Chromium y móvil y verificar sitio publicado. No mezclar ramas de visualización de caballos, cámara, estadios ni saldo demo.
@@ -61,5 +61,5 @@ No fusionar ni activar hasta pasar la suite de integración con la base definiti
 - Sincronizar de nuevo desde main y revisar diffs antes de cualquier merge.
 
 ### Última acción y próxima acción ejecutable
-- Archivos creados en esta rama: api/users-lib.php, api/users.php, scripts/users-migrate.php, cuenta/index.html, assets/users.css, assets/users-app.js, tests/users-system.mjs, .github/workflows/users-system.yml y este documento.
-- Próxima acción EXACTA: ejecutar workflow Users identity sobre el SHA de la rama; corregir sus fallas; hacer idempotente migration; arreglar query pública; integrar api/auth.php; confirmar el almacén MariaDB y configurar secrets vía Hostinger; ejecutar test manual con dos cuentas y móviles; verificar producción con rutas reales; solo después solicitar merge.
+- Archivos trabajados en esta rama: api/users-lib.php, api/users.php, scripts/users-migrate.php, cuenta/index.html, assets/users.css, assets/users-app.js, tests/users-system.mjs, .github/workflows/users-system.yml, tests/auth-security.mjs, api/auth.php y este documento.
+- Próxima acción EXACTA: obtener resultado completo de GitHub Actions para el último SHA, corregir cualquier fallo; verificar estructura y credenciales MariaDB por el administrador Hostinger, provisión segura del secreto y mail; validar Google con token legítimo; QA de dos cuentas + Chrome/móvil, comprobar /cuenta/ publicado; recién después proponer merge. No fusionar automáticamente.
