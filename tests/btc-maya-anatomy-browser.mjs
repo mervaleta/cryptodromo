@@ -14,7 +14,7 @@ try{
  const page=await browser.newPage({viewport:{width:1320,height:840},deviceScaleFactor:1,reducedMotion:'no-preference'});
  page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text())});
- await page.goto('http://127.0.0.1:8799/racers/#BTC',{waitUntil:'domcontentloaded',timeout:90000});
+ await page.goto('http://127.0.0.1:8799/racers/?btcMaster=maya#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
@@ -47,19 +47,19 @@ try{
  assert.equal(start.heroGroom.heroLocks,56,'sculpted swept hero locks must actually render');
  assert.equal(start.heroGroom.solidRingSides,6,'hair should use true volumetric loft rings, not crossed cards');
  assert.equal(start.heroGroom.rootBedVertices,495,'smooth skinned crest must cover the gap between ears and mane');
- assert.ok(start.heroGroom.eyeRadius<.0004,'3D eye globe must sit within the sockets');
+ assert.equal(start.heroGroom.eyeRadius,0,'defective spherical eye overlay must be removed');
  assert.equal(start.heroGroom.originalRig,true);
  assert.ok(start.heroGroom.beveledHoofVertices>=300,'real four-hoof Maya geometry sculpt required');
  assert.equal(start.heroGroom.heroHooves,4,'four visible, articulated hoof shells required');
  assert.ok(start.heroGroom.hoofMeshVertices>=600,'actual hoof wall geometry required');
  assert.ok(start.heroGroom.elevatedEarVertices>=20,'natural ear silhouette geometry required');
  assert.equal(start.heroGroom.sculptedEars,2,'two fully modeled upright ears required');
- assert.equal(start.heroGroom.eyeGlobes,2,'both eye sockets require actual 3D spheres');
- assert.equal(start.heroGroom.irisEditable,true,'published eyeColor drives iris shader');
- assert.equal(start.heroGroom.blackEquinePupils,true,'pupils must stay black and horizontally elongated');
+ assert.equal(start.heroGroom.eyeGlobes,0,'no protruding eye globes');
+ assert.equal(start.heroGroom.irisEditable,false,'remove free-floating iris overlay');
+ assert.equal(start.heroGroom.blackEquinePupils,false,'no detached pupil geometry');
  assert.ok(start.heroGroom.earTriangles>=800,'ears must be real skinned 3D leaves, not image sprites');
- assert.ok(start.heroGroom.facialSurfaces>=2,'rigged eyelids, nostril contours and tear ducts required');
- assert.ok(start.heroGroom.facialTriangles>140,'facial detail is actual 3D geometry');
+ assert.equal(start.heroGroom.facialSurfaces,0,'remove detached eyelid and tear duct meshes');
+ assert.equal(start.heroGroom.facialTriangles,0,'no loose facial triangles');
  assert.ok(start.heroGroom.fineLocks>=650,'full layered mane and tail required');
  assert.equal(start.heroGroom.modelPreserved,true);
  assert.equal(start.heroGroom.gallopPreserved,true);
