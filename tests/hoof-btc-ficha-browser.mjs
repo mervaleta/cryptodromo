@@ -18,7 +18,10 @@ try{
   undefined,{timeout:90000,polling:500});
  const state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(state.symbol,'BTC');
- assert.equal(state.variant,'original','BTC public fiche must use intact original Gallop while Maya is quarantined');
+ assert.equal(state.variant,'enhanced','BTC must show restored V5 while preserving native Gallop');
+ assert.equal(state.heroGroom?.version,'btc-v5-motion-study-20261103');
+ assert.equal(state.heroGroom?.pass,10);
+ assert.ok(state.heroGroom?.silkLocks>100,'restored 3D mane/tail shell missing');
  assert.equal(state.terrain.visible,true);
  assert.equal(state.terrain.surface,'dirt');
  assert.ok(['skeleton','master'].includes(state.terrain.contactSource),
