@@ -8,8 +8,8 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-anatomy-feedback-20261105-v1';
-import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-anatomy-feedback-20261105-v1';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-safe-master-20261105-v1';
+import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-safe-master-20261105-v1';
 
 const CAMERA_POSITIONS={
  profile:[2.12,1.97,3.73],
@@ -57,7 +57,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  const terrain=createBTCTerrainStage(scene,{platform,pedestalRing,renderer});
  let terrainSurface='dirt',terrainWetness=0;
 
- let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
+ let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='v5'?'enhanced':'original',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#29232a';
  const resize=()=>{
