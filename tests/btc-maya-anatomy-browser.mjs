@@ -38,7 +38,9 @@ try{
  assert.equal(start.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
   assert.equal(start.heroGroom.proceduralHairTexture,true);
   assert.equal(start.heroGroom.hindTextureGenerated,true);
-  assert.equal(start.heroGroom.hindGaitCorrective,true);
+  assert.equal(start.heroGroom.hindGaitCorrective,false,'legacy oscillating muscle corrective must be disabled');
+  assert.equal(start.heroGroom.volumeSkinMethod,'side-stabilized-native-linear');
+  assert.ok(start.heroGroom.pollAnchoredVertices>200,'skull/occipital crest must follow Head');
   assert.ok(start.heroGroom.hindMaxExpansion>.10);
   assert.equal(start.heroGroom.neckOutliers,0,'Mane must remain within dorsal neck envelope');
  assert.equal(start.heroGroom.crownBridgeLocks,112,'forelock and dorsal mane must be joined across the poll');

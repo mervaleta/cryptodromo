@@ -130,3 +130,10 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - **QA:** contrato automático de lookdev y pruebas de regresión de la ficha; se requieren capturas reales Chromium/WebGL desde perfil/frente/atrás, galope, rendimiento y luego verificación de Hostinger.
 - **Compatibilidad pendiente:** consolidar cambios anatómicos de PR #89, ojos/crin/cola de #99 y #100. No sobrescribirlos por merge automático.
 - **Resultado:** `pending_deploy`; aprobado por código NO significa calidad AAA ni publicación en la ficha del sitio hasta merge y verificación del host.
+
+## 2026-11-05 · `btc-maya-pose-anatomy-20261105-v1` · corrección por captura pública
+- Referencia: captura aportada por el usuario que muestra nuca/crin discontinua, ancas con articulación antinatural, muslo-corvejón estrechado y huellas gigantes.
+- Corrección de piel: eliminada deformación sinusoidal de muslo durante Gallop; restaurado el skinning lineal original con filtro de influencias cruzadas izquierda/derecha del tren posterior, basado en la iteración v13b del PR #89 (DQS experimental rechazado).
+- Nuca: máscara suave de pesos hacia el hueso original Head en cresta occipital y borde de órbita, basada en la rama del PR #100; no añade props ni modifica clips.
+- Terreno de la ficha: impresiones reducidas a 32% y máximo de 36 marcas; los defaults del estadio no cambian.
+- Cadena de cachés y ficha `/racers/#BTC` actualizadas a versión v13. Pruebas y capturas todavía necesarias. Estado `pending_deploy`, no `verified` ni `AAA`.
