@@ -73,3 +73,11 @@ Triple canal visible; cambios de cámara legibles; cambios de líder relatados s
 - `stadiums/crypto/live/index.html` invalida la caché del controlador y `tests/tv-transition-watchdog.mjs` documenta el contrato.
 
 **QA:** PR #117 y workflows en GitHub Actions; solo se debe registrar PASS al comprobar una ejecución del último commit. No se ha probado aún un ciclo completo ni un equipo móvil real.
+
+## Iteración 1c · CI: contratos de importación
+
+- Se inspeccionaron logs concretos de 5 checks fallidos del HEAD `5fd2269`.
+- Fallaban pruebas estáticas que pedían el viejo cache token `scene.js?v=muybridge-clearance-20261104-v3`, precisamente el módulo que esta implementación versiona para evitar mezcla de código nuevo/viejo.
+- Se actualizaron **solo dos pruebas** de esa cadena: `tests/stadium-live-integration.mjs` y `tests/winner-replay-env-contract.mjs`, al token `broadcast-aaa-20261105-v1`. No se tocaron sus comprobaciones de escena, winner, integración, hipódromo ni datos.
+- Sigue faltando verificar los demás checks del HEAD actualizado. Los fallos antiguos no prueban un problema de runtime ni tampoco demuestran estabilidad.
+- Los cambios de `main` respecto de la base de este PR corresponden a BTC; al momento de revisar no hubo archivos modificados en común. Volver a comparar inmediatamente antes del merge.
