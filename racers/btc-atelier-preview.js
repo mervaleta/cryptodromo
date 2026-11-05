@@ -28,7 +28,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,1.5));
  renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.055;
+ renderer.toneMappingExposure=.94;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();
  const camera=new THREE.PerspectiveCamera(33,1,.1,55);
@@ -60,7 +60,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  let heldPoseTime=0,heldPoseIndex=null;
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='original'?'original':'enhanced',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#29232a';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#30261f';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
@@ -82,7 +82,8 @@ export function createPreview(canvas,onFailure=()=>{}){
   const candidate=(variant==='enhanced'||variant==='baseline'||variant==='maya')&&token.symbol==='BTC';
   try{
    const next=await createHorse({
-    coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,
+    coat:token.symbol==='BTC'?(/^#[0-9a-f]{6}$/i.test(token.mayaAppearance?.coatColor||'')?token.mayaAppearance.coatColor:'#a36b4e'):token.coat,
+    accent:token.color,symbol:token.symbol,height:2.5,
     mode:paused?'Idle':'Gallop',maneMotion:variant==='original',nativeLookdev:token.symbol==='BTC',
     // Three.js Horse.glb reference: evaluate the authored gait as one coherent clip.
     // No secondary gaitRefiner joint offsets on the BTC anatomy QA viewer.
