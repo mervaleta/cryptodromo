@@ -36,9 +36,9 @@ function crp_users_json(): array {
     if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 8192) crp_users_fail(413,'Solicitud demasiado grande.');
     $raw=file_get_contents('php://input',false,null,0,8193);
     if ($raw === false || strlen($raw)>8192) crp_users_fail(413,'Solicitud demasiado grande.');
-    $data=json_decode($raw,true);
-    if (!is_array($data) || array_is_list($data)) crp_users_fail(400,'Solicitud inválida.');
-    return $data;
+    $decoded=json_decode($raw);
+    if (!($decoded instanceof stdClass)) crp_users_fail(400,'Solicitud inválida.');
+    return (array)$decoded;
 }
 function crp_users_password(mixed $pass): string {
     if (!is_string($pass) || strlen($pass)<12 || strlen($pass)>128) {
