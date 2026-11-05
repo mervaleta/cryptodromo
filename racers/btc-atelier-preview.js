@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
-import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-motion-study-20261103';
+import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-native-crest-closure-20261105-v3';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-restore-v5-hair-gallop-20261105-v1';
 import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-restore-v5-hair-gallop-20261105-v1';
