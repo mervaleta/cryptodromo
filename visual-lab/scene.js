@@ -1454,6 +1454,30 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
    })
  });
 }
+// Read-only, opt-in ray diagnostics for rail camera occlusion. No render loop work.
+if(new URLSearchParams(location.search).get('stadium-occlusion-qa')==='1'){
+ const raycaster=new THREE.Raycaster();
+ window.__cryptodromoOcclusionQA=Object.freeze({
+  snapshot:()=>{
+   scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);
+   const samples=[];
+   for(const y of [-.65,-.3,0,.3,.65])for(const x of [-.8,-.4,0,.4,.8]){
+    raycaster.setFromCamera(new THREE.Vector2(x,y),camera);
+    const hits=raycaster.intersectObjects(scene.children,true);
+    const hit=hits.find(h=>h.object.visible&&h.distance>camera.near+.01);
+    if(!hit){samples.push({x,y,hit:null});continue;}
+    let parent=hit.object,chain=[];
+    while(parent&&parent!==scene){chain.push(parent.name||parent.type);parent=parent.parent;}
+    samples.push({x,y,hit:{name:hit.object.name||hit.object.type,
+     chain:chain.slice(0,8),distance:Number(hit.distance.toFixed(2)),
+     point:hit.point.toArray().map(v=>Number(v.toFixed(2))) }});
+   }
+   return {layout:layoutMode,view:camSelect.value,elapsed,
+    camera:camera.position.toArray(),focus:cameraFocus.toArray(),
+    samples};
+  }
+ });
+}
 window.addEventListener('pagehide',()=>{hoofFX.dispose();pavilionDetail.dispose();grandstandCrowd.dispose();courseStaticBatches.dispose();forestBatches.dispose();distantBackdrop.dispose();},{once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
