@@ -24,6 +24,10 @@ async function waitForModel(expectPatch=true){
  },{patch:expectPatch,version:BUILD},{timeout:120000});
  return await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
 }
+async function snap(path){
+ await page.evaluate(()=>document.querySelector('#horse-view')?.scrollIntoView({block:'center',behavior:'instant'}));
+ return page.screenshot({path,timeout:90000});
+}
 try{
  // No query flags: this is the exact URL the user will open.
  await page.goto(root+'#BTC',{waitUntil:'domcontentloaded',timeout:90000});
@@ -35,23 +39,22 @@ try{
  assert.equal(real.heroGroom.pass,10);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(400);
- const oldTime=await page.locator('#horse-canvas').screenshot({path:folder+'/canonical-top-neck.png',timeout:90000});
+ const oldTime=await snap(folder+'/canonical-top-neck.png');
  await page.waitForTimeout(650);
- const newTime=await page.locator('#horse-canvas').screenshot();
+ const newTime=await snap();
  assert.notDeepEqual(oldTime,newTime,'Canonical BTC must visibly gallop');
  // Compare same actual source pose before/after ONLY the neck patch.
  await page.goto(root+'?btcFreeze=1&btcNeckRepair=off#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await waitForModel(false);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(350);
- const before=await page.locator('#horse-canvas').screenshot({path:folder+'/before-top-hole.png',timeout:90000});
+ const before=await snap(folder+'/before-top-hole.png');
  await page.goto(root+'?btcFreeze=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  await waitForModel(true);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(350);
- const after=await page.locator('#horse-canvas').screenshot({path:folder+'/after-top-neck-closed.png',timeout:90000});
+ const after=await snap(folder+'/after-top-neck-closed.png');
  assert.notDeepEqual(before,after,'Actual patch must change top-view pixels');
- const canvas=page.locator('#horse-canvas');
  for(const camera of ['profile','front','rear','threeQuarter','top']){
   await page.locator('[data-btc-camera="'+camera+'"]').click();
   const phases=camera==='profile'||camera==='top'?Array.from({length:16},(_,i)=>i):[0,4,8,12];
@@ -59,7 +62,7 @@ try{
    await page.evaluate(p=>window.__cryptodromoBTCAtelierSetPose(p),p);
    await page.waitForFunction(p=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===p,p);
    await page.waitForTimeout(150);
-   await canvas.screenshot({path:folder+'/'+camera+'-'+String(p).padStart(2,'0')+'.png',timeout:90000});
+   await snap(folder+'/'+camera+'-'+String(p).padStart(2,'0')+'.png');
   }
  }
  await page.locator('button.runner[data-symbol="ETH"]').click({timeout:20000});
