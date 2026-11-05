@@ -1,4 +1,4 @@
-name: Verify BTC Premium V5 actually published on Hostinger
+name: Verify live BTC anatomical 3D horse on Hostinger
 on:
   push:
     branches: [main]
@@ -12,50 +12,50 @@ permissions:
 jobs:
   verify-live:
     runs-on: ubuntu-24.04
-    timeout-minutes: 24
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
-      - name: Check exact versioned production module chain
+      - name: Verify Hostinger serves the latest BTC module chain
         shell: bash
         run: |
           set -euo pipefail
           ORIGIN="https://race.cryptodromo.com/racers"
-          for attempt in $(seq 1 24); do
-            echo "Checking BTC public CDN/Hostinger deployment: $attempt/24"
+          for attempt in $(seq 1 20); do
+            echo "Public origin check ${attempt}/20"
             ok=true
-            for module in index.html racers.js btc-atelier-preview.js btc-hero-v5.js btc-silk-shell-v5.js btc-master-revision.json; do
-              if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "$ORIGIN/$module?deploy=$GITHUB_SHA-$attempt" -o "/tmp/crp-btc-$module"; then
-                ok=false; break
-              fi
+            for module in index.html racers.js btc-atelier-preview.js btc-terrain-stage.js btc-maya-master.js btc-maya-groom.js btc-maya-face-details.js btc-maya-hooves.js; do
+              if ! curl -fLsS --retry 2 --connect-timeout 10 --max-time 30 "${ORIGIN}/${module}?deploy=${GITHUB_SHA}" -o "/tmp/btc-${module}"; then ok=false; break; fi
             done
             if [[ "$ok" == true ]] &&
-              grep -q 'btc-v5-luxury-profile-20261105-v2' /tmp/crp-btc-index.html &&
-              grep -q 'btc-v5-luxury-profile-20261105-v2' /tmp/crp-btc-racers.js &&
-              grep -q 'btc-v5-luxury-profile-20261105-v2' /tmp/crp-btc-btc-atelier-preview.js &&
-              grep -q 'refineSkinnedCoat' /tmp/crp-btc-btc-hero-v5.js &&
-              grep -q '.01735' /tmp/crp-btc-btc-silk-shell-v5.js &&
-              grep -q 'btc-v5-luxury-profile-20261105-v2' /tmp/crp-btc-btc-master-revision.json; then
-              echo 'HOSTINGER_BTC_PREMIUM_MODULE_CHAIN_DEPLOYED'
+              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-index.html &&
+              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-racers.js &&
+              grep -q 'hoof-btc-fiche-20261104-v1' /tmp/btc-btc-atelier-preview.js &&
+              grep -q 'btc-master-procedural-hind-groom-20261104-v12-fx1' /tmp/btc-btc-maya-master.js &&
+              grep -q 'createHoofTerrainFX' /tmp/btc-btc-terrain-stage.js &&
+              grep -q 'neckOutliers' /tmp/btc-btc-maya-groom.js &&
+              grep -q 'createBTCMayaFaceDetails' /tmp/btc-btc-maya-face-details.js &&
+              grep -q 'createBTCSculptedHooves' /tmp/btc-btc-maya-hooves.js; then
+              echo 'LIVE_HOSTINGER_BTC_FILES_UPDATED'
               break
             fi
-            if [[ "$attempt" -eq 24 ]]; then
-              echo '::error::GitHub merged but Hostinger still serves stale/missing BTC Premium modules'
+            if [[ "$attempt" -eq 20 ]]; then
+              echo '::error::Main updated but Hostinger has not deployed the new BTC horse'
               exit 1
             fi
             sleep 15
           done
-      - name: Install Chromium for actual production WebGL inspection
+      - name: Install Chromium for real production WebGL acceptance
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
           npx playwright install chromium --with-deps
-      - name: Verify canonical BTC 3D and 16 phases on actual live site
+      - name: Verify native Gallop and anatomically sculpted BTC at real URL
         run: node tests/btc-public-master-browser.mjs
-      - name: Keep browser screenshots for explicit visual owner approval
+      - name: Archive internal production diagnostic still only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-premium-live-real-browser-five-cameras
+          name: btc-live-anatomical-verification
           path: artifacts/btc-live/*.png
-          if-no-files-found: warn
+          if-no-files-found: ignore

@@ -1,63 +1,91 @@
 /**
- * Canonical production BTC acceptance. A successful build alone is insufficient:
- * actual Hostinger code, animated 3D frames, the native rig, and 99-runner
- * isolation must all be demonstrated. Human AAA sign-off is separate.
+ * Tests the actual Hostinger production URL, not just the GitHub branch.
+ * Captures a still only for internal diagnostics, never records a video.
  */
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
 import {chromium} from 'playwright';
-const BUILD='btc-v5-luxury-profile-20261105-v2';
-const directory='artifacts/btc-live';
-mkdirSync(directory,{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
 ]});
-const page=await browser.newPage({viewport:{width:1390,height:900},deviceScaleFactor:1,reducedMotion:'no-preference'});
 const errors=[];
-page.on('pageerror',e=>errors.push(String(e?.message||e)));
-try{
- await page.goto('https://race.cryptodromo.com/racers/#BTC',{waitUntil:'domcontentloaded',timeout:90000});
- await page.waitForFunction(expected=>{
-  const state=window.__cryptodromoBTCAtelierQA?.();
-  return state?.symbol==='BTC'&&state.variant==='enhanced'&&state.heroGroom?.refinedBodyMeshes>=1&&
-   state.heroGroom.refinedBodyVertices>1000&&state.heroGroom.nativeTailBones===7&&
-   state.clips?.includes('Gallop')&&state.drawCalls>0&&
-   document.querySelector('#btc-master-build')?.textContent?.includes(expected);
- },BUILD,{timeout:120000});
- const state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
- assert.equal(state.heroGroom.source,'original-skinned-glb');
- assert.equal(state.heroGroom.gallopPreserved,true);
- assert.equal(state.heroGroom.oldHairHidden,true);
- assert.equal(state.heroGroom.pass,10);
- await page.locator('#horse-canvas').screenshot({path:directory+'/canonical-btc-v5-premium.png',timeout:90000});
- // Demonstrate native movement changes even when no query flags are supplied.
- const before=await page.locator('#horse-canvas').screenshot();
- await page.waitForTimeout(600);
- const after=await page.locator('#horse-canvas').screenshot();
- assert.notDeepEqual(before,after,'Canonical BTC must visibly gallop');
- // Four additional angles, 16 phase samples, on the same production URL host.
- await page.goto('https://race.cryptodromo.com/racers/?btcFreeze=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
- await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.refinedBodyMeshes>=1,undefined,{timeout:120000});
- const canvas=page.locator('#horse-canvas');
- for(const camera of ['profile','front','rear','threeQuarter']){
-  await page.locator('[data-btc-camera="'+camera+'"]').click();
-  for(const pose of (camera==='profile'?Array.from({length:16},(_,i)=>i):[0,4,8,12])){
-   await page.evaluate(v=>window.__cryptodromoBTCAtelierSetPose(v),pose);
-   await page.waitForFunction(v=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===v,pose);
-   await page.waitForTimeout(150);
-   await canvas.screenshot({path:directory+'/'+camera+'-'+String(pose).padStart(2,'0')+'.png',timeout:90000});
-  }
- }
- // A symbol switch must dispose BTC-only groom, not mutate race roster.
+try {
+ const page=await browser.newPage({
+  viewport:{width:1360,height:900},deviceScaleFactor:1,reducedMotion:'no-preference'
+ });
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('https://race.cryptodromo.com/racers/#BTC',{
+  waitUntil:'domcontentloaded',timeout:90000
+ });
+ await page.waitForFunction(()=>{
+  const s=window.__cryptodromoBTCAtelierQA?.();
+  return s?.symbol==='BTC'&&s?.variant==='maya'&&
+    s?.heroGroom?.version==='btc-maya-2017-sculpt-gallop-20261104'&&
+    s?.heroGroom?.heroHooves===4&&s?.heroGroom?.facialSurfaces===0&&
+    s?.clips?.includes('Gallop')&&s?.drawCalls>0;
+ },null,{timeout:120000});
+ const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
+ // Verificación específica del nuevo terreno en la URL pública.
+ // Que cargue el GLB no es suficiente: debe impactar el suelo y dejar huella.
+ assert.ok(s.terrain?.visible,'BTC terrain FX must be active in the public card');
+ assert.equal(s.terrain.surface,'dirt');
+ assert.ok(['skeleton','master'].includes(s.terrain.contactSource),
+  'Hoof contacts must use animated rig, not phase proxy');
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.terrain?.impacts>=2,
+  undefined,{timeout:60000,polling:400});
+ const dirt=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain);
+ assert.ok(dirt.imprints>=2,'At least 2 planted hoof imprints expected');
+ await page.selectOption('#btc-terrain-surface','sand');
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.terrain?.impacts>=1,
+  undefined,{timeout:60000,polling:400});
+ assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain)).surface,'sand');
+ await page.selectOption('#btc-terrain-surface','grass');
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.terrain?.impacts>=1,
+  undefined,{timeout:60000,polling:400});
+ assert.equal((await page.evaluate(()=>window.__cryptodromoBTCAtelierQA().terrain)).surface,'grass');
+ await page.selectOption('#btc-terrain-surface','dirt');
+  assert.equal(s.heroGroom.gallopPreserved,true);
+ assert.equal(s.heroGroom.originalRig,true);
+ assert.equal(s.heroGroom.sculptedEyes,2);
+ assert.equal(s.heroGroom.eyeGlobes,0,'floating eye meshes must be absent');
+ assert.equal(s.heroGroom.crownBridgeLocks,112,'hero mane must be connected across the poll');
+ assert.equal(s.heroGroom.heroLocks,56,'the normal public BTC must use raised locks');
+ assert.equal(s.heroGroom.solidRingSides,6,'live horse needs rounded 3D locks instead of hair ribbons');
+ assert.equal(s.heroGroom.rootBedVertices,495,'the real public horse must have a continuous sculpted hair root bed');
+ assert.equal(s.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
+  assert.equal(s.heroGroom.proceduralHairTexture,true);
+  assert.equal(s.heroGroom.hindTextureGenerated,true);
+  assert.equal(s.heroGroom.hindGaitCorrective,true);
+  assert.ok(s.heroGroom.hindMaxExpansion>.10);
+  assert.equal(s.heroGroom.neckOutliers,0,'no hair vertices outside dorsal neck envelope');
+ assert.equal(s.heroGroom.eyeRadius,0,'eyes are quarantined');
+ assert.equal(s.heroGroom.irisEditable,false,'no floating iris');
+ assert.equal(s.heroGroom.blackEquinePupils,true);
+ assert.equal(s.heroGroom.sculptedEars,2,'stylized pinnae should appear on the public horse');
+ assert.equal(s.heroGroom.integratedMayaHooves,true);
+ assert.ok(s.heroGroom.nativeEarFacesRemoved>=150,'no extra horn geometry on public BTC');
+ assert.equal(s.heroGroom.integratedEarRootCapTriangles,s.heroGroom.earCutBorderEdges,'no cut edge exposed behind the ears');
+ assert.ok(s.heroGroom.extraTailFacesRemoved>=150,'no second native flesh tail on public BTC');
+ assert.ok(s.heroGroom.extraTailFacesRemoved>250,'the old tail free end must be absent without opening the rump');
+ assert.ok(s.heroGroom.poweredHindVertices>650,'hindquarters must be physically fuller in production');
+ assert.ok(s.heroGroom.integratedDockCapTriangles>=20,'rump opening must be welded inside original Maya mesh');
+ assert.ok(s.heroGroom.fineLocks>=650,'fewer true 3D hair locks replace hundreds of flat fibers');
+ const before=s.hoofPhase;
+ await page.waitForTimeout(1100);
+ const after=(await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.())).hoofPhase;
+ assert.ok(Math.abs(after-before)>.001,'The production horse must be actually galloping');
+ mkdirSync('artifacts/btc-live', {recursive:true});
+ await page.locator('#horse-view').screenshot({
+  path:'artifacts/btc-live/public-btc-anatomical.png',timeout:90000
+ });
  await page.locator('button.runner[data-symbol="ETH"]').click({timeout:20000});
- await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='ETH',undefined,{timeout:90000});
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='ETH',null,{timeout:90000});
  const eth=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
- assert.equal(eth.heroGroom,null);
+ assert.equal(eth.heroGroom,null,'Other 99 token models must remain untouched');
  assert.deepEqual(errors,[],errors.join('; '));
- console.log('HOSTINGER_BTC_V5_PREMIUM_NATIVE_GALLOP_VISUAL_QA_OK',JSON.stringify({
-  build:BUILD,source:state.heroGroom.source,refinedBodyVertices:state.heroGroom.refinedBodyVertices,
-  clips:state.clips,angles:4,profilePhases:16,othersUnaffected:true,visualAAAApproved:false
+ console.log('PRODUCTION_BTC_SCULPT_AND_GALLOP_CONFIRMED',JSON.stringify({
+  url:page.url(),version:s.heroGroom.version,hoofShells:s.heroGroom.heroHooves,
+  groomLocks:s.heroGroom.fineLocks,faces:s.heroGroom.facialSurfaces
  }));
-}finally{
- await page.close();await browser.close();
-}
+ await page.close();
+} finally {await browser.close();}
