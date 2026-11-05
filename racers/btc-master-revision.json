@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "symbol": "BTC",
-  "masterId": "btc-maya-2017-sculpt-gallop-20261104",
+  "masterId": "btc-original-glb-gallop",
   "buildId": "btc-native-horse-20261105-v1",
   "status": "needs_visual_qa",
   "statusLabel": "Motor nativo sin sprites implementado en PR, requiere inspección de 16 fases WebGL antes de aprobar calidad y desplegar",
