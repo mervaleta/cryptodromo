@@ -86,6 +86,8 @@ test('existing broadcasting scene still owns camera, replay and official outcome
  assert.match(scene,/director\.js\?v=broadcast-aaa-20261105-v1/);
  assert.match(scene,/raceBroadcast\.js\?v=broadcast-aaa-20261105-v1/);
  assert.match(scene,/tvDirector\.frame\(/);
+ assert.match(scene,/elapsed-lastLeaderNarrationAt>=8/);
+ assert.doesNotMatch(scene,/Math\.floor\(elapsed\)%9===0/);
  assert.match(scene,/selectedMode==='broadcast'/);
  assert.match(scene,/officialRanking\(profiles\)/);
  assert.match(scene,/winnerReplay\.advance/);
