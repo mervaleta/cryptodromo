@@ -1,0 +1,33 @@
+name: Cryptódromo users identity backend
+on:
+  pull_request:
+    paths:
+      - 'api/users*.php'
+      - 'cuenta/**'
+      - 'assets/users*'
+      - 'scripts/users-migrate.php'
+      - 'tests/users-system.mjs'
+      - '.github/workflows/users-system.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  users:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate PHP and SQLite runtime
+        run: |
+          php -v
+          php -m | grep -i pdo_sqlite
+          php -l api/users-lib.php
+          php -l api/users.php
+          php -l scripts/users-migrate.php
+      - name: Real persistence and security integration test
+        run: node --test tests/users-system.mjs
+      - name: Frontend JavaScript syntax
+        run: node --check assets/users-app.js
