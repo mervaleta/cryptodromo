@@ -205,6 +205,10 @@ final class CrpPredictions {
                 $this->db->commit();
                 return self::payload($existing);
             }
+            // Re-sample server time AFTER acquiring the transactional lock.
+            // An HTTP request queued before cutoff cannot commit after cutoff.
+            // Explicit CLI timestamps are solely for deterministic offline testing.
+            if(PHP_SAPI!=='cli') $now=time();
             if($now >= $race['close_at'] || $race['start_at']>$now+900)
                 throw new PredictionFailure('Admisión cerrada o fuera de ventana',409);
             $account=$this->account($userId,$now);
