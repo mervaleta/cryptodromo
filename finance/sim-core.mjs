@@ -90,6 +90,8 @@ export class SimLedger{
   const req=this.operations.get(requestId);
   if(!req||req.metadata.kind!=='withdrawal-request'||req.legs[0].asset!==asset)throw Error('Unknown withdrawal');
   if(this.operations.has(id))return this.operations.get(id);
+  const expected=req.legs.find(leg=>leg.owner===pending)?.delta;
+  if(!Number.isSafeInteger(expected)||expected!==amount)throw Error('Withdrawal amount mismatch');
   if(this.entries.some(e=>e.metadata.requestId===requestId))throw Error('Already finalized');
   const user=req.legs[0].owner;
   const legs=fail?
