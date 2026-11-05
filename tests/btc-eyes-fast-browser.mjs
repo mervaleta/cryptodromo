@@ -32,6 +32,27 @@ try{
   writeFileSync('artifacts/btc-ocular-fast/'+camera+'.png',
    Buffer.from(raw.split(',')[1],'base64'));
  }
+ // Benchmark the SAME animated skinned Maya horse over a complete Gallop.
+ // Six actual WebGL cameras, 16 profile poses, four other poses each.
+ for(const camera of ['profile','front','rear','threeQuarter','top','detail']){
+  await page.evaluate(name=>{
+   const b=document.querySelector('[data-btc-camera="'+name+'"]');
+   if(!b)throw Error('BTC camera missing: '+name);
+   b.click();
+  },camera);
+  const frames=camera==='profile'?Array.from({length:16},(_,i)=>i):[0,4,8,12];
+  for(const phase of frames){
+   await page.evaluate(i=>window.__cryptodromoBTCAtelierSetPose?.(i),phase);
+   const state=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA?.());
+   assert.equal(state?.heldPoseIndex,phase,'Native Gallop pose did not hold');
+   await page.waitForTimeout(90);
+   const snap=await page.evaluate(()=>document.querySelector('#horse-canvas').toDataURL('image/png'));
+   assert.ok(snap.startsWith('data:image/png;base64,')&&snap.length>40000,
+    'Empty WebGL frame at '+camera+'/'+phase);
+   writeFileSync('artifacts/btc-ocular-fast/'+camera+'-'+String(phase).padStart(2,'0')+'.png',
+     Buffer.from(snap.split(',')[1],'base64'));
+  }
+ }
  assert.deepEqual(faults,[],faults.join('; '));
  console.log('BTC_ORBITAL_TOPOLOGY_REAL_WEBGL',JSON.stringify({
   harmonyBuild:s.heroGroom.harmonyBuild,eyes:s.heroGroom.eyeGlobes,
