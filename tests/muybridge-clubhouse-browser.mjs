@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
 
 const url=process.env.CRP_BASE_URL||'http://127.0.0.1:4173';
@@ -9,6 +10,23 @@ try{
  const errors=[];
  const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
  page.on('pageerror',e=>errors.push(e.message));
+ const cdp=await page.context().newCDPSession(page);
+ // Capture the compositor directly: Playwright screenshot waits for an
+ // animated canvas to settle and can time out on software WebGL.
+ async function capture(path,selector){
+   const clip=selector?await page.locator(selector).evaluate(el=>{
+     const r=el.getBoundingClientRect();
+     return {x:r.left,y:r.top,width:r.width,height:r.height,scale:1};
+   }):undefined;
+   if(clip)assert.ok(clip.width>0&&clip.height>0,'visible stage capture bounds');
+   const {data}=await cdp.send('Page.captureScreenshot',{
+     format:'png',captureBeyondViewport:false,fromSurface:true,...(clip?{clip}:{})
+   });
+   const png=Buffer.from(data,'base64');
+   assert.ok(png.length>10000,'real nonempty WebGL PNG');
+   assert.equal(png.subarray(1,4).toString(),'PNG','valid PNG signature');
+   await writeFile(path,png);
+ }
  for(const [id,mode] of [['muybridge','oval'],['genesis','straight'],['vint-cerf','s-bend']]){
    const response=await page.goto(url+'/visual-lab/?track='+id+'&pavilion-qa=1&finish-qa=alpha06&camera-qa=alpha17',
      {waitUntil:'domcontentloaded',timeout:45000});
@@ -61,8 +79,8 @@ try{
    await page.waitForTimeout(1700);
    assert.equal(await page.locator('#presentation-overlay').isVisible(),false,
      'Do not approve photos with a presentation scrim hiding the building');
-   await page.screenshot({path:'/tmp/muybridge-clubhouse-'+id+'.png'});
-   await page.locator('#stage').screenshot({path:'/tmp/muybridge-clubhouse-'+id+'-architecture.png'});
+   await capture('/tmp/muybridge-clubhouse-'+id+'.png');
+   await capture('/tmp/muybridge-clubhouse-'+id+'-architecture.png','#stage');
    // Camera and lighting are the real controls used by the LIVE page, not
    // synthetic render images. The select may be hidden in TV/embed mode.
    await page.evaluate(()=>{
@@ -75,8 +93,8 @@ try{
      return vip?.detailNight===true && vip.detailWashIntensity>0;
    },null,{timeout:25000});
    await page.waitForTimeout(1300);
-   await page.screenshot({path:'/tmp/muybridge-clubhouse-'+id+'-night.png'});
-   await page.locator('#stage').screenshot({path:'/tmp/muybridge-clubhouse-'+id+'-architecture-night.png'});
+   await capture('/tmp/muybridge-clubhouse-'+id+'-night.png');
+   await capture('/tmp/muybridge-clubhouse-'+id+'-architecture-night.png','#stage');
    console.log('CLUBHOUSE_QA_OK',JSON.stringify({id,layout:mode,worldZ:result.liveVIPWorldZ,
      ovalClearance:result.ovalClearance}));
  }
