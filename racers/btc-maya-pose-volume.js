@@ -45,7 +45,8 @@ export function stabilizeHindSkinWeights(positions,bones,weights,boneNames){
   const original=[],wrong=[];
   for(let k=0;k<4;k++){
    const j=bones[v*4+k],name=boneNames[j]||'',w=weights[v*4+k];
-   const invalid=(name.startsWith('Back')&&name.endsWith(otherSide)) ||
+   const invalid=((name.startsWith('Back')||name.startsWith('IKBackLeg')||
+       name.startsWith('FFB'))&&name.endsWith(otherSide)) ||
       name.startsWith('Front') || name.startsWith('Tail');
    original.push(w);wrong.push(invalid);
    originalTotal+=w;
