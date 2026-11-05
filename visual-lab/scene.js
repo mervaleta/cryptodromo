@@ -263,7 +263,8 @@ function sign(text,x,y,z,w=24,h=3,parent=venue,fg='#f3ecd7',bg='#0e3028'){
  const surface=mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}),parent);
  surface.position.set(x,y,z);return surface;
 }
-sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,18.2,-72,64,4.7,pavilion);
+// A compact frieze plaque belongs above the portico, not in front of the upper-story glazing.
+sign('CRYPTÓDROMO · SATOSHI NAKAMOTO',0,7.7,-67.5,42,1.65,pavilion);
 sign('PISTA EADWEARD MUYBRIDGE',0,3.1,-36,52,3.0,pavilion);
 // Remote grandstands retain their exact seeded coordinates and dress colors,
 // but are no longer two isolated primitive torso/head meshes.
