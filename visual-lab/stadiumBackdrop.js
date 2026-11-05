@@ -32,13 +32,13 @@ export function createStadiumBackdrop(scene,{softwareGPU=false,mobile=false}={})
  const roofMaterial=new THREE.MeshStandardMaterial({color:'#354e4c',metalness:.24,roughness:.72});
  const parapets=new THREE.InstancedMesh(roofGeo,roofMaterial,buildings.length);
  const windowGeo=new THREE.BoxGeometry(1,1,1),windowPositions=[];
- for(const building of buildings){
-  const {x,z,w,h,d}=building;
+ for(let buildingIndex=0;buildingIndex<buildings.length;buildingIndex++){
+  const {x,z,w,h,d}=buildings[buildingIndex];
   dummy.position.set(x,h+.26,z);
   dummy.rotation.set(0,0,0);
   dummy.scale.set(w+.9,.52,d+1.1);
   dummy.updateMatrix();
-  parapets.setMatrixAt(windowPositions.length===-1?0:buildings.indexOf(building),dummy.matrix);
+  parapets.setMatrixAt(buildingIndex,dummy.matrix);
   const cols=Math.min(9,Math.max(2,Math.floor(w/3.0)));
   const rows=Math.min(13,Math.max(2,Math.floor(h/4.4)));
   // Facade faces the stadium, independently of which side of the track.
