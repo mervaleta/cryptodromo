@@ -1,0 +1,45 @@
+name: "Predictions: PHP ledger integrity, simulation and 100 users"
+on:
+  push:
+    branches: [feat/predictions-virtual-ledger-20261105]
+    paths:
+      - 'predictions/**'
+      - 'pronosticos/**'
+      - 'api/predictions.php'
+      - 'scripts/settle-predictions.php'
+      - 'tests/predictions-php.php'
+      - 'tests/predictions-concurrency.php'
+      - '.github/workflows/predictions-ledger.yml'
+  pull_request:
+    paths:
+      - 'predictions/**'
+      - 'pronosticos/**'
+      - 'api/predictions.php'
+      - 'scripts/settle-predictions.php'
+      - 'tests/predictions-php.php'
+      - 'tests/predictions-concurrency.php'
+      - '.github/workflows/predictions-ledger.yml'
+permissions:
+  contents: read
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PHP preflight
+        run: |
+          php -v
+          php -m | grep -i pdo_sqlite
+          php -l predictions/lib.php
+          php -l api/predictions.php
+          php -l scripts/settle-predictions.php
+          php -l tests/predictions-php.php
+          php -l tests/predictions-concurrency.php
+      - run: node --experimental-default-type=module scripts/export-prediction-fixture.mjs
+      - run: node --experimental-default-type=module --test tests/predictions-official-fixture.mjs
+      - run: php tests/predictions-php.php
+      - run: php tests/predictions-concurrency.php
+      - run: node --check pronosticos/app.js
