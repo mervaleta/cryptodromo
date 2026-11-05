@@ -81,3 +81,16 @@ Triple canal visible; cambios de cámara legibles; cambios de líder relatados s
 - Se actualizaron **solo dos pruebas** de esa cadena: `tests/stadium-live-integration.mjs` y `tests/winner-replay-env-contract.mjs`, al token `broadcast-aaa-20261105-v1`. No se tocaron sus comprobaciones de escena, winner, integración, hipódromo ni datos.
 - Sigue faltando verificar los demás checks del HEAD actualizado. Los fallos antiguos no prueban un problema de runtime ni tampoco demuestran estabilidad.
 - Los cambios de `main` respecto de la base de este PR corresponden a BTC; al momento de revisar no hubo archivos modificados en común. Volver a comparar inmediatamente antes del merge.
+
+## Iteración 1d · protección ante escena lenta y source-probe colgado
+
+**Comprobación efectiva del anterior HEAD `830c12f`:** GitHub Actions: 22 controles exitosos, 2 omitidos, 2 fallidos. Los dos fallos se produjeron por `page.screenshot` con timeout (40 s cámara Alpha17 y 45 s efectos de cascos/BTC). La prueba local de TV y sus contratos fueron exitosos. Estos fallos NO demuestran un defecto de cámaras, pero no permiten afirmar cobertura visual completa.
+
+**Implementación adicional aislada:**
+- `tests/satoshi-tv-player-browser.mjs` simula una descarga diferida de `visual-lab/scene.js`: comprueba que un `#raceCanvas` en el documento sin motor listo no destape la señal, no muestre error de ruta errónea y pase a cámara visible al completarse el cargador.
+- `assets/crypto-venue.js` limita cada comprobación HTML de origen a 12 segundos, **incluyendo la descarga del cuerpo**, mediante `AbortController`. Si ambas rutas fallan, la TV no mantiene un spinner indefinidamente antes de cargar el iframe: usa el error y reintento existentes.
+- `tests/tv-transition-watchdog.mjs` comprueba que existe un límite de sondeo y se libera el temporizador.
+
+**Estado:** la nueva prueba browser/contratos **no debe darse por aprobada** sin leer el resultado del workflow del HEAD de esta iteración. Los dos fallos de capturas pertenecen a suites de otros ámbitos, y se mantienen documentados sin alterar los tests de BTC ni Parade.
+
+**Convivencia:** `main` cambió al menos cinco veces respecto de `339ec31` durante la iteración, en áreas BTC y wallet. No fusionar hasta releer compare y CI. Todos los cambios de esta fase siguen en el alcance de televisión y tests de TV.
