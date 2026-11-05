@@ -4,6 +4,7 @@
  * filtering suppresses high-frequency fiber shimmer at stadium distances.
  * Compounds with the existing cryptocurrency livery shader.
  */
+export const BTC_NATIVE_MASTER_BUILD='btc-native-horse-20261105-v1';
 export const BTC_NATIVE_LOOKDEV_BUILD='btc-native-lookdev-20261105-v1';
 const BEGIN='#include <begin_vertex>';
 const COMMON='#include <common>';
