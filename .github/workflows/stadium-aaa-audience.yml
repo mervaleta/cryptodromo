@@ -38,6 +38,11 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
           npx playwright install chromium --with-deps
+      - name: Checkout pinned baseline for comparison
+        uses: actions/checkout@v4
+        with:
+          ref: b5b0bd673a4a4827f74f360f55976e9d9b66917a
+          path: baseline-stadium
       - name: Render actual 3D scene and capture evidence
         env:
           CRP_BASE_URL: http://127.0.0.1:4173
@@ -47,6 +52,7 @@ jobs:
           trap 'kill $server_pid || true' EXIT
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
           node tests/stadium-aaa-audience-browser.mjs
+          node tests/stadium-aaa-audience-comparison.mjs
       - name: Preserve real browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
