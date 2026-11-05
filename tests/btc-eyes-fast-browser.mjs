@@ -13,7 +13,7 @@ try{
  await page.waitForFunction(()=>{const s=window.__cryptodromoBTCAtelierQA?.();return s?.variant==='maya'&&s?.heroGroom?.harmonyBuild==='btc-master-procedural-hind-groom-20261104-v12-fx2'&&s?.drawCalls>0;},null,{timeout:120000});
  const s=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(s.heroGroom.eyeApertureBorders,22);
- assert.equal(s.heroGroom.eyeCenterX,.001635);
+ assert.equal(s.heroGroom.eyeCenterX,.001825);
  assert.equal(s.heroGroom.eyeApertureCenters,2);
  assert.equal(s.heroGroom.vertices,5411);
  assert.equal(s.heroGroom.eyeAssembly,'integrated-maya-eyelid-shading-v15');
