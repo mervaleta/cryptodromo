@@ -60,7 +60,7 @@ try{
   await route.continue();
  });
  try{
-  const delayedPage=await openPage(delayed,'/stadiums/crypto/live/?track=muybridge');
+  const delayedPage=await openPage(delayed,'/stadiums/crypto/live/?track=muybridge&tv-qa=1');
   await delayedPage.waitForFunction(()=>{
    const frame=document.getElementById('stadium-broadcast');
    const doc=frame?.contentDocument;
@@ -74,9 +74,14 @@ try{
    'Do not uncover a DOM-only 3D canvas');
   assert.equal(await delayedPage.locator('#tv-error').isVisible(),false,
    'A valid document waiting for 3D boot is not a hosting rewrite');
+  assert.equal((await delayedPage.evaluate(()=>window.__satoshiTvQA?.snapshot()))?.ready,false);
   resumeScene();
   await requirePlayer(delayedPage,'muybridge');
   assert.equal(await delayedPage.locator('#tv-loading').isVisible(),false);
+  const tuning=(await delayedPage.evaluate(()=>window.__satoshiTvQA?.snapshot()))?.tuning;
+  assert.ok(Number.isFinite(tuning?.lastTuneLatencyMs),'Missing readiness latency');
+  assert.equal(tuning.successfulTuneCount,1);
+  assert.equal(tuning.failedTuneCount,0);
   console.log('PASS Satoshi TV delayed WebGL: loading remains covered until all horse models are ready');
  }finally{
   resumeScene();
