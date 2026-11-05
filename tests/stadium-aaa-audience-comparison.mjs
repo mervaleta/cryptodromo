@@ -6,7 +6,7 @@ const metrics=[];
 try{
  for(const [name,host] of [['before','http://127.0.0.1:4174'],['after','http://127.0.0.1:4173']]){
   const page=await browser.newPage({viewport:{width:1600,height:940}});
-  await page.goto(host+'/visual-lab/?track=genesis',{waitUntil:'domcontentloaded',timeout:45000});
+  await page.goto(host+'/visual-lab/?track=genesis&finish-qa=alpha06',{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>document.querySelector('#start')?.disabled===false,null,{timeout:120000});
   for(const [view,weather] of [['overview','noon'],['rail','noon'],['rail','night']]){
    await page.evaluate(([view,weather])=>{
