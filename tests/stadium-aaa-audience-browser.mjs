@@ -29,6 +29,7 @@ try {
  assert.equal(first.layout,'straight');
  assert.equal(first.groups.find(x=>x.name.endsWith('arms')).count,first.crowd*2);
  assert.ok(first.drawCalls>0);
+ await setControl('graphics-quality','balanced');
  await setControl('camera','overview');
  await setControl('weather','noon');
  await page.waitForTimeout(1200);
