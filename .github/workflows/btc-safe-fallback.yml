@@ -8,6 +8,9 @@ on:
       - 'racers/btc-atelier-preview.js'
       - 'racers/btc-master-revision.json'
       - 'tests/btc-safe-fallback-contract.mjs'
+      - 'tests/btc-restore-v5-contract.mjs'
+      - 'racers/btc-hero-v5.js'
+      - 'racers/btc-silk-shell-v5.js'
       - 'tests/btc-native-gallop-reference-contract.mjs'
       - 'race-lab/source/src/horse.js'
       - 'race-lab/source/src/btcNativeLookdev.js'
@@ -29,4 +32,6 @@ jobs:
           node --check racers/btc-atelier-preview.js
           node --check race-lab/source/src/horse.js
           node --check race-lab/source/src/btcNativeLookdev.js
-          node --test tests/btc-native-procedural-lookdev-contract.mjs tests/btc-native-gallop-reference-contract.mjs tests/btc-safe-fallback-contract.mjs tests/btc-horse-atelier-contract.mjs tests/btc-v12-anatomy-contract.mjs
+          node --check racers/btc-hero-v5.js
+          node --check racers/btc-silk-shell-v5.js
+          node --test tests/btc-restore-v5-contract.mjs tests/btc-native-procedural-lookdev-contract.mjs tests/btc-native-gallop-reference-contract.mjs tests/btc-safe-fallback-contract.mjs tests/btc-horse-atelier-contract.mjs tests/btc-v12-anatomy-contract.mjs
