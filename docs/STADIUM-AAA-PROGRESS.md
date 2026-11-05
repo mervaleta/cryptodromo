@@ -36,6 +36,18 @@
 - Producción de Hostinger: sin evidencia postintegración; PR no fusionado.
 - Rendimiento: sin medición FPS por GPU ni visual review. Los draw groups son presupuesto estático, no fps.
 
+## Iteración 2 · pabellón VIP estructural, balcón y cubierta (código integrado; QA en curso)
+- Problema confirmado en geometría: cuerpo principal con base y=4.5, fundación hasta y=1.215, discontinuidad visual ~3.285m. Implementada planta baja con dos alas, vestíbulo, columnas que llegan al suelo y pórtico soportado.
+- Añadidos accesos acristalados, capiteles, entablamento, balcón continuo, barandillas, cornisa denticulada, elementos de cubierta y frontón central entre torres.
+- Nuevos materiales: piedra clara, hierro verde azulado, bronce, vidrio y lentes emisivos cálidos en nocturna, sin agregar nuevos focos dinámicos.
+- Nueva geometría independiente: visual-lab/satoshiPavilionDetail.js, posición relativa al mismo grupo VIP, limitación de footprint local X [-35.5,35.5], Z [-5.2,14.6]; sin invadir pistas ni cambiar cámaras.
+- Rendimiento: InstancedMesh con geometrías reutilizables; eco desactiva sólo ornamentación, no soportes; dispose libera recursos.
+- Tests: tests/satoshi-pavilion-detail.mjs y tests/muybridge-clubhouse-browser.mjs, con capturas reales en tres pistas de día y noche. Workflow .github/workflows/muybridge-clubhouse.yml.
+- Cache bust en visual-lab/index.html, stadiums/crypto/broadcast/index.html y contratos que verifican URLs correctas.
+- Referencias: https://www.kentuckyderby.com/living-traditions/twin-spires/ ; https://sah-archipedia.org/buildings/KY-01-111-0018 ; https://old.palermo.com.ar/es/institucional/c/tribunas .
+- Estado de QA: ejecución disparada para revisión, todavía no aprobada al registrar este punto. Falta comparación visual antes/después y medición FPS.
+- Deuda: ventanas originales aún usan paneles planos; falta profundidad de huecos, mejores materiales, contraste de sombras y revisión desde cerca.
+
 ## Estado de pruebas concurrentes
 - Audiencia y geometría: PASS en Actions #41960445118; cuatro capturas Chromium reales.
 - Satoshi Nakamoto Stadium: PASS en #41960445027.
