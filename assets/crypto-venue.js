@@ -42,6 +42,7 @@ let active=selected.id;
 let replay=readTvReplay(params,active);
 let source=null,serial=0,loadTimer=null,framePoller=null,frameReadySerial=-1;
 let sourcePromise=null;
+let readyObserver=null;
 // Read-only tuning telemetry, exposed only in ?tv-qa=1; no sporting state.
 let tuneStartedAt=0,lastTuneLatencyMs=null,successfulTuneCount=0,failedTuneCount=0,lastTuneError='';
 const format=n=>String(Math.max(0,Math.floor(n))).padStart(2,'0');
@@ -73,6 +74,7 @@ const setBusy=()=>{
  soundEnabled=false;audioButton.disabled=true;audioButton.setAttribute('aria-pressed','false');audioButton.textContent='🔊 Activar sonido';
 };
 const setError=detail=>{
+ disconnectReadyObserver();
  failedTuneCount++;lastTuneError=String(detail);lastTuneLatencyMs=null;
  clearTimeout(loadTimer);clearInterval(framePoller);uncover();
  frame.hidden=true;frame.style.visibility='hidden';loading.hidden=true;errorBox.hidden=false;
@@ -161,8 +163,9 @@ function signalReady(expectedSerial=serial){
   }
  }catch{}
  if(!validFrameDoc())return false;
- if(frameReadySerial===expectedSerial)return true;
+ if(frameReadySerial===expectedSerial){uncover();return true;}
  frameReadySerial=expectedSerial;
+ disconnectReadyObserver();
  lastTuneLatencyMs=Math.max(0,Math.round(performance.now()-tuneStartedAt));
  lastTuneError='';successfulTuneCount++;
  clearTimeout(loadTimer);clearInterval(framePoller);
@@ -188,6 +191,23 @@ function signalReady(expectedSerial=serial){
  try{frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('resize'));}catch{}
  return true;
 }
+function disconnectReadyObserver(){readyObserver?.disconnect();readyObserver=null;}
+// DOM-ready is not 3D-ready: the async horse loader enables #start only
+// after all twelve actors have been constructed. Observe that exact signal,
+// keeping the existing timer as a recovery path for rewritten/slow documents.
+function connectReadyObserver(expectedSerial){
+ disconnectReadyObserver();
+ try{
+  const start=frame.contentDocument?.getElementById('start');
+  if(!start)return;
+  readyObserver=new MutationObserver(()=>{
+   if(expectedSerial!==serial){disconnectReadyObserver();return;}
+   signalReady(expectedSerial);
+  });
+  readyObserver.observe(start,{attributes:true,attributeFilter:['disabled']});
+  signalReady(expectedSerial);
+ }catch{}
+}
 function watchLoad(expectedSerial){
  clearTimeout(loadTimer);clearInterval(framePoller);
  framePoller=setInterval(()=>{
@@ -204,6 +224,7 @@ async function tune(id,requestedReplay=null,changeUrl=true){
  const track=getTrack(id);if(!track)return;
  active=track.id;replay=requestedReplay;
  const current=++serial;
+ disconnectReadyObserver();
  tuneStartedAt=performance.now();lastTuneLatencyMs=null;lastTuneError='';
  clearTimeout(loadTimer);clearInterval(framePoller);
  frameReadySerial=-1;
@@ -241,6 +262,7 @@ frame.addEventListener('load',async()=>{
  // is asynchronous: keep polling, do not send a valid page into the fallback.
  if(hasRaceDocument()){
   watchLoad(serial);
+  connectReadyObserver(serial);
   return;
  }
  // A hosting rewrite may serve /live/ with status 200 at /broadcast/.
@@ -292,7 +314,7 @@ $('tv-fullscreen').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)showProgramGuide();});
 const ticker=setInterval(showProgramGuide,1000);
-window.addEventListener('pagehide',()=>{clearInterval(ticker);clearInterval(framePoller);clearTimeout(loadTimer);environmentDeck.dispose();parameterDeck.dispose();frame.src='about:blank';},{once:true});
+window.addEventListener('pagehide',()=>{clearInterval(ticker);clearInterval(framePoller);clearTimeout(loadTimer);disconnectReadyObserver();environmentDeck.dispose();parameterDeck.dispose();frame.src='about:blank';},{once:true});
 showProgramGuide();
 if(new URLSearchParams(location.search).get('tv-qa')==='1'){
  window.__satoshiTvQA=Object.freeze({
