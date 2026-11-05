@@ -12,7 +12,7 @@ import {recommendQuality,rendererSettings,createQualityGovernor} from '../alpha1
 import {createAlternativeTracks} from './trackVisuals.js?v=a12-curves-1';
 import {createLiveStadiumDistrict} from './stadiumDistrict.js?v=stadium-live-1';
 import {createStadiumDensity} from './stadiumDensity.js?v=photo-finish-tv-params-20261104-v1';
-import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-1';
+import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-2';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=alpha16-village-1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
@@ -1129,7 +1129,8 @@ function adjustCamera(dt){
    goal.set(point.x-tx*52+nx*32,23,point.z-tz*52+nz*32);
    target.set(point.x+tx*8,1.8,point.z+tz*8);
  }else if(mode==='grandstand'){
-   goal.set(0,27,-68);
+   // Former z=-68 was on the oval backstretch. Film from above the stands.
+   goal.set(0,27,PAVILION_GRANDSTAND_CAMERA_Z);
    target.set(point.x,1.7,point.z);
  }else if(mode==='orbit'){
    const angle=elapsed*.09,offset=55;
