@@ -15,6 +15,6 @@ test('public BTC chooses native original GLB, Maya is explicit opt-in',()=>{
  assert.doesNotMatch(master,/const face=createBTCMayaFaceDetails\(best/);
  assert.match(master,/globes:0,eyeRadius:0/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- assert.equal(manifest.buildId,'btc-maya-safety-original-20261105-v1');
- assert.equal(manifest.status,'needs_fix');
+ assert.equal(manifest.buildId,'btc-native-horse-20261105-v1');
+ assert.equal(manifest.status,'needs_visual_qa');
 });
