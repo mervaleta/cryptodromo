@@ -84,7 +84,8 @@ try {
             $me=crp_users_current($db);
             crp_users_reply(200,['ok'=>true,'csrf'=>$_SESSION['csrf'],
                 'user'=>$me?crp_users_private($me):null,
-                'mail_enabled'=>crp_users_mail_configured()]);
+                'mail_enabled'=>crp_users_mail_configured(),
+                'google_client_id'=>trim((string)(getenv('GOOGLE_OAUTH_CLIENT_ID') ?: ''))]);
         }
         if ($action==='profile') {
             $alias=(string)($_GET['alias'] ?? '');
