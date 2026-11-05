@@ -8,7 +8,9 @@
  *
  * These are visual-only metres. Race doses, winner and fixture stay unchanged.
  */
-import {trackPoint} from './trackMath.js';
+// MUST match the exact geometry module imported by scene.js. A stale oval
+// gave a misleading 93.5m clearance while the actual backstretch is 36.5m.
+import {trackPoint} from './trackMath.js?v=alpha14-runout-2';
 export const PAVILION_OFFSET_Z=-67;
 // Broadcast camera must stand behind the backstretch rail, not on the dirt.
 export const PAVILION_GRANDSTAND_CAMERA_Z=-119;
