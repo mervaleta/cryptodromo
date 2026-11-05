@@ -165,3 +165,10 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - El GLB original conserva el clip Gallop; el visor desactiva `gaitRefiner` aditivo para evitar torsiones. Con V5, `maneMotion=false` en la crin de shader GLB para impedir doble movimiento sobre el pelo; V5 gestiona su propia inercia.
 - `?btcMaster=original` conserva rollback; `?btcMaster=maya` sigue exclusivamente diagnóstico. Los demás 99 corredores y el motor de apuestas/carrera no se modifican.
 - No declarar AAA ni publicar como maestro de todos sin capturas Chromium/WebGL de 16 fases y aceptación visual del usuario.
+
+## 2026-11-05 · `btc-v5-luxury-profile-20261105-v2` · V5 premium sobre GLB nativo (NO maestro aprobado)
+- Se revisaron las capturas WebGL de los diez pases V5, obtenidas de GitHub Actions run `41951792739`, artefacto `13381433822`. La crin era gruesa y la inserción de la cola necesitaba mejorar.
+- `btc-hero-v5.js`: remallado de aristas interior tipo Loop para `Main` y `Main_Light` en 2 niveles. Conserva las coordenadas originales, el orden de malla, huesos y pesos originales en vértices existentes; los nuevos interpolan pesos de joints nativos. Costuras y contornos usan puntos medios para no abrir huecos. No altera `Gallop` ni el motor general.
+- `btc-silk-shell-v5.js`: raíces de la cola desplazadas al interior de la grupa del GLB en pose rest, melena menos tubular y materiales de pelo más mates y orgánicos. No se agregaron dobles colas ni meshes desconectados.
+- `btc-atelier-preview.js`, `racers.js` y `index.html`: se carga el build versionado para la ficha BTC por defecto, con botón de rollback al GLB original; se expone control QA para 16 fases sobre el clip original sin corregir las articulaciones.
+- `btc-master-revision.json`: `pending_deploy`. **Pendiente QA del build exacto en navegador y Hostinger; no afirmar AAA**. Los otros 99 caballos y sus resultados no se modificaron.
