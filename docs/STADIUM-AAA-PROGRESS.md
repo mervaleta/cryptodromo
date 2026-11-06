@@ -224,3 +224,11 @@
 - La consulta de Actions asociada al checkpoint anterior `ae8092b` devolvió cero runs en el filtro limitado a PR y primera página del conector. NO equivale a afirmar ausencia global de CI. Este cambio todavía no tiene evidencia de ejecución ni JSON/PNG inspeccionados.
 - P0 sigue abierto: cubierta/travesaños y columna ocluyen rail nocturna/diurna en artefacto real #13411024839 (run 42020938960). Próximo paso: descargar artefacto del nuevo HEAD, identificar cadenas `hit.chain` dominantes, corregir solo geometría local de estadio y repetir capturas sincronizadas; si falla CI, corregir el test antes de interpretar visuales.
 - Sin cambios a caballos BTC, fixtures, apuestas, ganadores, motor o cámaras compartidas. No certificar AAA sin gameplay de tres pistas, estética, cámaras y GPU real.
+
+
+## Iteración 18 · cobertura de CI para diagnóstico de oclusión (2026-11-05)
+- Releído el checkpoint antes de intervenir. Comparación GitHub: main `0cfeb06655e636d53ad77a940c99e29f0dec6220`, rama 116 ahead / 23 behind antes del commit; PR #115 sigue aislada. No rebase, merge ni deploy.
+- Hallazgo concreto: `tests/stadium-occlusion-qa.mjs` existía pero el workflow de audiencia NO lo ejecutaba en el job `geometry`. Un CI verde podía omitir silenciosamente el contrato del diagnóstico de 25 raycasts.
+- Commit `389e252` incorpora ese contrato a las rutas que disparan el workflow, validación sintáctica y `node --test`. No cambia escena, cámara, motor ni otros workflows.
+- La consulta de runs por HEAD anterior `54d7f6c8` no devolvió resultados en el filtro limitado de PR/primera página. El artefacto #13411024839 del run #42020938960 sigue disponible pero corresponde a `f57dcdd`, anterior a los JSON emparejados. No se inspeccionaron PNG/JSON nuevos en esta iteración ni se afirma CI verde para el nuevo commit.
+- P0 sin resolver: cubierta y columna obstruyen rail día/noche en capturas anteriores. Para corregir geometría, obtener PNG y `*.occlusion.json` del MISMO HEAD/instante, identificar `hit.chain`, aplicar cambio local y volver a capturar. Gameplay de tres pistas y GPU real pendientes. AAA NO certificado; PR draft, sin publicación.
