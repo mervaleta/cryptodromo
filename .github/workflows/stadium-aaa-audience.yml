@@ -11,6 +11,7 @@ on:
       - 'stadiums/crypto/broadcast/index.html'
       - 'tests/stadium-aaa-audience*'
       - 'tests/stadium-static-batches.mjs'
+      - 'tests/stadium-occlusion-qa.mjs'
       - 'tests/stadium-presentation-visibility-browser.mjs'
       - '.github/workflows/stadium-aaa-audience.yml'
   workflow_dispatch:
@@ -37,9 +38,10 @@ jobs:
           node --experimental-default-type=module --check tests/stadium-aaa-audience.mjs
           node --experimental-default-type=module --check tests/stadium-grandstand-crowd.mjs
           node --experimental-default-type=module --check tests/stadium-static-batches.mjs
+          node --experimental-default-type=module --check tests/stadium-occlusion-qa.mjs
           node --experimental-default-type=module --check tests/stadium-presentation-visibility-browser.mjs
       - name: Validate audience geometry and existing safety contracts
-        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-static-batches.mjs tests/stadium-clean-photo-finish-tv.mjs
+        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-static-batches.mjs tests/stadium-occlusion-qa.mjs tests/stadium-clean-photo-finish-tv.mjs
   webgl:
     runs-on: ubuntu-24.04
     timeout-minutes: 22
