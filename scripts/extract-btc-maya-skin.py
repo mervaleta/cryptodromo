@@ -11,6 +11,9 @@ import collections
 import json
 import pathlib
 import re
+import struct
+import zlib
+import hashlib
 
 SINGLE = re.compile(r'setAttr\s+"\.wl\[(\d+)\]\.w\[(\d+)\]"\s+([^;]+);')
 RANGE_START = re.compile(r'setAttr(?:\s+-s\s+\d+)?\s+"\.wl\[(\d+)\]\.w\[(\d+):(\d+)\]"\s*(.*)')
@@ -71,12 +74,67 @@ def run(path):
         'note':'Native skinCluster1 weights; do not remap by nearest neighbor into unrelated GLB bones.',
     }
 
+
+def export_exact_sparse_skin(path, out_path):
+    """Private offline intermediate. Keep ALL 70 joints and ALL weights.
+
+    This is NOT yet a glTF and must not be bound to Quaternius's 50 joints.
+    Binary (big/little specified): zlib(
+      ASCII "BTCSKIN1",
+      uint32le vertexCount, uint32le boneCount,
+      (vertexCount+1) uint32le offsets in PAIRS,
+      repeated (uint8 boneIndex, float32le originalMayaWeight)
+    ).
+    Every row retains all contributing joints, including tiny influences.
+    """
+    rows, names = parse(path)
+    if len(rows)!=5406 or set(names)!=set(range(70)):
+        raise ValueError('Cannot export incomplete 2017 Maya skinCluster1')
+    offsets=[0]
+    data=bytearray()
+    totals=[]
+    worst4=0.0
+    over4=0
+    for vertex in range(5406):
+        row=rows[vertex]
+        if not row: raise ValueError(f'Unweighted native source vertex {vertex}')
+        normal=sum(row.values())
+        totals.append(abs(normal-1))
+        if abs(normal-1)>0.0001: raise ValueError(f'Original weights invalid at {vertex}: {normal}')
+        top=sorted(row.items(),key=lambda item:item[1],reverse=True)
+        if len(top)>4:over4+=1
+        worst4=max(worst4,1-sum(w for _,w in top[:4]))
+        for joint,weight in sorted(row.items()):
+            if joint<0 or joint>=70 or weight<0 or weight>1:
+                raise ValueError(f'Invalid native source influence {vertex}:{joint}={weight}')
+            data+=struct.pack('<Bf',joint,weight)
+        offsets.append(len(data)//5)
+    uncompressed=b'BTCSKIN1'+struct.pack('<II',5406,70)
+    uncompressed+=struct.pack('<5407I',*offsets)+data
+    compressed=zlib.compress(uncompressed,9)
+    pathlib.Path(out_path).write_bytes(compressed)
+    return {
+      'source':'Horse_VR_2017.ma/HorseRig1:skinCluster1',
+      'format':'zlib:BTCSKIN1:sparse-f32le',
+      'vertices':5406,'nativeBones':70,'influencePairs':offsets[-1],
+      'verticesWithMoreThanFour':over4,
+      'maxDiscardedInfluenceMassIfForcedToFour':worst4,
+      'normalizationMaxError':max(totals),
+      'bytesCompressed':len(compressed),
+      'sha256':hashlib.sha256(compressed).hexdigest(),
+      'warning':'Private derivative of original user supplied Maya. Do NOT publish to public repository without rights confirmation. No retarget or rig available yet.'
+    }
+
+
 if __name__=='__main__':
     ap=argparse.ArgumentParser()
     ap.add_argument('maya',help='Path to original Horse_VR_2017.ma; do not commit a proprietary .ma')
     ap.add_argument('--json',default='',help='Optional report file')
+    ap.add_argument('--export-exact',default='',help='Write private compressed native sparse skin. Do not commit to public repo without rights confirmation')
     args=ap.parse_args()
     report=run(args.maya)
     data=json.dumps(report,indent=2)
     print(data)
     if args.json: pathlib.Path(args.json).write_text(data+'\n',encoding='utf8')
+    if args.export_exact:
+        print(json.dumps(export_exact_sparse_skin(args.maya,args.export_exact),indent=2))
