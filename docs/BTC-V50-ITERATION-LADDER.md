@@ -73,3 +73,8 @@
 - **Commit:** `5018ec7ed277485ed6e6814929bdeebc4545c26e`.
 - **Corrección:** el validador de skinCluster exige ahora la identidad `HorseRig1:skinCluster1`, una escena de origen identificable y `geometryMatrix` finita de 16 valores; comprueba nombres y logical indices sin asumir que el JSON siempre contiene listas válidas. Evita admitir archivos incompletos o atribuidos a otro skinCluster.
 - **Limitaciones:** no se ejecutó Maya ni Chromium/WebGL en esta intervención; no hay JSON original exportado ni imágenes A/B. Este endurecimiento de importación NO constituye mejora visual ni acredita V23/V25. PR #136 sigue aislado, sin despliegue.
+
+## 2026-11-07 · rig Maya: rechazo de conexiones ambiguas (NO acreditada)
+- **Commit:** `326e03061265abc144903fd9966e9524206303a6`.
+- **Corrección:** el validador de exportación rechaza pesos booleanos, índices de influencia booleanos, matrices con valores booleanos, claves de matrices extra/ausentes y conexiones `matrix[]` ambiguas o no enlazadas a `worldMatrix[0]`. Reduce el riesgo de importar un rig corrupto sin tocar runtime BTC.
+- **Estado:** no se ha ejecutado Maya ni se dispone de exportación original validada. No hay pruebas Chromium/WebGL A/B de seis cámaras y 16 fases; V23/V25 siguen sin acreditarse. La condición `worldMatrix[0]` debe contrastarse contra las conexiones efectivas del archivo Maya antes de aceptar un JSON real. No merge, no Hostinger, no anuncio.
