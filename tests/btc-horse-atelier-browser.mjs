@@ -16,7 +16,7 @@ try{
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:120000});
  const safe=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(safe.variant,'maya','public BTC must use V21 by default');
- assert.equal(safe.heroGroom?.harmonyBuild,'btc-v21-ocular-tail-root-20261107-v1','canonical V21 build must be rendered, not just printed in a label');
+ assert.equal(safe.heroGroom?.harmonyBuild,'btc-v22-continuous-hind-seam-20261107','canonical V21 build must be rendered, not just printed in a label');
  assert.equal(safe.heroGroom?.eyeGlobes,2,'both real 3D eyes must render on Head');
  assert.equal(safe.heroGroom?.eyeRadius,.000335,'V21 eye geometry radius');
  assert.ok(safe.clips.includes('Gallop'));
