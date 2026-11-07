@@ -43,8 +43,6 @@ def export():
         raise RuntimeError('Influence count mismatch')
     # Maya matrix[] logical indices need not match the compact getWeights order.
     matrix_connections = {}
-    for plug in cmds.listConnections(CLUSTER + '.matrix', connections=True, plugs=True) or []:
-        pass  # Full connection map recorded below via each logical index.
     for logical in cmds.getAttr(CLUSTER + '.matrix', multiIndices=True) or []:
         source = cmds.listConnections('%s.matrix[%d]' % (CLUSTER, logical),
                                       source=True, destination=False, plugs=True) or []
