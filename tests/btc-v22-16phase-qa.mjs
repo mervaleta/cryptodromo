@@ -33,6 +33,17 @@ try{
   await page.evaluate(i=>window.__cryptodromoBTCAtelierSetPose?.(i),index);
   await page.waitForFunction(i=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===i,index,{timeout:15000});
   await page.waitForTimeout(160);
+  const sample=await page.evaluate(()=>{
+   const canvas=document.querySelector('#horse-canvas');
+   if(!canvas)return null;
+   const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');
+   if(!gl)return {webgl:false};
+   const pixels=new Uint8Array(4*4*4);
+   gl.readPixels(Math.max(0,Math.floor(gl.drawingBufferWidth/2)-2),Math.max(0,Math.floor(gl.drawingBufferHeight/2)-2),4,4,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+   return {webgl:true,error:gl.getError(),nonzero:pixels.some(v=>v!==0),width:gl.drawingBufferWidth,height:gl.drawingBufferHeight};
+  });
+  assert.ok(sample?.webgl&&sample.width>0&&sample.height>0,'WebGL context unavailable '+camera+index);
+  assert.equal(sample.error,0,'WebGL readback error '+camera+index);
   const png=await page.evaluate(()=>document.querySelector('#horse-canvas')?.toDataURL('image/png'));
   assert.ok(png?.startsWith('data:image/png;base64,')&&png.length>20000,'Empty WebGL frame '+camera+index);
   const bytes=Buffer.from(png.slice('data:image/png;base64,'.length),'base64');
