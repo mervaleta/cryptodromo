@@ -57,3 +57,8 @@
 - **Trabajo concreto:** extractor no destructivo para ejecutar *dentro de Autodesk Maya*, leyendo `HorseRig1:skinCluster1`, orden real de influencias, índices lógicos, pesos por vértice y `bindPreMatrix`; valida normalización y escribe JSON de datos sin modificar la escena. Evita inferir pesos del caballo Quaternius.
 - **Sin falsear resultados:** no se ejecutó Maya ni se generó un JSON real. No hay exportación GLB ni capturas Chromium/WebGL nuevas. V23 sigue pendiente de prueba comparativa de seis cámaras y 16 fases; V25 tampoco se acredita.
 - **Siguiente:** ejecutar el script con `Horse_VR_2017.ma` en Maya, auditar que devuelve 5406 vértices y 70 influencias, verificar orden/espacios de matrices y construir una prueba de skinning contra deformación nativa antes de reemplazar el rig actual. No publicar.
+
+## 2026-11-07 · control de integridad de exportación Maya (NO acreditado)
+- **Commit:** `2542c2548baee1e5def37f3b2bad2a1fb8ca600f`.
+- **Cambio:** `tools/btc/validate_maya_skincluster.py` comprueba fuera de Maya el esquema, 5406 vértices, 70 influencias, correspondencia de índices lógicos, matrices bind de 16 valores finitos, conexiones y normalización/unicidad de pesos por vértice. Rechaza JSON inconsistente antes de usarlo en el rig.
+- **Estado:** aún no hay JSON real exportado desde `Horse_VR_2017.ma`, ejecución de la validación con ese JSON, capturas WebGL ni comparación de seis vistas y 16 fases. No cuenta V23 ni V25. No desplegar.
