@@ -338,8 +338,15 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   const donorSkin=donorGeo.getAttribute('skinIndex'),donorWeights=donorGeo.getAttribute('skinWeight');
   const hostGeo=anatomy.geometry,hostPos=hostGeo.getAttribute('position'),
    hostSkin=hostGeo.getAttribute('skinIndex'),hostWeights=hostGeo.getAttribute('skinWeight');
+  // Only attach to triangles that survived the Maya crop. BufferGeometry
+  // retains orphaned vertex attributes after setIndex(), and searching all
+  // hostPos vertices can snap the donor to REMOVED posterior tissue.
+  const liveHostVertices=new Set();
+  const hostIndex=hostGeo.getIndex();
+  if(!hostIndex)throw Error('BTC V22 cropped Maya host lost its index');
+  for(let j=0;j<hostIndex.count;j++)liveHostVertices.add(hostIndex.getX(j));
   const attachment=[];
-  for(let i=0;i<hostPos.count;i++){
+  for(const i of liveHostVertices){
    const x=hostPos.getX(i),y=hostPos.getY(i),z=hostPos.getZ(i);
    if(z>.0207&&z<.032&&y>.0042&&Math.abs(x)>.0012)
     attachment.push({id:i,x,y,z,side:Math.sign(x)});
