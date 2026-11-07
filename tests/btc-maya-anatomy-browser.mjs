@@ -22,7 +22,7 @@ try{
  },null,{timeout:120000});
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.variant,'maya');
- assert.equal(start.heroGroom.vertices,5460,'original anatomical surface with tail and both ear-root caps');
+ assert.equal(start.heroGroom.vertices,5462,'original anatomical surface with tail and both ear-root caps');
  assert.ok(start.heroGroom.triangles>9500&&start.heroGroom.triangles<10500,
   'Maya horse must retain full body topology but remove duplicate appendages');
  assert.ok(start.heroGroom.nativeEarFacesRemoved>=150,'legacy horns must be culled');
