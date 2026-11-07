@@ -256,6 +256,24 @@ function refineSkinnedDonor(source,passes=2){
   for(let k=0;k<4;k++){sk.push(top[k]?.[0]||0);sw.push((top[k]?.[1]||0)/total);}
  }
  for(const tri of fs)facesOut.push(...tri);
+ // Reject invalid topology before it can enter the GPU skinning path.
+ // A collapsed face or non-manifold edge must never be hidden by shading.
+ const edgeUses=new Map();
+ for(const [a,b,c] of fs){
+  const pa=vs[a]?.p,pb=vs[b]?.p,pc=vs[c]?.p;
+  if(!pa||!pb||!pc||[...pa,...pb,...pc].some(v=>!Number.isFinite(v)))
+   throw Error('BTC V22 donor subdivision produced non-finite geometry');
+  const ab=pb.map((v,k)=>v-pa[k]),ac=pc.map((v,k)=>v-pa[k]);
+  const cross=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]];
+  if(cross.reduce((sum,v)=>sum+v*v,0)<1e-24)
+   throw Error('BTC V22 donor subdivision produced a degenerate triangle');
+  for(const [u,v] of [[a,b],[b,c],[c,a]]){
+   const key=u<v?u+':'+v:v+':'+u;
+   const count=(edgeUses.get(key)||0)+1;
+   if(count>2)throw Error('BTC V22 donor subdivision has a non-manifold edge');
+   edgeUses.set(key,count);
+  }
+ }
  const out=new THREE.BufferGeometry();
  out.setIndex(facesOut);
  out.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
