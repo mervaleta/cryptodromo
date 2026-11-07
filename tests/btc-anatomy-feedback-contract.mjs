@@ -26,7 +26,7 @@ test('true Maya BTC has stationary muscle mass, stable poll and original Gallop'
  assert.doesNotMatch(master,/addBTCHindquarterGaitShader\(shader,hindGait\)/);
  assert.match(master,/gallopPreserved:true/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- assert.equal(manifest.buildId,'btc-v21-ocular-tail-root-20261107-v1');
+ assert.equal(manifest.buildId,'btc-v22-continuous-hind-seam-20261107');
 });
 test('showroom hooves use scaled, limited marks with stadium defaults preserved',()=>{
  const fx=read('visual-lab/hoofTerrainFX.js');
