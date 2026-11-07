@@ -78,3 +78,8 @@
 - **Commit:** `326e03061265abc144903fd9966e9524206303a6`.
 - **Corrección:** el validador de exportación rechaza pesos booleanos, índices de influencia booleanos, matrices con valores booleanos, claves de matrices extra/ausentes y conexiones `matrix[]` ambiguas o no enlazadas a `worldMatrix[0]`. Reduce el riesgo de importar un rig corrupto sin tocar runtime BTC.
 - **Estado:** no se ha ejecutado Maya ni se dispone de exportación original validada. No hay pruebas Chromium/WebGL A/B de seis cámaras y 16 fases; V23/V25 siguen sin acreditarse. La condición `worldMatrix[0]` debe contrastarse contra las conexiones efectivas del archivo Maya antes de aceptar un JSON real. No merge, no Hostinger, no anuncio.
+
+## 2026-11-07 · reparacion sintactica del validador Maya (NO acreditada)
+- **Commits:** `6363dff36f582b816455ed29de29f96c4954f7b3`, `de621cb56e9605e91b867a6d245806d373e9cef6`.
+- **Defecto concreto:** `validate_maya_skincluster.py` contenia secuencias literales `\\n` al final de instrucciones Python, lo que impedia interpretar el archivo. Se restauraron los saltos de linea reales entre instrucciones, conservando los escapes dentro de cadenas de error.
+- **Limite:** correccion del validador, no del aspecto WebGL. Sin exportacion Maya real ni evidencia visual A/B, V23 y V25 siguen sin acreditarse. Falta ejecutar `python -m py_compile tools/btc/validate_maya_skincluster.py`, prueba positiva/negativa con JSON real y Chromium/WebGL 6 vistas y 16 fases. No desplegar.
