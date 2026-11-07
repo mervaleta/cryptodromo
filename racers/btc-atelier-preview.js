@@ -8,7 +8,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
-import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-v20b-native-hind-gallop-20261105';
+import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-v21-ocular-tail-root-20261107-v1';
 import {createBTCTerrainStage} from './btc-terrain-stage.js?v=btc-restore-v5-hair-gallop-20261105-v1';
 
 const CAMERA_POSITIONS={
@@ -60,7 +60,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  let heldPoseTime=0,heldPoseIndex=null;
  let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='original'?'original':stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
- let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#30261f';
+ let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#352721';
  const resize=()=>{
   if(disposed)return;
   const bounds=canvas.parentElement?.getBoundingClientRect();
