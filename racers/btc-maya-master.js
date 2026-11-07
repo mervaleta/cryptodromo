@@ -72,7 +72,12 @@ function makeSkinTransfer(source){
     const list=grid.get(key(c[0]+a,c[1]+b,c[2]+d));
     if(!list)continue;
     for(const i of list){
-     const v=coords[i],dx=x-v[0],dy=y-v[1],dz=z-v[2];
+     const v=coords[i];
+     // Do not borrow left-side limb bones for a right-side thigh or cheek.
+     // The old globally-nearest transfer crossed the mid-sagittal plane,
+     // introducing mirrored skinning in narrow articulated surfaces.
+     if(Math.abs(x)>.00072 && Math.abs(v[0])>.00072 && x*v[0]<0)continue;
+     const dx=x-v[0],dy=y-v[1],dz=z-v[2];
      const dist=dx*dx+dy*dy+dz*dz;
      if(nearest.length<12||dist<nearest[nearest.length-1].dist){
       nearest.push({i,dist});nearest.sort((a,b)=>a.dist-b.dist);
@@ -84,7 +89,9 @@ function makeSkinTransfer(source){
   }
   if(!nearest.length){
    for(let i=0;i<coords.length;i++){
-    const v=coords[i],dx=x-v[0],dy=y-v[1],dz=z-v[2],dist=dx*dx+dy*dy+dz*dz;
+    const v=coords[i];
+    if(Math.abs(x)>.00072 && Math.abs(v[0])>.00072 && x*v[0]<0)continue;
+    const dx=x-v[0],dy=y-v[1],dz=z-v[2],dist=dx*dx+dy*dy+dz*dz;
     if(nearest.length<12||dist<nearest[nearest.length-1].dist){
      nearest.push({i,dist});nearest.sort((a,b)=>a.dist-b.dist);
      if(nearest.length>12)nearest.length=12;
@@ -669,7 +676,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
    tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
-   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
+   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,skinTransferSameFlank:true,skinTransferFlankBoundary:.00072,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.002125,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
