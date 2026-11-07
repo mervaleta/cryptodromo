@@ -51,10 +51,10 @@ def validate(path):
         key = str(idx)
         m = matrices.get(key)
         require(isinstance(m, list) and len(m) == 16 and
-                all(isinstance(x, (int, float)) and math.isfinite(x) for x in m),
+                all(type(x) in (int, float) and math.isfinite(x) for x in m),
                 "invalid bindPreMatrix[%s]" % key)
-        require(bool(connections.get(key)), "missing matrix connection[%s]" % key)
-    rows = data.get("weightsSparseByVertex", [])
+        require(isinstance(connections.get(key), list) and len(connections[key]) == 1 and\n                isinstance(connections[key][0], str) and connections[key][0].endswith(".worldMatrix[0]"),\n                "missing/ambiguous worldMatrix connection[%s]" % key)
+    require(set(matrices) == {str(i) for i in logical}, "bind matrix keys do not match influences")\n    require(set(connections) == {str(i) for i in logical}, "matrix connection keys do not match influences")\n    rows = data.get("weightsSparseByVertex", [])
     require(isinstance(rows, list) and len(rows) == n, "incorrect vertex row count")
     if not isinstance(rows, list):
         rows = []
@@ -69,10 +69,10 @@ def validate(path):
                 errors.append("invalid weight pair at vertex %d" % v)
                 continue
             j, w = pair
-            if not isinstance(j, int) or not 0 <= j < k or j in ids:
+            if type(j) is not int or not 0 <= j < k or j in ids:
                 errors.append("invalid/repeated influence at vertex %d" % v)
             ids.add(j)
-            if not isinstance(w, (int, float)) or not math.isfinite(w) or w <= 0 or w > 1:
+            if type(w) not in (int, float) or not math.isfinite(w) or w <= 0 or w > 1:
                 errors.append("invalid weight at vertex %d" % v)
             else:
                 total += w
