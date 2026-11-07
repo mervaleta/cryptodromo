@@ -21,6 +21,18 @@ def dag_path(name):
     selection.add(name)
     return selection.getDagPath(0)
 
+def flatten_matrix(value):
+    """Maya getAttr(matrix) varies between a flat tuple and a nested 1-row tuple."""
+    if isinstance(value, (tuple, list)) and len(value) == 1 and isinstance(value[0], (tuple, list)):
+        value = value[0]
+    if not isinstance(value, (tuple, list)) or len(value) != 16:
+        raise RuntimeError('Expected a 4x4 Maya matrix, got %r' % (value,))
+    import math
+    flat = [float(x) for x in value]
+    if not all(math.isfinite(x) for x in flat):
+        raise RuntimeError('Nonfinite Maya matrix')
+    return flat
+
 def export():
     if not cmds.objExists(CLUSTER):
         raise RuntimeError('Missing original skinCluster: ' + CLUSTER)
@@ -50,7 +62,7 @@ def export():
     bind_pre = {}
     for logical in cmds.getAttr(CLUSTER + '.bindPreMatrix', multiIndices=True) or []:
         matrix = cmds.getAttr('%s.bindPreMatrix[%d]' % (CLUSTER, logical))
-        bind_pre[str(logical)] = list(matrix) if matrix is not None else None
+        bind_pre[str(logical)] = flatten_matrix(matrix) if matrix is not None else None
     rows = []
     for vertex in range(mesh.numVertices):
         row = [float(weights[vertex * influence_count + j]) for j in range(influence_count)]
@@ -69,7 +81,7 @@ def export():
         'matrixConnectionsByLogicalIndex': matrix_connections,
         'bindPreMatrixByLogicalIndex': bind_pre,
         'weightsSparseByVertex': rows,
-        'geometryMatrix': list(cmds.xform(shape[0], query=True, matrix=True, worldSpace=True)),
+        'geometryMatrix': flatten_matrix(cmds.xform(shape[0], query=True, matrix=True, worldSpace=True)),
     }
     with open(OUT, 'w', encoding='utf8') as handle:
         json.dump(result, handle, separators=(',', ':'), ensure_ascii=False)
