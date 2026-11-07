@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-v21-ocular-tail-root-20261107-v1';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-v22-continuous-hind-seam-20261107';
 import {createBTCNativeHindLimbRepair} from './btc-native-hind-limb-repair.js?v=btc-v22-continuous-hind-seam-20261107';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-face-native-gallop-20261105-v16';
@@ -422,14 +422,14 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.72;
+ coat.metalness=0;coat.roughness=.62;
  coat.defines={STANDARD:'',PHYSICAL:''};
- coat.clearcoat=.028;coat.clearcoatRoughness=.83;
- coat.sheen=.17;coat.sheenColor.set('#977458');coat.sheenRoughness=.93;
+ coat.clearcoat=.052;coat.clearcoatRoughness=.79;
+ coat.sheen=.23;coat.sheenColor.set('#a78d76');coat.sheenRoughness=.85;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
- const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#a46239');
+ const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#855036');
  const accent=new THREE.Color(/^#[0-9a-f]{6}$/i.test(brandAccent||'')?brandAccent:'#f7931a');
  coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.055));
  coat.flatShading=false;coat.side=THREE.FrontSide;
@@ -457,7 +457,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
    'diffuseColor.rgb*=1.-.085*eyeContour;'
   );
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
-   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.038*coatDirection+.046*amberBreak,.65,.94);');
+   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.026*coatDirection+.032*amberBreak,.54,.85);');
   addBTCHindquarterCoatTexture(shader);
   // Keep native Gallop transforms. No additional pose-varying muscle offset.
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
