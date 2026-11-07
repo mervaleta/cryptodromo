@@ -180,8 +180,11 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // generated IN the actual skinned Maya body mesh (not a floating patch).
  const capPosition=Array.from(positions),capSkinAnchors=new Map();
  const sideEdges=[-1,1].map(side=>border.filter(({a,b})=>{
-  const ax=positions[a*3],bx=positions[b*3];
-  return side<0?ax<=0&&bx<=0:ax>=0&&bx>=0;
+  // Midline vertices are shared by BOTH half-loops; classify each EDGE
+  // exactly once by its midpoint, rather than counting centerline pairs
+  // twice (the previous guard crashed V22 before any model rendered).
+  const mx=(positions[a*3]+positions[b*3])*.5;
+  return side<0?mx<0:mx>0;
  }));
  if(sideEdges[0].length+sideEdges[1].length!==border.length||
     sideEdges.some(e=>e.length<15||e.length>35))
