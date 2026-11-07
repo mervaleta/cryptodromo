@@ -7,6 +7,8 @@
 
 **Cadena efectiva si se acepta:** `racers/index.html → racers.js → btc-atelier-preview.js → btc-maya-master.js → btc-native-hind-limb-repair.js` con `btc-v22-continuous-hind-seam-20261107`. `racers/btc-master-revision.json` permanece `needs_visual_qa`. Se conserva V5 como alternativa reversible.
 
+**Segunda intervención en rama tras inspeccionar primeras capturas:** el corte plano eliminó la mayor parte del desgarro, pero dejó las patas demasiado angulosas. Se descartó esa primera superficie como final. Ahora el donante GLB se subdivide topológicamente dos veces mediante una variante conservadora de Loop que interpola pesos en aristas; el extremo superior se proyecta hacia los vértices de piel del muslo Maya del mismo lado y comparte gradualmente sus influencias del esqueleto. Las caras tienen normales suavizadas. Se mantiene el galope original y no se introducen cilindros ni falsas prótesis. Debe demostrarse que los volúmenes se mantienen anatómicos durante 16 fases.
+
 **Gate innegociable:** seis cámaras, 16 fases reales, comparativa **V21 vs V22** con ángulo/tiempo iguales; inspeccionar muslos, pliegues, interior de grupa, raíz de cola, y que no se cree un hueco al perder solapamiento. Sólo después de aprobación de los PNG candidatos, merge, chequeo efectivo Hostinger y capturas desde la URL canónica. Si sigue igual o empeora, no aprobar. Nunca llamar AAA ni modelo maestro.
 
 ## 2026-11-07 · BTC V21 · córnea 3D y anclaje de cola (candidato, NO AAA)
