@@ -25,6 +25,7 @@ jobs:
         with: {node-version: '22'}
       - name: Validate actual source, build and rollback
         run: |
+          python3 -m py_compile scripts/extract-btc-maya-skin.py
           node --check racers/btc-native-hind-limb-repair.js
           node --check racers/btc-maya-master.js
           node --check racers/btc-atelier-preview.js
