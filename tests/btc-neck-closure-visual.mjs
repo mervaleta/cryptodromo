@@ -27,14 +27,14 @@ async function load(url,closed){
  return state;
 }
 try{
- const baseline=await load('http://127.0.0.1:8799/racers/?btcNeckRepair=off&btcFreeze=1#BTC',false);
+ const baseline=await load('http://127.0.0.1:8799/racers/?btcMaster=v5&btcNeckRepair=off&btcFreeze=1#BTC',false);
  await page.locator('[data-btc-camera="top"]').click();
  await page.waitForTimeout(350);
  const before=await page.locator('#horse-canvas').screenshot({path:DIR+'/01-original-v5-neck-hole-top.png',timeout:90000});
  await page.locator('[data-btc-camera="profile"]').click();
  await page.waitForTimeout(220);
  await page.locator('#horse-canvas').screenshot({path:DIR+'/01-original-v5-profile.png',timeout:90000});
- const candidate=await load('http://127.0.0.1:8799/racers/?btcFreeze=1#BTC',true);
+ const candidate=await load('http://127.0.0.1:8799/racers/?btcMaster=v5&btcFreeze=1#BTC',true);
  assert.equal(candidate.heroGroom.neckClosureBuild,'btc-crest-closure-20261105-v1');
  assert.equal(candidate.heroGroom.neckClosureTriangles,30);
  await page.locator('[data-btc-camera="top"]').click();
