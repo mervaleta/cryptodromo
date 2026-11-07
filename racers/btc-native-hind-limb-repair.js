@@ -84,17 +84,60 @@ function cropMayaHind(anatomy){
  }
  if(fullyRemoved<1000||fullyRemoved>3600||clipped<15)
   throw Error('BTC V22 clipping outside known Maya anatomy: '+fullyRemoved+'/'+clipped);
- geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
+ // A complete edge clip can leave tiny DISCONNECTED hoof islands from
+ // the old Maya posterior feet. Two five-face components survive around
+ // y≈.009, z≈.0005 and appear as airborne polygon shrapnel in actual
+ // Chromium profile/rear captures. Prune only those separate components,
+ // never connected flesh, caps, or donor GLB limbs.
+ const parent=Array.from({length:xyz.length/3},(_,i)=>i);
+ const root=(id)=>{
+  while(parent[id]!==id){parent[id]=parent[parent[id]];id=parent[id];}
+  return id;
+ };
+ const join=(a,b)=>{a=root(a);b=root(b);if(a!==b)parent[a]=b;};
+ for(let i=0;i<next.length;i+=3){
+  join(next[i],next[i+1]);join(next[i+1],next[i+2]);
+ }
+ const counts=new Map(),limits=new Map();
+ for(let i=0;i<next.length;i+=3){
+  const r=root(next[i]);counts.set(r,(counts.get(r)||0)+1);
+  const l=limits.get(r)||{y:0,z:0,n:0};
+  for(let k=0;k<3;k++){
+   const v=next[i+k];l.y+=xyz[v*3+1];l.z+=xyz[v*3+2];l.n++;
+  }
+  limits.set(r,l);
+ }
+ const islandRoots=new Set();
+ for(const [r,count] of counts){
+  const l=limits.get(r);
+  if(count<=8&&l.y/l.n>.005&&l.z/l.n<.002)
+   islandRoots.add(r);
+ }
+ const pruned=[],cleanGroups=[];
+ let isolatedTrianglesRemoved=0;
+ for(const group of groups){
+  const start=pruned.length;
+  for(let i=group.start;i<group.start+group.count;i+=3){
+   if(islandRoots.has(root(next[i]))){isolatedTrianglesRemoved++;continue;}
+   pruned.push(next[i],next[i+1],next[i+2]);
+  }
+  cleanGroups.push({start,count:pruned.length-start,materialIndex:group.materialIndex});
+ }
+ if(isolatedTrianglesRemoved>20)
+  throw Error('BTC posterior island cleanup exceeded 20 triangles: '+isolatedTrianglesRemoved);
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
  geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
- geo.setIndex(new THREE.Uint16BufferAttribute(next,1));
+ geo.setIndex(new THREE.Uint16BufferAttribute(pruned,1));
  geo.clearGroups();
- for(const g of groups)geo.addGroup(g.start,g.count,g.materialIndex);
+ for(const g of cleanGroups)geo.addGroup(g.start,g.count,g.materialIndex);
  geo.deleteAttribute('normal');
  geo.computeVertexNormals();
  geo.computeBoundingSphere();
  return {removedMayaTriangles:fullyRemoved,cutTriangles:clipped,
-  addedCutVertices:xyz.length/3-originalCount,keptMayaTriangles:next.length/3,
+  addedCutVertices:xyz.length/3-originalCount,keptMayaTriangles:pruned.length/3,
+  isolatedMayaPosteriorIslandsRemoved:islandRoots.size,
+  isolatedMayaPosteriorTrianglesRemoved:isolatedTrianglesRemoved,
   seamMethod:'shared-edge-skinned-plane-clipping',
   restore(){
    geo.setAttribute('position',old.position);
@@ -380,6 +423,8 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    donorHindTriangles:bodyCut.triangles,
    donorHoofTriangles:hoovesCut.triangles,
    removedMayaTriangles:crop.removedMayaTriangles,
+   isolatedMayaPosteriorIslandsRemoved:crop.isolatedMayaPosteriorIslandsRemoved,
+   isolatedMayaPosteriorTrianglesRemoved:crop.isolatedMayaPosteriorTrianglesRemoved,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
