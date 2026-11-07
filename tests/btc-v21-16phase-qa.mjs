@@ -1,12 +1,12 @@
 /**
- * BTC V21 visual rejection gate: every one of the native Gallop's 16 phases
+ * BTC version-agnostic visual rejection gate: every one of the native Gallop's 16 phases
  * must render in Chromium/WebGL. A passing run is NOT an AAA approval.
  */
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
-const DIR='artifacts/btc-v21-full-cycle';mkdirSync(DIR,{recursive:true});
-const BUILD='btc-v21-ocular-tail-root-20261107-v1';
+const DIR='artifacts/btc-current-full-cycle';mkdirSync(DIR,{recursive:true});
+const BUILD=JSON.parse((await import('node:fs')).readFileSync(new URL('../racers/btc-master-revision.json',import.meta.url),'utf8')).buildId;
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:1100,height:750},deviceScaleFactor:1});
 const errors=[],frames=[],all=new Set();
@@ -48,5 +48,5 @@ try{
   hind:baseline.heroGroom.hindRestoration,
   visualGate:'Reject detached eyes, rump seams, tail root gaps, twisted hocks, detached hoof or any non-equine pose; compare all views with V20b baseline and 212734.mp4'
  },null,2));
- console.log('BTC_V21_16_POSES_REAL_WEBGL_COMPLETE',frames.length);
+ console.log('BTC_CURRENT_16_POSES_REAL_WEBGL_COMPLETE',frames.length);
 }finally{await page.close();await browser.close();}

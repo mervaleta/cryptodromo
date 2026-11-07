@@ -8,14 +8,14 @@
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-v21-ocular-tail-root-20261107-v1';
-import {createBTCNativeHindLimbRepair} from './btc-native-hind-limb-repair.js?v=btc-v20b-native-hind-gallop-20261105';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-v22-continuous-hind-seam-20261107';
+import {createBTCNativeHindLimbRepair} from './btc-native-hind-limb-repair.js?v=btc-v22-continuous-hind-seam-20261107';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-face-native-gallop-20261105-v16';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
-export const BTC_MAYA_RENDER_BUILD='btc-v21-ocular-tail-root-20261107-v1';
+export const BTC_MAYA_RENDER_BUILD='btc-v22-continuous-hind-seam-20261107';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -72,7 +72,12 @@ function makeSkinTransfer(source){
     const list=grid.get(key(c[0]+a,c[1]+b,c[2]+d));
     if(!list)continue;
     for(const i of list){
-     const v=coords[i],dx=x-v[0],dy=y-v[1],dz=z-v[2];
+     const v=coords[i];
+     // Do not borrow left-side limb bones for a right-side thigh or cheek.
+     // The old globally-nearest transfer crossed the mid-sagittal plane,
+     // introducing mirrored skinning in narrow articulated surfaces.
+     if(Math.abs(x)>.00072 && Math.abs(v[0])>.00072 && x*v[0]<0)continue;
+     const dx=x-v[0],dy=y-v[1],dz=z-v[2];
      const dist=dx*dx+dy*dy+dz*dz;
      if(nearest.length<12||dist<nearest[nearest.length-1].dist){
       nearest.push({i,dist});nearest.sort((a,b)=>a.dist-b.dist);
@@ -84,7 +89,9 @@ function makeSkinTransfer(source){
   }
   if(!nearest.length){
    for(let i=0;i<coords.length;i++){
-    const v=coords[i],dx=x-v[0],dy=y-v[1],dz=z-v[2],dist=dx*dx+dy*dy+dz*dz;
+    const v=coords[i];
+    if(Math.abs(x)>.00072 && Math.abs(v[0])>.00072 && x*v[0]<0)continue;
+    const dx=x-v[0],dy=y-v[1],dz=z-v[2],dist=dx*dx+dy*dy+dz*dz;
     if(nearest.length<12||dist<nearest[nearest.length-1].dist){
      nearest.push({i,dist});nearest.sort((a,b)=>a.dist-b.dist);
      if(nearest.length>12)nearest.length=12;
@@ -173,17 +180,47 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   e.count===1&&retiredTailEdges.has(key)).map(([,e])=>e);
  if(border.length<20||border.length>100)
   throw Error('BTC tail root border unexpectedly changed');
- const borderVertices=new Set(border.flatMap(e=>[e.a,e.b]));
- const center=[0,0,0];
- for(const id of borderVertices)for(let k=0;k<3;k++)center[k]+=positions[id*3+k];
- for(let k=0;k<3;k++)center[k]/=borderVertices.size;
- // Sink the cap fractionally into the rump, never let it form a stump.
- center[1]-=.00048;
- const capCenter=positions.length/3;
- positions=Float32Array.from([...positions,...center]);
- for(const {a,b} of border)visibleTriangles.push(b,a,capCenter);
+ // The free-tail cut has TWO bilateral rim loops that share two vertices
+ // on the midline. V21 forced all 48 edges into a SINGLE fan: a non-manifold
+ // bow-tie of triangles that visibly tore through the rump during Gallop.
+ // Seal each anatomical half independently, with a smooth intermediate ring
+ // generated IN the actual skinned Maya body mesh (not a floating patch).
+ const capPosition=Array.from(positions),capSkinAnchors=new Map();
+ const sideEdges=[-1,1].map(side=>border.filter(({a,b})=>{
+  // Midline vertices are shared by BOTH half-loops; classify each EDGE
+  // exactly once by its midpoint, rather than counting centerline pairs
+  // twice (the previous guard crashed V22 before any model rendered).
+  const mx=(positions[a*3]+positions[b*3])*.5;
+  return side<0?mx<0:mx>0;
+ }));
+ if(sideEdges[0].length+sideEdges[1].length!==border.length||
+    sideEdges.some(e=>e.length<15||e.length>35))
+  throw Error('BTC tail rim not separable into two anatomical half-loops');
+ for(const [i,edges] of sideEdges.entries()){
+  const side=i===0?-1:1;
+  const ids=[...new Set(edges.flatMap(e=>[e.a,e.b]))];
+  const center=[0,0,0];
+  for(const id of ids)for(let j=0;j<3;j++)center[j]+=positions[id*3+j]/ids.length;
+  center[0]=side*Math.max(Math.abs(center[0]),.00055);
+  center[1]-=.00044; // cap lives INSIDE the rump, no artificial tail stump
+  const inner=new Map();
+  for(const id of ids){
+   const old=[positions[id*3],positions[id*3+1],positions[id*3+2]];
+   const v=old.map((p,k)=>p*.48+center[k]*.52);
+   const n=capPosition.length/3;capPosition.push(...v);inner.set(id,n);
+   capSkinAnchors.set(n,id); // boundary and new ring follow same authored tissue
+  }
+  const centerId=capPosition.length/3;capPosition.push(...center);
+  for(const {a,b} of edges){
+   const ia=inner.get(a),ib=inner.get(b);
+   visibleTriangles.push(b,a,ia,b,ia,ib,ib,ia,centerId);
+  }
+ }
+ positions=Float32Array.from(capPosition);
  removed.tailDockBorderEdges=border.length;
- removed.integratedDockCapTriangles=border.length;
+ removed.integratedDockCapTriangles=border.length*3;
+ removed.tailDockCapHalves=2;
+ removed.tailDockCapRingVertices=capSkinAnchors.size;
  // The removed native ear tips also cut HOLES through the original poll.
  // Reconnect each ear-root opening to its OWN existing boundary vertices.
  // No floating cover or separate prop: the caps belong to the skinned body.
@@ -333,7 +370,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
  for(let i=0;i<positions.length;i+=3){
-  const skin=skinAt(skinRest[i],skinRest[i+1],skinRest[i+2]);
+  const refId=capSkinAnchors.get(i/3);
+  const ref=refId===undefined?i:refId*3;
+  const skin=skinAt(skinRest[ref],skinRest[ref+1],skinRest[ref+2]);
   for(let k=0;k<4;k++){
    bone[(i/3)*4+k]=skin.joints[k];weights[(i/3)*4+k]=skin.weights[k];
   }
@@ -422,14 +461,14 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // MeshPhysicalMaterial (which would make .copy() access missing sheenColor).
  THREE.MeshStandardMaterial.prototype.copy.call(coat,source.material);
  coat.name='BTC Maya natural sculpted coat';
- coat.metalness=0;coat.roughness=.72;
+ coat.metalness=0;coat.roughness=.62;
  coat.defines={STANDARD:'',PHYSICAL:''};
- coat.clearcoat=.028;coat.clearcoatRoughness=.83;
- coat.sheen=.17;coat.sheenColor.set('#977458');coat.sheenRoughness=.93;
+ coat.clearcoat=.052;coat.clearcoatRoughness=.79;
+ coat.sheen=.23;coat.sheenColor.set('#a78d76');coat.sheenRoughness=.85;
  // The horse is an animal, not a neon advertising statue. BTC branding is
  // carried by the identity card; the animal gets a natural chestnut coat.
  // A published editor profile with brand_colored intentionally overrides it.
- const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#a46239');
+ const natural=new THREE.Color(/^#[0-9a-f]{6}$/i.test(coatColor||'')?coatColor:'#855036');
  const accent=new THREE.Color(/^#[0-9a-f]{6}$/i.test(brandAccent||'')?brandAccent:'#f7931a');
  coat.color.copy(natural.lerp(accent,brandMode==='brand_colored'?.46:.055));
  coat.flatShading=false;coat.side=THREE.FrontSide;
@@ -457,7 +496,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
    'diffuseColor.rgb*=1.-.085*eyeContour;'
   );
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
-   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.038*coatDirection+.046*amberBreak,.65,.94);');
+   '#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+.026*coatDirection+.032*amberBreak,.54,.85);');
   addBTCHindquarterCoatTexture(shader);
   // Keep native Gallop transforms. No additional pose-varying muscle offset.
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
@@ -608,7 +647,8 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  const originalVisibility=hidden.map(x=>({...x}));
  const skinAt=makeSkinTransfer(best);
  const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
- const rumpPatch=sculptRumpSurfacePatch(best,anatomy.materials[0]);
+ // The real body cap below replaces the previously detached overlay disk.
+ const rumpPatch={triangles:0,dispose(){}};
  const groom=createMayaGroom(best,skinAt,{
   maneSize,tailSize,maneColor:color,tailColor:tailColor||color,
   scalpColor:anatomy.materials[0].color
@@ -634,8 +674,9 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
+   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
-   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'original-skinned-GLB-hind-limbs-v20',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
+   hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,skinTransferSameFlank:true,skinTransferFlankBoundary:.00072,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
    eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.002125,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
