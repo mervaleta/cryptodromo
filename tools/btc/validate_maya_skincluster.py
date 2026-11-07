@@ -17,6 +17,12 @@ def validate(path):
             errors.append(message)
 
     require(data.get("schema") == "btc-maya-original-skin-v1", "wrong schema")
+    require(data.get("skinCluster") == "HorseRig1:skinCluster1", "wrong skinCluster")
+    require(isinstance(data.get("sourceScene"), str) and bool(data.get("sourceScene")), "missing source scene")
+    geometry = data.get("geometryMatrix")
+    require(isinstance(geometry, list) and len(geometry) == 16 and
+            all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for x in geometry),
+            "invalid geometry matrix")
     n = data.get("vertexCount")
     k = data.get("influenceCount")
     require(n == 5406, "unexpected vertex count: %r" % n)
@@ -25,12 +31,23 @@ def validate(path):
         raise ValueError("invalid vertex/influence counts: " + "; ".join(errors))
     names = data.get("influences", [])
     logical = data.get("influenceLogicalIndices", [])
-    require(len(names) == k and len(set(names)) == k, "influence names not unique/complete")
-    require(len(logical) == k and len(set(logical)) == k, "logical influence indices not unique/complete")
-    require(all(isinstance(i, int) and i >= 0 for i in logical), "invalid logical indices")
+    require(isinstance(names, list) and len(names) == k and
+            all(isinstance(name, str) and bool(name) for name in names) and
+            len(set(name for name in names if isinstance(name, str))) == k,
+            "influence names not unique/complete")
+    require(isinstance(logical, list) and len(logical) == k and
+            all(type(i) is int and i >= 0 for i in logical) and
+            len(set(i for i in logical if type(i) is int)) == k,
+            "logical influence indices not unique/complete")
+    require(all(type(i) is int and i >= 0 for i in logical) if isinstance(logical, list) else False, "invalid logical indices")
     matrices = data.get("bindPreMatrixByLogicalIndex", {})
     connections = data.get("matrixConnectionsByLogicalIndex", {})
-    for idx in logical:
+    require(isinstance(matrices, dict) and isinstance(connections, dict), "invalid matrix dictionaries")
+    if not isinstance(matrices, dict):
+        matrices = {}
+    if not isinstance(connections, dict):
+        connections = {}
+    for idx in logical if isinstance(logical, list) else []:
         key = str(idx)
         m = matrices.get(key)
         require(isinstance(m, list) and len(m) == 16 and
@@ -38,7 +55,9 @@ def validate(path):
                 "invalid bindPreMatrix[%s]" % key)
         require(bool(connections.get(key)), "missing matrix connection[%s]" % key)
     rows = data.get("weightsSparseByVertex", [])
-    require(len(rows) == n, "incorrect vertex row count")
+    require(isinstance(rows, list) and len(rows) == n, "incorrect vertex row count")
+    if not isinstance(rows, list):
+        rows = []
     for v, row in enumerate(rows):
         if not isinstance(row, list) or not row:
             errors.append("empty/invalid weight row %d" % v)
