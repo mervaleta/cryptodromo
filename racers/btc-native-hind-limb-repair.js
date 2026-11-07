@@ -161,29 +161,91 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // Upper end tucks into the still-continuous Maya rump.
    return y>.00385&&z<.0268&&Math.abs(x)>.0010;
   });
-  // Hide the unmatched Quaternius upper cut INSIDE the Maya croup.
-  // V20b left this edge exposed; the posterior camera saw jagged shards.
-  // The actual galloping hock, cannon and fetlock vertices BELOW z=.0208
-  // are unchanged, as are every donor bone index and skin weight.
-  const donorPos=bodyCut.geometry.getAttribute('position');
-  let insetVertices=0;
+
+  // Topological seam alignment, not a polygon spike tucked in arbitrarily:
+  // Pull the UPPER donor vertices toward the nearest retained Maya surface
+  // of the same flank, and transfer the equivalent Maya skin influence.
+  // Native GLB positions/weights stay intact BELOW the junction.
+  const donorGeo=bodyCut.geometry,donorPos=donorGeo.getAttribute('position');
+  const donorSkin=donorGeo.getAttribute('skinIndex'),donorWeights=donorGeo.getAttribute('skinWeight');
+  const hostGeo=anatomy.geometry,hostPos=hostGeo.getAttribute('position'),
+   hostSkin=hostGeo.getAttribute('skinIndex'),hostWeights=hostGeo.getAttribute('skinWeight');
+  const attachment=[];
+  for(let i=0;i<hostPos.count;i++){
+   const x=hostPos.getX(i),y=hostPos.getY(i),z=hostPos.getZ(i);
+   if(z>.0207&&z<.032&&y>.0042&&Math.abs(x)>.0012)
+    attachment.push({id:i,x,y,z,side:Math.sign(x)});
+  }
+  if(attachment.length<100)throw Error('BTC V22 host rump attachment surface incomplete');
+  let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
    if(z<=.0208||y<.0039||Math.abs(x)<.0010)continue;
    const u=THREE.MathUtils.clamp((z-.0208)/.0060,0,1);
    const t=u*u*(3-2*u);
-   const centerX=Math.sign(x)*.0026;
+   const side=Math.sign(x);
+   let near=null,d2=Infinity;
+   for(const v of attachment){
+    if(v.side!==side)continue;
+    const dx=v.x-x,dy=v.y-y,dz=v.z-z;
+    // Match the anatomical level first, avoiding a seam jumping up the croup.
+    const dist=dx*dx+dy*dy+dz*dz*2.4;
+    if(dist<d2){d2=dist;near=v;}
+   }
+   if(!near||d2>.000075)continue;
+   const blend=t*.98;
    donorPos.setXYZ(i,
-    centerX+(x-centerX)*(1-.91*t),
-    .0116+(y-.0116)*(1-.72*t),
-    z);
-   insetVertices++;
+    THREE.MathUtils.lerp(x,near.x-side*.00022,blend),
+    THREE.MathUtils.lerp(y,near.y,blend),
+    THREE.MathUtils.lerp(z,near.z,blend*.18));
+   // At the upper boundary the donor follows the SAME hind-thigh tissue
+   // as Maya during Gallop. Distal native Gallop weights are untouched.
+   const influences=new Map();
+   for(const [id,mult,attr,weight] of [
+    [i,1-.88*t,donorSkin,donorWeights],
+    [near.id,.88*t,hostSkin,hostWeights]
+   ])for(let k=0;k<4;k++){
+    const w=mult*weight.getComponent(id,k);
+    if(w>1e-8){
+     const bone=attr.getComponent(id,k);
+     influences.set(bone,(influences.get(bone)||0)+w);
+    }
+   }
+   const top=[...influences].sort((p,q)=>q[1]-p[1]).slice(0,4);
+   const total=top.reduce((s,p)=>s+p[1],0)||1;
+   for(let k=0;k<4;k++){
+    donorSkin.setComponent(i,k,top[k]?.[0]||0);
+    donorWeights.setComponent(i,k,(top[k]?.[1]||0)/total);
+   }
+   insetVertices++;reattachedWeights++;
   }
-  donorPos.needsUpdate=true;
-  bodyCut.geometry.deleteAttribute('normal');
-  bodyCut.geometry.computeVertexNormals();
-  bodyCut.geometry.computeBoundingSphere();
+  donorPos.needsUpdate=true;donorSkin.needsUpdate=true;donorWeights.needsUpdate=true;
+  donorGeo.deleteAttribute('normal');donorGeo.computeVertexNormals();
+  // Quaternius uses UV split vertices. Blend normals across coincident
+  // points to remove visible "wooden boot" facets without flattening form.
+  const smoothNormals=(geometry)=>{
+   const p=geometry.getAttribute('position'),n=geometry.getAttribute('normal'),
+    groups=new Map();
+   for(let i=0;i<p.count;i++){
+    const key=[p.getX(i),p.getY(i),p.getZ(i)].map(v=>Math.round(v*1000000)).join('/');
+    const bucket=groups.get(key)||[];bucket.push(i);groups.set(key,bucket);
+   }
+   for(const ids of groups.values()){
+    if(ids.length<2)continue;
+    const v=new THREE.Vector3();
+    for(const id of ids)v.add(new THREE.Vector3(n.getX(id),n.getY(id),n.getZ(id)));
+    if(v.lengthSq()<1e-9)continue;
+    v.normalize();
+    for(const id of ids)n.setXYZ(id,v.x,v.y,v.z);
+   }
+   n.needsUpdate=true;
+   return groups.size;
+  };
+  const uniqueSurfacePoints=smoothNormals(donorGeo);
+  donorGeo.computeBoundingSphere();
   bodyCut.insetVertices=insetVertices;
+  bodyCut.reattachedWeights=reattachedWeights;
+  bodyCut.uniqueSurfacePoints=uniqueSurfacePoints;
   hoovesCut=clipNativeTriangles(hoof,p=>{
    const cy=p.reduce((s,v)=>s+v[1],0)/3;
    return cy>.003;
@@ -209,6 +271,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    removedMayaTriangles:crop.removedMayaTriangles,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
+   donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
    sameOriginalSkeleton:donor.skeleton===original.skeleton&&donorHooves.skeleton===original.skeleton
   },
   dispose(){
