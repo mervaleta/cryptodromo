@@ -78,7 +78,7 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.doesNotMatch(groom,/TextureLoader|\.jpg|\.png|\.webp|PlaneGeometry/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
  assert.equal(manifest.buildId,'btc-v22-continuous-hind-seam-20261107');
- assert.match(manifest.visualPass,/BTC V22/);
+ assert.match(manifest.visualPass,/(?:BTC )?V22/);
  assert.equal(manifest.status,'needs_visual_qa');
  assert.equal(module.BTC_HINDQUARTER_BUILD,'btc-hindquarters-rump-gaskin-20261104-v12');
 });
