@@ -62,3 +62,9 @@
 - **Commit:** `2542c2548baee1e5def37f3b2bad2a1fb8ca600f`.
 - **Cambio:** `tools/btc/validate_maya_skincluster.py` comprueba fuera de Maya el esquema, 5406 vértices, 70 influencias, correspondencia de índices lógicos, matrices bind de 16 valores finitos, conexiones y normalización/unicidad de pesos por vértice. Rechaza JSON inconsistente antes de usarlo en el rig.
 - **Estado:** aún no hay JSON real exportado desde `Horse_VR_2017.ma`, ejecución de la validación con ese JSON, capturas WebGL ni comparación de seis vistas y 16 fases. No cuenta V23 ni V25. No desplegar.
+
+## 2026-11-07 · Maya bind-matrix serialization hardening (NO acreditada)
+- **SHA:** `020c081ebde56e3e93153b89b0529e1deea0776d`.
+- **Defecto:** `maya.cmds.getAttr` puede devolver matrices como tupla anidada de una fila de 16 elementos. El exportador usaba `list(matrix)`, produciendo una matriz con un solo elemento (la tupla interna), incompatible con el validador y con skinning fiel.
+- **Corrección:** `flatten_matrix` acepta formas plana/anidada, exige exactamente 16 números finitos y se aplica a `bindPreMatrix` y `geometryMatrix`. No altera la escena Maya ni ningún caballo publicado.
+- **Validación pendiente:** ejecutar dentro de Maya real con `Horse_VR_2017.ma`, verificar 70 matrices y 5406 filas, comparar deformación nativa, ejecutar WebGL Chromium seis vistas/16 fases y comprobar CI. Sin esas evidencias V23/V25 permanecen sin acreditar. No desplegar.
