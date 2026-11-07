@@ -68,3 +68,8 @@
 - **Defecto:** `maya.cmds.getAttr` puede devolver matrices como tupla anidada de una fila de 16 elementos. El exportador usaba `list(matrix)`, produciendo una matriz con un solo elemento (la tupla interna), incompatible con el validador y con skinning fiel.
 - **Corrección:** `flatten_matrix` acepta formas plana/anidada, exige exactamente 16 números finitos y se aplica a `bindPreMatrix` y `geometryMatrix`. No altera la escena Maya ni ningún caballo publicado.
 - **Validación pendiente:** ejecutar dentro de Maya real con `Horse_VR_2017.ma`, verificar 70 matrices y 5406 filas, comparar deformación nativa, ejecutar WebGL Chromium seis vistas/16 fases y comprobar CI. Sin esas evidencias V23/V25 permanecen sin acreditar. No desplegar.
+
+## 2026-11-07 · rechazo de metadatos Maya corruptos (NO acreditada)
+- **Commit:** `5018ec7ed277485ed6e6814929bdeebc4545c26e`.
+- **Corrección:** el validador de skinCluster exige ahora la identidad `HorseRig1:skinCluster1`, una escena de origen identificable y `geometryMatrix` finita de 16 valores; comprueba nombres y logical indices sin asumir que el JSON siempre contiene listas válidas. Evita admitir archivos incompletos o atribuidos a otro skinCluster.
+- **Limitaciones:** no se ejecutó Maya ni Chromium/WebGL en esta intervención; no hay JSON original exportado ni imágenes A/B. Este endurecimiento de importación NO constituye mejora visual ni acredita V23/V25. PR #136 sigue aislado, sin despliegue.
