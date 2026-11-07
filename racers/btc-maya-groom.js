@@ -189,6 +189,11 @@ function createHairMass(source,skinAt,{
    (major?.000122+.000045*seed:.000019);
   for(let row=0;row<=ROWS;row++){
    const u=row/ROWS,c=point(u,0,0);
+   // The old groom assigned one bone sample to ALL vertices of a long
+   // mane lock. Under Gallop this stretched loose wires across the throat.
+   // Sample Neck/Head influences at each ring along the actual crest,
+   // while preserving Head-only forelock and the native Tail1..7 chain.
+   const ringSkin=!tail&&!forelock&&!crown?skinAt(...c):skinFor(sk,u);
    const before=point(Math.max(0,u-.013),0,0);
    const after=point(Math.min(1,u+.013),0,0);
    let tx=after[0]-before[0],ty=after[1]-before[1],tz=after[2]-before[2];
@@ -210,7 +215,7 @@ function createHairMass(source,skinAt,{
     const tint=(.79+.22*seed+.027*(1-u));
     colors.push(tint*1.04,tint*.99,tint*.95);
     tip.push(u);ids.push(id*1.71);region.push(tail?1:0);
-    const skin=skinFor(sk,u);
+    const skin=ringSkin;
     for(let k=0;k<4;k++){
      bones.push(skin.joints[k]||0);weights.push(skin.weights[k]||0);
     }
