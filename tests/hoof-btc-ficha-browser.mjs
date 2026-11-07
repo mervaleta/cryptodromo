@@ -13,7 +13,7 @@ try{
  const errors=[],missing=[];
  page.on('pageerror',e=>errors.push(e.stack||e.message));
  page.on('response',res=>{if(res.status()>=400&&/\.(js|glb|gz)(\?|$)/.test(res.url()))missing.push(res.status()+' '+res.url());});
- const res=await page.goto(base+'/racers/?atelier=btc#BTC',{waitUntil:'domcontentloaded',timeout:45000});
+ const res=await page.goto(base+'/racers/?atelier=btc&btcMaster=v5#BTC',{waitUntil:'domcontentloaded',timeout:45000});
  assert.equal(res?.status(),200);
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.ready,
   undefined,{timeout:90000,polling:500});
