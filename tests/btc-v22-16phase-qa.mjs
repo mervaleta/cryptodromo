@@ -23,6 +23,9 @@ try{
  assert.equal(baseline.heroGroom?.hindRestoration?.seamMethod,'shared-edge-skinned-plane-clipping','Must use true skin-weighted cut boundary, not V20 centroid culling');
  assert.ok(baseline.heroGroom?.hindRestoration?.addedCutVertices>=15);
  assert.ok(baseline.heroGroom?.hindRestoration?.donorUpperInsetVertices>=10);
+ assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,'two topology-smoothing passes on the real native leg');
+ assert.ok(baseline.heroGroom?.hindRestoration?.donorHindTriangles>4000,'real limb geometry must have substantially more smooth faces');
+ assert.ok(baseline.heroGroom?.hindRestoration?.donorReweightedVertices>10,'upper donor transition must follow Maya thigh during Gallop');
  async function capture(camera,index){
   await page.evaluate(name=>document.querySelector('[data-btc-camera="'+name+'"]')?.click(),camera);
   await page.evaluate(i=>window.__cryptodromoBTCAtelierSetPose?.(i),index);
