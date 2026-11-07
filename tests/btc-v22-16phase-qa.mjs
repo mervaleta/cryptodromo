@@ -23,6 +23,11 @@ try{
  assert.equal(baseline.heroGroom?.hindRestoration?.seamMethod,'shared-edge-skinned-plane-clipping','Must use true skin-weighted cut boundary, not V20 centroid culling');
  assert.ok(baseline.heroGroom?.hindRestoration?.addedCutVertices>=15);
  assert.ok(baseline.heroGroom?.hindRestoration?.donorUpperInsetVertices>=10);
+ assert.ok(baseline.heroGroom?.hindRestoration?.isolatedMayaPosteriorIslandsRemoved>=2,
+   'two disconnected old Maya hind-foot scraps must be removed');
+ assert.ok(baseline.heroGroom?.hindRestoration?.isolatedMayaPosteriorTrianglesRemoved>=10,
+   'actual orphaned posterior 5-face scraps must be culled, not just hidden');
+
  assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,'two topology-smoothing passes on the real native leg');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorHindTriangles>4000,'real limb geometry must have substantially more smooth faces');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorReweightedVertices>10,'upper donor transition must follow Maya thigh during Gallop');
