@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
-const BUILD='btc-v20b-native-hind-gallop-20261105',dir='artifacts/btc-live';mkdirSync(dir,{recursive:true});
+const BUILD='btc-v21-ocular-tail-root-20261107-v1',dir='artifacts/btc-live';mkdirSync(dir,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:920,height:700},deviceScaleFactor:1,reducedMotion:'no-preference'});
 const faults=[];page.on('pageerror',e=>faults.push(e.message));
