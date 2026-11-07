@@ -1,4 +1,4 @@
-name: BTC V21 · verify Hostinger, Gallop and six real WebGL cameras
+name: BTC V22 · verify Hostinger, Gallop and six real WebGL cameras
 on:
   push:
     branches: [main]
@@ -25,16 +25,16 @@ jobs:
               if ! curl -fLsS --connect-timeout 10 --max-time 30 "$ORIGIN/$module?deploy=$GITHUB_SHA-$attempt" -o "/tmp/btc-$module"; then ok=false;break;fi
             done
             if [[ "$ok" == true ]] &&
-               grep -Fq 'btc-v21-ocular-tail-root-20261107-v1' /tmp/btc-index.html &&
-               grep -Fq 'btc-v21-ocular-tail-root-20261107-v1' /tmp/btc-racers.js &&
-               grep -Fq 'btc-v21-ocular-tail-root-20261107-v1' /tmp/btc-btc-atelier-preview.js &&
-               grep -Fq 'btc-v21-ocular-tail-root-20261107-v1' /tmp/btc-btc-maya-master.js &&
-               grep -Fq 'btc-v21-ocular-tail-root-20261107-v1' /tmp/btc-btc-master-revision.json &&
+               grep -Fq 'btc-v22-continuous-hind-seam-20261107' /tmp/btc-index.html &&
+               grep -Fq 'btc-v22-continuous-hind-seam-20261107' /tmp/btc-racers.js &&
+               grep -Fq 'btc-v22-continuous-hind-seam-20261107' /tmp/btc-btc-atelier-preview.js &&
+               grep -Fq 'btc-v22-continuous-hind-seam-20261107' /tmp/btc-btc-maya-master.js &&
+               grep -Fq 'btc-v22-continuous-hind-seam-20261107' /tmp/btc-btc-master-revision.json &&
                grep -Fq 'original GLB' /tmp/btc-btc-native-hind-limb-repair.js; then
-              echo 'HOSTINGER_BTC_V21_NATIVE_HIND_EFFECTIVE_BUILD_CONFIRMED'
+              echo 'HOSTINGER_BTC_V22_NATIVE_HIND_EFFECTIVE_BUILD_CONFIRMED'
               break
             fi
-            if [[ "$attempt" == 24 ]]; then echo '::error::Hostinger has not delivered BTC V21'; exit 1;fi
+            if [[ "$attempt" == 24 ]]; then echo '::error::Hostinger has not delivered BTC V22'; exit 1;fi
             sleep 15
           done
       - name: Install Chromium for real browser rendering
@@ -47,6 +47,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-v21-hostinger-16phase-sixcam-real-webgl
+          name: btc-v22-hostinger-16phase-sixcam-real-webgl
           path: artifacts/btc-live/*.png
           if-no-files-found: warn
