@@ -75,6 +75,68 @@ def run(path):
     }
 
 
+
+def parse_original_bind_matrices(path):
+    """Read all 70 Maya skinCluster1 inverseBind matrices, not approximations.
+
+    Maya .pm[] uses 16 row-major floats and is in ORIGINAL Maya coordinates,
+    not the rotated/scaled web sculpture coordinates. Never feed these values
+    directly into Three.js until the rest mesh and bone world matrices receive
+    the same coordinate-basis conversion.
+    """
+    import math
+    matrices = {}
+    inside = False
+    collecting = None
+    numbers = []
+    idx = None
+    with pathlib.Path(path).open(encoding='latin1') as fh:
+        for line in fh:
+            if line.startswith('createNode '):
+                if 'createNode skinCluster -n "HorseRig1:skinCluster1"' in line:
+                    inside = True
+                elif inside:
+                    break
+                continue
+            if not inside:continue
+            if collecting:
+                numbers.extend(float(v) for v in NUMS.findall(line.split(';')[0]))
+                if ';' in line:
+                    if len(numbers)!=16:raise ValueError(f'Maya bind matrix {idx} has {len(numbers)} components')
+                    matrices[idx]=numbers
+                    collecting=None;idx=None;numbers=[]
+                continue
+            m=re.search(r'setAttr\s+"\.pm\[(\d+)\]"\s+-type\s+"matrix"\s+(.*)',line)
+            if not m:continue
+            idx=int(m.group(1))
+            numbers=[float(v) for v in NUMS.findall(m.group(2).split(';')[0])]
+            if ';' in m.group(2):
+                if len(numbers)!=16:raise ValueError(f'Maya bind matrix {idx} has {len(numbers)} components')
+                matrices[idx]=numbers
+                idx=None;numbers=[]
+            else:collecting=True
+    if set(matrices)!=set(range(70)):
+        raise ValueError('Original Maya inverse bind matrices incomplete: missing '+str(sorted(set(range(70))-set(matrices))))
+    for i,row in matrices.items():
+        if not all(math.isfinite(v) for v in row) or max(abs(row[k]-v) for k,v in [(3,0),(7,0),(11,0),(15,1)])>1e-5:
+            raise ValueError(f'Original matrix {i} has non-affine values')
+    return [matrices[i] for i in range(70)]
+
+def export_maya_bind_matrices(path,out_path):
+    import hashlib
+    matrices=parse_original_bind_matrices(path)
+    raw=b'BTCBIND1'+struct.pack('<I',70)
+    for matrix in matrices:
+        raw+=struct.pack('<16d',*matrix)
+    compressed=zlib.compress(raw,9)
+    pathlib.Path(out_path).write_bytes(compressed)
+    return {'format':'zlib:BTCBIND1:70:row-major-float64',
+      'source':'Horse_VR_2017.ma/HorseRig1:skinCluster1.pm[0..69]',
+      'matrixCount':len(matrices),'bytesCompressed':len(compressed),
+      'sha256':hashlib.sha256(compressed).hexdigest(),
+      'warning':'Original Maya coordinate basis. Not usable as glTF skin until consistent rest mesh + joint transformations.'}
+
+
 def export_exact_sparse_skin(path, out_path):
     """Private offline intermediate. Keep ALL 70 joints and ALL weights.
 
@@ -131,6 +193,7 @@ if __name__=='__main__':
     ap.add_argument('maya',help='Path to original Horse_VR_2017.ma; do not commit a proprietary .ma')
     ap.add_argument('--json',default='',help='Optional report file')
     ap.add_argument('--export-exact',default='',help='Write private compressed native sparse skin. Do not commit to public repo without rights confirmation')
+    ap.add_argument('--export-binds',default='',help='Write 70 original Maya inverse bind matrices in a private zlib archive')
     args=ap.parse_args()
     report=run(args.maya)
     data=json.dumps(report,indent=2)
@@ -138,3 +201,5 @@ if __name__=='__main__':
     if args.json: pathlib.Path(args.json).write_text(data+'\n',encoding='utf8')
     if args.export_exact:
         print(json.dumps(export_exact_sparse_skin(args.maya,args.export_exact),indent=2))
+    if args.export_binds:
+        print(json.dumps(export_maya_bind_matrices(args.maya,args.export_binds),indent=2))
