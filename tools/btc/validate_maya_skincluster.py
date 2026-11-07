@@ -85,9 +85,7 @@ def validate(path):
         if len(errors) > 30:
             break
     if errors:
-        raise ValueError("BTC Maya skin export rejected:
-" + "
-".join(errors))
+        raise ValueError("BTC Maya skin export rejected:\n" + "\n".join(errors))
     print("PASS: original Maya skin data structure, %d vertices, %d influences" % (n, k))
 
 
