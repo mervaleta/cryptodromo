@@ -173,17 +173,44 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   e.count===1&&retiredTailEdges.has(key)).map(([,e])=>e);
  if(border.length<20||border.length>100)
   throw Error('BTC tail root border unexpectedly changed');
- const borderVertices=new Set(border.flatMap(e=>[e.a,e.b]));
- const center=[0,0,0];
- for(const id of borderVertices)for(let k=0;k<3;k++)center[k]+=positions[id*3+k];
- for(let k=0;k<3;k++)center[k]/=borderVertices.size;
- // Sink the cap fractionally into the rump, never let it form a stump.
- center[1]-=.00048;
- const capCenter=positions.length/3;
- positions=Float32Array.from([...positions,...center]);
- for(const {a,b} of border)visibleTriangles.push(b,a,capCenter);
+ // The free-tail cut has TWO bilateral rim loops that share two vertices
+ // on the midline. V21 forced all 48 edges into a SINGLE fan: a non-manifold
+ // bow-tie of triangles that visibly tore through the rump during Gallop.
+ // Seal each anatomical half independently, with a smooth intermediate ring
+ // generated IN the actual skinned Maya body mesh (not a floating patch).
+ const capPosition=Array.from(positions),capSkinAnchors=new Map();
+ const sideEdges=[-1,1].map(side=>border.filter(({a,b})=>{
+  const ax=positions[a*3],bx=positions[b*3];
+  return side<0?ax<=0&&bx<=0:ax>=0&&bx>=0;
+ }));
+ if(sideEdges[0].length+sideEdges[1].length!==border.length||
+    sideEdges.some(e=>e.length<15||e.length>35))
+  throw Error('BTC tail rim not separable into two anatomical half-loops');
+ for(const [i,edges] of sideEdges.entries()){
+  const side=i===0?-1:1;
+  const ids=[...new Set(edges.flatMap(e=>[e.a,e.b]))];
+  const center=[0,0,0];
+  for(const id of ids)for(let j=0;j<3;j++)center[j]+=positions[id*3+j]/ids.length;
+  center[0]=side*Math.max(Math.abs(center[0]),.00055);
+  center[1]-=.00044; // cap lives INSIDE the rump, no artificial tail stump
+  const inner=new Map();
+  for(const id of ids){
+   const old=[positions[id*3],positions[id*3+1],positions[id*3+2]];
+   const v=old.map((p,k)=>p*.48+center[k]*.52);
+   const n=capPosition.length/3;capPosition.push(...v);inner.set(id,n);
+   capSkinAnchors.set(n,id); // boundary and new ring follow same authored tissue
+  }
+  const centerId=capPosition.length/3;capPosition.push(...center);
+  for(const {a,b} of edges){
+   const ia=inner.get(a),ib=inner.get(b);
+   visibleTriangles.push(b,a,ia,b,ia,ib,ib,ia,centerId);
+  }
+ }
+ positions=Float32Array.from(capPosition);
  removed.tailDockBorderEdges=border.length;
- removed.integratedDockCapTriangles=border.length;
+ removed.integratedDockCapTriangles=border.length*3;
+ removed.tailDockCapHalves=2;
+ removed.tailDockCapRingVertices=capSkinAnchors.size;
  // The removed native ear tips also cut HOLES through the original poll.
  // Reconnect each ear-root opening to its OWN existing boundary vertices.
  // No floating cover or separate prop: the caps belong to the skinned body.
@@ -333,7 +360,9 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
  for(let i=0;i<positions.length;i+=3){
-  const skin=skinAt(skinRest[i],skinRest[i+1],skinRest[i+2]);
+  const refId=capSkinAnchors.get(i/3);
+  const ref=refId===undefined?i:refId*3;
+  const skin=skinAt(skinRest[ref],skinRest[ref+1],skinRest[ref+2]);
   for(let k=0;k<4;k++){
    bone[(i/3)*4+k]=skin.joints[k];weights[(i/3)*4+k]=skin.weights[k];
   }
@@ -608,7 +637,8 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
  const originalVisibility=hidden.map(x=>({...x}));
  const skinAt=makeSkinTransfer(best);
  const anatomy=makeAnatomy(best,skinAt,{coatColor,brandAccent,brandMode,hoofColor});
- const rumpPatch=sculptRumpSurfacePatch(best,anatomy.materials[0]);
+ // The real body cap below replaces the previously detached overlay disk.
+ const rumpPatch={triangles:0,dispose(){}};
  const groom=createMayaGroom(best,skinAt,{
   maneSize,tailSize,maneColor:color,tailColor:tailColor||color,
   scalpColor:anatomy.materials[0].color
@@ -634,6 +664,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
+   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
