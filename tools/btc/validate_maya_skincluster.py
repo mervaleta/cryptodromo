@@ -53,8 +53,12 @@ def validate(path):
         require(isinstance(m, list) and len(m) == 16 and
                 all(type(x) in (int, float) and math.isfinite(x) for x in m),
                 "invalid bindPreMatrix[%s]" % key)
-        require(isinstance(connections.get(key), list) and len(connections[key]) == 1 and\n                isinstance(connections[key][0], str) and connections[key][0].endswith(".worldMatrix[0]"),\n                "missing/ambiguous worldMatrix connection[%s]" % key)
-    require(set(matrices) == {str(i) for i in logical}, "bind matrix keys do not match influences")\n    require(set(connections) == {str(i) for i in logical}, "matrix connection keys do not match influences")\n    rows = data.get("weightsSparseByVertex", [])
+        require(isinstance(connections.get(key), list) and len(connections[key]) == 1 and
+                isinstance(connections[key][0], str) and connections[key][0].endswith(".worldMatrix[0]"),
+                "missing/ambiguous worldMatrix connection[%s]" % key)
+    require(set(matrices) == {str(i) for i in logical}, "bind matrix keys do not match influences")
+    require(set(connections) == {str(i) for i in logical}, "matrix connection keys do not match influences")
+    rows = data.get("weightsSparseByVertex", [])
     require(isinstance(rows, list) and len(rows) == n, "incorrect vertex row count")
     if not isinstance(rows, list):
         rows = []
@@ -81,7 +85,9 @@ def validate(path):
         if len(errors) > 30:
             break
     if errors:
-        raise ValueError("BTC Maya skin export rejected:\n" + "\n".join(errors))
+        raise ValueError("BTC Maya skin export rejected:
+" + "
+".join(errors))
     print("PASS: original Maya skin data structure, %d vertices, %d influences" % (n, k))
 
 
