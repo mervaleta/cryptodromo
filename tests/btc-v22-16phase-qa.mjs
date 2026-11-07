@@ -26,6 +26,8 @@ try{
  assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,'two topology-smoothing passes on the real native leg');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorHindTriangles>4000,'real limb geometry must have substantially more smooth faces');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorReweightedVertices>10,'upper donor transition must follow Maya thigh during Gallop');
+ assert.equal(baseline.heroGroom?.tailDockCapHalves,2,'actual rump cap must have separate left/right closure');
+ assert.equal(baseline.heroGroom?.tailRootPatchTriangles,0,'forbid second floating rump patch');
  async function capture(camera,index){
   await page.evaluate(name=>document.querySelector('[data-btc-camera="'+name+'"]')?.click(),camera);
   await page.evaluate(i=>window.__cryptodromoBTCAtelierSetPose?.(i),index);
