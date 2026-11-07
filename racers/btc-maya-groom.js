@@ -74,7 +74,7 @@ function createHairMass(source,skinAt,{
   const f=(n+.37+.24*seed)/(forelock?(major?6:14):crown?(major?14:42):hero?28:
    (tail?(major?majorCount:fineCount):(major?majorCount/2:fineCount/2)));
   const root=tail?
-   [(seed-.5)*.00056,.01472+.00084*crossSeed,.03195-.00047*seed]:
+   [(seed-.5)*.00040,.01540+.00052*crossSeed,.03136-.00032*seed]:
    forelock?
     [side*(.00010+.00025*seed),-.02765+.00070*f,.04575-.00010*seed]:
    crown?
@@ -97,7 +97,7 @@ function createHairMass(source,skinAt,{
    :hero
     ?(.0071+.0029*seed)
    :tail
-    ?(major?.029+.0100*seed:.026+.0115*seed)
+    ?(major?.024+.0070*seed:.022+.0080*seed)
     :(major?.00820+.00210*seed:.00350+.00155*seed))*
       size*(tail||forelock||crown||hero?1:(.70+.30*smooth(f/.29))*clamp((-.0038-root[1])/.008,.15,1));
   const breadth=(tail
@@ -145,7 +145,7 @@ function createHairMass(source,skinAt,{
     const flow=t*.68+.32*t2;
     // Three-dimensional tapered fan: a compact tail dock opens into a
     // soft plumelike cascade, with deliberate staggered free ends.
-    const fan=(seed-.5)*(.0022*Math.sin(PI*t)+.0020*t2);
+    const fan=(seed-.5)*(.0016*Math.sin(PI*t)+.00145*t2);
     x=root[0]+fan+(.00037+.00041*seed)*Math.sin(t*TAU*2.1+seed*4)*t2;
     y=root[1]+length*(.62*t+.32*t2)+.00095*Math.sin(PI*t)+.0010*Math.sin(t*PI*3.2+seed*TAU)*t2;
     // Raised tail with an elegant backward sweep rather than limp free ends.
@@ -256,8 +256,8 @@ function createHairMass(source,skinAt,{
  geo.computeVertexNormals();geo.computeBoundingSphere();
  const mat=new THREE.MeshPhysicalMaterial({
   name:tail?'BTC tail - tapered layered hair':'BTC neck mane - feathered layers',
-  color,vertexColors:true,metalness:0,roughness:tail?.87:.88,
-  sheen:.11,sheenColor:new THREE.Color('#766a65'),
+  color,vertexColors:true,metalness:0,roughness:tail?.82:.85,
+  sheen:.19,sheenColor:new THREE.Color('#a38a76'),
   sheenRoughness:.92,clearcoat:0,side:THREE.DoubleSide
  });
  mat.onBeforeCompile=shader=>{
@@ -274,7 +274,7 @@ function createHairMass(source,skinAt,{
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
    '#include <color_fragment>\nfloat hairRootShade=mix(.93,1.03,smoothstep(.04,.64,vMayaHair.x));\nfloat hairCuticle=sin(vMayaHair.y*22.3+vMayaHair.x*89.)*.022;\nfloat btcCuticle=sin(vMayaHairRest.y*15500. + vMayaHairRest.z*3700. + sin(vMayaHairRest.x*7200.)*.65);\nfloat btcFineCoat=sin(vMayaHairRest.y*5100.-vMayaHairRest.x*2800.);\nfloat hairBand=sin(vMayaHairRest.y*9300.+vMayaHairRest.z*11200.+vMayaHair.y*4.3);\ndiffuseColor.rgb*=clamp(hairRootShade+hairCuticle+.055*btcCuticle+.027*btcFineCoat+.036*hairBand,.82,1.16);');
  };
- mat.customProgramCacheKey=()=>tail?'btc-natural-tail-spring-v14':'btc-feathered-mane-poll-v14';
+ mat.customProgramCacheKey=()=>tail?'btc-v21-anchored-tail-taper':'btc-v21-mane-fiber-gloss';
  const scalpMat=null;
  const mesh=attach(source,geo,mat,
   tail?'BTC Maya rooted long tail':'BTC Maya natural rooted flowing mane');
