@@ -46,3 +46,8 @@
 - **SHA de corrección candidata:** `d93f46864915e81d4c559d74aa951c7a5a0a3260`.
 - **Defecto raíz corregido en código:** la búsqueda de anclajes de la pata donante recorría todos los atributos de vértices de Maya, incluidos los que quedaron huérfanos al recortar el índice. Ahora sólo busca vértices referenciados por triángulos sobrevivientes, evitando atraer el injerto a tejido eliminado.
 - **Estado:** sin capturas comparables Chromium/WebGL ni prueba visual de las 16 fases. No cuenta como V23 ni autoriza merge, Hostinger o anuncio. Deben correrse regresiones de malla, capturas reales y comparar contra V21 y V22 antes de aceptar.
+
+## 2026-11-07 · V23 regression gate adicional (NO acreditada)
+- **SHA:** `9c51c5f3428f64a93e986c9649fafbcc411c068e`.
+- Se incorporó validación previa al render del donante posterior: coordenadas finitas, pesos normalizados, índices de huesos dentro del skeleton y triángulos no colapsados tras el ajuste de costura. En caso de corrupción se rechaza el candidato en vez de mostrar espinas WebGL.
+- **Límite:** es defensa de integridad, no mejora visual demostrada. Falta ejecutar Chromium/WebGL, comparar seis vistas y 16 fases contra V21/V22 y comprobar CI. V23 sigue sin acreditar, PR #136 continúa aislado; no publicar.
