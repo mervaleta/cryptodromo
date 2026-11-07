@@ -125,6 +125,104 @@ function clipNativeTriangles(mesh,predicate){
  trimmed.computeBoundingSphere();
  return {geometry:trimmed,triangles:selected.length/3};
 }
+
+/**
+ * Subdivide the ACTUAL rigged GLB donor surface, not a fake cylinder drawn
+ * over it. Quaternius splits 3D vertices at UV/hard-normal seams:
+ * 3086 triangle-corner vertices represent only ~827 spatial locations.
+ * Weld those coincident native points (the coat has no UV dependence here),
+ * then apply two conservative Loop subdivision passes to round the limbs.
+ * Preserve all native Gallop bone indices at old vertices; interpolate
+ * influences at new edge vertices. No separately animated skeleton.
+ */
+function refineSkinnedDonor(source,passes=2){
+ const pos=source.getAttribute('position'),joints=source.getAttribute('skinIndex'),
+  weights=source.getAttribute('skinWeight'),index=source.getIndex();
+ if(!index||!joints||!weights)throw Error('BTC V22 cannot refine a non-rigged donor');
+ const unique=new Map(),vertices=[],faces=[];
+ const getVertex=id=>{
+  const point=[pos.getX(id),pos.getY(id),pos.getZ(id)];
+  const key=point.map(x=>Math.round(x*1e7)).join(':');
+  if(unique.has(key))return unique.get(key);
+  const bones=new Map();
+  for(let k=0;k<4;k++){
+   const w=weights.getComponent(id,k);
+   if(w>1e-8)bones.set(joints.getComponent(id,k),w);
+  }
+  const v=vertices.length;vertices.push({p:point,w:bones});unique.set(key,v);
+  return v;
+ };
+ for(let i=0;i<index.count;i+=3){
+  const tri=[getVertex(index.getX(i)),getVertex(index.getX(i+1)),getVertex(index.getX(i+2))];
+  if(new Set(tri).size===3)faces.push(tri);
+ }
+ let vs=vertices,fs=faces;
+ const combine=(parts)=>{
+  const p=[0,0,0],w=new Map();
+  for(const [v,factor] of parts){
+   for(let a=0;a<3;a++)p[a]+=v.p[a]*factor;
+   for(const [joint,amount] of v.w)w.set(joint,(w.get(joint)||0)+amount*factor);
+  }
+  return {p,w};
+ };
+ for(let pass=0;pass<passes;pass++){
+  const adj=Array.from({length:vs.length},()=>new Set()),edges=new Map();
+  const edge=(a,b,opp)=>{
+   const key=a<b?a+':'+b:b+':'+a;
+   const info=edges.get(key)||{a:Math.min(a,b),b:Math.max(a,b),opp:[]};
+   info.opp.push(opp);edges.set(key,info);
+   adj[a].add(b);adj[b].add(a);
+  };
+  for(const [a,b,d] of fs){edge(a,b,d);edge(b,d,a);edge(d,a,b);}
+  const boundary=Array.from({length:vs.length},()=>new Set());
+  for(const e of edges.values())if(e.opp.length===1){
+   boundary[e.a].add(e.b);boundary[e.b].add(e.a);
+  }
+  const next=[];
+  for(let i=0;i<vs.length;i++){
+   const near=Array.from(boundary[i]),valence=adj[i].size;
+   if(near.length===2){
+    next.push(combine([[vs[i],.75],[vs[near[0]],.125],[vs[near[1]],.125]]));
+   }else if(valence>=3){
+    const beta=valence===3?3/16:3/(8*valence);
+    const terms=[[vs[i],1-valence*beta],...Array.from(adj[i],v=>[vs[v],beta])];
+    next.push(combine(terms));
+   }else next.push(vs[i]);
+  }
+  const mid=new Map();
+  for(const [key,e] of edges){
+   const [a,b]=[vs[e.a],vs[e.b]];
+   const m=e.opp.length===2
+    ?combine([[a,.375],[b,.375],[vs[e.opp[0]],.125],[vs[e.opp[1]],.125]])
+    :combine([[a,.5],[b,.5]]);
+   mid.set(key,next.length);next.push(m);
+  }
+  const find=(a,b)=>mid.get(a<b?a+':'+b:b+':'+a);
+  const tris=[];
+  for(const [a,b,d] of fs){
+   const ab=find(a,b),bd=find(b,d),da=find(d,a);
+   tris.push([a,ab,da],[b,bd,ab],[d,da,bd],[ab,bd,da]);
+  }
+  vs=next;fs=tris;
+ }
+ const p=[],sk=[],sw=[],facesOut=[];
+ for(const v of vs){
+  p.push(...v.p);
+  const top=[...v.w].filter(([,w])=>w>1e-8).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const total=top.reduce((s,e)=>s+e[1],0)||1;
+  for(let k=0;k<4;k++){sk.push(top[k]?.[0]||0);sw.push((top[k]?.[1]||0)/total);}
+ }
+ for(const tri of fs)facesOut.push(...tri);
+ const out=new THREE.BufferGeometry();
+ out.setIndex(facesOut);
+ out.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ out.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(sk,4));
+ out.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));
+ out.computeVertexNormals();out.computeBoundingSphere();
+ return {geometry:out,sourceTriangles:faces.length,triangles:fs.length,
+  vertices:vs.length,passes};
+}
+
 function attachNativeDonor(original,geometry,material,name) {
  const clone=new THREE.SkinnedMesh(geometry,material);
  clone.name=name;
@@ -162,6 +260,15 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    return y>.00385&&z<.0268&&Math.abs(x)>.0010;
   });
 
+  // Refine the actual skinned GLB limb before sewing its upper edge.
+  // Results are visibly rounded geometry, not a lighting-only cosmetic.
+  const refined=refineSkinnedDonor(bodyCut.geometry,2);
+  bodyCut.geometry.dispose();
+  bodyCut.geometry=refined.geometry;
+  bodyCut.sourceTriangles=refined.sourceTriangles;
+  bodyCut.triangles=refined.triangles;
+  bodyCut.refinedVertices=refined.vertices;
+  bodyCut.subdivisionPasses=refined.passes;
   // Topological seam alignment, not a polygon spike tucked in arbitrarily:
   // Pull the UPPER donor vertices toward the nearest retained Maya surface
   // of the same flank, and transfer the equivalent Maya skin influence.
@@ -252,6 +359,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   });
   if(bodyCut.triangles<280||hoovesCut.triangles<20)
    throw Error('BTC V20 native donor unexpectedly incomplete: '+bodyCut.triangles+'/'+hoovesCut.triangles);
+  const smoothHooves=refineSkinnedDonor(hoovesCut.geometry,1);
+  hoovesCut.geometry.dispose();hoovesCut.geometry=smoothHooves.geometry;
+  hoovesCut.sourceTriangles=smoothHooves.sourceTriangles;
+  hoovesCut.triangles=smoothHooves.triangles;
   donor=attachNativeDonor(original,bodyCut.geometry,anatomy.materials[0],
    'BTC V20 original Gallop hind limbs with original skin weights');
   donorHooves=attachNativeDonor(original,hoovesCut.geometry,anatomy.materials[1],
@@ -272,6 +383,9 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
+   donorSubdivisionPasses:bodyCut.subdivisionPasses,
+   originalDonorTriangles:bodyCut.sourceTriangles,refinedDonorVertices:bodyCut.refinedVertices,
+   originalHoofTriangles:hoovesCut.sourceTriangles,
    sameOriginalSkeleton:donor.skeleton===original.skeleton&&donorHooves.skeleton===original.skeleton
   },
   dispose(){
