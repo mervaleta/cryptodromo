@@ -8,14 +8,14 @@
 import * as THREE from 'three';
 import {BTC_EQUINE_MESH} from './btc-maya-body-data.js';
 import {stabilizeHindSkinWeights} from './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b';
-import {createMayaGroom} from './btc-maya-groom.js?v=btc-maya-face-native-gallop-20261105-v16';
+import {createMayaGroom} from './btc-maya-groom.js?v=btc-v21-ocular-tail-root-20261107-v1';
 import {createBTCNativeHindLimbRepair} from './btc-native-hind-limb-repair.js?v=btc-v20b-native-hind-gallop-20261105';
 import {sculptBTCHindquarters,addBTCHindquarterCoatTexture,addBTCHindquarterGaitShader,hindLimbSkinNeighborWeight,BTC_HINDQUARTER_BUILD} from './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12';
 import {createBTCMayaFaceDetails} from './btc-maya-face-details.js?v=btc-maya-face-native-gallop-20261105-v16';
 import {createBTCHarmonyEars} from './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12';
 export const BTC_MAYA_MASTER='btc-maya-2017-sculpt-gallop-20261104';
 // v12 anatomical mesh unchanged; new published BTC fiche build also includes terrain FX.
-export const BTC_MAYA_RENDER_BUILD='btc-v20b-native-hind-gallop-20261105';
+export const BTC_MAYA_RENDER_BUILD='btc-v21-ocular-tail-root-20261107-v1';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 const gauss=(x,c,r)=>Math.exp(-Math.pow((x-c)/r,2));
@@ -497,7 +497,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const headJoint=source.skeleton.bones.findIndex(b=>b.name==='Head');
  if(headJoint<0)throw Error('BTC eye globes require native Head joint');
  // Smaller globes sit INSIDE the two actual sockets; previous spheres floated ahead of the eyelid.
- const radius=.000285,template=new THREE.SphereGeometry(radius,48,32);
+ const radius=.000335,template=new THREE.SphereGeometry(radius,48,32);
  const xyz=[],normals=[],local=[],sides=[],bones=[],weights=[],indices=[];
  const point=template.getAttribute('position'),normal=template.getAttribute('normal');
  const tris=template.getIndex();
@@ -508,9 +508,9 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
    // Eye cornea calibrated to Maya's actual outer socket, x approximately .00240.
     // Ellipsoidal ocular surface follows the ORIGINAL eye aperture,
     // centered ~x=.00145,y=-.02831,z=.04268, not the outer cheek.
-    xyz.push(side*(.001825+x),-.02831+y*1.60,.04268+z*1.67);
-   const nx=side*normal.getX(i),ny=normal.getY(i)/1.60,
-     nz=normal.getZ(i)/1.67,nl=Math.hypot(nx,ny,nz)||1;
+    xyz.push(side*(.002125+x),-.02831+y*1.54,.04268+z*1.55);
+   const nx=side*normal.getX(i),ny=normal.getY(i)/1.54,
+     nz=normal.getZ(i)/1.55,nl=Math.hypot(nx,ny,nz)||1;
     normals.push(nx/nl,ny/nl,nz/nl);
    local.push(x/radius,y/radius,z/radius);
    sides.push(side);
@@ -533,8 +533,8 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
  const irisColor=new THREE.Color(chosen);
  const material=new THREE.MeshPhysicalMaterial({
   name:'BTC inset natural eye globes with independently colored irises',
-  color:'#251711',metalness:0,roughness:.53,
-  clearcoat:.075,clearcoatRoughness:.68,side:THREE.FrontSide
+  color:'#160e0a',metalness:0,roughness:.28,
+  clearcoat:.28,clearcoatRoughness:.20,side:THREE.FrontSide
  });
  material.onBeforeCompile=shader=>{
   shader.uniforms.btcIrisColor={value:irisColor};
@@ -547,7 +547,7 @@ function makeAnatomicalEyes(source,skinAt,{eyeColor='#271910'}={}){
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
    '#include <color_fragment>\nfloat btcEyeFront=vBTCEyeRest.x;\nfloat btcEyeIrisRadius=length(vec2(vBTCEyeRest.y/.68,vBTCEyeRest.z/.53));\nfloat btcEyePupilRadius=length(vec2(vBTCEyeRest.y/.45,vBTCEyeRest.z/.29));\nfloat btcEyeFacing=smoothstep(.60,.72,btcEyeFront);\nfloat btcEyeIrisMask=(1.-smoothstep(.94,1.04,btcEyeIrisRadius))*btcEyeFacing;\nfloat btcEyePupilMask=(1.-smoothstep(.91,1.03,btcEyePupilRadius))*btcEyeFacing;\nvec3 btcEyeIrisShading=(btcIrisColor*.74+vec3(.075,.036,.019))*mix(.86,1.16,smoothstep(.22,1.,btcEyeIrisRadius));\ndiffuseColor.rgb=mix(diffuseColor.rgb,btcEyeIrisShading,btcEyeIrisMask);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.003,.002,.002),btcEyePupilMask);');
  };
- material.customProgramCacheKey=()=> 'btc-eye-small-matte-corneas-20261105-v5';
+ material.customProgramCacheKey=()=> 'btc-v21-inset-equine-corneas-gloss';
  const mesh=new THREE.SkinnedMesh(geometry,material);
  mesh.name='BTC bilateral embedded spherical eyes on native Head joint';
  applySkin(mesh,source);
@@ -637,7 +637,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,hindLimbRig:'original-skinned-GLB-hind-limbs-v20',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
-   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.001825,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
+   eyeGlobes:eyes.globes,eyeRadius:eyes.eyeRadius,eyeCenterX:.002125,irisEditable:eyes.irisEditable,blackEquinePupils:eyes.blackEquinePupils,
    tailInertia:groom.tailInertia,
    eyeAssembly:face.eyeAssembly,
    integratedEyeRims:face.integratedEyeRims,

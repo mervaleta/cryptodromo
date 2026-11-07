@@ -1,3 +1,13 @@
+## 2026-11-07 · BTC V21 · córnea 3D y anclaje de cola (candidato, NO AAA)
+
+**Destino concreto:** https://race.cryptodromo.com/racers/#BTC (sin flags). La nueva cadena `racers/index.html → racers.js → btc-atelier-preview.js → btc-maya-master.js → btc-maya-groom.js` usa build `btc-v21-ocular-tail-root-20261107-v1`. Se conserva el rig original, el clip `Gallop`, la geometría de las patas posteriores del V20b y las variantes V4/V5 de comparación; los otros 99 corredores y el motor de resultados no se modifican.
+
+- **Antes:** capturas reales Chromium de V20b (Actions #42089387495, artefacto #13445446252) muestran globo ocular demasiado oculto y una cola despegada visualmente de la grupa, excesivamente larga y ancha. Se conserva ese artefacto como baseline. La costura dentada del trasplante de patas V20b es otro defecto P0 no resuelto.
+- **Geometría real del ojo:** radio del globo `0.000285 → 0.000335`, centro bilateral X `0.001825 → 0.002125`, cámara anterior de ojo elipsoidal y pesos completamente en hueso Head. Sin discos flotantes; iris y pupila siguen siendo regiones de shader sobre el globo. Córnea menos mate (roughness `.53 → .28`, clearcoat `.075 → .28`). La visibilidad debe comprobarse desde ambos perfiles y frente durante Gallop.
+- **Cola sobre la grupa:** raíces `y≈.01472..01556 → .01540..01592`, `z≈.03148..03195 → .03104..03136`, abanico lateral más estrecho, hebras principales y finas sensiblemente más cortas y fibra menos opaca. Se preservan todos los huesos Tail1..Tail7, el clip y la inercia previa; inspeccionar borde real desde atrás, porque un ajuste de raíces NO garantiza reparar una costura topológica del rump.
+- **Distribución:** nuevos `?v=` en imports del visor, documento, metadata y shader keys para invalidar CDN/navegador.
+- **Estado y riesgos:** `needs_visual_qa`. Estas son correcciones parciales de dos defectos; pendientes de capturas comparables y verificación del build servido en Hostinger. **No certificar AAA, no aprobar maestro, no extender a otros 99.**
+
 ## 2026-11-05 · BTC V20b · tren posterior original del GLB (candidato aislado)
 
 **Defecto reportado por el usuario:** en el build público V16 las patas traseras de Maya se deforman y la caña/corvejón parece quebrarse en una fase del Gallop. La malla `Horse_VR_2017.ma` tiene 10.790 caras trianguladas y sus pesos fueron transferidos por proximidad desde el GLB Quaternius; esa malla no fue modelada ni skineada específicamente para la animación Quaternius de 50 huesos. V18 mejoró pesos pero no resolvió la ruptura visual.

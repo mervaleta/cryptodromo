@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
-const BUILD='btc-v20b-native-hind-gallop-20261105';
+const BUILD=JSON.parse((await import('node:fs')).readFileSync(new URL('../racers/btc-master-revision.json',import.meta.url),'utf8')).buildId;
 const DIR='artifacts/btc-v20-hind-real-webgl';mkdirSync(DIR,{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'

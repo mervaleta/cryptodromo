@@ -56,10 +56,10 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  const files=['racers/index.html','racers/racers.js','racers/btc-atelier-preview.js'];
  for(const file of files){
    const content=read(file);
-   assert.ok(content.includes('btc-v20b-native-hind-gallop-20261105'),'FX public build not used by '+file);
+   assert.ok(content.includes('btc-v21-ocular-tail-root-20261107-v1'),'FX public build not used by '+file);
    assert.ok(!content.includes('btc-master-solid-groom-20261104-v11'),file+' still stale');
  }
- assert.match(read('racers/btc-maya-master.js'),/btc-v20b-native-hind-gallop-20261105/);
+ assert.match(read('racers/btc-maya-master.js'),/btc-v21-ocular-tail-root-20261107-v1/);
  assert.match(read('racers/btc-maya-master.js'),/btc-master-procedural-hind-groom-20261104-v12/);
  assert.match(read('racers/btc-atelier-preview.js'),/createBTCTerrainStage/);
  const master=read('racers/btc-maya-master.js');
@@ -77,8 +77,8 @@ test('canonical BTC chain picks new groom and body modules; 99 other horses unch
  assert.match(groom,/solidRingSides:SIDES/);
  assert.doesNotMatch(groom,/TextureLoader|\.jpg|\.png|\.webp|PlaneGeometry/);
  const manifest=JSON.parse(read('racers/btc-master-revision.json'));
- assert.equal(manifest.buildId,'btc-v20b-native-hind-gallop-20261105');
- assert.match(manifest.visualPass,/BTC V20b/);
+ assert.equal(manifest.buildId,'btc-v21-ocular-tail-root-20261107-v1');
+ assert.match(manifest.visualPass,/BTC V21/);
  assert.equal(manifest.status,'needs_visual_qa');
  assert.equal(module.BTC_HINDQUARTER_BUILD,'btc-hindquarters-rump-gaskin-20261104-v12');
 });
