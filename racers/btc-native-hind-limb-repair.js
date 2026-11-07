@@ -394,6 +394,36 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    }
    insetVertices++;reattachedWeights++;
   }
+  // Fail closed before WebGL: a malformed influence or inverted/vanished
+  // donor face can otherwise render as a long spike during Gallop.
+  // This is a regression gate, NOT visual acceptance of V23.
+  for(let i=0;i<donorPos.count;i++){
+   const x=donorPos.getX(i),y=donorPos.getY(i),z=donorPos.getZ(i);
+   if(![x,y,z].every(Number.isFinite))
+    throw Error('BTC V23 donor contains non-finite vertex '+i);
+   let total=0;
+   for(let k=0;k<4;k++){
+    const w=donorWeights.getComponent(i,k),bone=donorSkin.getComponent(i,k);
+    if(!Number.isFinite(w)||w<0||!Number.isInteger(bone)||
+       bone<0||bone>=original.skeleton.bones.length)
+     throw Error('BTC V23 donor invalid skin influence '+i+':'+k);
+    total+=w;
+   }
+   if(Math.abs(total-1)>0.002)
+    throw Error('BTC V23 donor weights not normalized at '+i+': '+total);
+  }
+  const finalIndex=donorGeo.getIndex();
+  for(let j=0;j<finalIndex.count;j+=3){
+   const a=finalIndex.getX(j),b=finalIndex.getX(j+1),c=finalIndex.getX(j+2);
+   if(a===b||b===c||c===a)
+    throw Error('BTC V23 donor collapsed triangle '+j/3);
+   const ab=new THREE.Vector3(donorPos.getX(b)-donorPos.getX(a),
+    donorPos.getY(b)-donorPos.getY(a),donorPos.getZ(b)-donorPos.getZ(a));
+   const ac=new THREE.Vector3(donorPos.getX(c)-donorPos.getX(a),
+    donorPos.getY(c)-donorPos.getY(a),donorPos.getZ(c)-donorPos.getZ(a));
+   if(ab.cross(ac).lengthSq()<1e-24)
+    throw Error('BTC V23 donor zero-area triangle '+j/3);
+  }
   donorPos.needsUpdate=true;donorSkin.needsUpdate=true;donorWeights.needsUpdate=true;
   donorGeo.deleteAttribute('normal');donorGeo.computeVertexNormals();
   // Quaternius uses UV split vertices. Blend normals across coincident
