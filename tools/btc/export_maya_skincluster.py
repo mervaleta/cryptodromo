@@ -33,6 +33,16 @@ def flatten_matrix(value):
         raise RuntimeError('Nonfinite Maya matrix')
     return flat
 
+def canonical_matrix_source(plug):
+    """Resolve Maya's short DAG plug names to the full paths used by influenceObjects()."""
+    if not isinstance(plug, str) or not plug.endswith('.worldMatrix[0]'):
+        raise RuntimeError('Unexpected skin matrix source: %r' % (plug,))
+    node = plug[:-len('.worldMatrix[0]')]
+    matches = cmds.ls(node, long=True) or []
+    if len(matches) != 1:
+        raise RuntimeError('Ambiguous or missing matrix source: %r -> %r' % (plug, matches))
+    return matches[0] + '.worldMatrix[0]'
+
 def export():
     if not cmds.objExists(CLUSTER):
         raise RuntimeError('Missing original skinCluster: ' + CLUSTER)
@@ -58,7 +68,7 @@ def export():
     for logical in cmds.getAttr(CLUSTER + '.matrix', multiIndices=True) or []:
         source = cmds.listConnections('%s.matrix[%d]' % (CLUSTER, logical),
                                       source=True, destination=False, plugs=True) or []
-        matrix_connections[str(logical)] = source
+        matrix_connections[str(logical)] = [canonical_matrix_source(plug) for plug in source]
     bind_pre = {}
     for logical in cmds.getAttr(CLUSTER + '.bindPreMatrix', multiIndices=True) or []:
         matrix = cmds.getAttr('%s.bindPreMatrix[%d]' % (CLUSTER, logical))
