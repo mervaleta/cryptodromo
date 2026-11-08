@@ -10,6 +10,7 @@
  */
 export const RAIL_CAMERA_BASE_SIDE = 14;
 export const RAIL_CAMERA_START_SIDE = 32;
+export const RAIL_CAMERA_SBEND_START_SIDE = 40;
 export const RAIL_CAMERA_CLEARANCE_METERS = 36;
 const STRAIGHT_LENGTH = 780;
 
@@ -18,6 +19,6 @@ export function railCameraSideOffset(progress, layout = 'straight') {
   const p = Number.isFinite(progress) ? Math.max(0, progress) : 0;
   const blend = Math.min(1, p * STRAIGHT_LENGTH / RAIL_CAMERA_CLEARANCE_METERS);
   const eased = blend * blend * (3 - 2 * blend);
-  return RAIL_CAMERA_START_SIDE +
-    (RAIL_CAMERA_BASE_SIDE - RAIL_CAMERA_START_SIDE) * eased;
+  const startSide = layout === 's-bend' ? RAIL_CAMERA_SBEND_START_SIDE : RAIL_CAMERA_START_SIDE;
+  return startSide + (RAIL_CAMERA_BASE_SIDE - startSide) * eased;
 }
