@@ -23,10 +23,11 @@ try{
  assert.equal(baseline.heroGroom?.hindRestoration?.seamMethod,'shared-edge-skinned-plane-clipping','Must use true skin-weighted cut boundary, not V20 centroid culling');
  assert.ok(baseline.heroGroom?.hindRestoration?.addedCutVertices>=15);
  assert.ok(baseline.heroGroom?.hindRestoration?.donorUpperInsetVertices>=10);
- assert.ok(baseline.heroGroom?.hindRestoration?.isolatedMayaPosteriorIslandsRemoved>=2,
-   'two disconnected old Maya hind-foot scraps must be removed');
- assert.ok(baseline.heroGroom?.hindRestoration?.isolatedMayaPosteriorTrianglesRemoved>=10,
-   'actual orphaned posterior 5-face scraps must be culled, not just hidden');
+ // Keep the orphan-removal rejection strict, but capture the actual WebGL
+ // evidence first. Previously the assertion aborted before a single PNG,
+ // leaving the geometry defect impossible to inspect or compare.
+ const posterior=baseline.heroGroom?.hindRestoration;
+ console.log('BTC_V22_POSTERIOR_AUDIT',JSON.stringify(posterior));
 
  assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,'two topology-smoothing passes on the real native leg');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorHindTriangles>4000,'real limb geometry must have substantially more smooth faces');
@@ -73,4 +74,9 @@ try{
   visualGate:'Must compare with V21 actual Hostinger images: no posterior surface shards, no open stifle, no hoof detachment. Fail visually if rear or 3Q is worse.'
  },null,2));
  console.log('BTC_V22_16_POSES_REAL_WEBGL_COMPLETE',frames.length);
+ assert.ok(posterior?.isolatedMayaPosteriorIslandsRemoved>=2,
+   'two disconnected old Maya hind-foot scraps must be removed; inspect archived PNGs and BTC_V22_POSTERIOR_AUDIT');
+ assert.ok(posterior?.isolatedMayaPosteriorTrianglesRemoved>=10,
+   'actual orphaned posterior 5-face scraps must be culled, not just hidden');
+
 }finally{await page.close();await browser.close();}
