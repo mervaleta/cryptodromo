@@ -160,18 +160,30 @@ function cropMayaHind(anatomy){
  // y≈.009, z≈.0005 and appear as airborne polygon shrapnel in actual
  // Chromium profile/rear captures. Prune only those separate components,
  // never connected flesh, caps, or donor GLB limbs.
- const parent=Array.from({length:xyz.length/3},(_,i)=>i);
+ // Connected surface components must be joined by a SHARED EDGE, not
+ // merely a vertex index: two shells touching at one point are not one
+ // watertight surface. The old vertex union silently joined these hanging
+ // foot scraps to the torso and the pruning gate could never see them.
+ const triangleCount=next.length/3;
+ const parent=Array.from({length:triangleCount},(_,i)=>i);
  const root=(id)=>{
   while(parent[id]!==id){parent[id]=parent[parent[id]];id=parent[id];}
   return id;
  };
  const join=(a,b)=>{a=root(a);b=root(b);if(a!==b)parent[a]=b;};
+ const edgeOwner=new Map();
  for(let i=0;i<next.length;i+=3){
-  join(next[i],next[i+1]);join(next[i+1],next[i+2]);
+  const tri=i/3,vs=[next[i],next[i+1],next[i+2]];
+  for(let k=0;k<3;k++){
+   const a=vs[k],b=vs[(k+1)%3];
+   const key=a<b?a+':'+b:b+':'+a;
+   if(edgeOwner.has(key))join(tri,edgeOwner.get(key));
+   else edgeOwner.set(key,tri);
+  }
  }
  const counts=new Map(),limits=new Map();
  for(let i=0;i<next.length;i+=3){
-  const r=root(next[i]);counts.set(r,(counts.get(r)||0)+1);
+  const r=root(i/3);counts.set(r,(counts.get(r)||0)+1);
   const l=limits.get(r)||{y:0,z:0,n:0};
   for(let k=0;k<3;k++){
    const v=next[i+k];l.y+=xyz[v*3+1];l.z+=xyz[v*3+2];l.n++;
@@ -189,7 +201,7 @@ function cropMayaHind(anatomy){
  for(const group of groups){
   const start=pruned.length;
   for(let i=group.start;i<group.start+group.count;i+=3){
-   if(islandRoots.has(root(next[i]))){isolatedTrianglesRemoved++;continue;}
+   if(islandRoots.has(root(i/3))){isolatedTrianglesRemoved++;continue;}
    pruned.push(next[i],next[i+1],next[i+2]);
   }
   cleanGroups.push({start,count:pruned.length-start,materialIndex:group.materialIndex});
