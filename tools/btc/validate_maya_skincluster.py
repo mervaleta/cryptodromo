@@ -10,7 +10,9 @@ from pathlib import Path
 
 
 def validate(path):
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    data = json.loads(Path(path).read_text(encoding="utf-8"),
+                      parse_constant=lambda value: (_ for _ in ()).throw(
+                          ValueError("non-finite JSON constant: " + value)))
     if not isinstance(data, dict):
         raise ValueError("BTC Maya skin export rejected: expected a JSON object")
     errors = []
