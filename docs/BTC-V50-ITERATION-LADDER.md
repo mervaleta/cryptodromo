@@ -144,3 +144,8 @@
 - **Código SHA:** `9607acd33ec2a6238ff955edfb0befc8613466e0` en `racers/btc-native-hind-limb-repair.js`.
 - **Defecto abordado:** los chequeos de 32 muestras por arista podían omitir un intervalo eliminado estrecho y construir una cara sobre un hueco de la grupa. Ahora se intersecan exactamente las desigualdades lineales de z, y y ambos semiespacios laterales de x para hallar intervalos abiertos de recorte, sin depender de una resolución de muestreo. Se conserva rechazo conservador cuando el clipper no puede representar intervalos interiores; no se inventa una topología nueva.
 - **Pendiente:** pruebas automatizadas de bordes degenerados y tangencias, CI, capturas reales Chromium/WebGL seis cámaras y 16 fases, comparación A/B contra V21 y mejor V22, SHA de los artefactos. No se ha demostrado mejora visual, ni se ha ejecutado WebGL en esta corrida. **V23 permanece sin acreditar**. No merge, Hostinger ni anuncio.
+
+## 2026-11-08 · canonicalización de rutas DAG de Maya (NO acreditada)
+- **Commit de código:** `2a14e0431875bb894594544030d1c5c150d68b70`.
+- **Defecto corregido:** `cmds.listConnections` puede devolver un nombre corto de joint, mientras `MFnSkinCluster.influenceObjects().fullPathName()` devuelve la ruta DAG completa. El validador exige igualdad exacta, por lo que una exportación auténtica podía rechazarse falsamente. El exportador ahora resuelve cada fuente `worldMatrix[0]` a ruta DAG completa con `cmds.ls(..., long=True)` y rechaza nodos ambiguos o ausentes.
+- **Alcance:** sólo script de extracción del rig BTC, sin cambio del caballo en producción. No se ejecutó Autodesk Maya, no se produjo JSON real ni se ejecutó Chromium/WebGL A/B; tampoco se certifica CI. V23/V25 continúan sin acreditar. No merge ni despliegue.
