@@ -185,7 +185,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // bow-tie of triangles that visibly tore through the rump during Gallop.
  // Seal each anatomical half independently, with a smooth intermediate ring
  // generated IN the actual skinned Maya body mesh (not a floating patch).
- const capPosition=Array.from(positions),capSkinAnchors=new Map();
+ const capPosition=Array.from(positions),capSkinAnchors=new Map(),capCenterRims=new Map();
  const sideEdges=[-1,1].map(side=>border.filter(({a,b})=>{
   // Midline vertices are shared by BOTH half-loops; classify each EDGE
   // exactly once by its midpoint, rather than counting centerline pairs
@@ -211,6 +211,8 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
    capSkinAnchors.set(n,id); // boundary and new ring follow same authored tissue
   }
   const centerId=capPosition.length/3;capPosition.push(...center);
+  // Anchor each inset center to its own bilateral rim during Gallop.
+  capCenterRims.set(centerId,ids);
   for(const {a,b} of edges){
    const ia=inner.get(a),ib=inner.get(b);
    visibleTriangles.push(b,a,ia,b,ia,ib,ib,ia,centerId);
@@ -221,6 +223,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  removed.integratedDockCapTriangles=border.length*3;
  removed.tailDockCapHalves=2;
  removed.tailDockCapRingVertices=capSkinAnchors.size;
+ removed.tailDockCapRimSkinnedCenters=capCenterRims.size;
  // The removed native ear tips also cut HOLES through the original poll.
  // Reconnect each ear-root opening to its OWN existing boundary vertices.
  // No floating cover or separate prop: the caps belong to the skinned body.
@@ -372,9 +375,27 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  for(let i=0;i<positions.length;i+=3){
   const refId=capSkinAnchors.get(i/3);
   const ref=refId===undefined?i:refId*3;
-  const skin=skinAt(skinRest[ref],skinRest[ref+1],skinRest[ref+2]);
+  let skin=skinAt(skinRest[ref],skinRest[ref+1],skinRest[ref+2]);
+  const rim=capCenterRims.get(i/3);
+  if(rim){
+   // The cap center must not acquire a different bone merely because
+   // its centroid was moved into the rump. Average the existing rim
+   // influences from the same anatomical half instead.
+   const influences=new Map();
+   for(const id of rim){
+    const offset=id*3;
+    const sample=skinAt(skinRest[offset],skinRest[offset+1],skinRest[offset+2]);
+    for(let k=0;k<4;k++){
+     const joint=sample.joints[k],w=sample.weights[k];
+     if(w>1e-8)influences.set(joint,(influences.get(joint)||0)+w/rim.length);
+    }
+   }
+   const top=[...influences].sort((a,b)=>b[1]-a[1]).slice(0,4);
+   const sum=top.reduce((n,p)=>n+p[1],0)||1;
+   skin={joints:top.map(p=>p[0]),weights:top.map(p=>p[1]/sum)};
+  }
   for(let k=0;k<4;k++){
-   bone[(i/3)*4+k]=skin.joints[k];weights[(i/3)*4+k]=skin.weights[k];
+   bone[(i/3)*4+k]=skin.joints[k]||0;weights[(i/3)*4+k]=skin.weights[k]||0;
   }
  }
  // Stabilize skin weights across neighboring vertices of the supplied Maya
@@ -674,7 +695,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
-   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,
+   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,tailDockCapRimSkinnedCenters:anatomy.tailDockCapRimSkinnedCenters,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,skinTransferSameFlank:true,skinTransferFlankBoundary:.00072,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
