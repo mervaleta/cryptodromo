@@ -10,6 +10,7 @@ on:
       - 'visual-lab/stadiumRailClearance.js'
       - 'tests/stadium-rail-clearance.mjs'
       - 'tests/stadium-aaa-audience-browser.mjs'
+      - 'tests/stadium-aaa-audience-comparison.mjs'
       - 'tests/stadium-occlusion-qa.mjs'
       - '.github/workflows/stadium-aaa-audience.yml'
   pull_request:
