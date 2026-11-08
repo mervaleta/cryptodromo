@@ -11,6 +11,7 @@ on:
       - 'tests/btc-v22-16phase-qa.mjs'
       - 'tests/btc-maya-native-index-identity.mjs'
       - 'scripts/extract-btc-maya-skin.py'
+      - 'tools/btc/**'
       - '.github/workflows/btc-v22-16phase-qa.yml'
   workflow_dispatch:
 permissions:
@@ -25,7 +26,8 @@ jobs:
         with: {node-version: '22'}
       - name: Validate actual source, build and rollback
         run: |
-          python3 -m py_compile scripts/extract-btc-maya-skin.py
+          python3 -m py_compile scripts/extract-btc-maya-skin.py tools/btc/export_maya_skincluster.py tools/btc/validate_maya_skincluster.py tools/btc/test_validate_maya_skincluster.py
+          python3 -m unittest discover -s tools/btc -p 'test_validate_maya_skincluster.py' -v
           node --check racers/btc-native-hind-limb-repair.js
           node --check racers/btc-maya-master.js
           node --check racers/btc-atelier-preview.js
