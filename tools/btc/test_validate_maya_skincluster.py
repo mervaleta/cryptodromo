@@ -97,6 +97,15 @@ class SkinValidationTests(unittest.TestCase):
         data["bindPreMatrixByLogicalIndex"]["999"] = data["bindPreMatrixByLogicalIndex"]["0"]
         self.check(data, False)
 
+    def test_nonfinite_json_constant_rejected(self):
+        data = fixture()
+        data["weightsSparseByVertex"][0] = [[0, float("nan")]]
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "skin.json"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "non-finite JSON constant"):
+                validator.validate(path)
+
     def test_nan_weight(self):
         data = fixture()
         data["weightsSparseByVertex"][0] = [[0, float("nan")]]
