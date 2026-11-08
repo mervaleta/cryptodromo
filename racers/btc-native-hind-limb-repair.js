@@ -46,7 +46,21 @@ function cropMayaHind(anatomy){
  function intersection(a,b,da,db){
   const key=a<b?a+':'+b:b+':'+a;
   if(edgeCache.has(key))return edgeCache.get(key);
-  const t=THREE.MathUtils.clamp(da/(da-db),0,1);
+  // The crop field is max() of three planes, not a single linear plane.
+  // Linear interpolation of endpoint distances can place a shared cut
+  // vertex off the actual boundary when the active plane changes mid-edge.
+  // Bisect the exact field on this edge, preserving the edge cache.
+  let lo=0,hi=1;
+  const positiveA=da>=0;
+  for(let step=0;step<28;step++){
+   const mid=(lo+hi)*.5;
+   const px=xyz[a*3]+(xyz[b*3]-xyz[a*3])*mid;
+   const py=xyz[a*3+1]+(xyz[b*3+1]-xyz[a*3+1])*mid;
+   const pz=xyz[a*3+2]+(xyz[b*3+2]-xyz[a*3+2])*mid;
+   const field=Math.max(pz-.0208,.0052-py,.0015-Math.abs(px));
+   if((field>=0)===positiveA)lo=mid;else hi=mid;
+  }
+  const t=(lo+hi)*.5;
   const id=xyz.length/3;
   for(let k=0;k<3;k++)xyz.push(xyz[a*3+k]*(1-t)+xyz[b*3+k]*t);
   const influences=new Map();
