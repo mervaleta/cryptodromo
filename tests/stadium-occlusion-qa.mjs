@@ -12,3 +12,11 @@ test('occlusion probe is opt-in, read-only and samples 25 camera rays',()=>{
  assert.match(scene,/samples\.push\(\{x,y,hit:/);
  assert.match(scene,/chain:chain\.slice\(0,8\)/);
 });
+
+test('ray diagnostics ignore hidden ancestors, not only hidden leaf meshes',()=>{
+ // Alpha20 start-gate children remain raycastable after their parent group
+ // is hidden for oval and S-bend. A leaf-only check produced false positives.
+ assert.match(scene,/const hit=hits\.find\(h=>\{/);
+ assert.match(scene,/for\(let node=h\.object;node;node=node\.parent\)if\(!node\.visible\)return false;/);
+ assert.match(scene,/if\(!hit\)\{samples\.push\(\{x,y,hit:null\}\);continue;\}/);
+});
