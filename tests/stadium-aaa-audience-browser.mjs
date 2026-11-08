@@ -104,7 +104,18 @@ try {
   'Day/night rail focus differs despite matching camera positions');
  await setControl('layout','oval');
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
- await capture('04-oval-clearance.png');
+ const ovalShot=await capture('04-oval-clearance.png');
+ assert.equal(ovalShot.layout,'oval','Oval screenshot must capture the oval geometry');
+ // Cover the third official layout in the same real Chromium/WebGL run.
+ // Alpha20's straight-only canopy must not leak into the S-bend scene.
+ await setControl('layout','s-bend');
+ await page.waitForFunction(()=>window.__cryptodromoOcclusionQA?.snapshot()?.layout==='s-bend',null,{timeout:30000});
+ await page.waitForTimeout(700);
+ const bendShot=await capture('05-sbend-clearance.png');
+ assert.equal(bendShot.layout,'s-bend','S-bend screenshot must capture the third course');
+ assert.equal(bendShot.samples.length,25);
+ assert.ok(bendShot.samples.every(sample=>!sample.hit?.chain?.includes('Alpha20 broadcast start gates')),
+  'Straight-only Alpha20 start canopy leaked into S-bend sightlines');
  assert.deepEqual(errors,[]);
  console.log('PASS real WebGL audience',first.crowd,first.drawCalls);
 } finally {await browser.close();}
