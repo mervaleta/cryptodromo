@@ -93,6 +93,16 @@ class SkinValidationTests(unittest.TestCase):
         data["weightsSparseByVertex"][0] = [[0, float("nan")]]
         self.check(data, False)
 
+    def test_connection_points_to_wrong_joint(self):
+        data = fixture()
+        data["matrixConnectionsByLogicalIndex"]["5"] = ["joint6.worldMatrix[0]"]
+        self.check(data, False)
+
+    def test_boolean_vertex_count(self):
+        data = fixture()
+        data["vertexCount"] = True
+        self.check(data, False)
+
     def test_boolean_logical_index(self):
         data = fixture()
         data["influenceLogicalIndices"][0] = True
