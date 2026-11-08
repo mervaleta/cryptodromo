@@ -106,3 +106,8 @@
 - **Defecto:** un JSON con `influences=null`, `influenceLogicalIndices=null`, índices lógicos string o nombres nulos podía provocar `TypeError` al iterar o indexar, en lugar de un rechazo explícito. Se agregó un guard previo a la lectura de matrices y cuatro regresiones negativas.
 - **Alcance:** sólo herramientas de validación del rig BTC. No cambia geometría, galope, otros 99 corredores ni producción. No se ejecutó Maya ni Chromium/WebGL ni pruebas Python en esta corrida; no se atribuye éxito de tests no ejecutados.
 - **Estado:** V23 y V25 sin acreditar. Falta checkout con ejecución de suite, exportación real de Maya y comparación WebGL de seis cámaras/16 fases. Sin merge, Hostinger ni anuncio.
+
+## 2026-11-08 · sparse influence ID hardening (NO acreditada)
+- **Commits:** `f5bb4e2147faf0e4c865e387542b965174852d17`, `32f2c86fbc496855d2befdaaca0d85156733e088`.
+- **Defecto:** una fila de pesos con índice de influencia no hashable (por ejemplo una lista) provocaba `TypeError` en `ids.add(j)` antes de emitir el rechazo de validación. Ahora sólo agrega índices enteros al conjunto; índices inválidos se reportan como `ValueError`. Se añadieron dos casos de regresión negativos (lista y null).
+- **Estado:** cambios sólo en herramientas del rig BTC, sin modificar geometría ni producción. Pruebas Python y capturas Chromium/WebGL no ejecutadas en esta intervención; no hay exportación Maya original ni comparación visual A/B. V23 y V25 siguen sin acreditar. No merge, no despliegue ni anuncio.
