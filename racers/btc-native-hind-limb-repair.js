@@ -401,7 +401,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
      y=p.reduce((n,v)=>n+v[1],0)/3,z=p.reduce((n,v)=>n+v[2],0)/3;
    // Full original Gallop joint topology from gaskin through fetlock.
    // Upper end tucks into the still-continuous Maya rump.
-   return y>.00385&&z<.0268&&Math.abs(x)>.0010;
+   // Stop the Quaternius thigh collar below the original Maya croup.
+   // The old z<.0268 allowed broad donor triangles to climb onto the
+   // rump and appear as a jagged skirt in real rear WebGL images.
+   return y>.00385&&z<.0246&&Math.abs(x)>.0010;
   });
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
@@ -439,7 +442,8 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
    if(z<=.0208||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((z-.0208)/.0060,0,1);
+   // Match the taper's endpoint to the new anatomical collar cutoff.
+   const u=THREE.MathUtils.clamp((z-.0208)/(.0246-.0208),0,1);
    const t=u*u*(3-2*u);
    const side=Math.sign(x);
    let near=null,d2=Infinity;
