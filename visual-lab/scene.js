@@ -18,6 +18,7 @@ import {createStraightCourseBatches,createForestBatches} from './stadiumStaticBa
 import {PAVILION_OFFSET_Z,PAVILION_UPPER_ROOF_Y,PAVILION_FOUNDATION_Y,PAVILION_GRANDSTAND_CAMERA_Z,pavilionPlacementAudit} from './pavilionPlacement.js?v=muybridge-clearance-3';
 import {createParadeVillage} from '../parade/scenery.js?v=photo-finish-tv-params-20261104-v1';
 import {createStadiumBackdrop} from './stadiumBackdrop.js?v=satoshi-backdrop-facades-20261105-v1';
+import {railCameraSideOffset} from './stadiumRailClearance.js?v=satoshi-rail-gate-clearance-20261108-v1';
 import {createCloudLayer} from './cloudLayer.js?v=alpha15-2';
 import {liveSlot,formatCountdown,SLOT_SECONDS} from './liveSchedule.js?v=a08-1';
 import {coastDistance,coastSpeed,broadcastRunoutDistance,raceStatistics,narrateEvent,RUNOUT_SECONDS} from './raceBroadcast.js?v=alpha15-runout-1';
@@ -1159,7 +1160,12 @@ function adjustCamera(dt){
    goal.set(point.x-tx*34+nx*47,48,point.z-tz*34+nz*47);
    target.set(point.x+tx*18,1.8,point.z+tz*18);
  }else if(mode==='rail'){
-   goal.set(point.x-tx*8+nx*14,2.8,point.z-tz*8+nz*14);
+   // The launch gate spans z=-16..+16. The old 14m rail offset made the
+   // camera look through its roof and support pillars at t=0.
+   // Only this visual shot moves, fading back to the usual rail offset
+   // over the first 36m; gate, race physics and shared rigs are unchanged.
+   const railSide=railCameraSideOffset(avg,layoutMode);
+   goal.set(point.x-tx*8+nx*railSide,2.8,point.z-tz*8+nz*railSide);
    target.set(point.x+tx*11,2,point.z+tz*11);
  }else if(mode==='leader'){
    // Follow the actual leader, but never modify official positions.
