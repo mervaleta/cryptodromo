@@ -25,9 +25,9 @@ def validate(path):
             "invalid geometry matrix")
     n = data.get("vertexCount")
     k = data.get("influenceCount")
-    require(n == 5406, "unexpected vertex count: %r" % n)
-    require(k == 70, "unexpected influence count: %r" % k)
-    if not isinstance(n, int) or not isinstance(k, int) or n <= 0 or k <= 0:
+    require(type(n) is int and n == 5406, "unexpected vertex count: %r" % n)
+    require(type(k) is int and k == 70, "unexpected influence count: %r" % k)
+    if type(n) is not int or type(k) is not int or n <= 0 or k <= 0:
         raise ValueError("invalid vertex/influence counts: " + "; ".join(errors))
     names = data.get("influences", [])
     logical = data.get("influenceLogicalIndices", [])
@@ -47,14 +47,15 @@ def validate(path):
         matrices = {}
     if not isinstance(connections, dict):
         connections = {}
-    for idx in logical if isinstance(logical, list) else []:
+    for position, idx in enumerate(logical if isinstance(logical, list) else []):
         key = str(idx)
         m = matrices.get(key)
         require(isinstance(m, list) and len(m) == 16 and
                 all(type(x) in (int, float) and math.isfinite(x) for x in m),
                 "invalid bindPreMatrix[%s]" % key)
+        expected_connection = (names[position] + ".worldMatrix[0]") if isinstance(names, list) and position < len(names) and isinstance(names[position], str) else None
         require(isinstance(connections.get(key), list) and len(connections[key]) == 1 and
-                isinstance(connections[key][0], str) and connections[key][0].endswith(".worldMatrix[0]"),
+                connections[key][0] == expected_connection,
                 "missing/ambiguous worldMatrix connection[%s]" % key)
     require(set(matrices) == {str(i) for i in logical}, "bind matrix keys do not match influences")
     require(set(connections) == {str(i) for i in logical}, "matrix connection keys do not match influences")
