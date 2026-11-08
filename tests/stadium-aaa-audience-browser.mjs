@@ -29,7 +29,14 @@ try {
   await writeFile('artifacts/stadium-aaa-audience/'+filename.replace(/\.png$/,'.occlusion.json'),JSON.stringify(probe,null,2));
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
   assert.ok(data?.length>1000,'Chromium returned no screenshot pixels');
-  await writeFile('artifacts/stadium-aaa-audience/'+filename,Buffer.from(data,'base64'));
+  const png=Buffer.from(data,'base64');
+  // Reject blank/truncated or wrong-viewport evidence before archiving it.
+  // PNG IHDR dimensions are authoritative for the actual CDP frame, not the DOM.
+  assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a',filename+': invalid PNG signature');
+  assert.equal(png.toString('ascii',12,16),'IHDR',filename+': missing PNG header');
+  assert.equal(png.readUInt32BE(16),1600,filename+': unexpected screenshot width');
+  assert.equal(png.readUInt32BE(20),940,filename+': unexpected screenshot height');
+  await writeFile('artifacts/stadium-aaa-audience/'+filename,png);
   return probe;
  };
  // QA may run in TV/embed mode where production controls are hidden, but present.
