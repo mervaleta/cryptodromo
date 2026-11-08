@@ -26,7 +26,6 @@ try {
    assert.ok(gateHits.every(sample=>sample.x!==0),
     filename+': gate structure occludes the central rail sightline');
   }
-  await writeFile('artifacts/stadium-aaa-audience/'+filename.replace(/\.png$/,'.occlusion.json'),JSON.stringify(probe,null,2));
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
   assert.ok(data?.length>1000,'Chromium returned no screenshot pixels');
   const png=Buffer.from(data,'base64');
@@ -36,7 +35,15 @@ try {
   assert.equal(png.toString('ascii',12,16),'IHDR',filename+': missing PNG header');
   assert.equal(png.readUInt32BE(16),1600,filename+': unexpected screenshot width');
   assert.equal(png.readUInt32BE(20),940,filename+': unexpected screenshot height');
+  // IHDR alone does not establish a complete PNG: CDP can return a truncated
+  // stream with a valid header. Require the terminal zero-length IEND chunk.
+  assert.ok(png.length>=45,filename+': PNG too short');
+  assert.equal(png.subarray(-12,-8).toString('hex'),'00000000',filename+': missing zero-length IEND');
+  assert.equal(png.toString('ascii',png.length-8,png.length-4),'IEND',filename+': truncated PNG');
+  assert.equal(png.subarray(-4).toString('hex'),'ae426082',filename+': invalid IEND CRC');
+  // Only persist the JSON/PNG pair after the image has passed validation.
   await writeFile('artifacts/stadium-aaa-audience/'+filename,png);
+  await writeFile('artifacts/stadium-aaa-audience/'+filename.replace(/\\.png$/,'.occlusion.json'),JSON.stringify(probe,null,2));
   return probe;
  };
  // QA may run in TV/embed mode where production controls are hidden, but present.
