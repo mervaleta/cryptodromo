@@ -43,6 +43,31 @@ function cropMayaHind(anatomy){
   const x=xyz[v*3],y=xyz[v*3+1],z=xyz[v*3+2];
   return Math.max(z-.0208,.0052-y,.0015-Math.abs(x));
  }
+ // Exact open interval where the crop removes an edge. Each removed
+ // half-space is linear; the lateral condition is a union of two intervals.
+ // This catches arbitrarily narrow hidden intervals missed by 32 samples.
+ function removedIntervals(a,b){
+  const ax=xyz[a*3],ay=xyz[a*3+1],az=xyz[a*3+2];
+  const dx=xyz[b*3]-ax,dy=xyz[b*3+1]-ay,dz=xyz[b*3+2]-az;
+  function restrict(lo,hi,value,slope,sign){
+   const v=value*sign,d=slope*sign;
+   if(d===0)return v>0?[lo,hi]:null;
+   const t=-v/d;
+   return d>0?[Math.max(lo,t),hi]:[lo,Math.min(hi,t)];
+  }
+  const out=[];
+  for(const side of [-1,1]){
+   let range=[0,1];
+   // removed: z < .0208, y > .0052, side*x > .0015
+   for(const [value,slope,sign] of [
+    [az-.0208,dz,-1],[ay-.0052,dy,1],[side*ax-.0015,side*dx,1]]){
+    range=restrict(range[0],range[1],value,slope,sign);
+    if(!range||range[1]<=range[0])break;
+   }
+   if(range&&range[1]>range[0])out.push(range);
+  }
+  return out;
+ }
  function intersection(a,b,da,db){
   const key=a<b?a+':'+b:b+':'+a;
   if(edgeCache.has(key))return edgeCache.get(key);
@@ -87,14 +112,8 @@ function cropMayaHind(anatomy){
    if(keep.every(Boolean)){
     for(let j=0;j<3;j++){
      const a=tri[j],b=tri[(j+1)%3];
-     for(let sample=1;sample<32;sample++){
-      const t=sample/32;
-      const x=xyz[a*3]*(1-t)+xyz[b*3]*t;
-      const y=xyz[a*3+1]*(1-t)+xyz[b*3+1]*t;
-      const z=xyz[a*3+2]+(xyz[b*3+2]-xyz[a*3+2])*t;
-      if(Math.max(z-.0208,.0052-y,.0015-Math.abs(x))<0)
-       throw Error('BTC V22 hidden crop interval on retained edge: '+a+'/'+b);
-     }
+     if(removedIntervals(a,b).length)
+      throw Error('BTC V22 hidden crop interval on retained edge: '+a+'/'+b);
     }
     next.push(...tri);continue;
    }
@@ -107,17 +126,10 @@ function cropMayaHind(anatomy){
     // on the SAME edge even when both endpoints are retained. The
     // single-intersection polygon clip cannot represent that topology.
     // Fail closed instead of silently bridging a hole with a large face.
-    let transitions=0, previous=da>=0;
-    for(let sample=1;sample<=32;sample++){
-     const t=sample/32;
-     const x=xyz[a*3]*(1-t)+xyz[b*3]*t;
-     const y=xyz[a*3+1]*(1-t)+xyz[b*3+1]*t;
-     const z=xyz[a*3+2]*(1-t)+xyz[b*3+2]*t;
-     const current=Math.max(z-.0208,.0052-y,.0015-Math.abs(x))>=0;
-     if(current!==previous)transitions++;
-     previous=current;
-    }
-    if(transitions>1)
+    const intervals=removedIntervals(a,b);
+    // One entering or exiting crossing is representable by this clipper.
+    // Two removed intervals or an interior-only interval require splitting.
+    if(intervals.length>1||(da>=0&&db>=0&&intervals.length))
      throw Error('BTC V22 multi-crossing crop edge requires polygon splitting: '+a+'/'+b);
     if(da>=0)boundary.push(a);
     if((da>=0)!==(db>=0))boundary.push(intersection(a,b,da,db));
