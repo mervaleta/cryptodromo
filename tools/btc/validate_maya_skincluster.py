@@ -40,6 +40,12 @@ def validate(path):
             len(set(i for i in logical if type(i) is int)) == k,
             "logical influence indices not unique/complete")
     require(all(type(i) is int and i >= 0 for i in logical) if isinstance(logical, list) else False, "invalid logical indices")
+    # Stop before indexing malformed influence metadata: fail closed with a useful error.
+    if (not isinstance(names, list) or len(names) != k or
+            any(not isinstance(name, str) or not name for name in names) or
+            not isinstance(logical, list) or len(logical) != k or
+            any(type(i) is not int or i < 0 for i in logical)):
+        raise ValueError("BTC Maya skin export rejected:\\n" + "\\n".join(errors))
     matrices = data.get("bindPreMatrixByLogicalIndex", {})
     connections = data.get("matrixConnectionsByLogicalIndex", {})
     require(isinstance(matrices, dict) and isinstance(connections, dict), "invalid matrix dictionaries")
