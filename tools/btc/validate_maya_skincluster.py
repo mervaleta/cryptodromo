@@ -82,7 +82,8 @@ def validate(path):
             j, w = pair
             if type(j) is not int or not 0 <= j < k or j in ids:
                 errors.append("invalid/repeated influence at vertex %d" % v)
-            ids.add(j)
+            if type(j) is int:
+                ids.add(j)
             if type(w) not in (int, float) or not math.isfinite(w) or w <= 0 or w > 1:
                 errors.append("invalid weight at vertex %d" % v)
             else:
