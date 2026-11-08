@@ -134,5 +134,15 @@ class SkinValidationTests(unittest.TestCase):
         data["influences"][0] = None
         self.check(data, False)
 
+    def test_unhashable_sparse_influence_id(self):
+        data = fixture()
+        data["weightsSparseByVertex"][0] = [[[0], 1.0]]
+        self.check(data, False)
+
+    def test_null_sparse_influence_id(self):
+        data = fixture()
+        data["weightsSparseByVertex"][0] = [[None, 1.0]]
+        self.check(data, False)
+
 if __name__ == "__main__":
     unittest.main()
