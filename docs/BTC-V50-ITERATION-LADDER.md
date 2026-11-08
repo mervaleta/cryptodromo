@@ -116,3 +116,9 @@
 - **Commits:** `4b8939fd1c6f20c61e8a245665ca39165913916b`, `562a8ffb6c49066921bdcd2f23d34a388035aeed`.
 - **Defecto corregido:** `validate_maya_skincluster.py` llamaba `.get()` sobre la raíz JSON sin verificar que fuese un objeto. Los valores JSON `null`, `[]` o una cadena provocaban `AttributeError` en lugar de rechazo explícito. Ahora se exige objeto raíz y se añadieron tres pruebas negativas sintéticas.
 - **Alcance:** exclusivamente herramientas BTC de importación Maya. No se ejecutaron aquí pruebas Python, Maya ni Chromium/WebGL; no hay comparación visual de seis cámaras y 16 fases ni exportación original. V23/V25 no acreditadas, sin merge ni despliegue.
+
+## 2026-11-08 · V23 candidate: exact piecewise crop boundary (NOT credited)
+- **Code SHA:** `96244933a738b3922f26aa7c683e7e56e76621ca` in `racers/btc-native-hind-limb-repair.js`.
+- **Geometry defect addressed:** `cropMayaHind.distance` is a maximum of three signed fields, so it is piecewise linear, not globally linear along an edge. Interpolating the signed distances of endpoints can place the cut vertex away from the actual zero surface when the dominant plane switches. The intersection now bisects the original field for 28 steps and reuses the existing shared-edge cache; interpolated bone weights follow the solved edge parameter. This is an actual change to the candidate mesh positions, not a material/label update.
+- **Unverified risk:** the field uses `max` and may cross zero more than once along an edge; bisection finds one crossing but does not resolve all disconnected kept intervals. An edge-level multi-crossing audit and six-camera, 16-phase Chromium/WebGL comparison against V21 and previous V22 are required. If any pose worsens, revert this commit.
+- **Evidence:** no Chromium/WebGL screenshots, Maya export, browser regression or CI results obtained in this run. **V23 remains unchecked**, no merge, no Hostinger deployment, no user announcement.
