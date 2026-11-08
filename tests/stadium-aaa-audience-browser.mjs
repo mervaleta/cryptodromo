@@ -90,6 +90,18 @@ try {
  }
  assert.ok(Math.hypot(...dayRail.camera.map((n,i)=>n-nightRail.camera[i]))<2.5,
   'Day/night rail screenshots are not geometrically comparable at t=00:00');
+ // Camera position alone cannot guarantee equivalent photographs: a moving
+ // look-at target can rotate the rail lens while its origin stays fixed.
+ // Compare the exact focus recorded alongside each saved PNG.
+ for(const [label,shot] of [['day',dayRail],['night',nightRail]]){
+  assert.equal(shot.elapsed,0,label+' rail capture must be at launch');
+  assert.ok(Array.isArray(shot.focus)&&shot.focus.length===3
+   &&shot.focus.every(Number.isFinite),label+' rail focus is invalid');
+  assert.ok(shot.samples.some(sample=>sample.x===0&&sample.y===0),
+   label+' rail diagnostic lacks central sightline');
+ }
+ assert.ok(Math.hypot(...dayRail.focus.map((n,i)=>n-nightRail.focus[i]))<2.5,
+  'Day/night rail focus differs despite matching camera positions');
  await setControl('layout','oval');
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
  await capture('04-oval-clearance.png');
