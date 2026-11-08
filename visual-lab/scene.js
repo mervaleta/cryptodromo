@@ -1470,7 +1470,13 @@ if(new URLSearchParams(location.search).get('stadium-occlusion-qa')==='1'){
    for(const y of [-.65,-.3,0,.3,.65])for(const x of [-.8,-.4,0,.4,.8]){
     raycaster.setFromCamera(new THREE.Vector2(x,y),camera);
     const hits=raycaster.intersectObjects(scene.children,true);
-    const hit=hits.find(h=>h.object.visible&&h.distance>camera.near+.01);
+    const hit=hits.find(h=>{
+     if(h.distance<=camera.near+.01)return false;
+     // Raycaster includes children of hidden groups. Only rendered ancestors
+     // can occlude a screenshot (e.g. Alpha20 is hidden on oval/s-bend).
+     for(let node=h.object;node;node=node.parent)if(!node.visible)return false;
+     return true;
+    });
     if(!hit){samples.push({x,y,hit:null});continue;}
     let parent=hit.object,chain=[];
     while(parent&&parent!==scene){chain.push(parent.name||parent.type);parent=parent.parent;}
