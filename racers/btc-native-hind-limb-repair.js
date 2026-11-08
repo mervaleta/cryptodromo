@@ -88,6 +88,22 @@ function cropMayaHind(anatomy){
    const boundary=[];
    for(let j=0;j<3;j++){
     const a=tri[j],b=tri[(j+1)%3],da=d[j],db=d[(j+1)%3];
+    // A max-of-planes field may enter and leave the removed volume
+    // on the SAME edge even when both endpoints are retained. The
+    // single-intersection polygon clip cannot represent that topology.
+    // Fail closed instead of silently bridging a hole with a large face.
+    let transitions=0, previous=da>=0;
+    for(let sample=1;sample<=32;sample++){
+     const t=sample/32;
+     const x=xyz[a*3]*(1-t)+xyz[b*3]*t;
+     const y=xyz[a*3+1]*(1-t)+xyz[b*3+1]*t;
+     const z=xyz[a*3+2]*(1-t)+xyz[b*3+2]*t;
+     const current=Math.max(z-.0208,.0052-y,.0015-Math.abs(x))>=0;
+     if(current!==previous)transitions++;
+     previous=current;
+    }
+    if(transitions>1)
+     throw Error('BTC V22 multi-crossing crop edge requires polygon splitting: '+a+'/'+b);
     if(da>=0)boundary.push(a);
     if((da>=0)!==(db>=0))boundary.push(intersection(a,b,da,db));
    }
