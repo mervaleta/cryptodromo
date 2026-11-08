@@ -138,3 +138,9 @@
 - **Código SHA:** `95f8714d7dc90ce5bbfaf5c58953d54b6fc5bc14` (`racers/btc-native-hind-limb-repair.js`).
 - **Defecto:** la guarda anterior sólo examinaba aristas de triángulos mixtos; una arista con ambos extremos retenidos puede atravesar el volumen eliminado y quedar como puente falso sin activar el control. Ahora se muestrean también las tres aristas de cada triángulo enteramente retenido y se rechaza el candidato si se detecta un intervalo oculto.
 - **Riesgos:** control conservador de 31 muestras interiores por arista, no algoritmo de recorte multiintervalo; puede rechazar V22, y los intervalos más estrechos que el muestreo pueden escapar. Falta implementar clipping robusto, ejecutar pruebas de geometría, CI y Chromium/WebGL real seis cámaras/16 fases con comparativa A/B y SHA. Sin capturas ni QA visual, **V23 no se acredita**. No merge, no Hostinger, no anuncio.
+
+
+## 2026-11-08 · V23 analytic crop-interval candidate (NO acreditada)
+- **Código SHA:** `9607acd33ec2a6238ff955edfb0befc8613466e0` en `racers/btc-native-hind-limb-repair.js`.
+- **Defecto abordado:** los chequeos de 32 muestras por arista podían omitir un intervalo eliminado estrecho y construir una cara sobre un hueco de la grupa. Ahora se intersecan exactamente las desigualdades lineales de z, y y ambos semiespacios laterales de x para hallar intervalos abiertos de recorte, sin depender de una resolución de muestreo. Se conserva rechazo conservador cuando el clipper no puede representar intervalos interiores; no se inventa una topología nueva.
+- **Pendiente:** pruebas automatizadas de bordes degenerados y tangencias, CI, capturas reales Chromium/WebGL seis cámaras y 16 fases, comparación A/B contra V21 y mejor V22, SHA de los artefactos. No se ha demostrado mejora visual, ni se ha ejecutado WebGL en esta corrida. **V23 permanece sin acreditar**. No merge, Hostinger ni anuncio.
