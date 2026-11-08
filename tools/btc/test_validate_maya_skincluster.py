@@ -78,5 +78,31 @@ class SkinValidationTests(unittest.TestCase):
         self.check(data, False)
 
 
+    def test_missing_matrix_connection(self):
+        data = fixture()
+        del data["matrixConnectionsByLogicalIndex"]["5"]
+        self.check(data, False)
+
+    def test_unexpected_bind_matrix_key(self):
+        data = fixture()
+        data["bindPreMatrixByLogicalIndex"]["999"] = data["bindPreMatrixByLogicalIndex"]["0"]
+        self.check(data, False)
+
+    def test_nan_weight(self):
+        data = fixture()
+        data["weightsSparseByVertex"][0] = [[0, float("nan")]]
+        self.check(data, False)
+
+    def test_boolean_logical_index(self):
+        data = fixture()
+        data["influenceLogicalIndices"][0] = True
+        self.check(data, False)
+
+    def test_malformed_sparse_pair(self):
+        data = fixture()
+        data["weightsSparseByVertex"][0] = [[0]]
+        self.check(data, False)
+
+
 if __name__ == "__main__":
     unittest.main()
