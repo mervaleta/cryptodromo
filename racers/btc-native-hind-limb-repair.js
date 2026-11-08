@@ -446,20 +446,35 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const u=THREE.MathUtils.clamp((z-.0208)/(.0246-.0208),0,1);
    const t=u*u*(3-2*u);
    const side=Math.sign(x);
-   let near=null,d2=Infinity;
+   // Project to a locally averaged SAME-FLANK Maya patch, not one
+   // nearest vertex. Single-vertex snapping creates a stepped collar and
+   // needle-like triangles when adjacent donor points choose different hosts.
+   const nearby=[];
    for(const v of attachment){
     if(v.side!==side)continue;
     const dx=v.x-x,dy=v.y-y,dz=v.z-z;
-    // Match the anatomical level first, avoiding a seam jumping up the croup.
     const dist=dx*dx+dy*dy+dz*dz*2.4;
-    if(dist<d2){d2=dist;near=v;}
+    if(nearby.length<4||dist<nearby[nearby.length-1].dist){
+     nearby.push({v,dist});
+     nearby.sort((a,b)=>a.dist-b.dist);
+     if(nearby.length>4)nearby.pop();
+    }
    }
-   if(!near||d2>.000075)continue;
+   if(!nearby.length||nearby[0].dist>.000075)continue;
+   // Keep the closest original host for skin influence until the genuine
+   // Maya rig is available; only smooth the surface attachment geometry.
+   const near=nearby[0].v;
+   let sum=0,px=0,py=0,pz=0;
+   for(const {v,dist} of nearby){
+    const w=1/(dist+1e-9);
+    sum+=w;px+=v.x*w;py+=v.y*w;pz+=v.z*w;
+   }
+   px/=sum;py/=sum;pz/=sum;
    const blend=t*.98;
    donorPos.setXYZ(i,
-    THREE.MathUtils.lerp(x,near.x-side*.00022,blend),
-    THREE.MathUtils.lerp(y,near.y,blend),
-    THREE.MathUtils.lerp(z,near.z,blend*.18));
+    THREE.MathUtils.lerp(x,px-side*.00022,blend),
+    THREE.MathUtils.lerp(y,py,blend),
+    THREE.MathUtils.lerp(z,pz,blend*.18));
    // At the upper boundary the donor follows the SAME hind-thigh tissue
    // as Maya during Gallop. Distal native Gallop weights are untouched.
    const influences=new Map();
