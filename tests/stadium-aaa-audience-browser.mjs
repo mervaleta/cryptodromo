@@ -75,10 +75,22 @@ try {
    && Math.abs(shot.camera[1]-2.8)<.7
    && Math.abs(shot.camera[2]-32)<1.6;
  },null,{timeout:45000,polling:500});
+ // A screenshot can be taken while the smoothed camera is still moving,
+ // even after an earlier waitForFunction passed. Verify the actual saved
+ // camera snapshots at both lighting states, not just the requested preset.
  await capture('02-rail-day.png');
+ const dayRail=await page.evaluate(()=>window.__cryptodromoOcclusionQA.snapshot());
  await setControl('weather','night');
  await page.waitForTimeout(1200);
  await capture('03-rail-night.png');
+ const nightRail=await page.evaluate(()=>window.__cryptodromoOcclusionQA.snapshot());
+ for(const [label,shot] of [['day',dayRail],['night',nightRail]]){
+  assert.equal(shot.layout,'straight',label+' rail layout drift');
+  assert.equal(shot.view,'rail',label+' rail view drift');
+  assert.ok(Math.abs(shot.camera[2]-32)<2,label+' rail camera did not settle to launch offset: '+shot.camera);
+ }
+ assert.ok(Math.hypot(...dayRail.camera.map((n,i)=>n-nightRail.camera[i]))<2.5,
+  'Day/night rail screenshots are not geometrically comparable at t=00:00');
  await setControl('layout','oval');
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
  await capture('04-oval-clearance.png');
