@@ -185,7 +185,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // bow-tie of triangles that visibly tore through the rump during Gallop.
  // Seal each anatomical half independently, with a smooth intermediate ring
  // generated IN the actual skinned Maya body mesh (not a floating patch).
- const capPosition=Array.from(positions),capSkinAnchors=new Map(),capCenterRims=new Map();
+ const capPosition=Array.from(positions),capSkinAnchors=new Map(),capCenterRims=new Map(),halfCaps=[];
  const sideEdges=[-1,1].map(side=>border.filter(({a,b})=>{
   // Midline vertices are shared by BOTH half-loops; classify each EDGE
   // exactly once by its midpoint, rather than counting centerline pairs
@@ -213,14 +213,58 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const centerId=capPosition.length/3;capPosition.push(...center);
   // Anchor each inset center to its own bilateral rim during Gallop.
   capCenterRims.set(centerId,ids);
+  halfCaps.push({inner,centerId});
   for(const {a,b} of edges){
    const ia=inner.get(a),ib=inner.get(b);
    visibleTriangles.push(b,a,ia,b,ia,ib,ib,ia,centerId);
   }
  }
+ // The left and right rim sets are OPEN ARCS, not closed loops.
+ // They share two mid-sagittal endpoints; two unjoined cap fans leave
+ // eight exposed edges and the black triangular cavity seen in rear WebGL.
+ // Sew those exact edges inside the original Maya skinned body.
+ const openEnds=sideEdges.map(edges=>{
+  const degree=new Map();
+  for(const {a,b} of edges){
+   degree.set(a,(degree.get(a)||0)+1);
+   degree.set(b,(degree.get(b)||0)+1);
+  }
+  return [...degree].filter(([,n])=>n===1).map(([id])=>id);
+ });
+ if(openEnds.some(a=>a.length!==2)||
+    openEnds[0].some(id=>!openEnds[1].includes(id)))
+  throw Error('BTC tail rim arcs do not share two anatomical seam ends');
+ const [endA,endB]=openEnds[0].sort((a,b)=>positions[a*3+2]-positions[b*3+2]);
+ const left=halfCaps[0],right=halfCaps[1];
+ const lA=left.inner.get(endA),lB=left.inner.get(endB);
+ const rA=right.inner.get(endA),rB=right.inner.get(endB);
+ const lC=left.centerId,rC=right.centerId;
+ // Six non-overlapping triangles seal the narrow sagittal slit.
+ const bridge=[
+  [endA,lA,rA],[lA,lC,rA],[rA,lC,rC],
+  [lC,lB,rC],[rC,lB,rB],[lB,endB,rB]
+ ];
+ for(const tri of bridge)visibleTriangles.push(...tri);
+ // Fail before rendering if the added cap contains an exposed edge,
+ // an edge shared by more than two faces, or inconsistent winding.
+ const capStart=positions.length/3,capEdges=new Map();
+ for(let i=0;i<visibleTriangles.length;i+=3){
+  const tri=visibleTriangles.slice(i,i+3);
+  for(let k=0;k<3;k++){
+   const a=tri[k],b=tri[(k+1)%3];
+   if(a<capStart&&b<capStart)continue;
+   const key=edgeKey(a,b),v=capEdges.get(key)||{count:0,winding:0};
+   v.count++;v.winding+=a<b?1:-1;capEdges.set(key,v);
+  }
+ }
+ const badCapEdges=[...capEdges].filter(([,v])=>v.count!==2||v.winding!==0);
+ if(badCapEdges.length)
+  throw Error('BTC tail cap midline remains open/nonmanifold: '+badCapEdges.length);
  positions=Float32Array.from(capPosition);
  removed.tailDockBorderEdges=border.length;
- removed.integratedDockCapTriangles=border.length*3;
+ removed.integratedDockCapTriangles=border.length*3+bridge.length;
+ removed.tailDockMidlineBridgeTriangles=bridge.length;
+ removed.tailDockOpenCapEdges=badCapEdges.length;
  removed.tailDockCapHalves=2;
  removed.tailDockCapRingVertices=capSkinAnchors.size;
  removed.tailDockCapRimSkinnedCenters=capCenterRims.size;
@@ -695,7 +739,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
-   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,tailDockCapRimSkinnedCenters:anatomy.tailDockCapRimSkinnedCenters,
+   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,tailDockCapRimSkinnedCenters:anatomy.tailDockCapRimSkinnedCenters,tailDockMidlineBridgeTriangles:anatomy.tailDockMidlineBridgeTriangles,tailDockOpenCapEdges:anatomy.tailDockOpenCapEdges,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,skinTransferSameFlank:true,skinTransferFlankBoundary:.00072,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
