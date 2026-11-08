@@ -43,7 +43,7 @@ try {
   assert.equal(png.subarray(-4).toString('hex'),'ae426082',filename+': invalid IEND CRC');
   // Only persist the JSON/PNG pair after the image has passed validation.
   await writeFile('artifacts/stadium-aaa-audience/'+filename,png);
-  await writeFile('artifacts/stadium-aaa-audience/'+filename.replace(/\\.png$/,'.occlusion.json'),JSON.stringify(probe,null,2));
+  await writeFile('artifacts/stadium-aaa-audience/'+filename.replace(/\.png$/,'.occlusion.json'),JSON.stringify(probe,null,2));
   return probe;
  };
  // QA may run in TV/embed mode where production controls are hidden, but present.
