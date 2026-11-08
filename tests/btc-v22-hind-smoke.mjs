@@ -22,6 +22,8 @@ try{
  },null,{timeout:120000});
  const qa=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(qa.heroGroom?.tailDockCapRimSkinnedCenters,2,'Both rump cap centers must follow their original rim skin weights');
+ assert.equal(qa.heroGroom?.tailDockMidlineBridgeTriangles,6,'Six triangles must close the sagittal tail-dock slit');
+ assert.equal(qa.heroGroom?.tailDockOpenCapEdges,0,'Tail dock must have no open/nonmanifold cap edges');
  console.log('BTC_V22_HIND_DIAGNOSTIC',JSON.stringify(qa.heroGroom?.hindRestoration));
  writeFileSync(dest+'/metadata.json',JSON.stringify({
   build:qa.heroGroom?.harmonyBuild,
