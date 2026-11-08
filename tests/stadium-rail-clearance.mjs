@@ -5,8 +5,7 @@ import {trackPoint} from '../visual-lab/trackMath.js';
 import {GATE_START_OFFSET} from '../visual-lab/broadcastGates.js';
 import {
   railCameraSideOffset, RAIL_CAMERA_BASE_SIDE,
-  RAIL_CAMERA_START_SIDE, RAIL_CAMERA_SBEND_START_SIDE,
-  RAIL_CAMERA_CLEARANCE_METERS,
+  RAIL_CAMERA_START_SIDE, RAIL_CAMERA_CLEARANCE_METERS,
 } from '../visual-lab/stadiumRailClearance.js';
 
 const START_X=-390;
@@ -24,8 +23,8 @@ function launchShot(layout) {
   };
 }
 
-test('rail shot begins outside the physical gate canopy for both straight layouts',()=>{
-  for(const layout of ['straight','s-bend']){
+test('rail shot begins outside the physical gate canopy on the straight course',()=>{
+  for(const layout of ['straight']){
     const {camera,focus}=launchShot(layout);
     const gateX=START_X+GATE_START_OFFSET;
     for(const edgeX of [gateX-GATE_CANOPY_HALF_LENGTH_X,gateX+GATE_CANOPY_HALF_LENGTH_X]){
@@ -40,9 +39,12 @@ test('rail shot begins outside the physical gate canopy for both straight layout
 
 test('rail shot clears launch gate without abrupt jump in visual framing',()=>{
   assert.equal(railCameraSideOffset(0,'straight'),RAIL_CAMERA_START_SIDE);
-  assert.equal(railCameraSideOffset(0,'s-bend'),RAIL_CAMERA_SBEND_START_SIDE);
+  assert.equal(railCameraSideOffset(0,'s-bend'),RAIL_CAMERA_BASE_SIDE);
   assert.equal(railCameraSideOffset(0,'oval'),RAIL_CAMERA_BASE_SIDE);
-  for(const layout of ['straight','s-bend']){
+  for(const layout of ['s-bend','oval']) for(const p of [0,.001,.03,.15,.8]){
+    assert.equal(railCameraSideOffset(p,layout),RAIL_CAMERA_BASE_SIDE);
+  }
+  for(const layout of ['straight']){
     const offsets=[0,5,10,20,30,36,50].map(m=>railCameraSideOffset(m/780,layout));
     assert.ok(offsets.every((v,i)=>i===0 || v<=offsets[i-1]));
     assert.equal(offsets.at(-1),RAIL_CAMERA_BASE_SIDE);
