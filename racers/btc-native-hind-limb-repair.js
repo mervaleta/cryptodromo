@@ -548,6 +548,12 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    'BTC V20 original Gallop hind limbs with original skin weights');
   donorHooves=attachNativeDonor(original,hoovesCut.geometry,anatomy.materials[1],
    'BTC V20 original Gallop posterior hoof keratin');
+  // Opt-in screenshot isolation: hidden ONLY in this diagnostic browser URL.
+  // No effect on the published BTC model, physics or default candidate.
+  if(typeof location!=='undefined'&&
+     new URLSearchParams(location.search).get('btcHideDonorQA')==='1'){
+   donor.visible=false;donorHooves.visible=false;
+  }
  }catch(e){
   donor?.removeFromParent();donorHooves?.removeFromParent();
   bodyCut?.geometry.dispose();hoovesCut?.geometry.dispose();
