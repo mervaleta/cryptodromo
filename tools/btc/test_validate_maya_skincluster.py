@@ -114,5 +114,25 @@ class SkinValidationTests(unittest.TestCase):
         self.check(data, False)
 
 
+    def test_null_influence_names(self):
+        data = fixture()
+        data["influences"] = None
+        self.check(data, False)
+
+    def test_null_logical_indices(self):
+        data = fixture()
+        data["influenceLogicalIndices"] = None
+        self.check(data, False)
+
+    def test_string_logical_index(self):
+        data = fixture()
+        data["influenceLogicalIndices"][0] = "0"
+        self.check(data, False)
+
+    def test_null_influence_entry(self):
+        data = fixture()
+        data["influences"][0] = None
+        self.check(data, False)
+
 if __name__ == "__main__":
     unittest.main()
