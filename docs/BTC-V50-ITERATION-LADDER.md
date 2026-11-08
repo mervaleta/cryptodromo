@@ -111,3 +111,8 @@
 - **Commits:** `f5bb4e2147faf0e4c865e387542b965174852d17`, `32f2c86fbc496855d2befdaaca0d85156733e088`.
 - **Defecto:** una fila de pesos con índice de influencia no hashable (por ejemplo una lista) provocaba `TypeError` en `ids.add(j)` antes de emitir el rechazo de validación. Ahora sólo agrega índices enteros al conjunto; índices inválidos se reportan como `ValueError`. Se añadieron dos casos de regresión negativos (lista y null).
 - **Estado:** cambios sólo en herramientas del rig BTC, sin modificar geometría ni producción. Pruebas Python y capturas Chromium/WebGL no ejecutadas en esta intervención; no hay exportación Maya original ni comparación visual A/B. V23 y V25 siguen sin acreditar. No merge, no despliegue ni anuncio.
+
+## 2026-11-08 · top-level JSON contract guard (NO acreditada)
+- **Commits:** `4b8939fd1c6f20c61e8a245665ca39165913916b`, `562a8ffb6c49066921bdcd2f23d34a388035aeed`.
+- **Defecto corregido:** `validate_maya_skincluster.py` llamaba `.get()` sobre la raíz JSON sin verificar que fuese un objeto. Los valores JSON `null`, `[]` o una cadena provocaban `AttributeError` en lugar de rechazo explícito. Ahora se exige objeto raíz y se añadieron tres pruebas negativas sintéticas.
+- **Alcance:** exclusivamente herramientas BTC de importación Maya. No se ejecutaron aquí pruebas Python, Maya ni Chromium/WebGL; no hay comparación visual de seis cámaras y 16 fases ni exportación original. V23/V25 no acreditadas, sin merge ni despliegue.
