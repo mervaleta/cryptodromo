@@ -1,5 +1,17 @@
 name: Satoshi AAA audience - real browser and crowd geometry
 on:
+  # GitHub API-authored commits can fail to retrigger PR-only checks; also
+  # validate this isolated branch directly, without running other workflows.
+  push:
+    branches:
+      - feat/satoshi-aaa-audience-20261105
+    paths:
+      - 'visual-lab/scene.js'
+      - 'visual-lab/stadiumRailClearance.js'
+      - 'tests/stadium-rail-clearance.mjs'
+      - 'tests/stadium-occlusion-qa.mjs'
+      - '.github/workflows/stadium-aaa-audience.yml'
+      - 'docs/STADIUM-AAA-PROGRESS.md'
   pull_request:
     paths:
       - 'visual-lab/stadiumDensity.js'
@@ -7,11 +19,13 @@ on:
       - 'visual-lab/stadiumStaticBatches.js'
       - 'visual-lab/stadiumBackdrop.js'
       - 'visual-lab/scene.js'
+      - 'visual-lab/stadiumRailClearance.js'
       - 'visual-lab/index.html'
       - 'stadiums/crypto/broadcast/index.html'
       - 'tests/stadium-aaa-audience*'
       - 'tests/stadium-static-batches.mjs'
       - 'tests/stadium-occlusion-qa.mjs'
+      - 'tests/stadium-rail-clearance.mjs'
       - 'tests/stadium-presentation-visibility-browser.mjs'
       - '.github/workflows/stadium-aaa-audience.yml'
   workflow_dispatch:
@@ -35,13 +49,15 @@ jobs:
           node --experimental-default-type=module --check visual-lab/stadiumStaticBatches.js
           node --experimental-default-type=module --check visual-lab/stadiumBackdrop.js
           node --experimental-default-type=module --check visual-lab/scene.js
+          node --experimental-default-type=module --check visual-lab/stadiumRailClearance.js
           node --experimental-default-type=module --check tests/stadium-aaa-audience.mjs
           node --experimental-default-type=module --check tests/stadium-grandstand-crowd.mjs
           node --experimental-default-type=module --check tests/stadium-static-batches.mjs
           node --experimental-default-type=module --check tests/stadium-occlusion-qa.mjs
+          node --experimental-default-type=module --check tests/stadium-rail-clearance.mjs
           node --experimental-default-type=module --check tests/stadium-presentation-visibility-browser.mjs
       - name: Validate audience geometry and existing safety contracts
-        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-static-batches.mjs tests/stadium-occlusion-qa.mjs tests/stadium-clean-photo-finish-tv.mjs
+        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-static-batches.mjs tests/stadium-occlusion-qa.mjs tests/stadium-rail-clearance.mjs tests/stadium-clean-photo-finish-tv.mjs
   webgl:
     runs-on: ubuntu-24.04
     timeout-minutes: 22
