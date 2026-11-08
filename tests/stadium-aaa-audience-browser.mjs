@@ -120,6 +120,8 @@ try {
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
  const ovalShot=await capture('04-oval-clearance.png');
  assert.equal(ovalShot.layout,'oval','Oval screenshot must capture the oval geometry');
+ assert.ok(ovalShot.samples.every(sample=>!sample.hit?.chain?.includes('Alpha20 broadcast start gates')),
+  'Hidden straight-only Alpha20 canopy must not appear in oval ray diagnostics');
  // Cover the third official layout in the same real Chromium/WebGL run.
  // Alpha20's straight-only canopy must not leak into the S-bend scene.
  await setControl('layout','s-bend');
