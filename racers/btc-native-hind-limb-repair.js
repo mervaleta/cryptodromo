@@ -82,7 +82,22 @@ function cropMayaHind(anatomy){
    const tri=[idx.getX(i),idx.getX(i+1),idx.getX(i+2)];
    const d=tri.map(distance);
    const keep=d.map(v=>v>=0);
-   if(keep.every(Boolean)){next.push(...tri);continue;}
+   // A convex removed region can intersect an edge even if both ends
+   // survive. Never pass an all-kept triangle across that hidden cut.
+   if(keep.every(Boolean)){
+    for(let j=0;j<3;j++){
+     const a=tri[j],b=tri[(j+1)%3];
+     for(let sample=1;sample<32;sample++){
+      const t=sample/32;
+      const x=xyz[a*3]*(1-t)+xyz[b*3]*t;
+      const y=xyz[a*3+1]*(1-t)+xyz[b*3+1]*t;
+      const z=xyz[a*3+2]+(xyz[b*3+2]-xyz[a*3+2])*t;
+      if(Math.max(z-.0208,.0052-y,.0015-Math.abs(x))<0)
+       throw Error('BTC V22 hidden crop interval on retained edge: '+a+'/'+b);
+     }
+    }
+    next.push(...tri);continue;
+   }
    if(keep.every(v=>!v)){fullyRemoved++;continue;}
    clipped++;
    const boundary=[];
