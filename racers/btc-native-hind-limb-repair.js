@@ -117,7 +117,21 @@ function cropMayaHind(anatomy){
     }
     next.push(...tri);continue;
    }
-   if(keep.every(v=>!v)){fullyRemoved++;continue;}
+   if(keep.every(v=>!v)){
+    // The removed domain has two disconnected lateral lobes. An edge can
+    // start and end inside those lobes yet traverse retained centerline
+    // skin between them. Deleting that triangle would open a false hole.
+    // This single-polygon clipper cannot represent the intervening island.
+    for(let j=0;j<3;j++){
+     const a=tri[j],b=tri[(j+1)%3];
+     const intervals=removedIntervals(a,b);
+     const coversEntireEdge=intervals.length===1&&
+      intervals[0][0]<=0&&intervals[0][1]>=1;
+     if(!coversEntireEdge)
+      throw Error('BTC V22 retained island inside removed triangle edge: '+a+'/'+b);
+    }
+    fullyRemoved++;continue;
+   }
    clipped++;
    const boundary=[];
    for(let j=0;j<3;j++){
