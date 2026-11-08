@@ -30,6 +30,7 @@ try {
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
   assert.ok(data?.length>1000,'Chromium returned no screenshot pixels');
   await writeFile('artifacts/stadium-aaa-audience/'+filename,Buffer.from(data,'base64'));
+  return probe;
  };
  // QA may run in TV/embed mode where production controls are hidden, but present.
  const setControl=async (id,value)=>page.evaluate(({id,value})=>{
@@ -78,12 +79,10 @@ try {
  // A screenshot can be taken while the smoothed camera is still moving,
  // even after an earlier waitForFunction passed. Verify the actual saved
  // camera snapshots at both lighting states, not just the requested preset.
- await capture('02-rail-day.png');
- const dayRail=await page.evaluate(()=>window.__cryptodromoOcclusionQA.snapshot());
+ const dayRail=await capture('02-rail-day.png');
  await setControl('weather','night');
  await page.waitForTimeout(1200);
- await capture('03-rail-night.png');
- const nightRail=await page.evaluate(()=>window.__cryptodromoOcclusionQA.snapshot());
+ const nightRail=await capture('03-rail-night.png');
  for(const [label,shot] of [['day',dayRail],['night',nightRail]]){
   assert.equal(shot.layout,'straight',label+' rail layout drift');
   assert.equal(shot.view,'rail',label+' rail view drift');
