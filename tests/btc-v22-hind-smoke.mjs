@@ -40,6 +40,23 @@ try{
   shots.push(name);
   console.log('BTC_V22_DIAGNOSTIC_SHOT',name);
  }
+ // Compare the exact same rear pose with the two candidate components
+ // isolated. These are diagnostic URLs, NEVER images of a publishable model.
+ for(const [label,flag] of [['no-tail','btcHideTailQA'],['no-donor','btcHideDonorQA']]){
+  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&'+flag+'=1#BTC',
+   {waitUntil:'domcontentloaded',timeout:90000});
+  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.harmonyBuild===
+   'btc-v22-continuous-hind-seam-20261107',null,{timeout:120000});
+  await page.locator('[data-btc-camera="rear"]').click();
+  await page.evaluate(()=>window.__cryptodromoBTCAtelierSetPose?.(0));
+  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===0,null,{timeout:15000});
+  await page.waitForTimeout(180);
+  const data=await page.evaluate(()=>document.querySelector('#horse-canvas')?.toDataURL('image/png'));
+  assert.ok(data?.startsWith('data:image/png;base64,')&&data.length>20000);
+  writeFileSync(dest+'/rear-00-'+label+'.png',Buffer.from(data.split(',')[1],'base64'));
+  shots.push('rear-00-'+label+'.png');
+  console.log('BTC_V22_COMPONENT_ISOLATION',label);
+ }
  assert.deepEqual(errors,[]);
  console.log('BTC_V22_DIAGNOSTIC_DONE',shots.length);
 }finally{
