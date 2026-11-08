@@ -9,6 +9,7 @@ on:
       - 'visual-lab/scene.js'
       - 'visual-lab/stadiumRailClearance.js'
       - 'tests/stadium-rail-clearance.mjs'
+      - 'tests/stadium-aaa-audience-browser.mjs'
       - 'tests/stadium-occlusion-qa.mjs'
       - '.github/workflows/stadium-aaa-audience.yml'
   pull_request:
