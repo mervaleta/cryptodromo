@@ -148,6 +148,11 @@ class SkinValidationTests(unittest.TestCase):
         data["weightsSparseByVertex"][0] = [[[0], 1.0]]
         self.check(data, False)
 
+    def test_dictionary_sparse_influence_id(self):
+        data = fixture()
+        data["weightsSparseByVertex"][0] = [[{"bad": 0}, 1.0]]
+        self.check(data, False)
+
     def test_null_sparse_influence_id(self):
         data = fixture()
         data["weightsSparseByVertex"][0] = [[None, 1.0]]
