@@ -89,3 +89,9 @@
 - **Cambio:** se agregó `tools/btc/test_validate_maya_skincluster.py`, con fixture sintética de 5406 vértices y 70 influencias, caso positivo y rechazos de vértice faltante, pesos no normalizados, influencia repetida, matriz bind inválida, conexión ambigua y peso booleano.
 - **Comando pendiente de ejecutar en CI/checkout:** `python -m unittest discover -s tools/btc -p 'test_validate_maya_skincluster.py'`.
 - **Límite:** el fixture no proviene de Maya. No se ejecutó aquí la suite, ni Chromium/WebGL, ni hay comparativas A/B de seis cámaras y 16 fases. V23 y V25 continúan pendientes. Sin merge, despliegue ni anuncio.
+
+## 2026-11-07 · Maya export negative regression coverage (NO acreditada)
+- **Commit:** `025bec5e977ef52445ab64cf2705ffe201775f8f`.
+- **Cambio aislado:** cinco casos negativos adicionales en `tools/btc/test_validate_maya_skincluster.py`: conexión de matriz faltante, índice de matriz extra, peso NaN, índice lógico booleano y par sparse malformado. Ningún archivo de producción del caballo ni de los otros corredores se modificó.
+- **Prueba pendiente:** ejecutar `python -m unittest discover -s tools/btc -p 'test_validate_maya_skincluster.py'` en checkout/CI; la conexión GitHub de esta corrida no proporciona ejecución de shell/Chromium. No se adjudica éxito de tests no ejecutados.
+- **Estado:** sin exportación Maya original ni comparativas WebGL A/B de seis cámaras y 16 fases. V23 sigue sin acreditar. No merge, no Hostinger, no anuncio.
