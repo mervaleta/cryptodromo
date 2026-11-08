@@ -44,6 +44,15 @@ class SkinValidationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     validator.validate(path)
 
+    def test_non_object_json_null(self):
+        self.check(None, False)
+
+    def test_non_object_json_array(self):
+        self.check([], False)
+
+    def test_non_object_json_string(self):
+        self.check("not a skin export", False)
+
     def test_valid_fixture(self):
         self.check(fixture(), True)
 
