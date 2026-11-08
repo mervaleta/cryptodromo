@@ -16,6 +16,16 @@ try {
   assert.ok(probe,'Missing camera occlusion diagnostic');
   assert.equal(probe.samples?.length,25,'Expected 25 camera rays per screenshot');
   assert.ok(probe.samples.every(sample=>sample.hit===null || typeof sample.hit==='object'));
+  if(filename==='02-rail-day.png'||filename==='03-rail-night.png'){
+   // Guard against the P0 seen in the actual Nov 5 images: the rail lens
+   // looked straight through the starting-gate roof and posts at t=00:00.
+   const gateHits=probe.samples.filter(sample=>
+    sample.hit?.chain?.includes('Alpha20 broadcast start gates'));
+   assert.ok(gateHits.length<=4,
+    filename+': gate structure still occludes '+gateHits.length+'/25 rays');
+   assert.ok(gateHits.every(sample=>sample.x!==0),
+    filename+': gate structure occludes the central rail sightline');
+  }
   await writeFile('artifacts/stadium-aaa-audience/'+filename.replace(/\.png$/,'.occlusion.json'),JSON.stringify(probe,null,2));
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
   assert.ok(data?.length>1000,'Chromium returned no screenshot pixels');
@@ -57,7 +67,14 @@ try {
  await page.waitForTimeout(1200);
  await capture('01-overview-day.png');
  await setControl('camera','rail');
- await page.waitForTimeout(1000);
+ // WebGL software rasterization can take longer than 1s to settle from the
+ // high overview shot; measure the actual rail camera, not a transition frame.
+ await page.waitForFunction(()=>{
+  const shot=window.__cryptodromoOcclusionQA?.snapshot();
+  return shot?.view==='rail'
+   && Math.abs(shot.camera[1]-2.8)<.7
+   && Math.abs(shot.camera[2]-32)<1.6;
+ },null,{timeout:45000,polling:500});
  await capture('02-rail-day.png');
  await setControl('weather','night');
  await page.waitForTimeout(1200);
