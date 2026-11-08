@@ -283,6 +283,11 @@ function createHairMass(source,skinAt,{
  const scalpMat=null;
  const mesh=attach(source,geo,mat,
   tail?'BTC Maya rooted long tail':'BTC Maya natural rooted flowing mane');
+ // Diagnostic only. With the tail hidden, compare the actual rump surface
+ // against the same frame to attribute tears to the skin or hair.
+ if(tail&&typeof location!=='undefined'&&
+    new URLSearchParams(location.search).get('btcHideTailQA')==='1')
+  mesh.visible=false;
  return {mesh,geo,mat,scalpMat,locks:strandCount,vertices:positions.length/3,neckOutliers,bridgeLocks:tail?0:112,heroLocks:tail?0:56,rootBedVertices,solidRingSides:SIDES,looseNeckFibers:tail?0:neckOutliers,proceduralHairTexture:!tail};
 }
 
