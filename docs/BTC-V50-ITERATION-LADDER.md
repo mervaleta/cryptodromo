@@ -100,3 +100,9 @@
 - **Commits:** `3e092743415645d4442168eac83618f0cc0c4a93` y `0ed2a6a3dd6b22dae3a4768fdd8dbf917cf90270`.
 - **Defecto corregido:** el validador aceptaba que `matrix[5]` apuntase a `joint6.worldMatrix[0]` aun cuando el índice lógico 5 correspondía a `joint5`, porque sólo verificaba el sufijo. Ahora compara la conexión completa contra la influencia de la misma posición; rechaza además conteos booleanos. Dos tests negativos agregados.
 - **Limitación:** no se ejecutaron Maya, suite Python, Chromium/WebGL ni comparación A/B en esta corrida. Sin exportación original validada y 6 cámaras/16 fases, V23 sigue sin acreditarse. No merge ni publicación.
+
+## 2026-11-08 · fail-closed de metadatos de influencias Maya (NO acreditada)
+- **Commits:** `00dea11b750b3dcf9ffbb2b47b246d706b742af8`, `abc92935c206a78381e08becea4af341548d0cde`.
+- **Defecto:** un JSON con `influences=null`, `influenceLogicalIndices=null`, índices lógicos string o nombres nulos podía provocar `TypeError` al iterar o indexar, en lugar de un rechazo explícito. Se agregó un guard previo a la lectura de matrices y cuatro regresiones negativas.
+- **Alcance:** sólo herramientas de validación del rig BTC. No cambia geometría, galope, otros 99 corredores ni producción. No se ejecutó Maya ni Chromium/WebGL ni pruebas Python en esta corrida; no se atribuye éxito de tests no ejecutados.
+- **Estado:** V23 y V25 sin acreditar. Falta checkout con ejecución de suite, exportación real de Maya y comparación WebGL de seis cámaras/16 fases. Sin merge, Hostinger ni anuncio.
