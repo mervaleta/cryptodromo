@@ -132,3 +132,9 @@
 - **Código:** `e01fb7e6bde1ffed779ae06295f87760dd3c527b` (`racers/btc-native-hind-limb-repair.js`).
 - **Defecto abordado:** el campo de recorte `max(z-.0208, .0052-y, .0015-abs(x))` puede cruzar cero dos veces sobre una arista cuyos extremos se conservan. El clipper de un solo cruce habría unido superficies a través del intervalo eliminado, creando una cara que tapa un agujero. Se muestrea cada arista de triángulo mixto en 32 segmentos y se rechaza explícitamente una arista con múltiples transiciones, en lugar de fabricar geometría inválida. Esta guarda no implementa aún el split multiintervalo.
 - **Riesgo pendiente:** el muestreo discreto no garantiza detectar intervalos más estrechos que 1/32 de arista. El rechazo puede hacer que el candidato V22 falle y deba corregirse el algoritmo de partición antes de publicarlo. No hay captura ni ejecución de WebGL/CI en esta corrida; no se acredita V23 ni mejora visual. Mantener rama aislada, no merge ni despliegue.
+
+
+## 2026-11-08 · V23 fully-retained edge interval guard (NO acreditada)
+- **Código SHA:** `95f8714d7dc90ce5bbfaf5c58953d54b6fc5bc14` (`racers/btc-native-hind-limb-repair.js`).
+- **Defecto:** la guarda anterior sólo examinaba aristas de triángulos mixtos; una arista con ambos extremos retenidos puede atravesar el volumen eliminado y quedar como puente falso sin activar el control. Ahora se muestrean también las tres aristas de cada triángulo enteramente retenido y se rechaza el candidato si se detecta un intervalo oculto.
+- **Riesgos:** control conservador de 31 muestras interiores por arista, no algoritmo de recorte multiintervalo; puede rechazar V22, y los intervalos más estrechos que el muestreo pueden escapar. Falta implementar clipping robusto, ejecutar pruebas de geometría, CI y Chromium/WebGL real seis cámaras/16 fases con comparativa A/B y SHA. Sin capturas ni QA visual, **V23 no se acredita**. No merge, no Hostinger, no anuncio.
