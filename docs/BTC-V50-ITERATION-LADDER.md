@@ -127,3 +127,8 @@
 - **SHAs:** `78c6d2f1cc37ca61309f62c229c6ed5052e7f342` (validador), `48c43ff0551e08b65ddb2a7cdad14e582de27c5c` (regresión).
 - **Defecto:** la condición `j in ids` evaluaba un índice sparse tipo lista o diccionario antes de rechazar su tipo; esto lanza `TypeError` y el test `assertRaises(ValueError)` no lo acepta. Ahora sólo consulta el conjunto para enteros y se agrega caso diccionario.
 - **Evidencia faltante:** no se ejecutaron suite Python, Maya ni Chromium/WebGL en esta intervención; no hay A/B seis vistas y 16 fases. V23 continúa pendiente. Cambio exclusivo de herramientas BTC, sin merge ni despliegue.
+
+## 2026-11-08 · V23 crop edge multi-crossing safety gate (NO acreditada)
+- **Código:** `e01fb7e6bde1ffed779ae06295f87760dd3c527b` (`racers/btc-native-hind-limb-repair.js`).
+- **Defecto abordado:** el campo de recorte `max(z-.0208, .0052-y, .0015-abs(x))` puede cruzar cero dos veces sobre una arista cuyos extremos se conservan. El clipper de un solo cruce habría unido superficies a través del intervalo eliminado, creando una cara que tapa un agujero. Se muestrea cada arista de triángulo mixto en 32 segmentos y se rechaza explícitamente una arista con múltiples transiciones, en lugar de fabricar geometría inválida. Esta guarda no implementa aún el split multiintervalo.
+- **Riesgo pendiente:** el muestreo discreto no garantiza detectar intervalos más estrechos que 1/32 de arista. El rechazo puede hacer que el candidato V22 falle y deba corregirse el algoritmo de partición antes de publicarlo. No hay captura ni ejecución de WebGL/CI en esta corrida; no se acredita V23 ni mejora visual. Mantener rama aislada, no merge ni despliegue.
