@@ -4,6 +4,9 @@ on:
     branches:
       - feat/btc-v22-continuous-hind-seam-20261107
     paths:
+      - 'racers/btc-native-hind-limb-repair.js'
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-maya-groom.js'
       - 'tests/btc-v22-hind-smoke.mjs'
       - '.github/workflows/btc-v22-hind-smoke.yml'
   workflow_dispatch:
