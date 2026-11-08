@@ -11,6 +11,8 @@ from pathlib import Path
 
 def validate(path):
     data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("BTC Maya skin export rejected: expected a JSON object")
     errors = []
     def require(condition, message):
         if not condition:
@@ -69,6 +71,7 @@ def validate(path):
     require(isinstance(rows, list) and len(rows) == n, "incorrect vertex row count")
     if not isinstance(rows, list):
         rows = []
+    # A malformed row count must not silently pass after partial traversal.
     for v, row in enumerate(rows):
         if not isinstance(row, list) or not row:
             errors.append("empty/invalid weight row %d" % v)
