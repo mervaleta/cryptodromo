@@ -10,6 +10,9 @@ on:
       - 'tests/btc-v22-hind-smoke.mjs'
       - '.github/workflows/btc-v22-hind-smoke.yml'
   workflow_dispatch:
+concurrency:
+  group: btc-v22-hind-smoke-${{ github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
