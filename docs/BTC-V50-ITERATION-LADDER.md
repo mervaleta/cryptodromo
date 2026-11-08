@@ -149,3 +149,8 @@
 - **Commit de código:** `2a14e0431875bb894594544030d1c5c150d68b70`.
 - **Defecto corregido:** `cmds.listConnections` puede devolver un nombre corto de joint, mientras `MFnSkinCluster.influenceObjects().fullPathName()` devuelve la ruta DAG completa. El validador exige igualdad exacta, por lo que una exportación auténtica podía rechazarse falsamente. El exportador ahora resuelve cada fuente `worldMatrix[0]` a ruta DAG completa con `cmds.ls(..., long=True)` y rechaza nodos ambiguos o ausentes.
 - **Alcance:** sólo script de extracción del rig BTC, sin cambio del caballo en producción. No se ejecutó Autodesk Maya, no se produjo JSON real ni se ejecutó Chromium/WebGL A/B; tampoco se certifica CI. V23/V25 continúan sin acreditar. No merge ni despliegue.
+
+## 2026-11-08 · V23 analytic crop boundary regression (NO acreditada)
+- **Commit:** `3625ccd6c2d9898ad90e3b0218c89dc359372d5a`, `tests/btc-v23-crop-intervals.mjs`.
+- **Trabajo:** seis pruebas matemáticas independientes para la clasificación analítica de intervalos: fuera de z/y, doble cruce lateral, intervalo menor que un paso de muestreo, tangencia y corte de altura. Son pruebas del contrato de intervalos, NO una comparación de fotogramas ni una prueba de integración de la malla.
+- **Bloqueo de ejecución:** el contenedor no resuelve `raw.githubusercontent.com`; no se pudo descargar el checkout para ejecutar `node --test`. No se atribuyen tests aprobados. Ejecutar el archivo desde un checkout con Node y luego Chromium/WebGL real, seis vistas y 16 fases A/B. No hay imágenes comparativas ni SHA de artefactos. V23 sigue pendiente, sin merge ni despliegue.
