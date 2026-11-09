@@ -12,6 +12,8 @@ on:
       - 'visual-lab/stadiumStaticBatches.js'
       - 'visual-lab/stadiumBackdrop.js'
       - 'visual-lab/satoshiPavilionDetail.js'
+      - 'visual-lab/pavilionPlacement.js'
+      - 'tests/satoshi-pavilion-detail.mjs'
       - 'visual-lab/index.html'
       - 'stadiums/crypto/broadcast/index.html'
       - 'visual-lab/stadiumRailClearance.js'
@@ -32,6 +34,9 @@ on:
       - 'visual-lab/stadiumBackdrop.js'
       - 'visual-lab/scene.js'
       - 'visual-lab/stadiumRailClearance.js'
+      - 'visual-lab/satoshiPavilionDetail.js'
+      - 'visual-lab/pavilionPlacement.js'
+      - 'tests/satoshi-pavilion-detail.mjs'
       - 'visual-lab/index.html'
       - 'stadiums/crypto/broadcast/index.html'
       - 'tests/stadium-aaa-audience*'
@@ -62,6 +67,9 @@ jobs:
           node --experimental-default-type=module --check visual-lab/stadiumBackdrop.js
           node --experimental-default-type=module --check visual-lab/scene.js
           node --experimental-default-type=module --check visual-lab/stadiumRailClearance.js
+          node --experimental-default-type=module --check visual-lab/satoshiPavilionDetail.js
+          node --experimental-default-type=module --check visual-lab/pavilionPlacement.js
+          node --experimental-default-type=module --check tests/satoshi-pavilion-detail.mjs
           node --experimental-default-type=module --check tests/stadium-aaa-audience.mjs
           node --experimental-default-type=module --check tests/stadium-grandstand-crowd.mjs
           node --experimental-default-type=module --check tests/stadium-static-batches.mjs
@@ -69,7 +77,7 @@ jobs:
           node --experimental-default-type=module --check tests/stadium-rail-clearance.mjs
           node --experimental-default-type=module --check tests/stadium-presentation-visibility-browser.mjs
       - name: Validate audience geometry and existing safety contracts
-        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-static-batches.mjs tests/stadium-occlusion-qa.mjs tests/stadium-rail-clearance.mjs tests/stadium-clean-photo-finish-tv.mjs
+        run: node --experimental-default-type=module --test tests/stadium-aaa-audience.mjs tests/stadium-grandstand-crowd.mjs tests/stadium-static-batches.mjs tests/stadium-occlusion-qa.mjs tests/stadium-rail-clearance.mjs tests/satoshi-pavilion-detail.mjs tests/stadium-clean-photo-finish-tv.mjs
   webgl:
     runs-on: ubuntu-24.04
     timeout-minutes: 22
