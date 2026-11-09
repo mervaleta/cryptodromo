@@ -17,6 +17,8 @@ on:
       - 'visual-lab/index.html'
       - 'stadiums/crypto/broadcast/index.html'
       - 'visual-lab/stadiumRailClearance.js'
+      - 'visual-lab/broadcastGateNumbers.js'
+      - 'visual-lab/broadcastGates.js'
       - 'tests/stadium-rail-clearance.mjs'
       - 'tests/stadium-aaa-audience-browser.mjs'
       - 'tests/stadium-aaa-audience-comparison.mjs'
