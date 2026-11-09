@@ -129,6 +129,20 @@ try {
  }
  assert.ok(Math.hypot(...dayRail.focus.map((n,i)=>n-nightRail.focus[i]))<2.5,
   'Day/night rail focus differs despite matching camera positions');
+
+ // Lighting must not change the geometry of the launch canopy. A clear
+ // central ray in daylight but a blocked one at night indicates stale or
+ // non-equivalent visual evidence even when both screenshots are valid PNGs.
+ const gateSignature=shot=>shot.samples
+  .filter(sample=>sample.hit?.chain?.includes('Alpha20 broadcast start gates'))
+  .map(sample=>[sample.x,sample.y].join(',')).sort();
+ assert.deepEqual(gateSignature(nightRail),gateSignature(dayRail),
+  'Day/night rail gate occlusion rays differ at the same launch pose');
+ const centralRay=shot=>shot.samples.find(sample=>sample.x===0&&sample.y===0);
+ assert.equal(Boolean(centralRay(dayRail)?.hit?.chain?.includes('Alpha20 broadcast start gates')),false,
+  'Day rail central sightline intersects the Alpha20 canopy');
+ assert.equal(Boolean(centralRay(nightRail)?.hit?.chain?.includes('Alpha20 broadcast start gates')),false,
+  'Night rail central sightline intersects the Alpha20 canopy');
  // Switching layouts while the rail preset is active can leave the oval
  // photograph pointed at the straight-course launch rail. Explicitly use
  // the course overview for cross-layout architectural clearance evidence.
