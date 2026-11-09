@@ -7,10 +7,21 @@ on:
       - feat/satoshi-aaa-audience-20261105
     paths:
       - 'visual-lab/scene.js'
+      - 'visual-lab/stadiumDensity.js'
+      - 'visual-lab/stadiumGrandstandCrowd.js'
+      - 'visual-lab/stadiumStaticBatches.js'
+      - 'visual-lab/stadiumBackdrop.js'
+      - 'visual-lab/satoshiPavilionDetail.js'
+      - 'visual-lab/index.html'
+      - 'stadiums/crypto/broadcast/index.html'
       - 'visual-lab/stadiumRailClearance.js'
       - 'tests/stadium-rail-clearance.mjs'
       - 'tests/stadium-aaa-audience-browser.mjs'
       - 'tests/stadium-aaa-audience-comparison.mjs'
+      - 'tests/stadium-presentation-visibility-browser.mjs'
+      - 'tests/stadium-aaa-audience.mjs'
+      - 'tests/stadium-grandstand-crowd.mjs'
+      - 'tests/stadium-static-batches.mjs'
       - 'tests/stadium-occlusion-qa.mjs'
       - '.github/workflows/stadium-aaa-audience.yml'
   pull_request:
