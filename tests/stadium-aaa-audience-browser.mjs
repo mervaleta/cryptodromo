@@ -135,6 +135,31 @@ try {
  await setControl('camera','overview');
  await setControl('layout','oval');
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
+ // Layout changes can retain the previous straight-course rail pose for several
+ // rendered frames. Wait for the overview camera AND its focus to converge,
+ // then require two successive stable samples before archiving evidence.
+ const waitForOverview=async layout=>{
+  await page.waitForFunction(expected=>{
+   const shot=window.__cryptodromoOcclusionQA?.snapshot();
+   return shot?.layout===expected && shot.view==='overview'
+    && shot.camera?.every(Number.isFinite) && shot.focus?.every(Number.isFinite);
+  },layout,{timeout:45000,polling:250});
+  let previous=null,stable=0;
+  for(let attempt=0;attempt<80;attempt++){
+   await page.waitForTimeout(250);
+   const shot=await page.evaluate(()=>window.__cryptodromoOcclusionQA?.snapshot());
+   if(shot?.layout!==layout||shot.view!=='overview')throw new Error('Overview layout changed while settling: '+layout);
+   if(previous){
+    const movement=Math.hypot(...shot.camera.map((n,i)=>n-previous.camera[i]));
+    const aim=Math.hypot(...shot.focus.map((n,i)=>n-previous.focus[i]));
+    stable=movement<0.08&&aim<0.08?stable+1:0;
+    if(stable>=3)return;
+   }
+   previous=shot;
+  }
+  throw new Error('Overview camera/focus did not stabilize for '+layout);
+ };
+ await waitForOverview('oval');
  const ovalShot=await capture('04-oval-clearance.png');
  assert.equal(ovalShot.layout,'oval','Oval screenshot must capture the oval geometry');
  assert.equal(ovalShot.view,'overview','Oval clearance evidence must use course overview, not stale rail framing');
@@ -144,7 +169,7 @@ try {
  // Alpha20's straight-only canopy must not leak into the S-bend scene.
  await setControl('layout','s-bend');
  await page.waitForFunction(()=>window.__cryptodromoOcclusionQA?.snapshot()?.layout==='s-bend',null,{timeout:30000});
- await page.waitForTimeout(700);
+ await waitForOverview('s-bend');
  const bendShot=await capture('05-sbend-clearance.png');
  assert.equal(bendShot.layout,'s-bend','S-bend screenshot must capture the third course');
  assert.equal(bendShot.view,'overview','S-bend clearance evidence must use course overview');
