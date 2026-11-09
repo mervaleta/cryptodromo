@@ -37,6 +37,8 @@ on:
       - 'visual-lab/stadiumBackdrop.js'
       - 'visual-lab/scene.js'
       - 'visual-lab/stadiumRailClearance.js'
+      - 'visual-lab/broadcastGates.js'
+      - 'visual-lab/broadcastGateNumbers.js'
       - 'visual-lab/satoshiPavilionDetail.js'
       - 'visual-lab/pavilionPlacement.js'
       - 'tests/satoshi-pavilion-detail.mjs'
