@@ -129,10 +129,15 @@ try {
  }
  assert.ok(Math.hypot(...dayRail.focus.map((n,i)=>n-nightRail.focus[i]))<2.5,
   'Day/night rail focus differs despite matching camera positions');
+ // Switching layouts while the rail preset is active can leave the oval
+ // photograph pointed at the straight-course launch rail. Explicitly use
+ // the course overview for cross-layout architectural clearance evidence.
+ await setControl('camera','overview');
  await setControl('layout','oval');
  await page.waitForFunction(()=>!window.__cryptodromoAudienceQA.snapshot().visible);
  const ovalShot=await capture('04-oval-clearance.png');
  assert.equal(ovalShot.layout,'oval','Oval screenshot must capture the oval geometry');
+ assert.equal(ovalShot.view,'overview','Oval clearance evidence must use course overview, not stale rail framing');
  assert.ok(ovalShot.samples.every(sample=>!sample.hit?.chain?.includes('Alpha20 broadcast start gates')),
   'Hidden straight-only Alpha20 canopy must not appear in oval ray diagnostics');
  // Cover the third official layout in the same real Chromium/WebGL run.
@@ -142,6 +147,7 @@ try {
  await page.waitForTimeout(700);
  const bendShot=await capture('05-sbend-clearance.png');
  assert.equal(bendShot.layout,'s-bend','S-bend screenshot must capture the third course');
+ assert.equal(bendShot.view,'overview','S-bend clearance evidence must use course overview');
  assert.equal(bendShot.samples.length,25);
  assert.ok(bendShot.samples.every(sample=>!sample.hit?.chain?.includes('Alpha20 broadcast start gates')),
   'Straight-only Alpha20 start canopy leaked into S-bend sightlines');
