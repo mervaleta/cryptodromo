@@ -163,6 +163,8 @@ try {
  const ovalShot=await capture('04-oval-clearance.png');
  assert.equal(ovalShot.layout,'oval','Oval screenshot must capture the oval geometry');
  assert.equal(ovalShot.view,'overview','Oval clearance evidence must use course overview, not stale rail framing');
+ assert.ok(Math.hypot(...ovalShot.camera.map((n,i)=>n-dayRail.camera[i]))>20,
+  'Oval overview camera is still effectively the straight-course launch rail pose');
  assert.ok(ovalShot.samples.every(sample=>!sample.hit?.chain?.includes('Alpha20 broadcast start gates')),
   'Hidden straight-only Alpha20 canopy must not appear in oval ray diagnostics');
  // Cover the third official layout in the same real Chromium/WebGL run.
@@ -173,6 +175,10 @@ try {
  const bendShot=await capture('05-sbend-clearance.png');
  assert.equal(bendShot.layout,'s-bend','S-bend screenshot must capture the third course');
  assert.equal(bendShot.view,'overview','S-bend clearance evidence must use course overview');
+ assert.ok(Math.hypot(...bendShot.camera.map((n,i)=>n-dayRail.camera[i]))>20,
+  'S-bend overview camera is still effectively the straight-course launch rail pose');
+ assert.ok(Math.hypot(...bendShot.camera.map((n,i)=>n-ovalShot.camera[i]))>2,
+  'S-bend overview reused the oval camera position instead of reframing the course');
  assert.equal(bendShot.samples.length,25);
  assert.ok(bendShot.samples.every(sample=>!sample.hit?.chain?.includes('Alpha20 broadcast start gates')),
   'Straight-only Alpha20 start canopy leaked into S-bend sightlines');
