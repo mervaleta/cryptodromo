@@ -103,12 +103,31 @@ try {
    && Math.abs(shot.camera[1]-2.8)<.7
    && Math.abs(shot.camera[2]-32)<1.6;
  },null,{timeout:45000,polling:500});
- // A screenshot can be taken while the smoothed camera is still moving,
- // even after an earlier waitForFunction passed. Verify the actual saved
- // camera snapshots at both lighting states, not just the requested preset.
+ // The rail preset can enter its broad y/z tolerance while still panning
+ // from overview. Require a stable origin AND look-at target before both
+ // captures, otherwise day/night ray parity can compare transition frames.
+ const waitForStableRail=async()=>{
+  let previous=null,stable=0;
+  for(let attempt=0;attempt<80;attempt++){
+   await page.waitForTimeout(250);
+   const shot=await page.evaluate(()=>window.__cryptodromoOcclusionQA?.snapshot());
+   assert.equal(shot?.view,'rail','Rail view changed while settling');
+   assert.equal(shot?.layout,'straight','Rail layout changed while settling');
+   if(previous){
+    const movement=Math.hypot(...shot.camera.map((n,i)=>n-previous.camera[i]));
+    const aim=Math.hypot(...shot.focus.map((n,i)=>n-previous.focus[i]));
+    stable=movement<0.08&&aim<0.08?stable+1:0;
+    if(stable>=3)return;
+   }
+   previous=shot;
+  }
+  throw new Error('Rail camera/focus did not stabilize before screenshot');
+ };
+ await waitForStableRail();
  const dayRail=await capture('02-rail-day.png');
  await setControl('weather','night');
  await page.waitForTimeout(1200);
+ await waitForStableRail();
  const nightRail=await capture('03-rail-night.png');
  for(const [label,shot] of [['day',dayRail],['night',nightRail]]){
   assert.equal(shot.layout,'straight',label+' rail layout drift');
