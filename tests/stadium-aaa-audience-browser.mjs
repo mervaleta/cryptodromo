@@ -27,6 +27,19 @@ try {
     filename+': gate structure occludes the central rail sightline');
   }
   const {data}=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
+  // A pre-capture ray snapshot is only valid for this PNG if the camera did
+  // not move during CDP capture. Reject transition frames rather than archive
+  // geometrically mismatched image/raycast evidence.
+  const after=await page.evaluate(()=>window.__cryptodromoOcclusionQA?.snapshot());
+  assert.equal(after?.layout,probe.layout,filename+': layout changed during screenshot');
+  assert.equal(after?.view,probe.view,filename+': view changed during screenshot');
+  for(const key of ['camera','focus']){
+   assert.ok(Array.isArray(probe[key])&&Array.isArray(after?.[key])&&probe[key].length===3&&after[key].length===3,
+    filename+': missing '+key+' for capture synchronization');
+   const drift=Math.hypot(...probe[key].map((n,i)=>n-after[key][i]));
+   assert.ok(drift<0.35,filename+': '+key+' drifted '+drift.toFixed(3)+'m while screenshot was captured');
+  }
+  assert.equal(after?.elapsed,probe.elapsed,filename+': race time changed during screenshot');
   assert.ok(data?.length>1000,'Chromium returned no screenshot pixels');
   const png=Buffer.from(data,'base64');
   // Reject blank/truncated or wrong-viewport evidence before archiving it.
