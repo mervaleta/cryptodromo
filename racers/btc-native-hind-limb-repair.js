@@ -43,9 +43,9 @@ function cropMayaHind(anatomy){
  // cannot be bridged by an edge with two crossings.
  const planes=[
   {id:'z',f:v=>.0208-xyz[3*v+2]},
-  {id:'y',f:v=>xyz[3*v+1]-.0052},
-  {id:'L',f:v=>-xyz[3*v]-.0015},
-  {id:'R',f:v=>xyz[3*v]-.0015}
+  {id:'y',f:v=>xyz[3*v+1]-.0043},
+  {id:'L',f:v=>-xyz[3*v]-.0012},
+  {id:'R',f:v=>xyz[3*v]-.0012}
  ];
  function crossing(a,b,p){
   const da=p.f(a),db=p.f(b);
