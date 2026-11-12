@@ -37,27 +37,55 @@ function cropMayaHind(anatomy){
  const originalCount=pos.count;
  const edgeCache=new Map(),next=[],groups=[];
  let fullyRemoved=0,clipped=0;
- // Keep the native centerline and anterior skeleton. Subtract the TWO
- // disjoint, convex posterior crop lobes exactly. The former one-crossing
- // clipper bridged holes when an edge entered and exited a removed lobe.
- // This is actual geometry surgery: retained polygons are split, and every
- // new point receives interpolated skin influences.
- const planes=[
-  {name:'rearZ',signed:v=>.0208-xyz[v*3+2]},
-  {name:'lowY',signed:v=>xyz[v*3+1]-.0052},
-  {name:'leftX',signed:v=>-.0015-xyz[v*3]},
-  {name:'rightX',signed:v=>xyz[v*3]-.0015}
- ];
- const EPS=1e-12;
- function edgeIntersection(a,b,plane){
-  const fa=plane.signed(a),fb=plane.signed(b);
-  if(Math.abs(fa)<=EPS)return a;
-  if(Math.abs(fb)<=EPS)return b;
-  const key=plane.name+':'+Math.min(a,b)+':'+Math.max(a,b);
+ // Positive means retained. Cut only rear, lateral, low-leg tissue,
+ // preserving the centerline of the body and all front limbs.
+ function distance(v){
+  const x=xyz[v*3],y=xyz[v*3+1],z=xyz[v*3+2];
+  return Math.max(z-.0208,.0052-y,.0015-Math.abs(x));
+ }
+ // Exact open interval where the crop removes an edge. Each removed
+ // half-space is linear; the lateral condition is a union of two intervals.
+ // This catches arbitrarily narrow hidden intervals missed by 32 samples.
+ function removedIntervals(a,b){
+  const ax=xyz[a*3],ay=xyz[a*3+1],az=xyz[a*3+2];
+  const dx=xyz[b*3]-ax,dy=xyz[b*3+1]-ay,dz=xyz[b*3+2]-az;
+  function restrict(lo,hi,value,slope,sign){
+   const v=value*sign,d=slope*sign;
+   if(d===0)return v>0?[lo,hi]:null;
+   const t=-v/d;
+   return d>0?[Math.max(lo,t),hi]:[lo,Math.min(hi,t)];
+  }
+  const out=[];
+  for(const side of [-1,1]){
+   let range=[0,1];
+   // removed: z < .0208, y > .0052, side*x > .0015
+   for(const [value,slope,sign] of [
+    [az-.0208,dz,-1],[ay-.0052,dy,1],[side*ax-.0015,side*dx,1]]){
+    range=restrict(range[0],range[1],value,slope,sign);
+    if(!range||range[1]<=range[0])break;
+   }
+   if(range&&range[1]>range[0])out.push(range);
+  }
+  return out;
+ }
+ function intersection(a,b,da,db){
+  const key=a<b?a+':'+b:b+':'+a;
   if(edgeCache.has(key))return edgeCache.get(key);
-  const t=fa/(fa-fb);
-  if(!Number.isFinite(t)||t<0||t>1)
-   throw Error('BTC V23 invalid planar cut intersection '+plane.name+': '+a+'/'+b);
+  // The crop field is max() of three planes, not a single linear plane.
+  // Linear interpolation of endpoint distances can place a shared cut
+  // vertex off the actual boundary when the active plane changes mid-edge.
+  // Bisect the exact field on this edge, preserving the edge cache.
+  let lo=0,hi=1;
+  const positiveA=da>=0;
+  for(let step=0;step<28;step++){
+   const mid=(lo+hi)*.5;
+   const px=xyz[a*3]+(xyz[b*3]-xyz[a*3])*mid;
+   const py=xyz[a*3+1]+(xyz[b*3+1]-xyz[a*3+1])*mid;
+   const pz=xyz[a*3+2]+(xyz[b*3+2]-xyz[a*3+2])*mid;
+   const field=Math.max(pz-.0208,.0052-py,.0015-Math.abs(px));
+   if((field>=0)===positiveA)lo=mid;else hi=mid;
+  }
+  const t=(lo+hi)*.5;
   const id=xyz.length/3;
   for(let k=0;k<3;k++)xyz.push(xyz[a*3+k]*(1-t)+xyz[b*3+k]*t);
   const influences=new Map();
@@ -69,88 +97,59 @@ function cropMayaHind(anatomy){
   }
   const top=[...influences].sort((x,y)=>y[1]-x[1]).slice(0,4);
   const sum=top.reduce((n,v)=>n+v[1],0)||1;
-  for(let k=0;k<4;k++){
-   bones.push(top[k]?.[0]||0);
-   weights.push((top[k]?.[1]||0)/sum);
-  }
+  for(let k=0;k<4;k++){bones.push(top[k]?.[0]||0);weights.push((top[k]?.[1]||0)/sum);}
   edgeCache.set(key,id);
   return id;
- }
- function planeClip(poly,plane,positive){
-  if(poly.length<3)return [];
-  const inside=v=>positive?plane.signed(v)>=-EPS:plane.signed(v)<=EPS;
-  const out=[];
-  for(let i=0;i<poly.length;i++){
-   const a=poly[i],b=poly[(i+1)%poly.length];
-   const ia=inside(a),ib=inside(b);
-   if(ia)out.push(a);
-   if(ia!==ib)out.push(edgeIntersection(a,b,plane));
-  }
-  const dedup=[];
-  for(const v of out)if(dedup[dedup.length-1]!==v)dedup.push(v);
-  if(dedup.length>1&&dedup[0]===dedup[dedup.length-1])dedup.pop();
-  return dedup;
- }
- function polygonArea(poly){
-  if(poly.length<3)return 0;
-  const a=poly[0],ax=xyz[a*3],ay=xyz[a*3+1],az=xyz[a*3+2];
-  let sum=0;
-  for(let i=1;i<poly.length-1;i++){
-   const b=poly[i],c=poly[i+1];
-   const bx=xyz[b*3]-ax,by=xyz[b*3+1]-ay,bz=xyz[b*3+2]-az;
-   const cx=xyz[c*3]-ax,cy=xyz[c*3+1]-ay,cz=xyz[c*3+2]-az;
-   sum+=Math.hypot(by*cz-bz*cy,bz*cx-bx*cz,bx*cy-by*cx)*.5;
-  }
-  return sum;
- }
- function removeConvexLobe(poly,sidePlane){
-  let active=poly;
-  const retained=[];
-  // A polygon minus the INTERSECTION of three half-spaces is the
-  // union of non-overlapping outside slices, emitted in plane order.
-  for(const plane of [planes[0],planes[1],sidePlane]){
-   if(active.length<3)break;
-   const values=active.map(plane.signed);
-   if(Math.max(...values)<=EPS){
-    retained.push(active);
-    active=[];
-    break;
-   }
-   if(Math.min(...values)>EPS)continue;
-   const outside=planeClip(active,plane,false);
-   if(outside.length>=3&&polygonArea(outside)>1e-19)
-    retained.push(outside);
-   active=planeClip(active,plane,true);
-  }
-  return retained;
  }
  for(const group of old.groups){
   const start=next.length;
   for(let i=group.start;i<group.start+group.count;i+=3){
    const tri=[idx.getX(i),idx.getX(i+1),idx.getX(i+2)];
-   const ps=tri.map(v=>[xyz[v*3],xyz[v*3+1],xyz[v*3+2]]);
-   // Fast path: triangles provably disjoint from both rear crop lobes.
-   if(ps.every(p=>p[2]>=.0208)||ps.every(p=>p[1]<=.0052)||
-      ps.every(p=>Math.abs(p[0])<=.0015)){
-    next.push(...tri);
-    continue;
+   const d=tri.map(distance);
+   const keep=d.map(v=>v>=0);
+   // A convex removed region can intersect an edge even if both ends
+   // survive. Never pass an all-kept triangle across that hidden cut.
+   if(keep.every(Boolean)){
+    for(let j=0;j<3;j++){
+     const a=tri[j],b=tri[(j+1)%3];
+     if(removedIntervals(a,b).length)
+      throw Error('BTC V22 hidden crop interval on retained edge: '+a+'/'+b);
+    }
+    next.push(...tri);continue;
    }
-   // Clip away the left and right lobes separately. An edge with two
-   // crossings now yields multiple legitimate retained polygons instead
-   // of a spurious bridge or an unconditional runtime rejection.
-   let polys=removeConvexLobe(tri,planes[2]);
-   polys=polys.flatMap(poly=>removeConvexLobe(poly,planes[3]));
-   const area=polygonArea(tri);
-   let keptArea=0;
-   for(const poly of polys){
-    const a=polygonArea(poly);
-    if(a<=1e-19)continue;
-    keptArea+=a;
-    for(let j=1;j<poly.length-1;j++)
-     next.push(poly[0],poly[j],poly[j+1]);
+   if(keep.every(v=>!v)){
+    // The removed domain has two disconnected lateral lobes. An edge can
+    // start and end inside those lobes yet traverse retained centerline
+    // skin between them. Deleting that triangle would open a false hole.
+    // This single-polygon clipper cannot represent the intervening island.
+    for(let j=0;j<3;j++){
+     const a=tri[j],b=tri[(j+1)%3];
+     const intervals=removedIntervals(a,b);
+     const coversEntireEdge=intervals.length===1&&
+      intervals[0][0]<=0&&intervals[0][1]>=1;
+     if(!coversEntireEdge)
+      throw Error('BTC V22 retained island inside removed triangle edge: '+a+'/'+b);
+    }
+    fullyRemoved++;continue;
    }
-   if(keptArea<=Math.max(1e-19,area*1e-9))fullyRemoved++;
-   else if(keptArea<area*(1-1e-8))clipped++;
+   clipped++;
+   const boundary=[];
+   for(let j=0;j<3;j++){
+    const a=tri[j],b=tri[(j+1)%3],da=d[j],db=d[(j+1)%3];
+    // A max-of-planes field may enter and leave the removed volume
+    // on the SAME edge even when both endpoints are retained. The
+    // single-intersection polygon clip cannot represent that topology.
+    // Fail closed instead of silently bridging a hole with a large face.
+    const intervals=removedIntervals(a,b);
+    // One entering or exiting crossing is representable by this clipper.
+    // Two removed intervals or an interior-only interval require splitting.
+    if(intervals.length>1||(da>=0&&db>=0&&intervals.length))
+     throw Error('BTC V22 multi-crossing crop edge requires polygon splitting: '+a+'/'+b);
+    if(da>=0)boundary.push(a);
+    if((da>=0)!==(db>=0))boundary.push(intersection(a,b,da,db));
+   }
+   for(let j=1;j<boundary.length-1;j++)
+    next.push(boundary[0],boundary[j],boundary[j+1]);
   }
   groups.push({start,count:next.length-start,materialIndex:group.materialIndex});
  }
