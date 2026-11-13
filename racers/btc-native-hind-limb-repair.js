@@ -159,7 +159,10 @@ function cropMayaHind(anatomy){
  const islandRoots=new Set();
  for(const [r,count] of counts){
   const l=limits.get(r);
-  if(count<=8&&l.y/l.n>.005&&l.z/l.n<.002)
+  // Restrict cleanup to genuinely separate, small posterior components.
+  // A scrap can straddle the cut, so meanZ<.002 was too restrictive.
+  // Never remove the connected torso or either substantial limb shell.
+  if(count<=32&&l.y/l.n>.0035&&l.z/l.n<.0208)
    islandRoots.add(r);
  }
  const pruned=[],cleanGroups=[];
