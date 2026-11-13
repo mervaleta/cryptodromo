@@ -89,6 +89,12 @@ function cropMayaHind(anatomy){
   let active=poly;const kept=[];
   for(const plane of [planes[0],planes[1],side]){
    if(active.length<3)break;
+   // A coplanar polygon belongs to the positive side only. Otherwise
+   // both clip() calls retain the same boundary face and generate
+   // coincident triangles, dark seams and non-manifold cut surfaces.
+   const signs=active.map(plane.f);
+   if(signs.every(v=>v>=-1e-12))continue;
+   if(signs.every(v=>v<=-1e-12)){kept.push(active);active=[];break;}
    const outside=clip(active,plane,false);
    if(outside.length>=3)kept.push(outside);
    active=clip(active,plane,true);
@@ -118,6 +124,9 @@ function cropMayaHind(anatomy){
     let active=p,kept=[];
     for(const plane of [planes[4],planes[5]]){
      if(active.length<3)break;
+     const signs=active.map(plane.f);
+     if(signs.every(v=>v>=-1e-12))continue;
+     if(signs.every(v=>v<=-1e-12)){kept.push(active);active=[];break;}
      const outside=clip(active,plane,false);
      if(outside.length>=3)kept.push(outside);
      active=clip(active,plane,true);
