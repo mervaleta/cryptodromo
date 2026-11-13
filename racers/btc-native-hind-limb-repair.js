@@ -45,7 +45,12 @@ function cropMayaHind(anatomy){
   {id:'z',f:v=>.0208-xyz[3*v+2]},
   {id:'y',f:v=>xyz[3*v+1]-.0043},
   {id:'L',f:v=>-xyz[3*v]-.0012},
-  {id:'R',f:v=>xyz[3*v]-.0012}
+  {id:'R',f:v=>xyz[3*v]-.0012},
+  // The old Maya hind-foot debris straddles the sagittal x cut. Below
+  // the hock, cut the whole obsolete rear foot, including the centerline
+  // strip that the bilateral x-threshold leaves behind.
+  {id:'footZ',f:v=>.0115-xyz[3*v+2]},
+  {id:'footY',f:v=>xyz[3*v+1]-.0043}
  ];
  function crossing(a,b,p){
   const da=p.f(a),db=p.f(b);
@@ -107,6 +112,18 @@ function cropMayaHind(anatomy){
    const tri=[idx.getX(i),idx.getX(i+1),idx.getX(i+2)];
    let polys=subtract(tri,planes[2]);
    polys=polys.flatMap(p=>subtract(p,planes[3]));
+   // Surgical removal of the residual original low hind-foot strip.
+   // This is a genuine cut of Maya polygons, not a synthetic island count.
+   polys=polys.flatMap(p=>{
+    let active=p,kept=[];
+    for(const plane of [planes[4],planes[5]]){
+     if(active.length<3)break;
+     const outside=clip(active,plane,false);
+     if(outside.length>=3)kept.push(outside);
+     active=clip(active,plane,true);
+    }
+    return kept;
+   });
    let retained=0;
    for(const p of polys){
     if(area(p)<1e-18)continue;
