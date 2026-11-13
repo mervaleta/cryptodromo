@@ -546,7 +546,12 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   bodyCut.uniqueSurfacePoints=uniqueSurfacePoints;
   hoovesCut=clipNativeTriangles(hoof,p=>{
    const cy=p.reduce((s,v)=>s+v[1],0)/3;
-   return cy>.003;
+   const cz=p.reduce((s,v)=>s+v[2],0)/3;
+   // The original GLB Hooves primitive includes fore and hind keratin.
+   // Only the posterior hooves belong to this transplant. The previous
+   // height-only selection duplicated fore-hoof polygons on the BTC host
+   // and could leave stray skinned fragments during Gallop.
+   return cy>.003&&cz<.0208;
   });
   if(bodyCut.triangles<280||hoovesCut.triangles<20)
    throw Error('BTC V20 native donor unexpectedly incomplete: '+bodyCut.triangles+'/'+hoovesCut.triangles);
