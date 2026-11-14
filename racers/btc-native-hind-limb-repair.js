@@ -271,7 +271,11 @@ function clipNativeTriangles(mesh,predicate){
  for(let i=0;i<selected.length/3;i++){
   const key=root(i);sizes.set(key,(sizes.get(key)||0)+1);
  }
- const tiny=new Set([...sizes].filter(([,count])=>count<=8).map(([key])=>key));
+ // Real 3/4 WebGL captures still contain a detached keratin shard below
+ // the hind hooves. The earlier <=8-face filter misses larger scraps
+ // created by centroid extraction. Only reject isolated <=32-face shells;
+ // the existing 10% safety limit prevents loss of a substantial hoof.
+ const tiny=new Set([...sizes].filter(([,count])=>count<=32).map(([key])=>key));
  const cleaned=[];
  for(let i=0;i<selected.length;i+=3){
   if(!tiny.has(root(i/3)))cleaned.push(selected[i],selected[i+1],selected[i+2]);
