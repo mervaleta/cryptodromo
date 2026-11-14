@@ -469,7 +469,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    donorPos.setXYZ(i,
     THREE.MathUtils.lerp(x,tx-side*.00022,blend),
     THREE.MathUtils.lerp(y,ty,blend),
-    THREE.MathUtils.lerp(z,tz,blend*.18));
+    THREE.MathUtils.lerp(z,tz,blend*.72));
    const mayaFactor=.88*t;
    for(let k=0;k<4;k++){
     const weight=(1-mayaFactor)*donorWeights.getComponent(i,k);
