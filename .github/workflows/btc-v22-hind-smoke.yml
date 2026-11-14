@@ -1,0 +1,44 @@
+name: BTC V22 · focused hind-leg evidence
+on:
+  push:
+    branches:
+      - feat/btc-v22-continuous-hind-seam-20261107
+    paths:
+      - 'racers/btc-native-hind-limb-repair.js'
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-maya-groom.js'
+      - 'tests/btc-v22-hind-smoke.mjs'
+      - '.github/workflows/btc-v22-hind-smoke.yml'
+  workflow_dispatch:
+concurrency:
+  group: btc-v22-hind-smoke-${{ github.ref_name }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  quick-webgl-hind:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install WebGL Chromium
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 three@0.187.0
+          npx playwright install chromium --with-deps
+      - name: Render rear, three-quarter and profile poses 0 and 8
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-v22-smoke.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          sleep 2
+          node tests/btc-v22-hind-smoke.mjs
+      - name: Preserve diagnosis even when rendering fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-v22-hind-six-real-webgl
+          path: artifacts/btc-v22-hind-diagnostic/**
+          if-no-files-found: warn

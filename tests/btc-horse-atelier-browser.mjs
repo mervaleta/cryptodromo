@@ -16,7 +16,7 @@ try{
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.symbol==='BTC',null,{timeout:120000});
  const safe=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(safe.variant,'maya','public BTC must use V21 by default');
- assert.equal(safe.heroGroom?.harmonyBuild,'btc-v21-ocular-tail-root-20261107-v1','canonical V21 build must be rendered, not just printed in a label');
+ assert.equal(safe.heroGroom?.harmonyBuild,'btc-v22-continuous-hind-seam-20261107','canonical V21 build must be rendered, not just printed in a label');
  assert.equal(safe.heroGroom?.eyeGlobes,2,'both real 3D eyes must render on Head');
  assert.equal(safe.heroGroom?.eyeRadius,.000335,'V21 eye geometry radius');
  assert.ok(safe.clips.includes('Gallop'));
@@ -41,7 +41,7 @@ try{
  assert.equal(state.heroGroom?.version,'btc-maya-2017-sculpt-gallop-20261104');
  assert.equal(state.heroGroom?.oldHairHidden,true);
  assert.equal(state.heroGroom?.gallopPreserved,true);
- assert.equal(state.heroGroom?.vertices,5411,'Anatomical body plus skinned tail-root closure and both integrated ear-root caps');
+ assert.equal(state.heroGroom?.vertices,5462,'Anatomical body plus skinned tail-root closure and both integrated ear-root caps');
  assert.equal(state.heroGroom?.earRootCapCenters,2,'closed openings at both ears');
  assert.equal(state.heroGroom?.crownBridgeLocks,112,'poll hair bridge must exist in the standard BTC view');
  assert.equal(state.heroGroom?.heroLocks,56,'default BTC must use hero mane silhouette');

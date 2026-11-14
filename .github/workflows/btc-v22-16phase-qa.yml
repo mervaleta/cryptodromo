@@ -1,0 +1,67 @@
+name: BTC V22 · real clipped hind-seam Chromium WebGL
+on:
+  # API-authored commits may not trigger pull_request checks. Run only this
+  # isolated candidate on push so the 16-phase WebGL QA stays executable.
+  push:
+    branches:
+      - feat/btc-v22-continuous-hind-seam-20261107
+    paths:
+      - 'racers/btc-native-hind-limb-repair.js'
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'tests/btc-v22-16phase-qa.mjs'
+      - '.github/workflows/btc-v22-16phase-qa.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'racers/btc-native-hind-limb-repair.js'
+      - 'racers/btc-maya-master.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - 'tests/btc-v22-16phase-qa.mjs'
+      - 'tests/btc-maya-native-index-identity.mjs'
+      - 'scripts/extract-btc-maya-skin.py'
+      - 'tools/btc/**'
+      - '.github/workflows/btc-v22-16phase-qa.yml'
+  workflow_dispatch:
+concurrency:
+  group: btc-v22-webgl-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  real-hind-seam-webgl:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Validate actual source, build and rollback
+        run: |
+          python3 -m py_compile scripts/extract-btc-maya-skin.py tools/btc/export_maya_skincluster.py tools/btc/validate_maya_skincluster.py tools/btc/test_validate_maya_skincluster.py
+          python3 -m unittest discover -s tools/btc -p 'test_validate_maya_skincluster.py' -v
+          node --check racers/btc-native-hind-limb-repair.js
+          node --check racers/btc-maya-master.js
+          node --check racers/btc-atelier-preview.js
+          node --check tests/btc-v22-16phase-qa.mjs
+          node --test tests/btc-v12-anatomy-contract.mjs tests/btc-horse-atelier-contract.mjs tests/btc-master-change-policy.mjs tests/btc-maya-native-index-identity.mjs
+      - name: Install Chromium and 3D runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 three@0.187.0
+          npx playwright install chromium --with-deps
+      - name: Render 16 real skinned Gallop poses and six cameras
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-v22-qa.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          sleep 2
+          node tests/btc-v22-16phase-qa.mjs
+      - name: Archive real PNGs for visual before/after inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-v22-16-gallop-six-cameras
+          path: artifacts/btc-v22-full-cycle/**
+          if-no-files-found: warn
