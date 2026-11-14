@@ -239,12 +239,48 @@ function clipNativeTriangles(mesh,predicate){
   if(predicate(pts,ids,geo))selected.push(...ids);
  }
  if(!selected.length)throw Error('BTC V20 could not locate original hind limb polygons');
+ // The authored GLB duplicates vertex indices along UV/hard-normal seams.
+ // Connectivity by raw indices misclassifies real limb surfaces as scraps.
+ // Weld ONLY for component classification, not geometry or skin weights.
+ // Discard tiny disconnected posterior polygons introduced by the centroid
+ // extraction. Keep every large limb/hoof component intact.
+ const welded=new Map(),componentVertex=new Map();
+ const findKey=id=>{
+  const key=[pos.getX(id),pos.getY(id),pos.getZ(id)]
+   .map(v=>Math.round(v*1e6)).join(':');
+  if(!welded.has(key))welded.set(key,welded.size);
+  return welded.get(key);
+ };
+ const parent=Array.from({length:selected.length/3},(_,i)=>i);
+ const root=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
+ const join=(a,b)=>{a=root(a);b=root(b);if(a!==b)parent[a]=b;};
+ for(let i=0;i<selected.length;i+=3){
+  const tri=i/3;
+  for(let k=0;k<3;k++){
+   const v=findKey(selected[i+k]);
+   if(componentVertex.has(v))join(tri,componentVertex.get(v));
+   else componentVertex.set(v,tri);
+  }
+ }
+ const sizes=new Map();
+ for(let i=0;i<selected.length/3;i++){
+  const key=root(i);sizes.set(key,(sizes.get(key)||0)+1);
+ }
+ const tiny=new Set([...sizes].filter(([,count])=>count<=8).map(([key])=>key));
+ const cleaned=[];
+ for(let i=0;i<selected.length;i+=3){
+  if(!tiny.has(root(i/3)))cleaned.push(selected[i],selected[i+1],selected[i+2]);
+ }
+ // Fail closed if the selection was mostly debris or if a valid limb
+ // could have been misclassified as a small disconnected component.
+ if(cleaned.length<selected.length*.9)
+  throw Error('BTC donor component surgery exceeds safe 10% limit');
  const trimmed=geo.clone();
- trimmed.setIndex(selected);
+ trimmed.setIndex(cleaned);
  trimmed.clearGroups();
  trimmed.addGroup(0,selected.length,0);
  trimmed.computeBoundingSphere();
- return {geometry:trimmed,triangles:selected.length/3};
+ return {geometry:trimmed,triangles:cleaned.length/3,discardedTinyDonorTriangles:(selected.length-cleaned.length)/3};
 }
 
 /**
