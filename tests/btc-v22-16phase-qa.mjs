@@ -14,10 +14,22 @@ page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text())});
 try{
  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
+ try{
  await page.waitForFunction(build=>{
   const s=window.__cryptodromoBTCAtelierQA?.();
   return s?.heroGroom?.harmonyBuild===build&&s.drawCalls>0&&s.clips?.includes('Gallop');
  },BUILD,{timeout:120000});
+ }catch(e){
+  const diagnostics=await page.evaluate(()=>({
+   readyState:document.readyState,
+   qa:window.__cryptodromoBTCAtelierQA?.()||null,
+   text:document.body?.innerText?.slice(-1600)||'',
+   canvas:!!document.querySelector('#horse-canvas')
+  })).catch(x=>({evaluationError:String(x)}));
+  writeFileSync(DIR+'/startup-failure.json',JSON.stringify({diagnostics,errors},null,2));
+  console.error('BTC_V22_STARTUP_FAILURE',JSON.stringify({diagnostics,errors}));
+  throw e;
+ }
  const baseline=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.ok(baseline.heroGroom?.hindRestoration?.sameOriginalSkeleton);
  assert.equal(baseline.heroGroom?.hindRestoration?.seamMethod,'shared-edge-skinned-plane-clipping','Must use true skin-weighted cut boundary, not V20 centroid culling');
