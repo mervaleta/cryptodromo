@@ -244,7 +244,7 @@ function clipNativeTriangles(mesh,predicate){
  // Weld ONLY for component classification, not geometry or skin weights.
  // Discard tiny disconnected posterior polygons introduced by the centroid
  // extraction. Keep every large limb/hoof component intact.
- const welded=new Map(),componentVertex=new Map();
+ const welded=new Map(),componentEdge=new Map();
  const findKey=id=>{
   const key=[pos.getX(id),pos.getY(id),pos.getZ(id)]
    .map(v=>Math.round(v*1e6)).join(':');
@@ -256,10 +256,15 @@ function clipNativeTriangles(mesh,predicate){
  const join=(a,b)=>{a=root(a);b=root(b);if(a!==b)parent[a]=b;};
  for(let i=0;i<selected.length;i+=3){
   const tri=i/3;
+  // Only shared welded EDGES join surface triangles. A one-point
+  // contact between a discarded fragment and a leg is not a skin seam.
+  const verts=[0,1,2].map(k=>findKey(selected[i+k]));
   for(let k=0;k<3;k++){
-   const v=findKey(selected[i+k]);
-   if(componentVertex.has(v))join(tri,componentVertex.get(v));
-   else componentVertex.set(v,tri);
+   const a=verts[k],b=verts[(k+1)%3];
+   if(a===b)continue;
+   const edge=a<b?a+':'+b:b+':'+a;
+   if(componentEdge.has(edge))join(tri,componentEdge.get(edge));
+   else componentEdge.set(edge,tri);
   }
  }
  const sizes=new Map();
