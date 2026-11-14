@@ -275,7 +275,13 @@ function clipNativeTriangles(mesh,predicate){
  // the hind hooves. The earlier <=8-face filter misses larger scraps
  // created by centroid extraction. Only reject isolated <=32-face shells;
  // the existing 10% safety limit prevents loss of a substantial hoof.
- const tiny=new Set([...sizes].filter(([,count])=>count<=32).map(([key])=>key));
+ // The native GLB hoof primitive has only 44 triangles TOTAL, split
+ // between two legitimate hind-hoof shells (~22 faces each). A uniform
+ // 32-face debris cutoff erased BOTH real hooves and aborted WebGL startup.
+ // Use a small, source-specific cutoff; preserve the two authored hooves.
+ const isHoofPrimitive=[mesh.material].flat().some(m=>m?.name==='Hooves');
+ const tinyLimit=isHoofPrimitive?3:32;
+ const tiny=new Set([...sizes].filter(([,count])=>count<=tinyLimit).map(([key])=>key));
  const cleaned=[];
  for(let i=0;i<selected.length;i+=3){
   if(!tiny.has(root(i/3)))cleaned.push(selected[i],selected[i+1],selected[i+2]);
