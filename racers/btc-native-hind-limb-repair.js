@@ -278,7 +278,7 @@ function clipNativeTriangles(mesh,predicate){
  const trimmed=geo.clone();
  trimmed.setIndex(cleaned);
  trimmed.clearGroups();
- trimmed.addGroup(0,selected.length,0);
+ trimmed.addGroup(0,cleaned.length,0);
  trimmed.computeBoundingSphere();
  return {geometry:trimmed,triangles:cleaned.length/3,discardedTinyDonorTriangles:(selected.length-cleaned.length)/3};
 }
