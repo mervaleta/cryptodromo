@@ -49,8 +49,8 @@ function cropMayaHind(anatomy){
   // The old Maya hind-foot debris straddles the sagittal x cut. Below
   // the hock, cut the whole obsolete rear foot, including the centerline
   // strip that the bilateral x-threshold leaves behind.
-  {id:'footZ',f:v=>.0180-xyz[3*v+2]},
-  {id:'footY',f:v=>xyz[3*v+1]-.0037}
+  {id:'footZ',f:v=>.0208-xyz[3*v+2]},
+  {id:'footY',f:v=>xyz[3*v+1]-.0095}
  ];
  function crossing(a,b,p){
   const da=p.f(a),db=p.f(b);
