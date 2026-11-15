@@ -210,3 +210,14 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Crin y cola: raíz pegada a la línea cervical, mechones con menor arco y longitud superficial. El cuerpo, crin, ojos y Gallop son animados en Three.js, no imágenes estáticas.
 - En `/racers/#BTC` se selecciona Maya V16 por defecto. Reversión instantánea: `?btcMaster=v5#BTC` o `?btcMaster=original#BTC`; ningún otro símbolo se modifica.
 - Pruebas reales Chromium/WebGL previas: rama work/btc-face-restore-visual-20261105, run 42041368297 (contorno/ojos/hocico), 42041764109 (16 fases y 6 cámaras; revisión en curso al integrar). Esta no es aprobación estética ni certificación de Hostinger. Candidato needs_visual_qa, no modelo maestro, no replicación.
+
+
+## 2026-11-15 · WildMesh BTC MVP QA02 (isolated candidate; NOT DEPLOYED)
+
+- User-supplied proprietary-art horse demo (WildMesh 3D, **CC BY-NC 4.0**) evaluated as a genuine 3D alternative to the flawed V21 Maya/Quaternius hybrid. See `/licences/` and original https://sketchfab.com/3d-models/horse-realistic-3d-model-demo-free-65d6a70a6721495f938c93e80a5998e4.
+- Created a self-contained **GLB with 20 experimental Gallop channels** (19 joint rotations plus COM presentation bounce) by sampling the already available **Quaternius CC0 Gallop** at 49 keys across 0.583333s. The new model retains its own rig, joint influences, 82k+ mesh triangles and Idle/Walk clips. It is NOT directly animation-compatible with Quaternius; the transfer is an approximation that requires artist QA.
+- Converted unsupported specular/glossy PBR extension to core metallic/roughness and optimized embedded textures. New GLB filesize: **17,581,184 bytes**, SHA256 `d90fabd5b6277c461a453ab37f78e7f0dbd5b2e8a151519b7505afa5b6c4c60f`.
+- Rendered in real Chromium/Three.js/WebGL with no JS errors; 2 cameras × 4 representative phases on QA02 plus source geometry and further camera tests from QA01. Approximately 109,016 scene triangles (floor included). Not a GPU benchmark or AAA certification.
+- Added `racers/btc-wildmesh-horse.js`, BTC-only candidate path in `btc-atelier-preview.js`, default selection in `racers.js`, UI/button/license link in `racers/index.html`. Prior BTC variants remain available via `?btcMaster=original`, `?btcMaster=v5` and `?btcMaster=maya`. Absent GLB triggers fallback to prior Quaternius model, not a broken 2D error.
+- **Deployment blocker:** Binary `racers/models/btc-wildmesh-gallop-v2.glb` is packaged externally in `BTC-WildMesh-MVP-QA02.zip` but not uploaded to GitHub from this environment. The candidate branch must not be merged and declared active until the binary exists and public Hostinger/WebGL checks pass. No changes to other 99 horses, fixtures, results, bets, prices, or stadium.
+- Open items: 96 screenshot phase/camera matrix, hoof contact and slip, realistic race suspension, tail/mane secondary dynamics, comparative performance on GPU, explicit visual approval, and rights for any commercial use.
