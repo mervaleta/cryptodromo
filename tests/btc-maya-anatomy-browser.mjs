@@ -22,7 +22,7 @@ try{
  },null,{timeout:120000});
  const start=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(start.variant,'maya');
- assert.equal(start.heroGroom.vertices,5411,'original anatomical surface with tail and both ear-root caps');
+ assert.equal(start.heroGroom.vertices,5462,'original anatomical surface with tail and both ear-root caps');
  assert.ok(start.heroGroom.triangles>9500&&start.heroGroom.triangles<10500,
   'Maya horse must retain full body topology but remove duplicate appendages');
  assert.ok(start.heroGroom.nativeEarFacesRemoved>=150,'legacy horns must be culled');
@@ -33,7 +33,9 @@ try{
  assert.ok(start.heroGroom.extraTailFacesRemoved>250,'retire the old skin-tail free end while preserving croup skin');
  assert.ok(start.heroGroom.poweredHindVertices>650,'croup and hind thighs must be resculpted, not repainted');
  assert.ok(start.heroGroom.tailDockBorderEdges>=20,'identify tail-root cut boundary');
- assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges,'close every exposed dock edge with skinned Maya triangles');
+ assert.equal(start.heroGroom.integratedDockCapTriangles,start.heroGroom.tailDockBorderEdges*3,'each bilateral rim edge must have two bridge faces and a center fan');
+ assert.equal(start.heroGroom.tailDockCapHalves,2,'the bow-tie tail hole must be closed by TWO non-overlapping anatomical half-caps');
+ assert.equal(start.heroGroom.tailRootPatchTriangles,0,'no detached cover disc may float over the croup');
  assert.ok(start.heroGroom.fineLocks>=650);
  assert.equal(start.heroGroom.looseNeckFibers,0,'no dangling throat-level mane strands');
   assert.equal(start.heroGroom.proceduralHairTexture,true);

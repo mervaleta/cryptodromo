@@ -1,9 +1,10 @@
-name: BTC V21 16-phase real WebGL visual QA
+name: BTC current build 16-phase real WebGL visual QA
 on:
   pull_request:
     branches: [main]
     paths:
       - 'racers/btc-maya-master.js'
+      - 'racers/btc-native-hind-limb-repair.js'
       - 'racers/btc-maya-groom.js'
       - 'racers/btc-atelier-preview.js'
       - 'racers/racers.js'
@@ -43,6 +44,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: btc-v21-16-gallop-six-cameras
-          path: artifacts/btc-v21-full-cycle/**
+          name: btc-current-16-gallop-six-cameras
+          path: artifacts/btc-current-full-cycle/**
           if-no-files-found: warn
