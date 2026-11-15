@@ -620,11 +620,17 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
      // there, so no collar silhouette is arbitrarily pulled off the host.
      const u=(z-.0211)/(.0237-.0211);
      const taper=Math.sin(Math.PI*u)**2;
-     const alpha=.16*taper;
+     const alpha=.28*taper;
      const avg=[0,0,0];
      for(const v of edges[i])for(let k=0;k<3;k++)avg[k]+=positions[v][k];
      for(let k=0;k<3;k++)avg[k]/=edges[i].size;
-     const target=positions[i].map((v,k)=>v+alpha*(avg[k]-v));
+     // Limit the smoothing to a small fraction of a millimetre per pass.
+     // A stronger laplacian reduces sharp collar ridges without letting
+     // long adjacent triangles collapse into the Maya rump.
+     const raw=positions[i].map((v,k)=>alpha*(avg[k]-v));
+     const norm=Math.hypot(...raw);
+     const factor=norm>.00012?.00012/norm:1;
+     const target=positions[i].map((v,k)=>v+raw[k]*factor);
      // Avoid crossing the sagittal midline, or drifting into the tail cap.
      if(Math.sign(target[0])!==Math.sign(original[i][0]))continue;
      donorPos.setXYZ(i,...target);
