@@ -528,13 +528,21 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
     triangle.set(...face.pts);
     triangle.closestPointToPoint(donorPoint,closest);
     const dx=closest.x-x,dy=closest.y-y,dz=closest.z-z;
+    // Reject nonlocal attachments. The old 8.7 mm spherical search
+    // could snap a skinned thigh collar to the far croup/tail crease,
+    // stretching triangles into the dark spikes seen in rear WebGL.
+    // These limits are in the model's native (metre-scaled) coordinates.
+    if(Math.abs(dx)>.0025||Math.abs(dy)>.0030||Math.abs(dz)>.0030)
+     continue;
     const dist=dx*dx+dy*dy+2.4*dz*dz;
     if(dist<bestDist){
      bestDist=dist;
      best={face,point:closest.clone()};
     }
    }
-   if(!best||bestDist>.000075)continue;
+   // Do not invent a bridge across an anatomically unrelated surface.
+   // Leave the authored donor vertex in place when no LOCAL Maya host exists.
+   if(!best||bestDist>.00000625)continue;
    triangle.set(...best.face.pts);
    THREE.Triangle.getBarycoord(best.point,...best.face.pts,bary);
    if(![bary.x,bary.y,bary.z].every(Number.isFinite))continue;
