@@ -163,6 +163,10 @@ export function createPreview(canvas,onFailure=()=>{}){
    terrain.reset();
    terrain.setVisible(token.symbol==='BTC'&&terrainSurface!=='off'&&!next.isWildMesh);
    renderedSymbol=token.symbol;renderedVariant=wantsCC0?'cc0groom':next.isWildMesh?'wildmesh':candidate?variant:'original';
+   if(wantsCC0){
+    const badge=document.getElementById('preview-state');
+    if(badge)badge.textContent='BTC · GALOPE NATIVO CC0 · CRIN + COLA A1';
+   }
    prevGroom?.dispose();prevHero?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
