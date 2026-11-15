@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
 
-export const BTC_WILDMESH_RENDER_BUILD='btc-wildmesh-retarget-20261115-qa02';
+export const BTC_WILDMESH_RENDER_BUILD='btc-wildmesh-retarget-20261115-qa03';
 export const BTC_WILDMESH_URL='/racers/models/btc-wildmesh-gallop-v2.glb';
 const MIME_GALLOP='Gallop_Retarget_QA_Quaternius_to_WildMesh';
 let sourcePromise;
