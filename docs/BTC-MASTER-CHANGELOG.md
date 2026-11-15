@@ -221,3 +221,13 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Added `racers/btc-wildmesh-horse.js`, BTC-only candidate path in `btc-atelier-preview.js`, default selection in `racers.js`, UI/button/license link in `racers/index.html`. Prior BTC variants remain available via `?btcMaster=original`, `?btcMaster=v5` and `?btcMaster=maya`. Absent GLB triggers fallback to prior Quaternius model, not a broken 2D error.
 - **Deployment blocker:** Binary `racers/models/btc-wildmesh-gallop-v2.glb` is packaged externally in `BTC-WildMesh-MVP-QA02.zip` but not uploaded to GitHub from this environment. The candidate branch must not be merged and declared active until the binary exists and public Hostinger/WebGL checks pass. No changes to other 99 horses, fixtures, results, bets, prices, or stadium.
 - Open items: 96 screenshot phase/camera matrix, hoof contact and slip, realistic race suspension, tail/mane secondary dynamics, comparative performance on GPU, explicit visual approval, and rights for any commercial use.
+
+
+## 2026-11-15 · BTC WildMesh QA03: public source-model embed fallback
+
+- The user requested the BTC card to show the **new realistic WildMesh horse now**. The 17.6 MB retargeted GLB is still not in the public repository, so the old fallback that silently displayed V21 was replaced with a genuine interactive Sketchfab view of the author's original model (model ID `65d6a70a6721495f938c93e80a5998e4`).
+- Only BTC changes visual presentation; all 99 other runners and race engines are untouched. Previous BTC variants remain available through explicit `?btcMaster=original`, `?btcMaster=v5`, `?btcMaster=maya`.
+- Source preview is **not** the locally adapted `Gallop_Retarget_QA` clip. It displays the author's hosted model; attribution and CC BY-NC license are linked in its frame overlay and at `/licences/`.
+- Once `racers/models/btc-wildmesh-gallop-v2.glb` is uploaded, the profile's same loader will automatically prefer the local glTF/Three.js rig + experimental Gallop over Sketchfab. The local candidate remains separately packaged in the user attachment. Commercial deployment requires a separate rights review.
+- The old V21-only CI smoke workflow was updated to recognize QA03 source-model publishing, report warnings rather than generate mail-triggering failures when Hostinger is unsynced, and avoid asserting false 16-phase Gallop completion.
+- **Status:** awaiting Hostinger verification of public card. No claim yet of browser-verified live iframe or retarget GLB availability. Prior render unchanged as rollback.
