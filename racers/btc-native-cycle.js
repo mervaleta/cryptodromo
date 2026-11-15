@@ -4,7 +4,7 @@
  * textures, animation clips or geometry. External Bitcoin brand shell is our
  * own UI and independent of the original model.
  */
-export const BTC_CYCLE_BUILD='btc-native-run-cycle-20261115-v1';
+export const BTC_CYCLE_BUILD='btc-native-run-cycle-20261115-v2-cc0-groom';
 export const CYCLES=Object.freeze({
  run:{uid:'8451f03cb1564436bfaa3964dd619a86',label:'Carrera',title:'Horse Run Cycle On Place'},
  trot:{uid:'7e24b8c46d284b519d416035e6445903',label:'Trote',title:'Horse Trot'},
