@@ -546,18 +546,22 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    triangle.set(...best.face.pts);
    THREE.Triangle.getBarycoord(best.point,...best.face.pts,bary);
    if(![bary.x,bary.y,bary.z].every(Number.isFinite))continue;
+   // Visual candidate P0: the 2026-11-14 rear-00 Chromium capture still
+   // shows sharp triangular wedges at the rump/thigh join. Reduce collar
+   // projection amplitude and cap displacement to 0.48 mm (was 0.85 mm).
+   // This changes actual skinned vertex positions, not a validator.
    // The prior unconstrained projection could move a donor collar vertex
    // several times its local edge length, producing stretched dark triangles
    // in rear/3Q WebGL frames. Limit the *actual 3D displacement* instead
    // of clipping each axis independently. This preserves the anatomical
    // donor silhouette when the host is near but not genuinely coincident.
-   const blend=t*.98;
+   const blend=t*.76;
    const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00022,blend);
    const targetY=THREE.MathUtils.lerp(y,best.point.y,blend);
    const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.72);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
    const displacement=Math.hypot(deltaX,deltaY,deltaZ);
-   const maxDisplacement=.00085;
+   const maxDisplacement=.00048;
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
    donorPos.setXYZ(i,x+deltaX*safe,y+deltaY*safe,z+deltaZ*safe);
    const mayaFactor=.88*t,influences=new Map();
