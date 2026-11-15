@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
-import {createWildMeshHorse} from './btc-wildmesh-horse.js?v=btc-wildmesh-retarget-20261115-qa03';
+import {createWildMeshHorse} from './btc-wildmesh-horse.js?v=btc-wildmesh-bitcoin-20261115-v1';
 import {createWildMeshSketchfabFallback} from './btc-wildmesh-sketchfab.js?v=btc-wildmesh-bitcoin-20261115-v1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
@@ -87,7 +87,15 @@ export function createPreview(canvas,onFailure=()=>{}){
   try{
    let next;
    if(wantsWildMesh){
-    try{next=await createWildMeshHorse({height:2.5,mode:paused?'Idle':'Gallop',showTack:false});}
+    try{
+     const profile=token.mayaAppearance||{};
+     next=await createWildMeshHorse({
+      height:2.5,mode:paused?'Idle':'Gallop',showTack:true,
+      coat:profile.coatColor||token.coat,accent:token.color,
+      maneColor:profile.maneColor||'#342922',
+      tailColor:profile.tailColor||profile.maneColor||'#342922'
+     });
+    }
     catch(error){
      // Do NOT pretend that old V21 is the new model if the GLB upload is missing.
      console.warn('WildMesh BTC retargeted GLB not hosted; showing genuine WildMesh source preview:',error);
