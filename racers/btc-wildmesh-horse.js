@@ -34,8 +34,10 @@ export async function createWildMeshHorse({height=2.5,mode='Gallop',showTack=fal
  const bounds=new THREE.Box3().setFromObject(model);
  const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
  if(!Number.isFinite(size.y)||size.y<=0)throw Error('WildMesh GLB con dimensiones inválidas');
- model.position.set(-center.x,-bounds.min.y,-center.z);
- const scale=height/size.y;model.scale.setScalar(scale);
+ const scale=height/size.y;
+ model.scale.setScalar(scale);
+ // The Sketchfab file is authored in large scene units; offset must scale too.
+ model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
  root.add(model);
  const mats=new Set();
  model.traverse(object=>{
