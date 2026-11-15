@@ -44,8 +44,12 @@ function cropMayaHind(anatomy){
  const planes=[
   {id:'z',f:v=>.0208-xyz[3*v+2]},
   {id:'y',f:v=>xyz[3*v+1]-.0043},
-  {id:'L',f:v=>-xyz[3*v]-.0012},
-  {id:'R',f:v=>xyz[3*v]-.0012},
+  // The previous 1.2 mm center strip left two thin native Maya flaps
+  // hanging beside the tail dock in rear WebGL. Narrow the retained
+  // sagittal bridge without cutting the actual midline itself.
+  // Candidate only: accept after 16-phase / six-camera pixel comparison.
+  {id:'L',f:v=>-xyz[3*v]-.0007},
+  {id:'R',f:v=>xyz[3*v]-.0007},
   // The old Maya hind-foot debris straddles the sagittal x cut. Below
   // the hock (y <= .0095) AND at z <= .002, cut the residual rear-foot tip, including the centerline
   // strip that the bilateral x-threshold leaves behind.
