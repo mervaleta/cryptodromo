@@ -468,7 +468,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // Candidate P0 visual surgery: lower the Quaternius donor thigh collar by 1.2 mm
   // to keep its high polygon rim out of the Maya rump in rear poses.
   // The full 16-phase WebGL gate must determine whether this creates a gap.
-  return y>.00385&&z<.0221&&Math.abs(x)>.0010;
+  return y>.00385&&z<.0208&&Math.abs(x)>.0010;
   });
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
