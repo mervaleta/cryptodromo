@@ -23,6 +23,16 @@ test('master revision matches the actually selected BTC 3D render build',()=>{
   assert.ok(match,'native GLB lookdev build identifier missing');
   assert.equal(revision.buildId,match[1],'Public BTC fiche must describe the native GLB master');
   assert.match(racers,/requestedBTCMaster==='maya'\?'maya'/,'Maya remains explicit debug only');
+ }else if(revision.masterId==='wildmesh-3d-horse-demo-cc-by-nc-4'){
+  const candidate=read('racers/btc-wildmesh-horse.js');
+  const embed=read('racers/btc-wildmesh-sketchfab.js');
+  const match=candidate.match(/export const BTC_WILDMESH_RENDER_BUILD='([^']+)'/);
+  assert.ok(match,'WildMesh candidate build id missing');
+  assert.equal(revision.buildId,match[1],'BTC card must report the chosen WildMesh build');
+  assert.match(racers,/requestedBTCMaster==='maya'\?'maya':'wildmesh'/);
+  assert.match(embed,/65d6a70a6721495f938c93e80a5998e4/);
+  assert.match(read('racers/btc-atelier-preview.js'),/createWildMeshSketchfabFallback/);
+  assert.equal(revision.status,'pending_deploy','Must remain pending until public Hostinger QA passes');
  }else{
   const match=master.match(/export const BTC_MAYA_RENDER_BUILD='([^']+)'/);
   assert.ok(match,'Maya build identifier missing');
