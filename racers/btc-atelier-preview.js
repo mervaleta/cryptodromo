@@ -9,6 +9,7 @@ import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-
 import {createWildMeshHorse} from './btc-wildmesh-horse.js?v=btc-wildmesh-bitcoin-20261115-v1';
 import {createWildMeshSketchfabFallback} from './btc-wildmesh-sketchfab.js?v=btc-wildmesh-bitcoin-20261115-v1';
 import {createBTCCyclePreview} from './btc-native-cycle.js?v=btc-native-run-cycle-20261115-v1';
+import {createBTCCC0Groom} from './btc-cc0-groom.js?v=btc-cc0-groom-20261115-a1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-v21-ocular-tail-root-20261107-v1';
@@ -63,7 +64,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  let terrainSurface='dirt',terrainWetness=0;
 
  let heldPoseTime=0,heldPoseIndex=null;
- let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='original'?'original':stageParams.get('btcMaster')==='v5'?'enhanced':stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='wildmesh'?'wildmesh':'cycle',renderedSymbol=null,renderedVariant=null,frameHeld=false;
+ let horse=null,hero=null,extraGroom=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='original'?'original':stageParams.get('btcMaster')==='v5'?'enhanced':stageParams.get('btcMaster')==='maya'?'maya':stageParams.get('btcMaster')==='wildmesh'?'wildmesh':stageParams.get('btcMaster')==='cc0groom'?'cc0groom':'cycle',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#352721';
  const resize=()=>{
@@ -87,12 +88,13 @@ export function createPreview(canvas,onFailure=()=>{}){
   const candidate=(variant==='enhanced'||variant==='baseline'||variant==='maya')&&token.symbol==='BTC';
   const wantsWildMesh=variant==='wildmesh'&&token.symbol==='BTC';
   const wantsCycle=variant==='cycle'&&token.symbol==='BTC';
+  const wantsCC0=variant==='cc0groom'&&token.symbol==='BTC';
   if(wantsCycle){
-   const oldHorse=horse,oldHero=hero;
-   horse=null;hero=null;heldPoseTime=0;heldPoseIndex=null;frameHeld=false;
+   const oldHorse=horse,oldHero=hero,oldGroom=extraGroom;
+   horse=null;hero=null;extraGroom=null;heldPoseTime=0;heldPoseIndex=null;frameHeld=false;
    terrain.setVisible(false);sourceEmbed.hide();sourceCycle.show(token);
    renderedSymbol='BTC';renderedVariant='cycle';
-   oldHero?.dispose();oldHorse?.dispose();
+   oldGroom?.dispose();oldHero?.dispose();oldHorse?.dispose();
    return;
   }
   sourceCycle.hide();
@@ -112,11 +114,11 @@ export function createPreview(canvas,onFailure=()=>{}){
      // Do NOT pretend that old V21 is the new model if the GLB upload is missing.
      console.warn('WildMesh BTC retargeted GLB not hosted; showing genuine WildMesh source preview:',error);
      if(disposed||request!==selection)return;
-     const prev=horse,prevHero=hero;
-     horse=null;hero=null;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
+     const prev=horse,prevHero=hero,prevGroom=extraGroom;
+     horse=null;hero=null;extraGroom=null;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
      terrain.setVisible(false);sourceEmbed.show(token);
      renderedSymbol='BTC';renderedVariant='wildmesh-source-embed';
-     prevHero?.dispose();prev?.dispose();
+     prevGroom?.dispose();prevHero?.dispose();prev?.dispose();
      return;
     }
    }
@@ -150,13 +152,18 @@ export function createPreview(canvas,onFailure=()=>{}){
      nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,coatOptions);
     }
    }catch(error){next.dispose();throw error;}
+   let nextGroom=null;
+   if(wantsCC0){
+    try{nextGroom=createBTCCC0Groom(next.root);}
+    catch(error){next.dispose();throw Error('BTC CC0 groom failed: '+error.message);}
+   }
    sourceEmbed.hide();scene.add(next.root);
-   const prev=horse,prevHero=hero;
-   horse=next;hero=nextHero;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
+   const prev=horse,prevHero=hero,prevGroom=extraGroom;
+   horse=next;hero=nextHero;extraGroom=nextGroom;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
    terrain.reset();
    terrain.setVisible(token.symbol==='BTC'&&terrainSurface!=='off'&&!next.isWildMesh);
-   renderedSymbol=token.symbol;renderedVariant=next.isWildMesh?'wildmesh':candidate?variant:'original';
-   prevHero?.dispose();prev?.dispose();
+   renderedSymbol=token.symbol;renderedVariant=wantsCC0?'cc0groom':next.isWildMesh?'wildmesh':candidate?variant:'original';
+   prevGroom?.dispose();prevHero?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
   }
@@ -180,7 +187,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  function select(token){selected=token;return rebuild();}
  function setStage(next){const p=Math.floor(clamp(next,1,10));if(p!==btcPass){btcPass=p;rebuild();}}
  function setVariant(next){
-  if(next!=='cycle'&&next!=='original'&&next!=='enhanced'&&next!=='baseline'&&next!=='maya'&&next!=='wildmesh')return;
+  if(next!=='cycle'&&next!=='original'&&next!=='enhanced'&&next!=='baseline'&&next!=='maya'&&next!=='wildmesh'&&next!=='cc0groom')return;
   if(variant!==next){variant=next;rebuild();}
  }
  function setWind(value){wind=clamp(value,0,2);horse?.setWind?.(wind);}
@@ -208,6 +215,7 @@ export function createPreview(canvas,onFailure=()=>{}){
    }else{
     horse?.update(dt,speed);
    }
+   extraGroom?.update(dt,speed);
    hero?.update(dt,{wind,speed,running:!paused,phase:horse?.hoofPhase||0});
    terrain.update({horse,dt,running:!paused&&!fixedFrame&&selected?.symbol==='BTC',speed,wind});
   }
@@ -217,7 +225,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   select,pause,setVariant,setPose,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
   snapshot:()=>({
    symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse||sourceEmbed.active||sourceCycle.active,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
-   originalAsset:true,assetType:sourceCycle.active?'original-morph-run':sourceEmbed.active?'wildmesh-sketchfab':horse?.isWildMesh?'wildmesh':'quaternius',sourceEmbed:sourceEmbed.snapshot(),nativeCycle:sourceCycle.snapshot(),jockey:false,maneEnabled:!!hero||!!horse?.isWildMesh,
+   originalAsset:true,assetType:sourceCycle.active?'original-morph-run':sourceEmbed.active?'wildmesh-sketchfab':horse?.isWildMesh?'wildmesh':'quaternius',sourceEmbed:sourceEmbed.snapshot(),nativeCycle:sourceCycle.snapshot(),cc0Hair:extraGroom?.stats||null,jockey:false,maneEnabled:!!hero||!!horse?.isWildMesh,
    maneMotion:horse?.isWildMesh?'bone-keyframes':hero?'animated':null,tailMotion:horse?.isWildMesh?'retargeted-keys':hero?'animated':null,
    hairSystem:null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
    hoofPhase:horse?.hoofPhase||0,terrain:terrain.snapshot(),drawCalls:renderer.info.render.calls
@@ -225,7 +233,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   dispose(){
    if(disposed)return;disposed=true;selection++;
    renderer.setAnimationLoop(null);observer.disconnect();controls.dispose();
-   terrain.dispose();sourceCycle.dispose();sourceEmbed.dispose();hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);scene.remove(tailRim);
+   terrain.dispose();sourceCycle.dispose();sourceEmbed.dispose();extraGroom?.dispose();hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);scene.remove(tailRim);
    pedestalRing.geometry.dispose();pedestalRing.material.dispose();
    platformGeo.dispose();platformMat.dispose();renderer.dispose();
   }
