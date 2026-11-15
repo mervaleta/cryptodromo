@@ -1,4 +1,4 @@
-name: BTC WildMesh · public source-model deployment check (nonblocking)
+name: BTC original run-cycle · public source viewer deployment check
 on:
   push:
     branches: [main]
@@ -19,32 +19,32 @@ jobs:
         run: |
           set -uo pipefail
           ROOT='https://race.cryptodromo.com'
-          expected='btc-wildmesh-bitcoin-20261115-v1'
+          expected='btc-native-run-cycle-20261115-v1'
           verified=0
           for attempt in 1 2 3 4 5; do
             statusA=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-profile.html "$ROOT/racers/?v=$GITHUB_SHA-$attempt" || true)
             statusB=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-index.html "$ROOT/racers/index.html?v=$GITHUB_SHA-$attempt" || true)
             statusC=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-main.js "$ROOT/racers/racers.js?v=$GITHUB_SHA-$attempt" || true)
-            statusD=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-sketchfab.js "$ROOT/racers/btc-wildmesh-sketchfab.js?v=$GITHUB_SHA-$attempt" || true)
+            statusD=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-cycle.js "$ROOT/racers/btc-native-cycle.js?v=$GITHUB_SHA-$attempt" || true)
             statusE=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-build.json "$ROOT/racers/btc-master-revision.json?v=$GITHUB_SHA-$attempt" || true)
             statusF=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-licences.html "$ROOT/licences/?v=$GITHUB_SHA-$attempt" || true)
             echo "Attempt $attempt HTTP profile=$statusA index=$statusB main_js=$statusC sketchfab_js=$statusD build=$statusE licences=$statusF"
             if [[ "$statusA" == 200 && "$statusB" == 200 && "$statusC" == 200 && "$statusD" == 200 && "$statusE" == 200 && "$statusF" == 200 ]] &&
                grep -Fq "$expected" /tmp/btc-index.html &&
                grep -Fq "$expected" /tmp/btc-main.js &&
-               grep -Fq '65d6a70a6721495f938c93e80a5998e4' /tmp/btc-sketchfab.js &&
-               grep -Fq 'getMaterialList' /tmp/btc-sketchfab.js &&
-               grep -Fq 'setMaterial' /tmp/btc-sketchfab.js &&
+               grep -Fq '8451f03cb1564436bfaa3964dd619a86' /tmp/btc-cycle.js &&
+               grep -Fq '7e24b8c46d284b519d416035e6445903' /tmp/btc-cycle.js &&
+               grep -Fq 'animation_autoplay=1' /tmp/btc-cycle.js &&
                grep -Fq "$expected" /tmp/btc-build.json &&
                grep -Fq 'WildMesh' /tmp/btc-licences.html; then
               verified=1
-              echo '::notice::HOSTINGER_WILDMESH_QA03_SOURCE_EMBED_CODE_DEPLOYED'
+              echo '::notice::HOSTINGER_BTC_NATIVE_RUN_CYCLE_SOURCE_CODE_DEPLOYED'
               break
             fi
             sleep 10
           done
           if [[ "$verified" == 0 ]]; then
-            echo '::warning::Hostinger has NOT served BTC WildMesh QA03 yet. Do not claim public deployment. This is not a broken GitHub build.'
+            echo '::warning::Hostinger has NOT served original BTC run-cycle code yet. Do not claim public deployment. This is not a broken GitHub build.'
           fi
           echo "btc_public_source_embed_code_verified=$verified" >> "$GITHUB_STEP_SUMMARY"
-          echo 'Retargeted Gallop GLB is not in repository; this check validates source 3D preview code, not the animated Gallop or iframe execution.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Original morph animation source is hosted by Sketchfab; this check verifies publication of app code and model UID, NOT third-party iframe animation frames.' >> "$GITHUB_STEP_SUMMARY"
