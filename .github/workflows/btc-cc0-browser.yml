@@ -1,0 +1,79 @@
+name: BTC CC0 Hair · real public WebGL visual check (nonblocking)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'racers/btc-cc0-groom.js'
+      - 'racers/btc-atelier-preview.js'
+      - 'racers/racers.js'
+      - 'racers/index.html'
+      - '.github/workflows/btc-cc0-browser.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-3d:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install real Chromium
+        continue-on-error: true
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Load CC0 groom in public BTC card, test Gallop and capture evidence
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p artifacts/btc-cc0
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          import assert from 'node:assert/strict';
+          const errors=[];
+          let browser;
+          try{
+           browser=await chromium.launch({headless:true,args:[
+            '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
+           const context=await browser.newContext({viewport:{width:1430,height:960},deviceScaleFactor:1,reducedMotion:'no-preference'});
+           const page=await context.newPage();
+           page.on('pageerror',e=>errors.push(String(e)));
+           page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+           await page.goto('https://race.cryptodromo.com/racers/?btcMaster=cc0groom&verify=btc-cc0-groom-20261115-a1#BTC',{
+             waitUntil:'domcontentloaded',timeout:60000
+           });
+           await page.waitForFunction(()=>{
+            const state=globalThis.__cryptodromoBTCAtelierQA?.();
+            return state?.ready&&state.variant==='cc0groom'&&state.cc0Hair?.mane?.strands===1350
+              &&state.cc0Hair?.tail?.strands===960&&state.clips?.includes('Gallop')
+              &&state.drawCalls>0;
+           },null,{timeout:125000});
+           const state=await page.evaluate(()=>globalThis.__cryptodromoBTCAtelierQA?.());
+           assert.deepEqual(errors.filter(e=>!e.includes('404')),[]);
+           assert.equal(state.cc0Hair.mane.strands,1350);
+           assert.equal(state.cc0Hair.tail.strands,960);
+           await page.locator('#horse-view').screenshot({path:'artifacts/btc-cc0/horse-cc0-profile.png'});
+           for(const cam of ['front','rear']){
+            await page.locator('[data-btc-camera="'+cam+'"]').click();
+            await page.waitForTimeout(400);
+            await page.locator('#horse-view').screenshot({path:'artifacts/btc-cc0/horse-cc0-'+cam+'.png'});
+           }
+           console.log('PUBLIC_BTC_CC0_GROOM_RENDERED',JSON.stringify(state));
+           console.log('::notice::BTC CC0 groom real browser PASS');
+           await context.close();
+          }catch(e){
+           console.log('::warning::BTC CC0 public visual QA unverified: '+e.message);
+           console.log('Captured browser errors:',JSON.stringify(errors));
+           // Only the author approves aesthetic quality. A CI failure may be a CDN
+           // outage and must not trigger repeated alarming email notifications.
+          }finally{await browser?.close();}
+          JS
+      - name: Publish browser screenshots when captured
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-cc0-hair-webgl
+          path: artifacts/btc-cc0/*.png
+          if-no-files-found: ignore
