@@ -257,3 +257,14 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - QA: comprobar movimiento real público del iframe; CI sólo puede verificar publicación de archivos y marcadores, no demostrar visualmente la animación en Sketchfab.
 - El GLB WildMesh Gallop retarget sigue sólo en el artefacto de prueba local y **no** se ha publicado. No se declara validación AAA.
 
+
+
+## 2026-11-15 · Crin y cola CC0 A1, variante BTC opcional en ficha canónica
+
+- Esta iteración NO modifica ni redistribuye `Horse Run Cycle On Place` (Amitesh Nandan / CC BY-ND 4.0). Se conserva como presentación principal.
+- Introduce una variante visual independiente en `/racers/?btcMaster=cc0groom#BTC`, derivada únicamente del caballo y malla Hair **Quaternius Ultimate Animated Animal Pack (CC0 1.0)**, cuyo GLB comprimido ya utiliza `race-lab/source/assets/horse.glb.gz`.
+- `racers/btc-cc0-groom.js` distribuye **1.350 mechones de crin y 960 de cola** sobre las caras originales de Hair, heredando sus índices/pesos de huesos. Produce **8.100 triángulos de crin + 5.760 de cola**. Aplica oscilación secundaria muy suave en shader, sin tocar la animación Gallop del caballo donante ni el sistema de carrera.
+- Prueba aislada local en Chromium/SwiftShader: GLB real, Gallop e Idle reconocidos, fibras visibles, shader sin errores de consola, comparación con/sin crin y capturas perfil/frente/posterior. **No se confunde esta prueba con QA de producción ni con fotorealismo.**
+- La estética del cuerpo Quaternius sigue siendo low-poly; el resultado es un experimento de integración y no una solución AAA. Se incluye en la ficha como comparación opcional, sin reemplazar al caballo original Run Cycle ni cambiar los 99 corredores restantes.
+- Build público de referencia `btc-native-run-cycle-20261115-v2-cc0-groom`; invalidación de caché desde `racers/index.html` y `racers/racers.js`; registro BTC en `racers/btc-master-revision.json`.
+- Pendientes: comprobar Hostinger, 6 cámaras × 16 fases, contacto de cascos, naturalidad de crin/cola, rendimiento móvil y aprobación del usuario.
