@@ -167,11 +167,22 @@ function cropMayaHind(anatomy){
   return id;
  };
  const join=(a,b)=>{a=root(a);b=root(b);if(a!==b)parent[a]=b;};
- const edgeOwner=new Map();
+ // Maya can split vertex IDs at material/UV seams even where positions
+ // coincide. Shared-edge classification by index alone misses real spatial
+ // neighbors and can incorrectly identify skin fragments as independent.
+ // Weld only for TOPOLOGICAL CONNECTIVITY, never alter geometry or weights.
+ const welded=new Map(),edgeOwner=new Map();
+ function weldedId(v){
+  const key=[xyz[3*v],xyz[3*v+1],xyz[3*v+2]]
+   .map(n=>Math.round(n*1e7)).join(':');
+  if(!welded.has(key))welded.set(key,welded.size);
+  return welded.get(key);
+ }
  for(let i=0;i<next.length;i+=3){
-  const tri=i/3,vs=[next[i],next[i+1],next[i+2]];
+  const tri=i/3,vs=[next[i],next[i+1],next[i+2]].map(weldedId);
   for(let k=0;k<3;k++){
    const a=vs[k],b=vs[(k+1)%3];
+   if(a===b)continue;
    const key=a<b?a+':'+b:b+':'+a;
    if(edgeOwner.has(key))join(tri,edgeOwner.get(key));
    else edgeOwner.set(key,tri);
