@@ -1,4 +1,4 @@
-name: BTC original run-cycle · public source viewer deployment check
+name: BTC CC0 hair · original run and optional gallop groom public check
 on:
   push:
     branches: [main]
@@ -19,7 +19,7 @@ jobs:
         run: |
           set -uo pipefail
           ROOT='https://race.cryptodromo.com'
-          expected='btc-native-run-cycle-20261115-v1'
+          expected='btc-native-run-cycle-20261115-v2-cc0-groom'
           verified=0
           for attempt in 1 2 3 4 5; do
             statusA=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-profile.html "$ROOT/racers/?v=$GITHUB_SHA-$attempt" || true)
@@ -28,23 +28,30 @@ jobs:
             statusD=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-cycle.js "$ROOT/racers/btc-native-cycle.js?v=$GITHUB_SHA-$attempt" || true)
             statusE=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-build.json "$ROOT/racers/btc-master-revision.json?v=$GITHUB_SHA-$attempt" || true)
             statusF=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-licences.html "$ROOT/licences/?v=$GITHUB_SHA-$attempt" || true)
-            echo "Attempt $attempt HTTP profile=$statusA index=$statusB main_js=$statusC sketchfab_js=$statusD build=$statusE licences=$statusF"
-            if [[ "$statusA" == 200 && "$statusB" == 200 && "$statusC" == 200 && "$statusD" == 200 && "$statusE" == 200 && "$statusF" == 200 ]] &&
+            statusG=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-groom.js "$ROOT/racers/btc-cc0-groom.js?v=$GITHUB_SHA-$attempt" || true)
+            statusH=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-atl.js "$ROOT/racers/btc-atelier-preview.js?v=$GITHUB_SHA-$attempt" || true)
+            echo "Attempt $attempt HTTP profile=$statusA index=$statusB main_js=$statusC sketchfab_js=$statusD build=$statusE licences=$statusF groom=$statusG atelier=$statusH"
+            if [[ "$statusA" == 200 && "$statusB" == 200 && "$statusC" == 200 && "$statusD" == 200 && "$statusE" == 200 && "$statusF" == 200 && "$statusG" == 200 && "$statusH" == 200 ]] &&
                grep -Fq "$expected" /tmp/btc-index.html &&
                grep -Fq "$expected" /tmp/btc-main.js &&
                grep -Fq '8451f03cb1564436bfaa3964dd619a86' /tmp/btc-cycle.js &&
                grep -Fq '7e24b8c46d284b519d416035e6445903' /tmp/btc-cycle.js &&
                grep -Fq 'animation_autoplay=1' /tmp/btc-cycle.js &&
+               grep -Fq 'createBTCCC0Groom' /tmp/btc-groom.js &&
+               grep -Fq 'btcMaster' /tmp/btc-main.js &&
+               grep -Fq 'cc0groom' /tmp/btc-main.js &&
+               grep -Fq 'createBTCCC0Groom' /tmp/btc-atl.js &&
+               grep -Fq 'Crin + cola CC0' /tmp/btc-index.html &&
                grep -Fq "$expected" /tmp/btc-build.json &&
-               grep -Fq 'WildMesh' /tmp/btc-licences.html; then
+               grep -Fq 'Crin y cola CC0' /tmp/btc-licences.html; then
               verified=1
-              echo '::notice::HOSTINGER_BTC_NATIVE_RUN_CYCLE_SOURCE_CODE_DEPLOYED'
+              echo '::notice::HOSTINGER_BTC_CC0_GROOM_CODE_DEPLOYED'
               break
             fi
             sleep 10
           done
           if [[ "$verified" == 0 ]]; then
-            echo '::warning::Hostinger has NOT served original BTC run-cycle code yet. Do not claim public deployment. This is not a broken GitHub build.'
+            echo '::warning::Hostinger has NOT served BTC CC0 hair code yet. Do not claim public deployment. This is not a broken GitHub build.'
           fi
           echo "btc_public_source_embed_code_verified=$verified" >> "$GITHUB_STEP_SUMMARY"
-          echo 'Original morph animation source is hosted by Sketchfab; this check verifies publication of app code and model UID, NOT third-party iframe animation frames.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Code and asset references verified; original RUN viewer and optional CC0 3D groom/real Gallop remain subject to in-browser visual QA.' >> "$GITHUB_STEP_SUMMARY"
