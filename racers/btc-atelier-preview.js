@@ -6,7 +6,8 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
-import {createWildMeshHorse} from './btc-wildmesh-horse.js?v=btc-wildmesh-retarget-20261115-qa02';
+import {createWildMeshHorse} from './btc-wildmesh-horse.js?v=btc-wildmesh-retarget-20261115-qa03';
+import {createWildMeshSketchfabFallback} from './btc-wildmesh-sketchfab.js?v=btc-wildmesh-retarget-20261115-qa03';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-v21-ocular-tail-root-20261107-v1';
@@ -56,6 +57,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  // The 3D profile now displays the same hoof contact VFX engine as the stadium.
  // This never changes the animal skin/rig or official race coordinates.
  const terrain=createBTCTerrainStage(scene,{platform,pedestalRing,renderer});
+ const sourceEmbed=createWildMeshSketchfabFallback(canvas);
  let terrainSurface='dirt',terrainWetness=0;
 
  let heldPoseTime=0,heldPoseIndex=null;
@@ -86,7 +88,17 @@ export function createPreview(canvas,onFailure=()=>{}){
    let next;
    if(wantsWildMesh){
     try{next=await createWildMeshHorse({height:2.5,mode:paused?'Idle':'Gallop',showTack:false});}
-    catch(error){console.warn('WildMesh BTC candidate unavailable, keeping previous authored Gallop:',error);}
+    catch(error){
+     // Do NOT pretend that old V21 is the new model if the GLB upload is missing.
+     console.warn('WildMesh BTC retargeted GLB not hosted; showing genuine WildMesh source preview:',error);
+     if(disposed||request!==selection)return;
+     const prev=horse,prevHero=hero;
+     horse=null;hero=null;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
+     terrain.setVisible(false);sourceEmbed.show();
+     renderedSymbol='BTC';renderedVariant='wildmesh-source-embed';
+     prevHero?.dispose();prev?.dispose();
+     return;
+    }
    }
    if(!next)next=await createHorse({
     coat:token.symbol==='BTC'?(/^#[0-9a-f]{6}$/i.test(token.mayaAppearance?.coatColor||'')?token.mayaAppearance.coatColor:'#a36b4e'):token.coat,
@@ -118,7 +130,7 @@ export function createPreview(canvas,onFailure=()=>{}){
      nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,coatOptions);
     }
    }catch(error){next.dispose();throw error;}
-   scene.add(next.root);
+   sourceEmbed.hide();scene.add(next.root);
    const prev=horse,prevHero=hero;
    horse=next;hero=nextHero;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
    terrain.reset();
@@ -184,7 +196,7 @@ export function createPreview(canvas,onFailure=()=>{}){
  return {
   select,pause,setVariant,setPose,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
   snapshot:()=>({
-   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
+   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse||sourceEmbed.active,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
    originalAsset:true,assetType:horse?.isWildMesh?'wildmesh':'quaternius',jockey:false,maneEnabled:!!hero||!!horse?.isWildMesh,
    maneMotion:horse?.isWildMesh?'bone-keyframes':hero?'animated':null,tailMotion:horse?.isWildMesh?'retargeted-keys':hero?'animated':null,
    hairSystem:null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
@@ -193,7 +205,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   dispose(){
    if(disposed)return;disposed=true;selection++;
    renderer.setAnimationLoop(null);observer.disconnect();controls.dispose();
-   terrain.dispose();hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);scene.remove(tailRim);
+   terrain.dispose();sourceEmbed.dispose();hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);scene.remove(tailRim);
    pedestalRing.geometry.dispose();pedestalRing.material.dispose();
    platformGeo.dispose();platformMat.dispose();renderer.dispose();
   }
