@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
 import {createWildMeshHorse} from './btc-wildmesh-horse.js?v=btc-wildmesh-retarget-20261115-qa03';
-import {createWildMeshSketchfabFallback} from './btc-wildmesh-sketchfab.js?v=btc-wildmesh-retarget-20261115-qa03';
+import {createWildMeshSketchfabFallback} from './btc-wildmesh-sketchfab.js?v=btc-wildmesh-bitcoin-20261115-v1';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-v21-ocular-tail-root-20261107-v1';
@@ -94,7 +94,7 @@ export function createPreview(canvas,onFailure=()=>{}){
      if(disposed||request!==selection)return;
      const prev=horse,prevHero=hero;
      horse=null;hero=null;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
-     terrain.setVisible(false);sourceEmbed.show();
+     terrain.setVisible(false);sourceEmbed.show(token);
      renderedSymbol='BTC';renderedVariant='wildmesh-source-embed';
      prevHero?.dispose();prev?.dispose();
      return;
@@ -197,7 +197,7 @@ export function createPreview(canvas,onFailure=()=>{}){
   select,pause,setVariant,setPose,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
   snapshot:()=>({
    symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse||sourceEmbed.active,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
-   originalAsset:true,assetType:horse?.isWildMesh?'wildmesh':'quaternius',jockey:false,maneEnabled:!!hero||!!horse?.isWildMesh,
+   originalAsset:true,assetType:sourceEmbed.active?'wildmesh-sketchfab':horse?.isWildMesh?'wildmesh':'quaternius',sourceEmbed:sourceEmbed.snapshot(),jockey:false,maneEnabled:!!hero||!!horse?.isWildMesh,
    maneMotion:horse?.isWildMesh?'bone-keyframes':hero?'animated':null,tailMotion:horse?.isWildMesh?'retargeted-keys':hero?'animated':null,
    hairSystem:null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
    hoofPhase:horse?.hoofPhase||0,terrain:terrain.snapshot(),drawCalls:renderer.info.render.calls
