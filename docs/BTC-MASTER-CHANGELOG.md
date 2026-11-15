@@ -241,3 +241,19 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - New build identifier `btc-wildmesh-bitcoin-20261115-v1`, propagated through `racers/index.html`, `racers/racers.js`, `btc-atelier-preview.js`, loader and manifest. Explicit prior-version selectors remain intact.
 - **Crucial limitation:** the source Sketchfab embed does NOT include the Quaternius→WildMesh Gallop retarget. That animation exists as a local candidate GLB and is not hosted in GitHub/Hostinger. No false claim of an online galloping model.
 - QA pending: ensure the external Sketchfab API accepts material edits in the live iframe and visually confirm saddle orange. If it doesn't, iframe still shows an authentic interactive model with correct BTC surround and credits.
+
+
+## 2026-11-15 · BTC native animation pivot (original morph run/trot/walk)
+
+**Nuevo build**: `btc-native-run-cycle-20261115-v1`. El usuario rechazó la recoloración/API y el retarget WildMesh como principal. Se abandona esa vía a favor de los archivos 3D originales con ciclos auténticos en su propia malla.
+
+- **Run**: `horse_run_cycle_on_place.glb`, modelo de Amitesh Nandan (Sketchfab `8451f03cb1564436bfaa3964dd619a86`), 12 morph targets, 13 keyframes, duración 0,5 s. Carrera original sin retargeting.
+- **Trot**: `horse_trot.glb`, Sketchfab `7e24b8c46d284b519d416035e6445903`, 20 morph targets, 21 keyframes.
+- **Walk**: `horse_walk.glb`, Sketchfab `93b53ddcec414592842753d1819f3133`, 32 morph targets, 33 keyframes.
+- Estos tres GLB se proporcionaron por el propietario. El JSON glTF confirma `skins: 0`, una pista de morph `weights` por archivo. Son 3 mallas distintas y no se pueden combinar en un `AnimationMixer` común sin conversión de morfologías/topología.
+- `racers/btc-native-cycle.js` presenta los **embeds originales del autor** con `autostart=1&animation_autoplay=1` y controles propios de elección, frente a una capa BTC de branding independiente `#F7931A`.
+- `racers/btc-atelier-preview.js` usa la variante `cycle` por defecto sólo para BTC. Las variantes antiguas WildMesh y Maya se conservan para comparación. Cualquier otro token sigue con el caballo base/fixtures ya establecidos.
+- **Licencia importante**: 3 recursos CC BY-ND 4.0. No mezclar/transferir crin ni cola al GLB distribuido porque la licencia no autoriza redistribuir adaptaciones. Se conserva el autor original y sus colaboradores en la UI y `/licences/`.
+- QA: comprobar movimiento real público del iframe; CI sólo puede verificar publicación de archivos y marcadores, no demostrar visualmente la animación en Sketchfab.
+- El GLB WildMesh Gallop retarget sigue sólo en el artefacto de prueba local y **no** se ha publicado. No se declara validación AAA.
+
