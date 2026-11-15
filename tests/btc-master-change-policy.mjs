@@ -23,6 +23,16 @@ test('master revision matches the actually selected BTC 3D render build',()=>{
   assert.ok(match,'native GLB lookdev build identifier missing');
   assert.equal(revision.buildId,match[1],'Public BTC fiche must describe the native GLB master');
   assert.match(racers,/requestedBTCMaster==='maya'\?'maya'/,'Maya remains explicit debug only');
+ }else if(revision.masterId==='horse-run-cycle-on-place-cc-by-nd-4'){
+  const source=read('racers/btc-native-cycle.js');
+  const match=source.match(/export const BTC_CYCLE_BUILD='([^']+)'/);
+  assert.ok(match,'Native BTC run-cycle build identifier missing');
+  assert.equal(revision.buildId,match[1],'BTC ficha must match its selected original run cycle');
+  assert.match(racers,/requestedBTCMaster==='wildmesh'\?'wildmesh':'cycle'/);
+  assert.match(source,/8451f03cb1564436bfaa3964dd619a86/);
+  assert.match(source,/animation_autoplay=1/);
+  assert.match(read('racers/btc-atelier-preview.js'),/createBTCCyclePreview/);
+  assert.equal(revision.status,'pending_deploy');
  }else if(revision.masterId==='wildmesh-3d-horse-demo-cc-by-nc-4'){
   const candidate=read('racers/btc-wildmesh-horse.js');
   const embed=read('racers/btc-wildmesh-sketchfab.js');
