@@ -468,7 +468,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // Candidate P0 visual surgery: lower the Quaternius donor thigh collar by 0.7 mm
   // to keep its high polygon rim out of the Maya rump in rear poses.
   // The full 16-phase WebGL gate must determine whether this creates a gap.
-  return y>.00385&&z<.0239&&Math.abs(x)>.0010;
+  return y>.00385&&z<.0226&&Math.abs(x)>.0010;
   });
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
@@ -518,8 +518,8 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
-   if(z<=.0208||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((z-.0208)/(.0239-.0208),0,1);
+   if(z<=.0208||z>=.0226||y<.0039||Math.abs(x)<.0010)continue;
+   const u=THREE.MathUtils.clamp((z-.0208)/(.0226-.0208),0,1);
    const t=u*u*(3-2*u),side=Math.sign(x);
    donorPoint.set(x,y,z);
    let best=null,bestDist=Infinity;
