@@ -46,10 +46,10 @@ function cropMayaHind(anatomy){
   {id:'y',f:v=>xyz[3*v+1]-.0043},
   // P0 visual candidate: rear-00/rear-08 of run 43703166983 still show
   // native triangular flaps near the tail dock. Narrow the retained
-  // centerline bridge from 1.4 to 0.7 mm without cutting x=0.
+  // centerline bridge from 0.7 to 0.2 mm without cutting x=0.
   // Candidate only: accept after 16-phase / six-camera pixel comparison.
-  {id:'L',f:v=>-xyz[3*v]-.00035},
-  {id:'R',f:v=>xyz[3*v]-.00035},
+  {id:'L',f:v=>-xyz[3*v]-.00010},
+  {id:'R',f:v=>xyz[3*v]-.00010},
   // The old Maya hind-foot debris straddles the sagittal x cut. Below
   // the hock (y <= .0095) AND at z <= .002, cut the residual rear-foot tip, including the centerline
   // strip that the bilateral x-threshold leaves behind.
