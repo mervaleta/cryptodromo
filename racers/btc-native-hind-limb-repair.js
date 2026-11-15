@@ -43,7 +43,10 @@ function cropMayaHind(anatomy){
  // cannot be bridged by an edge with two crossings.
  const planes=[
   {id:'z',f:v=>.0208-xyz[3*v+2]},
-  {id:'y',f:v=>xyz[3*v+1]-.0043},
+  // P0 anatomy A/B: remove low hanging Maya rump flaps up to 5.2 mm,
+  // leaving the upper haunch untouched. Must be judged on real WebGL
+  // rear/threeQuarter frames against artifact 14135961152; not approved.
+  {id:'y',f:v=>xyz[3*v+1]-.0052},
   // P0 visual candidate: rear-00/rear-08 of run 43703166983 still show
   // native triangular flaps near the tail dock. Narrow the retained
   // centerline bridge from 0.7 to 0.2 mm without cutting x=0.
