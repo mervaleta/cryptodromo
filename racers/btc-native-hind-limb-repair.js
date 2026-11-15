@@ -454,7 +454,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // Stop the Quaternius thigh collar below the original Maya croup.
    // The old z<.0268 allowed broad donor triangles to climb onto the
    // rump and appear as a jagged skirt in real rear WebGL images.
-   return y>.00385&&z<.0246&&Math.abs(x)>.0010;
+   // Candidate P0 visual surgery: lower the Quaternius donor thigh collar by 0.7 mm
+  // to keep its high polygon rim out of the Maya rump in rear poses.
+  // The full 16-phase WebGL gate must determine whether this creates a gap.
+  return y>.00385&&z<.0239&&Math.abs(x)>.0010;
   });
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
@@ -493,7 +496,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
    if(z<=.0208||y<.0039||Math.abs(x)<.0010)continue;
    // Match the taper's endpoint to the new anatomical collar cutoff.
-   const u=THREE.MathUtils.clamp((z-.0208)/(.0246-.0208),0,1);
+   const u=THREE.MathUtils.clamp((z-.0208)/(.0239-.0208),0,1);
    const t=u*u*(3-2*u);
    const side=Math.sign(x);
    // Four-vertex local MLS collar rather than snapping each donor vertex
@@ -575,10 +578,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
     ]);
     for(let i=0;i<positions.length;i++){
      const [x,y,z]=positions[i];
-     if(z<=.0211||z>=.0243||y<=.0041||edges[i].size<4)continue;
+     if(z<=.0211||z>=.0237||y<=.0041||edges[i].size<4)continue;
      // Pin the transition's endpoints and taper the smoothing to zero
      // there, so no collar silhouette is arbitrarily pulled off the host.
-     const u=(z-.0211)/(.0243-.0211);
+     const u=(z-.0211)/(.0237-.0211);
      const taper=Math.sin(Math.PI*u)**2;
      const alpha=.16*taper;
      const avg=[0,0,0];
