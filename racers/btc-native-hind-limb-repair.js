@@ -495,65 +495,70 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   const hostIndex=hostGeo.getIndex();
   if(!hostIndex)throw Error('BTC V22 cropped Maya host lost its index');
   for(let j=0;j<hostIndex.count;j++)liveHostVertices.add(hostIndex.getX(j));
+  // Project the donor collar onto ACTUAL retained Maya triangles, rather
+  // than averaging four unrelated vertices across a thigh/tail crease.
+  // Closest-point barycentrics also transfer the host triangle's skinned
+  // influences continuously over the surface.
   const attachment=[];
-  for(const i of liveHostVertices){
-   const x=hostPos.getX(i),y=hostPos.getY(i),z=hostPos.getZ(i);
-   if(z>.0207&&z<.032&&y>.0042&&Math.abs(x)>.0012)
-    attachment.push({id:i,x,y,z,side:Math.sign(x)});
+  const va=new THREE.Vector3(),vb=new THREE.Vector3(),vc=new THREE.Vector3();
+  for(let j=0;j<hostIndex.count;j+=3){
+   const ids=[hostIndex.getX(j),hostIndex.getX(j+1),hostIndex.getX(j+2)];
+   const pts=ids.map(id=>new THREE.Vector3(
+    hostPos.getX(id),hostPos.getY(id),hostPos.getZ(id)));
+   const cx=(pts[0].x+pts[1].x+pts[2].x)/3;
+   const cy=(pts[0].y+pts[1].y+pts[2].y)/3;
+   const cz=(pts[0].z+pts[1].z+pts[2].z)/3;
+   if(cz<=.0207||cz>=.032||cy<=.0042||Math.abs(cx)<=.0012)continue;
+   if(pts.some(p=>Math.sign(p.x)!==Math.sign(cx)))continue;
+   attachment.push({ids,pts,side:Math.sign(cx)});
   }
-  if(attachment.length<100)throw Error('BTC V22 host rump attachment surface incomplete');
+  if(attachment.length<30)throw Error('BTC V23 host rump triangles missing');
+  const donorPoint=new THREE.Vector3(),closest=new THREE.Vector3(),
+   bary=new THREE.Vector3(),triangle=new THREE.Triangle();
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
    if(z<=.0208||y<.0039||Math.abs(x)<.0010)continue;
-   // Match the taper's endpoint to the new anatomical collar cutoff.
    const u=THREE.MathUtils.clamp((z-.0208)/(.0239-.0208),0,1);
-   const t=u*u*(3-2*u);
-   const side=Math.sign(x);
-   // Four-vertex local MLS collar rather than snapping each donor vertex
-   // to a DIFFERENT single Maya vertex. Single-vertex snapping created
-   // alternating ridges and dark triangular creases in rear WebGL frames.
-   // Blend both the target surface and the original host skin influences.
-   const nearest=[];
-   for(const v of attachment){
-    if(v.side!==side)continue;
-    const dx=v.x-x,dy=v.y-y,dz=v.z-z;
-    const dist=dx*dx+dy*dy+dz*dz*2.4;
-    if(nearest.length===4&&dist>=nearest[3].dist)continue;
-    let j=0;while(j<nearest.length&&nearest[j].dist<dist)j++;
-    nearest.splice(j,0,{v,dist});
-    if(nearest.length>4)nearest.pop();
-   }
-   if(!nearest.length||nearest[0].dist>.000075)continue;
-   const scale=Math.max(nearest[0].dist,1e-10);
-   const influences=new Map();
-   let tx=0,ty=0,tz=0,den=0;
-   for(const {v,dist} of nearest){
-    // Kernel decays before crossing to a different anatomical lobe.
-    const w=1/(1+dist/scale)**2;
-    den+=w;tx+=w*v.x;ty+=w*v.y;tz+=w*v.z;
-   }
-   tx/=den;ty/=den;tz/=den;
-   const blend=t*.98;
-   donorPos.setXYZ(i,
-    THREE.MathUtils.lerp(x,tx-side*.00022,blend),
-    THREE.MathUtils.lerp(y,ty,blend),
-    THREE.MathUtils.lerp(z,tz,blend*.72));
-   const mayaFactor=.88*t;
-   for(let k=0;k<4;k++){
-    const weight=(1-mayaFactor)*donorWeights.getComponent(i,k);
-    if(weight>1e-8){
-     const bone=donorSkin.getComponent(i,k);
-     influences.set(bone,(influences.get(bone)||0)+weight);
+   const t=u*u*(3-2*u),side=Math.sign(x);
+   donorPoint.set(x,y,z);
+   let best=null,bestDist=Infinity;
+   for(const face of attachment){
+    if(face.side!==side)continue;
+    triangle.set(...face.pts);
+    triangle.closestPointToPoint(donorPoint,closest);
+    const dx=closest.x-x,dy=closest.y-y,dz=closest.z-z;
+    const dist=dx*dx+dy*dy+2.4*dz*dz;
+    if(dist<bestDist){
+     bestDist=dist;
+     best={face,point:closest.clone()};
     }
    }
-   for(const {v,dist} of nearest){
-    const w=mayaFactor/(1+dist/scale)**2/den;
+   if(!best||bestDist>.000075)continue;
+   triangle.set(...best.face.pts);
+   THREE.Triangle.getBarycoord(best.point,...best.face.pts,bary);
+   if(![bary.x,bary.y,bary.z].every(Number.isFinite))continue;
+   const blend=t*.98;
+   donorPos.setXYZ(i,
+    THREE.MathUtils.lerp(x,best.point.x-side*.00022,blend),
+    THREE.MathUtils.lerp(y,best.point.y,blend),
+    THREE.MathUtils.lerp(z,best.point.z,blend*.72));
+   const mayaFactor=.88*t,influences=new Map();
+   for(let k=0;k<4;k++){
+    const w=(1-mayaFactor)*donorWeights.getComponent(i,k);
+    if(w>1e-8){
+     const bone=donorSkin.getComponent(i,k);
+     influences.set(bone,(influences.get(bone)||0)+w);
+    }
+   }
+   for(let v=0;v<3;v++){
+    const factor=mayaFactor*bary.getComponent(v);
+    const id=best.face.ids[v];
     for(let k=0;k<4;k++){
-     const weight=w*hostWeights.getComponent(v.id,k);
-     if(weight>1e-8){
-      const bone=hostSkin.getComponent(v.id,k);
-      influences.set(bone,(influences.get(bone)||0)+weight);
+     const w=factor*hostWeights.getComponent(id,k);
+     if(w>1e-8){
+      const bone=hostSkin.getComponent(id,k);
+      influences.set(bone,(influences.get(bone)||0)+w);
      }
     }
    }
