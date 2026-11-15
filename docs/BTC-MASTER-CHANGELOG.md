@@ -231,3 +231,13 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Once `racers/models/btc-wildmesh-gallop-v2.glb` is uploaded, the profile's same loader will automatically prefer the local glTF/Three.js rig + experimental Gallop over Sketchfab. The local candidate remains separately packaged in the user attachment. Commercial deployment requires a separate rights review.
 - The old V21-only CI smoke workflow was updated to recognize QA03 source-model publishing, report warnings rather than generate mail-triggering failures when Hostinger is unsynced, and avoid asserting false 16-phase Gallop completion.
 - **Status:** awaiting Hostinger verification of public card. No claim yet of browser-verified live iframe or retarget GLB availability. Prior render unchanged as rollback.
+
+
+## 2026-11-15 · BTC WildMesh Bitcoin palette v1
+
+- BTC source preview is now integrated with Sketchfab Viewer API 1.12.1 using `getMaterialList` and `setMaterial`; the public WildMesh model remains on its author's hosted viewer, with its PBR texture maps untouched. Colorization is attempted only after `viewerready`, with a direct iframe fallback when the API is unavailable.
+- Values come from `tokenRoster.js` and the BTC profile editor: `#F7931A` for BTC competition accents; natural `coatColor`, `maneColor`, `tailColor` and `hoofColor` passed through token appearance. Dark mane and realistic horse body are preserved; saddle materials `M_Saddle1/M_Saddle2` receive the strongest orange. A branded BTC/Bitcoin heading and SVG mark identify the runner without misleadingly recoloring its entire anatomy.
+- Native Three.js adapter `btc-wildmesh-horse.js` has matching PBR color tints, and shows the original horse's tack when the retargeted GLB eventually becomes available. This does not edit geometry, weights or the remaining 99 horses.
+- New build identifier `btc-wildmesh-bitcoin-20261115-v1`, propagated through `racers/index.html`, `racers/racers.js`, `btc-atelier-preview.js`, loader and manifest. Explicit prior-version selectors remain intact.
+- **Crucial limitation:** the source Sketchfab embed does NOT include the Quaternius→WildMesh Gallop retarget. That animation exists as a local candidate GLB and is not hosted in GitHub/Hostinger. No false claim of an online galloping model.
+- QA pending: ensure the external Sketchfab API accepts material edits in the live iframe and visually confirm saddle orange. If it doesn't, iframe still shows an authentic interactive model with correct BTC surround and credits.
