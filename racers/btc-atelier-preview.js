@@ -6,6 +6,8 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createHorse} from '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1';
+import {createWildMeshHorse} from './btc-wildmesh-horse.js?v=btc-wildmesh-retarget-20261115-qa03';
+import {createWildMeshSketchfabFallback} from './btc-wildmesh-sketchfab.js?v=btc-wildmesh-retarget-20261115-qa03';
 import {createBTCHeroV5} from './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4';
 import {createBTCHeroV4} from './btc-hero-v4.js?v=btc-real-hero-v4-20261103';
 import {createBTCHeroMaya} from './btc-maya-master.js?v=btc-v21-ocular-tail-root-20261107-v1';
@@ -55,10 +57,11 @@ export function createPreview(canvas,onFailure=()=>{}){
  // The 3D profile now displays the same hoof contact VFX engine as the stadium.
  // This never changes the animal skin/rig or official race coordinates.
  const terrain=createBTCTerrainStage(scene,{platform,pedestalRing,renderer});
+ const sourceEmbed=createWildMeshSketchfabFallback(canvas);
  let terrainSurface='dirt',terrainWetness=0;
 
  let heldPoseTime=0,heldPoseIndex=null;
- let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='original'?'original':stageParams.get('btcMaster')==='v5'?'enhanced':'maya',renderedSymbol=null,renderedVariant=null,frameHeld=false;
+ let horse=null,hero=null,selected=null,selection=0,disposed=false,variant=stageParams.get('btcMaster')==='original'?'original':stageParams.get('btcMaster')==='v5'?'enhanced':stageParams.get('btcMaster')==='maya'?'maya':'wildmesh',renderedSymbol=null,renderedVariant=null,frameHeld=false;
  let paused=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches||false;
  let wind=.95,speed=1,cameraView='profile',maneSize=1.22,tailSize=1.16,hairColor='#352721';
  const resize=()=>{
@@ -80,8 +83,24 @@ export function createPreview(canvas,onFailure=()=>{}){
   const token=selected;if(!token||disposed)return;
   const request=++selection;
   const candidate=(variant==='enhanced'||variant==='baseline'||variant==='maya')&&token.symbol==='BTC';
+  const wantsWildMesh=variant==='wildmesh'&&token.symbol==='BTC';
   try{
-   const next=await createHorse({
+   let next;
+   if(wantsWildMesh){
+    try{next=await createWildMeshHorse({height:2.5,mode:paused?'Idle':'Gallop',showTack:false});}
+    catch(error){
+     // Do NOT pretend that old V21 is the new model if the GLB upload is missing.
+     console.warn('WildMesh BTC retargeted GLB not hosted; showing genuine WildMesh source preview:',error);
+     if(disposed||request!==selection)return;
+     const prev=horse,prevHero=hero;
+     horse=null;hero=null;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
+     terrain.setVisible(false);sourceEmbed.show();
+     renderedSymbol='BTC';renderedVariant='wildmesh-source-embed';
+     prevHero?.dispose();prev?.dispose();
+     return;
+    }
+   }
+   if(!next)next=await createHorse({
     coat:token.symbol==='BTC'?(/^#[0-9a-f]{6}$/i.test(token.mayaAppearance?.coatColor||'')?token.mayaAppearance.coatColor:'#a36b4e'):token.coat,
     accent:token.color,symbol:token.symbol,height:2.5,
     mode:paused?'Idle':'Gallop',maneMotion:variant==='original',nativeLookdev:token.symbol==='BTC',
@@ -111,12 +130,12 @@ export function createPreview(canvas,onFailure=()=>{}){
      nextHero=(variant==='maya'?createBTCHeroMaya:variant==='baseline'?createBTCHeroV4:createBTCHeroV5)(next.root,coatOptions);
     }
    }catch(error){next.dispose();throw error;}
-   scene.add(next.root);
+   sourceEmbed.hide();scene.add(next.root);
    const prev=horse,prevHero=hero;
    horse=next;hero=nextHero;frameHeld=false;heldPoseTime=0;heldPoseIndex=null;
    terrain.reset();
-   terrain.setVisible(token.symbol==='BTC'&&terrainSurface!=='off');
-   renderedSymbol=token.symbol;renderedVariant=candidate?variant:'original';
+   terrain.setVisible(token.symbol==='BTC'&&terrainSurface!=='off'&&!next.isWildMesh);
+   renderedSymbol=token.symbol;renderedVariant=next.isWildMesh?'wildmesh':candidate?variant:'original';
    prevHero?.dispose();prev?.dispose();
   }catch(error){
    if(!disposed&&selection===request){console.error('BTC atelier model:',error);onFailure(token,error);}
@@ -141,13 +160,13 @@ export function createPreview(canvas,onFailure=()=>{}){
  function select(token){selected=token;return rebuild();}
  function setStage(next){const p=Math.floor(clamp(next,1,10));if(p!==btcPass){btcPass=p;rebuild();}}
  function setVariant(next){
-  if(next!=='original'&&next!=='enhanced'&&next!=='baseline'&&next!=='maya')return;
+  if(next!=='original'&&next!=='enhanced'&&next!=='baseline'&&next!=='maya'&&next!=='wildmesh')return;
   if(variant!==next){variant=next;rebuild();}
  }
  function setWind(value){wind=clamp(value,0,2);horse?.setWind?.(wind);}
  function setSpeed(value){speed=clamp(value,.5,1.6);}
- function setManeSize(value){maneSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original')rebuild();}
- function setTailSize(value){tailSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original')rebuild();}
+ function setManeSize(value){maneSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original'&&variant!=='wildmesh')rebuild();}
+ function setTailSize(value){tailSize=clamp(value,.65,1.85);if(selected?.symbol==='BTC'&&variant!=='original'&&variant!=='wildmesh')rebuild();}
  function setHairColor(value){if(/^#[0-9a-f]{6}$/i.test(value)){hairColor=value;hero?.setColor(value);}}
  function pause(value){paused=!!value;horse?.play(paused?'Idle':'Gallop',.2);}
  function setTerrainSurface(next){
@@ -177,16 +196,16 @@ export function createPreview(canvas,onFailure=()=>{}){
  return {
   select,pause,setVariant,setPose,setWind,setSpeed,setManeSize,setTailSize,setHairColor,setCamera,setStage,setTerrainSurface,setTerrainWetness,
   snapshot:()=>({
-   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
-   originalAsset:true,jockey:false,maneEnabled:!!hero,
-   maneMotion:hero?'animated':null,tailMotion:hero?'animated':null,
+   symbol:renderedSymbol,variant:renderedVariant,btcPass,fixedFrame,heldPoseIndex,requestedSymbol:selected?.symbol||null,requestedVariant:variant,ready:!!horse||sourceEmbed.active,paused,wind,speed,maneSize,tailSize,hairColor,camera:cameraView,
+   originalAsset:true,assetType:horse?.isWildMesh?'wildmesh':'quaternius',jockey:false,maneEnabled:!!hero||!!horse?.isWildMesh,
+   maneMotion:horse?.isWildMesh?'bone-keyframes':hero?'animated':null,tailMotion:horse?.isWildMesh?'retargeted-keys':hero?'animated':null,
    hairSystem:null,heroGroom:hero?.snapshot||null,clips:horse?.clips||[],
    hoofPhase:horse?.hoofPhase||0,terrain:terrain.snapshot(),drawCalls:renderer.info.render.calls
   }),
   dispose(){
    if(disposed)return;disposed=true;selection++;
    renderer.setAnimationLoop(null);observer.disconnect();controls.dispose();
-   terrain.dispose();hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);scene.remove(tailRim);
+   terrain.dispose();sourceEmbed.dispose();hero?.dispose();horse?.dispose();scene.remove(platform);scene.remove(pedestalRing);scene.remove(tailRim);
    pedestalRing.geometry.dispose();pedestalRing.material.dispose();
    platformGeo.dispose();platformMat.dispose();renderer.dispose();
   }
