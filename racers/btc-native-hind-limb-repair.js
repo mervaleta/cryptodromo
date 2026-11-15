@@ -546,11 +546,20 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    triangle.set(...best.face.pts);
    THREE.Triangle.getBarycoord(best.point,...best.face.pts,bary);
    if(![bary.x,bary.y,bary.z].every(Number.isFinite))continue;
+   // The prior unconstrained projection could move a donor collar vertex
+   // several times its local edge length, producing stretched dark triangles
+   // in rear/3Q WebGL frames. Limit the *actual 3D displacement* instead
+   // of clipping each axis independently. This preserves the anatomical
+   // donor silhouette when the host is near but not genuinely coincident.
    const blend=t*.98;
-   donorPos.setXYZ(i,
-    THREE.MathUtils.lerp(x,best.point.x-side*.00022,blend),
-    THREE.MathUtils.lerp(y,best.point.y,blend),
-    THREE.MathUtils.lerp(z,best.point.z,blend*.72));
+   const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00022,blend);
+   const targetY=THREE.MathUtils.lerp(y,best.point.y,blend);
+   const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.72);
+   const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
+   const displacement=Math.hypot(deltaX,deltaY,deltaZ);
+   const maxDisplacement=.00085;
+   const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
+   donorPos.setXYZ(i,x+deltaX*safe,y+deltaY*safe,z+deltaZ*safe);
    const mayaFactor=.88*t,influences=new Map();
    for(let k=0;k<4;k++){
     const w=(1-mayaFactor)*donorWeights.getComponent(i,k);
