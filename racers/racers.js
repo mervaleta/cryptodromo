@@ -44,7 +44,7 @@ const requestedBTCMaster=new URLSearchParams(location.search).get('btcMaster');
 document.body.classList.toggle('btc-maya-debug',requestedBTCMaster!=='original');
 // V5 uses original GLB bones + authored Gallop and restores volumetric mane/tail.
 // ?btcMaster=original is an explicit rollback; malformed Maya is diagnostic-only.
-let atelierVariant=requestedBTCMaster==='original'?'original':requestedBTCMaster==='v5'?'enhanced':requestedBTCMaster==='maya'?'maya':requestedBTCMaster==='wildmesh'?'wildmesh':'cycle';
+let atelierVariant=requestedBTCMaster==='cc0groom'?'cc0groom':requestedBTCMaster==='original'?'original':requestedBTCMaster==='v5'?'enhanced':requestedBTCMaster==='maya'?'maya':requestedBTCMaster==='wildmesh'?'wildmesh':'cycle';
 let btcRevision=null;
 function renderBTCRevision(){
  const panel=$('#btc-master-revision');
@@ -67,7 +67,7 @@ function renderBTCRevision(){
 }
 async function loadBTCRevision(){
  try{
-  const response=await fetch('/racers/btc-master-revision.json?v=btc-native-run-cycle-20261115-v1',{cache:'no-store'});
+  const response=await fetch('/racers/btc-master-revision.json?v=btc-native-run-cycle-20261115-v2-cc0-groom',{cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
   if(data?.symbol!=='BTC'||typeof data.buildId!=='string'||!Array.isArray(data.openIssues))
@@ -148,7 +148,7 @@ function fallback(token){
 }
 // The directory remains usable when WebGL or the external Three.js module is unavailable.
 // Only explicit BTC atelier requests load the pilot module. Normal profiles keep the stable preview.
-const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-native-run-cycle-20261115-v1':'./horse-preview.js?v=alpha18-gaitmane-1';
+const previewModule=btcAtelier?'./btc-atelier-preview.js?v=btc-native-run-cycle-20261115-v2-cc0-groom':'./horse-preview.js?v=alpha18-gaitmane-1';
 if(btcAtelier){
  const changeVariant=variant=>{
   atelierVariant=variant;
