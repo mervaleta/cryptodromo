@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone as cloneSkinned} from 'three/addons/utils/SkeletonUtils.js';
 
-export const BTC_WILDMESH_RENDER_BUILD='btc-wildmesh-retarget-20261115-qa03';
+export const BTC_WILDMESH_RENDER_BUILD='btc-wildmesh-bitcoin-20261115-v1';
 export const BTC_WILDMESH_URL='/racers/models/btc-wildmesh-gallop-v2.glb';
 const MIME_GALLOP='Gallop_Retarget_QA_Quaternius_to_WildMesh';
 let sourcePromise;
@@ -27,7 +27,7 @@ async function sourceGLTF(){
 }
 /** Interface compatible with the existing BTC profile preview, but the original
  * Quaternius rig never binds to, skins, or deforms WildMesh's mesh. */
-export async function createWildMeshHorse({height=2.5,mode='Gallop',showTack=false}={}){
+export async function createWildMeshHorse({height=2.5,mode='Gallop',showTack=true,coat='#55352c',accent='#f7931a',maneColor='#342922',tailColor='#342922'}={}){
  const src=await sourceGLTF();
  const model=cloneSkinned(src.scene);
  const root=new THREE.Group();
@@ -39,13 +39,14 @@ export async function createWildMeshHorse({height=2.5,mode='Gallop',showTack=fal
  // The Sketchfab file is authored in large scene units; offset must scale too.
  model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
  root.add(model);
- const mats=new Set();
+ const mats=new Set();const bindings=[];
  model.traverse(object=>{
   if(!object.isMesh)return;
   object.castShadow=true;object.receiveShadow=true;object.frustumCulled=false;
   const originals=Array.isArray(object.material)?object.material:[object.material];
   const assigned=originals.map(old=>{
    const copy=old.clone();mats.add(copy);
+   bindings.push({material:copy,name:old.name,base:old.color?.clone()});
    if(copy.name==='M_Hair')copy.side=THREE.DoubleSide;
    return copy;
   });
@@ -76,12 +77,29 @@ export async function createWildMeshHorse({height=2.5,mode='Gallop',showTack=fal
    mixer.update(dt*Math.max(0,Number(speed)||0));
    if(active?.getClip()?.duration)phase=(active.time/active.getClip().duration)%1;
   },
-  setWind(){},setWetness(){},setBank(){},setVisualQuality(){},setCoatFinish(){},setAppearance(){},
+  setWind(){},setWetness(){},setBank(){},setVisualQuality(){},setCoatFinish(){},
+  setAppearance(next={}){
+   // Reuse the same BTC token palette as the profile catalog. Preserve PBR
+   // baseColor textures and eye materials; no flat orange body paint.
+   coat=next.coat||coat;accent=next.accent||accent;
+   maneColor=next.maneColor||maneColor;tailColor=next.tailColor||tailColor;
+   const white=new THREE.Color('#ffffff');
+   const tint=(hex,weight)=>white.clone().lerp(new THREE.Color(hex),weight);
+   for(const {material,name,base} of bindings){
+    if(!base||!material.color)continue;
+    if(name==='M_Body')material.color.copy(base).multiply(tint(coat,.21));
+    else if(name==='M_Hair')material.color.copy(base).multiply(tint(maneColor,.38));
+    else if(name==='M_Saddle1'||name==='M_Saddle2')material.color.copy(base).multiply(tint(accent,.98));
+    else material.color.copy(base);
+    material.needsUpdate=true;
+   }
+  },
   dispose(){
    mixer.stopAllAction();mixer.uncacheRoot(model);root.removeFromParent();mats.forEach(m=>m.dispose());
    // Geometry + textures belong to cached sourceGLTF. Do not dispose shared resources.
   }
  };
+ api.setAppearance({coat,accent,maneColor,tailColor});
  api.play(mode,0.01);
  return api;
 }
