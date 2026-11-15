@@ -551,6 +551,49 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    }
    insetVertices++;reattachedWeights++;
   }
+  // BTC collar curvature relax (candidate, not a version): smooth only
+  // the refined donor's upper transition, where the four-neighbor host
+  // projection creates alternating triangular peaks in rear WebGL.
+  // Preserve the lower hock/fetlock and the exact outer rim endpoints.
+  // Shared indexed vertices receive the same displacement, so this cannot
+  // introduce a new T-junction. Validate all faces below before rendering.
+  {
+   const edges=Array.from({length:donorPos.count},()=>new Set());
+   const indices=donorGeo.getIndex();
+   for(let j=0;j<indices.count;j+=3){
+    const a=indices.getX(j),b=indices.getX(j+1),c=indices.getX(j+2);
+    edges[a].add(b);edges[a].add(c);
+    edges[b].add(a);edges[b].add(c);
+    edges[c].add(a);edges[c].add(b);
+   }
+   const original=Array.from({length:donorPos.count},(_,i)=>[
+    donorPos.getX(i),donorPos.getY(i),donorPos.getZ(i)
+   ]);
+   for(let pass=0;pass<2;pass++){
+    const positions=Array.from({length:donorPos.count},(_,i)=>[
+     donorPos.getX(i),donorPos.getY(i),donorPos.getZ(i)
+    ]);
+    for(let i=0;i<positions.length;i++){
+     const [x,y,z]=positions[i];
+     if(z<=.0211||z>=.0243||y<=.0041||edges[i].size<4)continue;
+     // Pin the transition's endpoints and taper the smoothing to zero
+     // there, so no collar silhouette is arbitrarily pulled off the host.
+     const u=(z-.0211)/(.0243-.0211);
+     const taper=Math.sin(Math.PI*u)**2;
+     const alpha=.16*taper;
+     const avg=[0,0,0];
+     for(const v of edges[i])for(let k=0;k<3;k++)avg[k]+=positions[v][k];
+     for(let k=0;k<3;k++)avg[k]/=edges[i].size;
+     const target=positions[i].map((v,k)=>v+alpha*(avg[k]-v));
+     // Avoid crossing the sagittal midline, or drifting into the tail cap.
+     if(Math.sign(target[0])!==Math.sign(original[i][0]))continue;
+     donorPos.setXYZ(i,...target);
+    }
+   }
+   donorPos.needsUpdate=true;
+   donorGeo.computeVertexNormals();
+   donorGeo.computeBoundingSphere();
+  }
   // Fail closed before WebGL: a malformed influence or inverted/vanished
   // donor face can otherwise render as a long spike during Gallop.
   // This is a regression gate, NOT visual acceptance of V23.
