@@ -19,7 +19,7 @@ jobs:
         run: |
           set -uo pipefail
           ROOT='https://race.cryptodromo.com'
-          expected='btc-wildmesh-retarget-20261115-qa03'
+          expected='btc-wildmesh-bitcoin-20261115-v1'
           verified=0
           for attempt in 1 2 3 4 5; do
             statusA=$(curl -L -sS --connect-timeout 5 --max-time 16 -w '%{http_code}' -o /tmp/btc-profile.html "$ROOT/racers/?v=$GITHUB_SHA-$attempt" || true)
@@ -33,6 +33,8 @@ jobs:
                grep -Fq "$expected" /tmp/btc-index.html &&
                grep -Fq "$expected" /tmp/btc-main.js &&
                grep -Fq '65d6a70a6721495f938c93e80a5998e4' /tmp/btc-sketchfab.js &&
+               grep -Fq 'getMaterialList' /tmp/btc-sketchfab.js &&
+               grep -Fq 'setMaterial' /tmp/btc-sketchfab.js &&
                grep -Fq "$expected" /tmp/btc-build.json &&
                grep -Fq 'WildMesh' /tmp/btc-licences.html; then
               verified=1
