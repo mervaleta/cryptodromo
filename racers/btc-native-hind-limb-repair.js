@@ -608,12 +608,26 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   // introduce a new T-junction. Validate all faces below before rendering.
   {
    const edges=Array.from({length:donorPos.count},()=>new Set());
-   const indices=donorGeo.getIndex();
+   const indices=donorGeo.getIndex(),edgeUses=new Map();
    for(let j=0;j<indices.count;j+=3){
     const a=indices.getX(j),b=indices.getX(j+1),c=indices.getX(j+2);
     edges[a].add(b);edges[a].add(c);
     edges[b].add(a);edges[b].add(c);
     edges[c].add(a);edges[c].add(b);
+    for(const [u,v] of [[a,b],[b,c],[c,a]]){
+     const key=Math.min(u,v)+':'+Math.max(u,v);
+     edgeUses.set(key,(edgeUses.get(key)||0)+1);
+    }
+   }
+   // Preserve the *actual open cut rim* of the authored limb. The old
+   // Laplacian pass moved rim vertices and stretched triangles toward the
+   // Maya croup, creating dark triangular flaps in rear WebGL views.
+   // A vertex adjacent to a boundary receives a tapered correction,
+   // while boundary vertices remain at their original sewn positions.
+   const rim=new Set();
+   for(const [key,count] of edgeUses){
+    if(count===1)for(const v of key.split(':'))rim.add(Number(v));
+    if(count>2)throw Error('BTC donor collar non-manifold edge '+key);
    }
    const original=Array.from({length:donorPos.count},(_,i)=>[
     donorPos.getX(i),donorPos.getY(i),donorPos.getZ(i)
@@ -624,12 +638,13 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
     ]);
     for(let i=0;i<positions.length;i++){
      const [x,y,z]=positions[i];
-     if(z<=.0211||z>=.0237||y<=.0041||edges[i].size<4)continue;
-     // Pin the transition's endpoints and taper the smoothing to zero
-     // there, so no collar silhouette is arbitrarily pulled off the host.
+     if(z<=.0211||z>=.0237||y<=.0041||edges[i].size<4||rim.has(i))continue;
+     // Pin the transition's endpoints AND the true open rim. Attenuate
+     // the smoothing one edge inward to avoid a hard displacement step.
      const u=(z-.0211)/(.0237-.0211);
      const taper=Math.sin(Math.PI*u)**2;
-     const alpha=.28*taper;
+     const rimNeighbor=[...edges[i]].some(v=>rim.has(v));
+     const alpha=.28*taper*(rimNeighbor?.18:1);
      const avg=[0,0,0];
      for(const v of edges[i])for(let k=0;k<3;k++)avg[k]+=positions[v][k];
      for(let k=0;k<3;k++)avg[k]/=edges[i].size;
