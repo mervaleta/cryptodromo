@@ -268,3 +268,18 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - La estética del cuerpo Quaternius sigue siendo low-poly; el resultado es un experimento de integración y no una solución AAA. Se incluye en la ficha como comparación opcional, sin reemplazar al caballo original Run Cycle ni cambiar los 99 corredores restantes.
 - Build público de referencia `btc-native-run-cycle-20261115-v2-cc0-groom`; invalidación de caché desde `racers/index.html` y `racers/racers.js`; registro BTC en `racers/btc-master-revision.json`.
 - Pendientes: comprobar Hostinger, 6 cámaras × 16 fases, contacto de cascos, naturalidad de crin/cola, rendimiento móvil y aprobación del usuario.
+
+
+## 2026-11-15 · Maestro CC0 unificado para 100 tokens, 12 monturas activas por carrera
+
+**Alcance aprobado por el usuario:** abandonar la mezcla de modelos; usar el caballo Quaternius Ultimate Animated Animals CC0 (rig original + Gallop original), más crin/cola CC0 que ya funcionaron en el prototipo BTC, para las 100 identidades de Cryptódromo.
+
+- `race-lab/source/src/horseGroomCC0.js` crea crines y colas con skinning sobre la malla Hair original. Comparte geometría entre clones y mantiene materiales y uniformes independientes; LOD: 210/140 mechas en GPU de rendimiento, 560/380 en calidad equilibrada, 1350/960 en primer plano. La longitud, el color y el viento se ajustan por token.
+- `race-lab/source/src/horse.js` conserva malla y clip Gallop nativos CC0, `setAppearance`, `setMaterialColors`, `setGroom` y movimiento. El sistema de mechones añade movimiento secundario sin retargeting y sin usar WildMesh ni el modelo SinDerivadas.
+- `race-lab/source/src/tokenHorseFactory.js` implementa la única fábrica y reconoce **exactamente 100** símbolos del roster. Los 100 son perfiles de datos; cada carrera crea/reutiliza **12 modelos skinned**, uno por carril. No se instancian 100 esqueletons simultáneos. El pelaje conserva matiz orgánico cuando no hay personalización publicada, y el branding del token se integra por `horseLivery.js`.
+- `visual-lab/horseRenderer.js`, `visual-lab/scene.js`, `visual-lab/presentationHorse.js`, `race-lab/source/src/main.js` y `racers/horse-preview.js` consumen el mismo maestro. El modo `?horse-engine=procedural` queda como rollback explícito.
+- Se consumen perfiles del editor `/api/horse-profiles.php` únicamente para cosmética. Un fallo de la API devuelve los 100 valores originales del roster. El fixture, coeficientes, precios sintéticos, motor de avance, ranking oficial, cámara, estadios y reloj no cambian.
+- La ficha canónica `/racers/#BTC` pasa por defecto a `cc0groom`, ahora resuelta mediante la fábrica compartida. El caballo Run Cycle de Amitesh Nandan sigue accesible solamente como comparación sin modificaciones, bajo CC BY-ND 4.0. Los diagnósticos antiguos Maya/WildMesh continúan disponibles explícitamente.
+- Build `crp-100-cc0-groom-20261115-v1`; versión de las referencias JS y ficha sincronizada. **Estatus: candidato pendiente de QA en GitHub Actions y Chromium/Hostinger**. No se declara calidad AAA.
+- QA requerido: 100 perfiles únicos, 12 caballos visibles con crin/cola, rendimiento, 16 fases y 6 cámaras de BTC, reproducción de los resultados oficiales sin cambios.
+
