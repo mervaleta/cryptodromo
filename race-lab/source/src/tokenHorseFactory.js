@@ -4,7 +4,7 @@
  * Quaternius Ultimate Animated Animal Pack: CC0 1.0.
  */
 import {TOKEN_ROSTER} from './data/tokenRoster.js';
-import {createHorse} from './horse.js';
+import {createHorse} from './horse.js?v=crp-100-cc0-groom-20261115-v1';
 import {resolveHorseProfile,toMasterHorseOptions,applyHorseProfileToRenderer,fetchPublishedHorseProfiles} from './data/horseProfileAdapter.js';
 
 export const CRP_UNIFIED_HORSE_BUILD='crp-100-cc0-groom-20261115-v1';
