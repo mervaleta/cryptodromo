@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createHorse } from '../race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
+import { createTokenHorse } from '../race-lab/source/src/tokenHorseFactory.js?v=crp-100-cc0-groom-20261115-v1';
 
 export function createPreview(canvas,onFailure=()=>{}){
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -14,7 +14,12 @@ export function createPreview(canvas,onFailure=()=>{}){
   async function select(token){
     const request=++selection;
     try{
-      const next=await createHorse({coat:token.coat,accent:token.color,symbol:token.symbol,height:2.5,mode:paused?'Idle':'Gallop',maneMotion:false});
+      const next=await createTokenHorse(token,{height:2.5,mode:paused?'Idle':'Gallop',quality:'balanced'});
+      if(token.mayaAppearance){
+       const p=token.mayaAppearance;
+       next.setMaterialColors?.({mane:p.maneColor,tail:p.tailColor,muzzle:p.muzzleColor,hoof:p.hoofColor,eye:p.eyeColor});
+       next.setGroom?.({maneScale:p.maneScale,tailScale:p.tailScale,maneStyle:p.maneStyle,tailStyle:p.tailStyle});
+      }
       if(request!==selection){next.dispose();return;}
       next.root.scale.setScalar(.78);scene.add(next.root);next.play(paused?'Idle':'Gallop',0);
       const previous=horse;horse=next;if(previous){scene.remove(previous.root);previous.dispose();}
