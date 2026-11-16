@@ -25,14 +25,32 @@ jobs:
           const b=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
           const ctx=await b.newContext({viewport:{width:1000,height:750}});
           const p=await ctx.newPage();const logs=[],failures=[];
+          await p.route('**/race-lab/source/src/horse.js*',async route=>{
+           const response=await route.fetch();
+           let code=await response.text();
+           const patches=[
+             ["if(!assetPromise){","console.log('CRP_HORSE_DBG_PROMISE_ENTER');if(!assetPromise){"],
+             ["const response=await fetch(MODEL_URL);","console.log('CRP_HORSE_DBG_FETCH_BEGIN');const response=await fetch(MODEL_URL);console.log('CRP_HORSE_DBG_FETCH_END',response.status);"],
+             ["const compressed=await response.arrayBuffer();","const compressed=await response.arrayBuffer();console.log('CRP_HORSE_DBG_BYTES',compressed.byteLength);"],
+             ["const binary=await new Response(stream).arrayBuffer();","const binary=await new Response(stream).arrayBuffer();console.log('CRP_HORSE_DBG_UNZIP',binary.byteLength);"],
+             ["const gltf=await new GLTFLoader().parseAsync(","console.log('CRP_HORSE_DBG_PARSE_BEGIN');const gltf=await new GLTFLoader().parseAsync("],
+             ["smoothHorseNormals(gltf.scene,{strength:.91});","console.log('CRP_HORSE_DBG_PARSE_END');smoothHorseNormals(gltf.scene,{strength:.91});"],
+             ["const asset=await loadHorseAsset(),model=clone(asset.scene);","console.log('CRP_HORSE_DBG_CREATE_ENTER');const asset=await loadHorseAsset(),model=clone(asset.scene);console.log('CRP_HORSE_DBG_CLONE_DONE');"]
+           ];
+           for(const [oldv,newv] of patches){
+            if(!code.includes(oldv))console.log('PATCH_MISS',oldv);
+            code=code.replace(oldv,newv);
+           }
+           await route.fulfill({response,body:code,contentType:'text/javascript'});
+          });
           p.on('pageerror',e=>logs.push('PAGEERROR '+e.message));
-          p.on('console',m=>{if(['error','warn'].includes(m.type()))logs.push(m.type()+': '+m.text());});
+          p.on('console',m=>{if(['error','warn'].includes(m.type())||m.text().startsWith('CRP_HORSE_DBG'))logs.push(m.type()+': '+m.text());});
           p.on('requestfailed',req=>failures.push('FAIL '+req.url()+' '+req.failure()?.errorText));
           p.on('response',r=>{if(r.status()>=400)failures.push('HTTP '+r.status()+' '+r.url())});
           try{
            const res=await p.goto('https://race.cryptodromo.com/race-lab/source/?horse-qa=100&diag=loader-20261115',{waitUntil:'domcontentloaded',timeout:45000});
            console.log('NAV_HTTP',res.status());
-           await p.waitForTimeout(14000);
+           await p.waitForTimeout(17000);
            const s=await p.evaluate(()=>({
             qa:window.__crpUnifiedHorsesQA?.(),
             diag:[...document.querySelectorAll('#sceneWrap>div')].map(x=>x.textContent?.slice(0,120)),
