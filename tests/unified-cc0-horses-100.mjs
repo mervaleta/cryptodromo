@@ -82,7 +82,7 @@ test('the two public race renderers, BTC fiche and programmatic groom use shared
  const btc=get('racers/btc-atelier-preview.js');
  const page=get('racers/index.html');
  assert.match(horse,/createRaceCC0Groom/);
- assert.match(horse,/sharedGroom\.update/);
+ assert.match(horse,/sharedGroom\?\.update/);
  assert.match(groom,/hairAnchor/);
  assert.match(groom,/hair\.skeleton/);
  assert.match(groom,/sharedGeometry/);
