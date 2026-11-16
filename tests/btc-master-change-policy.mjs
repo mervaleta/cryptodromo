@@ -23,6 +23,18 @@ test('master revision matches the actually selected BTC 3D render build',()=>{
   assert.ok(match,'native GLB lookdev build identifier missing');
   assert.equal(revision.buildId,match[1],'Public BTC fiche must describe the native GLB master');
   assert.match(racers,/requestedBTCMaster==='maya'\?'maya'/,'Maya remains explicit debug only');
+ }else if(revision.masterId==='crp-unified-cc0-100'){
+  const factory=read('race-lab/source/src/tokenHorseFactory.js');
+  const renderer=read('visual-lab/horseRenderer.js');
+  const preview=read('racers/btc-atelier-preview.js');
+  const match=factory.match(/export const CRP_UNIFIED_HORSE_BUILD='([^']+)'/);
+  assert.ok(match,'unified Quaternius CC0 master build id missing');
+  assert.equal(revision.buildId,match[1],'BTC fiche build must match the live 100-token factory');
+  assert.match(racers,/requestedBTCMaster==='wildmesh'\?'wildmesh':'cc0groom'/);
+  assert.match(preview,/createTokenHorse/);
+  assert.match(renderer,/createTokenHorse/);
+  assert.match(page,/data-btc-variant="cc0groom" aria-pressed="true"/);
+  assert.equal(revision.status,'pending_deploy');
  }else if(revision.masterId==='horse-run-cycle-on-place-cc-by-nd-4'){
   const source=read('racers/btc-native-cycle.js');
   const match=source.match(/export const BTC_CYCLE_BUILD='([^']+)'/);
