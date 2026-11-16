@@ -5,7 +5,7 @@
  */
 import {TOKEN_ROSTER} from './data/tokenRoster.js';
 import {createHorse} from './horse.js?v=crp-100-cc0-groom-20261115-v1';
-import {resolveHorseProfile,toMasterHorseOptions,applyHorseProfileToRenderer,fetchPublishedHorseProfiles} from './data/horseProfileAdapter.js';
+import {toMasterHorseOptions,fetchPublishedHorseProfiles} from './data/horseProfileAdapter.js';
 
 export const CRP_UNIFIED_HORSE_BUILD='crp-100-cc0-groom-20261115-v1';
 export const CRP_HORSE_TOKEN_COUNT=TOKEN_ROSTER.length;
@@ -33,7 +33,11 @@ export function allTokenIdentities(profiles={}){
 export function updateTokenHorse(horse,token,profiles={}){
  const original=bySymbol.get(token?.symbol);
  if(!original)throw new TypeError('Corredor desconocido: '+String(token?.symbol));
- return applyHorseProfileToRenderer(horse,identitySource(token,original),profiles);
+ const options=tokenIdentity(token,profiles);
+ horse?.setAppearance?.({coat:options.coat,accent:options.accent,symbol:options.symbol});
+ horse?.setMaterialColors?.(options.materials);
+ horse?.setGroom?.(options.groom);
+ return options;
 }
 /**
  * Clone the single CC0 rig, native Gallop, and shared CC0 groom geometry.
