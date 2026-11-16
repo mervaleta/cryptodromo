@@ -1,0 +1,47 @@
+name: Race Lab CC0 loader diagnostic (single run)
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/crp-race-lab-cc0-diag.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Inspect live Race Lab resource and horse model errors
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          const b=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
+          const ctx=await b.newContext({viewport:{width:1000,height:750}});
+          const p=await ctx.newPage();const logs=[],failures=[];
+          p.on('pageerror',e=>logs.push('PAGEERROR '+e.message));
+          p.on('console',m=>{if(['error','warn'].includes(m.type()))logs.push(m.type()+': '+m.text());});
+          p.on('requestfailed',req=>failures.push('FAIL '+req.url()+' '+req.failure()?.errorText));
+          p.on('response',r=>{if(r.status()>=400)failures.push('HTTP '+r.status()+' '+r.url())});
+          try{
+           const res=await p.goto('https://race.cryptodromo.com/race-lab/source/?horse-qa=100&diag=loader-20261115',{waitUntil:'domcontentloaded',timeout:45000});
+           console.log('NAV_HTTP',res.status());
+           await p.waitForTimeout(14000);
+           const s=await p.evaluate(()=>({
+            qa:window.__crpUnifiedHorsesQA?.(),
+            diag:[...document.querySelectorAll('#sceneWrap>div')].map(x=>x.textContent?.slice(0,120)),
+            status:document.querySelector('#raceStatus')?.textContent,
+            models:performance.getEntriesByType('resource').filter(x=>/horse\.glb|horse\.js|tokenHorseFactory|horseGroom/.test(x.name)).map(x=>({name:x.name,duration:x.duration,bytes:x.transferSize}))
+           }));
+           console.log('QA_JSON',JSON.stringify(s));
+           console.log('WARN_AND_ERRORS',JSON.stringify(logs.slice(-35)));
+           console.log('NETWORK_FAILURES',JSON.stringify(failures.slice(-35)));
+          }catch(e){console.log('DIAG_ERROR',e.message);}
+          finally{await ctx.close();await b.close();}
+          JS
