@@ -18,3 +18,10 @@ Cada iteración del maestro debe actualizar:
 **Fase siguiente, NO anticipar:** simulación física de crin y cola, comparada con `212734.mp4` de las fuentes, una vez que los defectos geométricos estén solucionados. Ver `docs/BTC-MANE-TAIL-PHYSICS-BRIEF.md`.
 
 Ni el rig Gallop ni el motor de resultados ni los otros 99 caballos deben alterarse por estos cambios.
+
+
+## Actualización de protocolo · 2026-11-15
+
+**Maestro en producción nuevo:** `racers/index.html → racers/racers.js → racers/btc-atelier-preview.js → race-lab/source/src/tokenHorseFactory.js → horse.js → horseGroomCC0.js`. Los otros 99 tokens ahora utilizan el mismo GLB Quaternius CC0 de forma explícitamente autorizada por el usuario. Ya no corresponde exigir que el maestro activo sea la variante Maya, aunque permanece como herramienta de comparación.
+
+La ficha de BTC sin parámetros debe mostrar `cc0groom`. Todo cambio de aspecto de crin, cola, ojos o pelaje compartido debe aparecer también en la transmisión `visual-lab/scene.js` y el 3D Race Lab. Actualizar `btc-master-revision.json`, changelog y cadenas de caché; comprobar tanto 100 identidades como 12 instancias activas y ranking oficial sin cambios. La condición de calidad AAA queda pendiente de aprobación visual.
