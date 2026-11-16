@@ -63,12 +63,26 @@ jobs:
             await page.waitForFunction(({key,build})=>{
              const state=window[key]?.();
              return !!state&&(state.build===build||state.masterBuild===build)&&
-              (state.activeHorses===12||state.variant==='cc0groom');
+              (state.variant==='cc0groom'||
+               (state.activeHorses===12&&state.groomed===12));
             },{key:c.snapshot,build},{timeout:115000});
             const state=await page.evaluate(key=>window[key]?.(),c.snapshot);
             console.log('STATE_'+c.name.toUpperCase(),JSON.stringify(state));
             if(!c.verify(state))throw new Error('Visual state invariant failed: '+JSON.stringify(state));
             await page.waitForTimeout(700);
+            // The stadium opens in an animated pre-race presentation; verify
+            // the *actual racing track* by entering manual replay and starting it.
+            if(c.name==='stadium'){
+             await page.locator('#replay-mode').click();
+             await page.waitForTimeout(350);
+             await page.locator('#start').click();
+             await page.waitForTimeout(2700);
+             await page.locator('#stage').screenshot({path:'artifacts/unified-cc0/stadium-racing.png',timeout:22000});
+            }
+            if(c.name==='race-lab'){
+             await page.locator('#startButton').click();
+             await page.waitForTimeout(1800);
+            }
             await page.locator(c.target).screenshot({path:'artifacts/unified-cc0/'+c.name+'.png',timeout:18000});
             console.log('PASS_REAL_WEBGL_'+c.name.toUpperCase());
             verified++;
