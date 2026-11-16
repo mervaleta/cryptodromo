@@ -471,7 +471,13 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // Candidate P0 visual surgery: lower the Quaternius donor thigh collar by 1.2 mm
   // to keep its high polygon rim out of the Maya rump in rear poses.
   // The full 16-phase WebGL gate must determine whether this creates a gap.
-  return y>.00385&&z<.0208&&Math.abs(x)>.0010;
+  // BTC posterior collar A/B: the GLB upper rim formerly began 1.35 mm
+  // below the retained Maya flank boundary (y=.0052). That broad overlap
+  // forms a visible triangular skirt in rear/3Q frames. Move the donor
+  // cutoff 0.95 mm toward the retained host, keeping 0.40 mm of overlap
+  // for skinned attachment instead of deleting or faking a seam.
+  // This is an unapproved geometry candidate, not V23.
+  return y>.00480&&z<.0208&&Math.abs(x)>.0010;
   });
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
