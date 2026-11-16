@@ -528,6 +528,23 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   if(attachment.length<30)throw Error('BTC V23 host rump triangles missing');
   const donorPoint=new THREE.Vector3(),closest=new THREE.Vector3(),
    bary=new THREE.Vector3(),triangle=new THREE.Triangle();
+  // Real geometry safeguard: a fixed 0.68 mm projection can exceed the
+  // edge length of the subdivided thigh triangles by several times.
+  // Bound each upper-collar displacement relative to its own local mesh
+  // scale, preventing thin stretched wedges without moving the cut rim.
+  const localMinEdge=new Float32Array(donorPos.count).fill(Infinity);
+  const donorFaces=donorGeo.getIndex();
+  for(let j=0;j<donorFaces.count;j+=3){
+   const ids=[donorFaces.getX(j),donorFaces.getX(j+1),donorFaces.getX(j+2)];
+   for(const [a,b] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
+    const length=Math.hypot(donorPos.getX(a)-donorPos.getX(b),
+     donorPos.getY(a)-donorPos.getY(b),donorPos.getZ(a)-donorPos.getZ(b));
+    if(length>1e-9){
+     localMinEdge[a]=Math.min(localMinEdge[a],length);
+     localMinEdge[b]=Math.min(localMinEdge[b],length);
+    }
+   }
+  }
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
@@ -577,7 +594,8 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.72);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
    const displacement=Math.hypot(deltaX,deltaY,deltaZ);
-   const maxDisplacement=.00068;
+   const maxDisplacement=Math.min(.00068,Number.isFinite(localMinEdge[i])
+    ?Math.max(.00010,localMinEdge[i]*.65):.00068);
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
    donorPos.setXYZ(i,x+deltaX*safe,y+deltaY*safe,z+deltaZ*safe);
    const mayaFactor=.88*t,influences=new Map();
