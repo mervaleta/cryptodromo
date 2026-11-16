@@ -116,7 +116,13 @@ function makeHorse(racer,index){
 }
 let horses=racers.map(makeHorse);
 horses.forEach((h,i)=>{h.laneY=5.35-i*.97;h.root.scale.y=.38;h.root.position.set(-14,h.laneY,.52);h.base=.111;});
-function disposePlaceholder(h){const geometries=new Set(),materials=new Set();h.root.traverse(object=>{if(object.isMesh){if(object.geometry)geometries.add(object.geometry);for(const material of (Array.isArray(object.material)?object.material:[object.material]))if(material)materials.add(material);}});geometries.forEach(geometry=>geometry.dispose());materials.forEach(material=>{material.map?.dispose();material.dispose();});h.root.clear();}
+function disposePlaceholder(h){
+  // Remove placeholder geometry from the scene before installing the loaded rig.
+  // Do not synchronously destroy its GPU geometry/material buffers while the
+  // live renderer uses them: this stalled Chromium/SwiftShader in Race Lab.
+  // These small, one-time placeholder allocations are reclaimed on page close.
+  h.root.clear();
+}
 function setHorseAnimation(mode){horses.forEach(h=>h.model?.play(mode,.28));}
 async function loadAnimatedHorses(){
   try{
