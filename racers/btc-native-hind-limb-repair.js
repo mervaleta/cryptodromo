@@ -47,7 +47,11 @@ function cropMayaHind(anatomy){
   // leaving the upper haunch untouched. Must be judged on real WebGL
   // rear/threeQuarter frames against artifact 14135961152; not approved.
   {id:'y',f:v=>xyz[3*v+1]-.0052},
-  // Real WebGL A/B of run 43703166983 against 43649277060 shows\n  // larger triangular tears at the rump and stifle with x=0.00010.\n  // Restore the conservative 1.5 mm native midline strip while\n  // retaining the improved distal-foot cut and topology safeguards.\n  {id:'L',f:v=>-xyz[3*v]-.0015},
+  // Real WebGL A/B of run 43703166983 against 43649277060 shows
+  // larger triangular tears at the rump and stifle with x=0.00010.
+  // Restore the conservative 1.5 mm native midline strip while
+  // retaining the improved distal-foot cut and topology safeguards.
+  {id:'L',f:v=>-xyz[3*v]-.0015},
   {id:'R',f:v=>xyz[3*v]-.0015},
   // The old Maya hind-foot debris straddles the sagittal x cut. Below
   // the hock (y <= .0095) AND at z <= .002, cut the residual rear-foot tip, including the centerline
