@@ -481,7 +481,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   // 0.55 mm into the intact host to test whether the dark rump/stifle
   // wedge is caused by a zero-overlap butt seam. Keep the native host
   // surface and the original Gallop; no version credit before WebGL A/B.
-  return y>.00500&&z<.02135&&Math.abs(x)>.0010;
+  return y>.00545&&z<.02135&&Math.abs(x)>.0010;
   });
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
