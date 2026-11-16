@@ -17,7 +17,13 @@ export function tokenIdentity(token,profiles={}){
  const original=bySymbol.get(token?.symbol);
  if(!original)throw new TypeError('Corredor desconocido: '+String(token?.symbol));
  // Preserve the authoritative roster's token color and its stable race symbol.
- return toMasterHorseOptions(identitySource(token,original),profiles);
+ const base=identitySource(token,original);
+ const mapped=toMasterHorseOptions(base,profiles);
+ // An unedited token keeps its natural source coat and uses the primary
+ // brand color as its accent. Published editor overrides may opt into a
+ // fully brand-colored coat. This avoids 100 unnaturally neon bodies.
+ if(!Object.hasOwn(profiles,original.symbol))mapped.coat=base.coat;
+ return mapped;
 }
 export function allTokenIdentities(profiles={}){
  // 100 parameters only, never allocate 100 3D skeletons or mixers at once.
