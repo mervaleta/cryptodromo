@@ -54,7 +54,9 @@ jobs:
           await p.route('**/race-lab/source/src/main.js*',async route=>{
            const res=await route.fetch();let code=await res.text();
            code=code.replace("const models=await Promise.all(horses.map(","console.log('CRP_LAB_LOADING_12');const models=await Promise.all(horses.map(");
-           code=code.replace("models.forEach((model,index)=>{","console.log('CRP_LAB_READY_12',models.length);models.forEach((model,index)=>{");
+           code=code.replace("models.forEach((model,index)=>{","console.log('CRP_LAB_READY_12',models.length);models.forEach((model,index)=>{console.log('CRP_LAB_BEFORE_DISPOSE',index);");
+           code=code.replace("disposePlaceholder(h);h.model=model;","disposePlaceholder(h);console.log('CRP_LAB_AFTER_DISPOSE',index);h.model=model;console.log('CRP_LAB_MODEL_ASSIGNED',index);");
+           code=code.replace("    diagnostics.textContent='CC0 CON CRIN Y COLA","    console.log('CRP_LAB_ALL_ASSIGNED');diagnostics.textContent='CC0 CON CRIN Y COLA");
            await route.fulfill({response:res,body:code,contentType:'text/javascript'});
           });
           p.on('pageerror',e=>logs.push('PAGEERROR '+e.message));
@@ -64,7 +66,7 @@ jobs:
           try{
            const res=await p.goto('https://race.cryptodromo.com/race-lab/source/?horse-qa=100&diag=loader-20261115',{waitUntil:'domcontentloaded',timeout:45000});
            console.log('NAV_HTTP',res.status());
-           await p.waitForTimeout(11000);
+           await p.waitForTimeout(6000);
            const s=await p.evaluate(()=>({
             qa:window.__crpUnifiedHorsesQA?.(),
             diag:[...document.querySelectorAll('#sceneWrap>div')].map(x=>x.textContent?.slice(0,120)),
@@ -72,7 +74,7 @@ jobs:
             models:performance.getEntriesByType('resource').filter(x=>/horse\.glb|horse\.js|tokenHorseFactory|horseGroom/.test(x.name)).map(x=>({name:x.name,duration:x.duration,bytes:x.transferSize}))
            }));
            console.log('QA_JSON',JSON.stringify(s));
-           console.log('WARN_AND_ERRORS',JSON.stringify(logs.slice(-35)));
+           console.log('WARN_AND_ERRORS',JSON.stringify(logs.slice(-115)));
            console.log('NETWORK_FAILURES',JSON.stringify(failures.slice(-35)));
           }catch(e){console.log('DIAG_ERROR',e.message);}
           finally{await ctx.close();await b.close();}
