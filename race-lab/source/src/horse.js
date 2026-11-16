@@ -3,6 +3,7 @@ import {createGaitRefiner} from './gaitRefiner.js?v=alpha09-1';
 import {createFurIdentity} from './horseLivery.js?v=alpha14-ticker-1';
 import {smoothHorseNormals} from './horseSurface.js?v=alpha08-1';
 import {createWindMane} from './windMane.js?v=alpha18-gaitmane-1';
+import {createRaceCC0Groom,CRP_UNIFIED_GROOM_BUILD} from './horseGroomCC0.js?v=crp-100-cc0-groom-20261115-v1';
 import {createHorseSurfaceFinish} from './horseVisualQuality.js';
 import {installBTCNativeLookdev} from './btcNativeLookdev.js?v=btc-native-lookdev-20261105-v1';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -28,7 +29,7 @@ async function loadHorseAsset(){
   return assetPromise;
 }
 
-export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop',maneMotion=true,maneGait=null,gaitCorrectionStrength=.40,nativeLookdev=false}={}){
+export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',height=2.5,phase=0,mode='Gallop',maneMotion=true,maneGait=null,gaitCorrectionStrength=.40,nativeLookdev=false,cc0Groom=false,groomQuality='balanced'}={}){
   const asset=await loadHorseAsset(),model=clone(asset.scene);model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model,true),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
   const visual=new THREE.Group();model.position.set(-center.x,-bounds.min.y,-center.z);visual.add(model);visual.scale.setScalar(height/size.y);visual.rotation.y=Math.PI/2;
@@ -52,6 +53,13 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   // Wind animates only the existing Hair vertices before skeletal skinning.
   // The GLB, gait clips, horse silhouette and livery textures stay intact.
   const mane=createWindMane(colorBindings,{seed:phase});
+  // The same Quaternius CC0 hair mesh drives independent skinned mane/tail
+  // ribbons for every token. Geometry is cached, colors/uniforms are per horse.
+  let sharedGroom=null;
+  if(cc0Groom){
+    try{sharedGroom=createRaceCC0Groom(model,{quality:groomQuality,coat,accent,symbol});}
+    catch(error){console.error('CRP shared CC0 groom could not attach:',error);}
+  }
   const reducedMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
   let maneWind=.55;
   const originalTones=new Map();let currentWetness=0;
@@ -69,17 +77,32 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
   const gait=createGaitRefiner(model,{strength:THREE.MathUtils.clamp(Number.isFinite(gaitCorrectionStrength)?gaitCorrectionStrength:.40,0,1)});
   const api={
     root,clips:clips.map(clip=>clip.name),
+    masterBuild:cc0Groom?CRP_UNIFIED_GROOM_BUILD:'quaternius-native',
+    get groomStats(){return sharedGroom?.stats||null;},
+    get groomSnapshot(){return sharedGroom?.snapshot||null;},
     get hoofPhase(){return gait.phase;},
     get maneWindEnabled(){return mane.enabled;},
     get maneMotion(){return mane.motion;},
-    setWind(level=.55){maneWind=Math.max(0,Math.min(2,Number(level)||0));},
+    setWind(level=.55){maneWind=Math.max(0,Math.min(2,Number(level)||0));sharedGroom?.setWind(maneWind);},
     setBank(radians=0){bankGoal=Math.max(-.12,Math.min(.12,Number(radians)||0));},
     setWetness(level){currentWetness=Math.max(0,Math.min(1,Number(level)||0));tintWetness();},
     setVisualQuality(name){surfaceFinish.setQuality(name);},
+    setGroom(style){sharedGroom?.setGroom(style);},
+    setMaterialColors(colors={}){
+      const map={Muzzle:colors.muzzle,Hooves:colors.hoof,Eye_Black:colors.eye,Hair:colors.mane};
+      for(const {material,name} of colorBindings){
+        const color=map[name];
+        if(typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color)){
+          material.color.set(color);originalTones.set(material,material.color.clone());
+        }
+      }
+      sharedGroom?.setMaterialColors(colors);tintWetness();
+    },
     setCoatFinish(level){surfaceFinish.setFinish(level);},
     play(name='Gallop',fade=.2){const clip=clips.find(item=>item.name===name);if(!clip)return;const next=mixer.clipAction(clip);if(next===action)return;next.reset().play();if(action)next.crossFadeFrom(action,fade,true);action=next;},
     setAppearance({coat:nextCoat=coat,accent:nextAccent=accent,symbol:nextSymbol=symbol}={}){
       identity.apply({coat:nextCoat,accent:nextAccent,symbol:nextSymbol});
+      sharedGroom?.setAppearance({coat:nextCoat,accent:nextAccent,symbol:nextSymbol});
       for(const {material} of colorBindings)originalTones.set(material,material.color.clone());
       tintWetness();
       coat=nextCoat;accent=nextAccent;symbol=nextSymbol;
@@ -94,8 +117,9 @@ export async function createHorse({coat='#956342',accent='#f7931a',symbol='BTC',
         gait.refine(step,rate,action.time/action.getClip().duration);
       }
       mane.update(step,{wind:maneWind,speed:rate,gait:maneGait||action?.getClip().name,motionEnabled:maneMotion,reducedMotion:!!reducedMotion?.matches});
+      sharedGroom?.update(step,rate);
     },
-    dispose(){bankGoal=0;bankPivot.rotation.x=0;mane.dispose();btcLookdev?.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();surfaceFinish.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
+    dispose(){bankGoal=0;bankPivot.rotation.x=0;sharedGroom?.dispose();mane.dispose();btcLookdev?.dispose();gait.reset();mixer.stopAllAction();mixer.uncacheRoot(model);identity.dispose();surfaceFinish.dispose();materials.forEach(material=>material.dispose());root.removeFromParent();}
   };
   api.setAppearance({coat,accent,symbol});
   api.play(mode,0);mixer.update(phase);return api;
