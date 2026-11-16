@@ -589,7 +589,12 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // collar pull leaves a protruding shoulder above the rear thigh.
    // Restore most of the host projection, but retain the bounded 3D move.
    const blend=t*.90;
-   const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00022,blend);
+      // P0 seam A/B: reduce the 0.22 mm inward projection offset to 0.08 mm.
+   // The larger offset displaced the upper thigh laterally into the host
+   // surface and left a dark folded wedge in rear/3Q real WebGL images.
+   // This is a geometry candidate only; do not credit V23 until the new
+   // 16-phase/six-camera PNG artifact is compared with #14157413825.
+const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const targetY=THREE.MathUtils.lerp(y,best.point.y,blend);
    const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.72);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
