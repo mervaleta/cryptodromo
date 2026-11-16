@@ -24,7 +24,8 @@ import {createRaceAudio,createNarration} from './raceAudio.js?v=alpha09-cheer-1'
 import {createNightLights} from './nightLights.js?v=alpha14-perimeter-1';
 import {createTrackSurfaceEffects} from './trackSurface.js?v=alpha09-contact-1';
 import {createHoofTerrainFX} from './hoofTerrainFX.js?v=photo-finish-tv-params-20261104-v1';
-import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=alpha20-procedural-2';
+import {createHorse,selectedHorseRenderer} from './horseRenderer.js?v=crp-100-cc0-groom-20261115-v1';
+import {loadPublishedVisualProfiles,CRP_UNIFIED_HORSE_BUILD,CRP_HORSE_TOKEN_COUNT} from '/race-lab/source/src/tokenHorseFactory.js?v=crp-100-cc0-groom-20261115-v1';
 import {installProceduralGround} from './proceduralGround.js?v=alpha20-procedural-2';
 import {createBroadcastGates} from './broadcastGates.js?v=alpha20-1';
 import {attachGateNumbers} from './broadcastGateNumbers.js?v=alpha20-1';
@@ -409,6 +410,21 @@ splitModeSelect.addEventListener('change',()=>{
 });
 let overtakeCount=0,previousOrder='';
 let horses=[],running=false,finished=false,elapsed=0,last=performance.now(),raf;
+let publishedVisualProfiles={};
+if(new URLSearchParams(location.search).get('horse-qa')==='100'){
+ window.__crpUnifiedHorsesQA=()=>({
+  build:CRP_UNIFIED_HORSE_BUILD,
+  totalProfiles:CRP_HORSE_TOKEN_COUNT,
+  activeHorses:horses.length,
+  symbols:horses.map(h=>h.entry.symbol),
+  groomed:horses.filter(h=>h.model?.groomStats?.mane?.strands>0&&h.model?.groomStats?.tail?.strands>0).length,
+  groom:horses.map(h=>h.model?.groomStats||null),
+  officialRanking:officialRanking(profiles).map(h=>h.entry?.symbol||h.symbol),
+  publishedProfiles:Object.keys(publishedVisualProfiles).length,
+  renderer:horseEngineMode,
+  drawCalls:renderer.info.render.calls
+ });
+}
 // Read-only diagnostics opt in, for repeatable browser comparisons, never for scoring.
 if(horseEngineMode==='procedural'&&new URLSearchParams(location.search).get('procedural-qa')==='alpha20'){
  window.__cryptodromoProceduralQA=Object.freeze({
@@ -519,7 +535,8 @@ function showOfficialResult(){
 const horseCoats=['#6c4731','#b18053','#342a26','#d3b48f','#a65f36','#5d5d62','#a78c66','#332c2a','#a28467','#c49a74','#5b4134','#d4bda8'];
 async function bootHorses(){
  const entries=race.entries;const results=await Promise.allSettled(entries.map((e,i)=>createHorse({
-   coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,stallNumber:i+1,height:2.85,mode:'Gallop',phase:i*.13
+   coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol,stallNumber:i+1,height:2.85,mode:'Gallop',phase:i*.13,
+  quality:softwareGPU||mobile?'performance':'balanced',profiles:publishedVisualProfiles
  })));
  for(let i=0;i<12;i++){
   let model;
@@ -571,7 +588,8 @@ function setRace(index){
   horses.forEach((h,i)=>{
    const e=race.entries[i];h.entry=e;h.progress=0;h.visualMeters=0;h.model.root.visible=true;const first=trackPoint(layoutMode,0,i);
     h.model.root.position.set(first.x,0,first.z);h.model.root.rotation.y=first.heading;
-   h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
+   if(h.model.setTokenProfile)h.model.setTokenProfile(e,publishedVisualProfiles);
+   else h.model.setAppearance({coat:e.coat||horseCoats[i],accent:e.color,symbol:e.symbol});
    h.model.setBank?.(0);
    h.visualSpeed=1;h.model.play('Idle');
   });
@@ -1440,4 +1458,10 @@ if(new URLSearchParams(location.search).get('pavilion-qa')==='1'){
 window.addEventListener('pagehide',()=>{hoofFX.dispose();dustGeo.dispose();dust.material.dispose();}, {once:true});
 window.addEventListener('error',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=e.message;});
 window.addEventListener('unhandledrejection',e=>{status.textContent='ERROR EN ESCENA';msg.textContent=String(e.reason);});
-bootHorses().catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
+bootHorses().then(()=>{
+ loadPublishedVisualProfiles().then(saved=>{
+  publishedVisualProfiles=saved;
+  // Published horse editor only changes cosmetics; market ranking is unchanged.
+  for(const h of horses)h.model.setTokenProfile?.(h.entry,publishedVisualProfiles);
+ });
+}).catch(e=>{console.error(e);status.textContent='ERROR DE CARGA 3D';msg.textContent=String(e);});
