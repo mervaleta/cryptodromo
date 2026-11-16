@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {createHorse} from '/race-lab/source/src/horse.js?v=alpha18-gaitmane-1';
+import {createTokenHorse,loadPublishedVisualProfiles} from '/race-lab/source/src/tokenHorseFactory.js?v=crp-100-cc0-groom-20261115-v1';
 /** Dedicated preview; reuses Racers horse rig, never touches race horses or clocks. */
 export function mountPresentationHorse(container){
  const noop=()=>{};
@@ -17,13 +17,14 @@ export function mountPresentationHorse(container){
  }
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
  container.append(renderer.domElement);
- let horse=null,serial=0,active=true,previous=performance.now();
+ let horse=null,serial=0,active=true,previous=performance.now(),profiles={};
+ loadPublishedVisualProfiles().then(saved=>{profiles=saved;});
  function resize(){const w=Math.max(1,container.clientWidth),h=Math.max(1,container.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
  const observer=new ResizeObserver(resize);observer.observe(container);resize();
  async function show(entry){
   const request=++serial;
   try{
-   const next=await createHorse({coat:entry.coat||'#956342',accent:entry.color||'#f7931a',symbol:entry.symbol||'BTC',height:2.85,mode:'Walk'});
+   const next=await createTokenHorse(entry,{height:2.85,mode:'Walk',quality:'balanced',profiles});
    if(!active||request!==serial){next.dispose();return;}
    if(horse)horse.dispose();
    horse=next;scene.add(horse.root);horse.play('Walk');container.dataset.preview='ready';
