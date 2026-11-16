@@ -6,7 +6,7 @@ import {createTokenHorse,CRP_UNIFIED_HORSE_BUILD} from '../race-lab/source/src/t
 import {createProceduralRaceHorse} from './proceduralHorse.js?v=alpha20-procedural-2';
 export {CRP_UNIFIED_HORSE_BUILD};
 export function selectedHorseRenderer(search=globalThis.location?.search||''){
- return new URLSearchParams(search).get('horse-engine')==='procedural'?'procedural':'cc0-unified';
+ return new URLSearchParams(search).get('horse-engine')==='procedural'?'procedural':'legacy';
 }
 export async function createHorse(options={}){
  if(selectedHorseRenderer()==='procedural'){
