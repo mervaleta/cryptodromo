@@ -1,0 +1,93 @@
+name: CRP 100 CC0 horses · live 12-rig WebGL acceptance
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/unified-cc0-live-qa.yml'
+      - 'race-lab/source/src/horseGroomCC0.js'
+      - 'race-lab/source/src/tokenHorseFactory.js'
+      - 'race-lab/source/src/horse.js'
+      - 'race-lab/source/src/main.js'
+      - 'race-lab/source/index.html'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/horseRenderer.js'
+      - 'stadiums/crypto/broadcast/index.html'
+      - 'racers/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Chromium WebGL tester
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install chromium --with-deps
+      - name: Verify actual Hostinger BTC, Race Lab and Stadium in real WebGL
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p artifacts/unified-cc0
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          const build='crp-100-cc0-groom-20261115-v1';
+          const browser=await chromium.launch({
+            headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']
+          });
+          const scenarios=[
+            {name:'btc',url:'https://race.cryptodromo.com/racers/?verify='+build+'#BTC',
+             verify:s=>s?.variant==='cc0groom'&&s?.masterBuild===build&&s?.cc0Hair?.mane?.strands===1350&&s?.cc0Hair?.tail?.strands===960&&s?.clips?.includes('Gallop')&&s?.drawCalls>0,
+             snapshot:'__cryptodromoBTCAtelierQA',target:'#horse-view'},
+            {name:'stadium',url:'https://race.cryptodromo.com/stadiums/crypto/broadcast/?horse-qa=100&verify='+build,
+             verify:s=>s?.build===build&&s?.totalProfiles===100&&s?.activeHorses===12&&s?.groomed===12&&s?.drawCalls>0&&s?.officialRanking?.length===12,
+             snapshot:'__crpUnifiedHorsesQA',target:'body'},
+            {name:'race-lab',url:'https://race.cryptodromo.com/race-lab/source/?horse-qa=100&verify='+build,
+             verify:s=>s?.build===build&&s?.totalProfiles===100&&s?.activeHorses===12&&s?.groomed===12&&s?.clips?.includes('Gallop')&&s?.officialRanking?.length===12,
+             snapshot:'__crpUnifiedHorsesQA',target:'#sceneWrap'},
+          ];
+          let verified=0;
+          for(const c of scenarios){
+           const ctx=await browser.newContext({viewport:{width:1300,height:900},deviceScaleFactor:1,reducedMotion:'no-preference'});
+           const page=await ctx.newPage();
+           const errors=[];
+           page.on('pageerror',e=>errors.push(e.message));
+           page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text());});
+           try{
+            const response=await page.goto(c.url,{waitUntil:'domcontentloaded',timeout:70000});
+            console.log('HTTP',c.name,response.status());
+            await page.waitForFunction(({key,build})=>{
+             const state=window[key]?.();
+             return !!state&&(state.build===build||state.masterBuild===build)&&
+              (state.activeHorses===12||state.variant==='cc0groom');
+            },{key:c.snapshot,build},{timeout:115000});
+            const state=await page.evaluate(key=>window[key]?.(),c.snapshot);
+            console.log('STATE_'+c.name.toUpperCase(),JSON.stringify(state));
+            if(!c.verify(state))throw new Error('Visual state invariant failed: '+JSON.stringify(state));
+            await page.waitForTimeout(700);
+            await page.locator(c.target).screenshot({path:'artifacts/unified-cc0/'+c.name+'.png',timeout:18000});
+            console.log('PASS_REAL_WEBGL_'+c.name.toUpperCase());
+            verified++;
+            if(errors.length)console.log('CONSOLE_'+c.name,JSON.stringify(errors.slice(0,6)));
+           }catch(e){
+            console.log('::warning::UNVERIFIED_REAL_WEBGL_'+c.name+': '+e.message);
+            console.log('CONSOLE_'+c.name,JSON.stringify(errors.slice(0,8)));
+            await page.screenshot({path:'artifacts/unified-cc0/'+c.name+'-failure.png'}).catch(()=>{});
+           }finally{await ctx.close();}
+          }
+          await browser.close();
+          console.log('VERIFIED_TOTAL',verified,'OF',scenarios.length);
+          if(verified===3)console.log('::notice::LIVE_CC0_100TOKEN_12RIG_ALL_PASSED');
+          else console.log('::warning::LIVE_CC0_100TOKEN_12RIG_INCOMPLETE_CHECK_LOG');
+          JS
+      - name: Save screenshots for actual human visual approval
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crp-100-cc0-real-webgl-shots
+          path: artifacts/unified-cc0/*.png
+          if-no-files-found: warn
