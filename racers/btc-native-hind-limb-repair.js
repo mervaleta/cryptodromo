@@ -681,7 +681,19 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // Limit the smoothing to a small fraction of a millimetre per pass.
      // A stronger laplacian reduces sharp collar ridges without letting
      // long adjacent triangles collapse into the Maya rump.
+     // Move only in the local surface tangent plane. The former full
+     // Laplacian moved upper-thigh vertices inward along their normals,
+     // flattening the croup and creating visible dark folded triangles.
+     // A tangential relax reduces collar zig-zags without collapsing
+     // the original sculpt's volume or pulling the cut rim out of place.
      const raw=positions[i].map((v,k)=>alpha*(avg[k]-v));
+     const normals=donorGeo.getAttribute('normal');
+     const nx=normals.getX(i),ny=normals.getY(i),nz=normals.getZ(i);
+     const nlen=Math.hypot(nx,ny,nz);
+     if(nlen>1e-8){
+      const dot=(raw[0]*nx+raw[1]*ny+raw[2]*nz)/(nlen*nlen);
+      raw[0]-=dot*nx;raw[1]-=dot*ny;raw[2]-=dot*nz;
+     }
      const norm=Math.hypot(...raw);
      const factor=norm>.00012?.00012/norm:1;
      const target=positions[i].map((v,k)=>v+raw[k]*factor);
