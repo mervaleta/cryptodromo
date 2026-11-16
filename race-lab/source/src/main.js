@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { getRaceFixture, RACES_PER_DAY, FIXTURE_DAYS, RACE_DURATION_SECONDS } from './data/raceFixture.js?v=crp-20261102';
-import { createHorse } from './horse.js';
+import { createTokenHorse,updateTokenHorse,loadPublishedVisualProfiles,CRP_UNIFIED_HORSE_BUILD,CRP_HORSE_TOKEN_COUNT } from './tokenHorseFactory.js?v=crp-100-cc0-groom-20261115-v1';
 import { createChurchillStadium } from './churchillStadium.js';
 import { createOfficialRace, positionAt, officialRanking, officialAudit } from './data/officialRace.js?v=crp-20261102';
 // CRYPTODROMO_SATOSHI_STADIUM_V1
@@ -8,6 +8,7 @@ import { createOfficialRace, positionAt, officialRanking, officialAudit } from '
 let absoluteRaceIndex = 0;
 let currentRace = getRaceFixture(0, 0);
 const racers = currentRace.entries;
+let publishedVisualProfiles={};
 let officialProfiles = createOfficialRace(currentRace.entries);
 const currentWinner = () => officialRanking(officialProfiles)[0];
 const environmentState = { hour: 17.5, clouds: .32, wind: 12, weather: 'clear', surface: 'grass' };
@@ -119,12 +120,29 @@ function disposePlaceholder(h){const geometries=new Set(),materials=new Set();h.
 function setHorseAnimation(mode){horses.forEach(h=>h.model?.play(mode,.28));}
 async function loadAnimatedHorses(){
   try{
-    const models=await Promise.all(horses.map(h=>createHorse({coat:h.racer.coat,accent:h.racer.color,symbol:h.racer.symbol,height:2.5,mode:'Idle'})));
-    models.forEach((model,index)=>{const h=horses[index];disposePlaceholder(h);h.model=model;h.legs=[];h.root.add(model.root);model.root.scale.set(1,1,1);model.setAppearance({coat:h.racer.coat,accent:h.racer.color,symbol:h.racer.symbol});model.play(running?'Gallop':'Idle',0);});
-    diagnostics.textContent='MODELO ANIMADO CC0 · 12 CORREDORES';diagnostics.style.color='#45e0a8';
+    const quality=globalThis.matchMedia?.('(max-width: 760px)').matches?'performance':'balanced';
+    const models=await Promise.all(horses.map(h=>createTokenHorse(h.racer,{height:2.5,mode:'Idle',quality,profiles:publishedVisualProfiles})));
+    models.forEach((model,index)=>{const h=horses[index];disposePlaceholder(h);h.model=model;h.legs=[];h.root.add(model.root);model.root.scale.set(1,1,1);updateTokenHorse(model,h.racer,publishedVisualProfiles);model.play(running?'Gallop':'Idle',0);});
+    diagnostics.textContent='CC0 CON CRIN Y COLA · 12 EN PISTA / '+CRP_HORSE_TOKEN_COUNT+' IDENTIDADES';diagnostics.style.color='#45e0a8';
   }catch(error){diagnostics.textContent='VISTA PROCEDURAL · MODELO ANIMADO NO DISPONIBLE';diagnostics.style.color='#ffcd7a';console.warn('Cryptodromo horse model fallback:',error);}
 }
 loadAnimatedHorses();
+loadPublishedVisualProfiles().then(profiles=>{
+ publishedVisualProfiles=profiles;
+ // Apply editor colors to the 12 visible rigs. No fixture or official prices touched.
+ for(const runner of horses)if(runner.model)updateTokenHorse(runner.model,runner.racer,publishedVisualProfiles);
+});
+window.__crpUnifiedHorsesQA=()=>({
+ build:CRP_UNIFIED_HORSE_BUILD,
+ totalProfiles:CRP_HORSE_TOKEN_COUNT,
+ activeHorses:horses.length,
+ symbols:horses.map(h=>h.racer.symbol),
+ groomed:horses.filter(h=>h.model?.groomStats?.mane?.strands>0&&h.model?.groomStats?.tail?.strands>0).length,
+ rigVersions:horses.map(h=>h.model?.masterBuild||null),
+ clips:horses[0]?.model?.clips||[],
+ officialRanking:officialRanking(officialProfiles).map(p=>p.entry.symbol)
+});
+
 
 // Finish gate and modular grandstand blocks.
 const gateMat=new THREE.MeshStandardMaterial({color:0xf0e9d5,roughness:.6});
@@ -162,7 +180,7 @@ function loadRace(index){
     const horse=horses[i];
     horse.racer=entry;horse.progress=0;horse.delta=0;horse.latestMove=0;horse.input1=entry.input1;horse.input2=entry.input2;
     horse.coefficients1=entry.coefficients1;horse.coefficients2=entry.coefficients2;
-    if(horse.model)horse.model.setAppearance({coat:entry.coat,accent:entry.color,symbol:entry.symbol});
+    if(horse.model)updateTokenHorse(horse.model,entry,publishedVisualProfiles);
     else{horse.coat.color.set(entry.coat);horse.coatLight.color.set(entry.coat).multiplyScalar(1.13);horse.cloth.color.set(entry.color);const oldTexture=horse.badge.material.map;horse.badge.material.map=makeCanvasTexture(entry.symbol,entry.color);horse.badge.material.needsUpdate=true;oldTexture?.dispose();}
     horse.root.position.x=-14;horse.base=.111;
   });
