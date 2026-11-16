@@ -23,3 +23,10 @@ En cada cambio:
 2. **Siguiente etapa, luego de aceptar la geometría:** mejorar físicas de movimiento de crin y cola comparando fases del galope con el video `212734.mp4` aportado en las fuentes. Ver `docs/BTC-MANE-TAIL-PHYSICS-BRIEF.md`.
 
 Consultar `racers/AGENTS.md` antes de editar el maestro.
+
+
+## Migración global aprobada el 2026-11-15: único caballo CC0 para 100 tokens
+
+El usuario autorizó expresamente reemplazar el plantel de la carrera por el caballo Quaternius CC0 con crin y cola skinned. Esta es una decisión posterior a los antiguos trabajos BTC-only. La regla anterior de no modificar los otros 99 ejemplares se aplica exclusivamente a los experimentos aislados de BTC, no a esta migración global autorizada.
+
+**Fuente maestra actual:** `race-lab/source/src/tokenHorseFactory.js` + `race-lab/source/src/horse.js` + `race-lab/source/src/horseGroomCC0.js`. Un mismo GLB Quaternius CC0, cien identidades de datos, doce rigged horses activos en cada carrera. Toda variación es cosmética y nunca modifica `officialRace.js`, `raceFixture.js`, precios ni posición oficial. La ficha canónica de BTC debe usar la misma fuente sin flags. Los visores de terceros quedan solo como comparación y según sus licencias.
