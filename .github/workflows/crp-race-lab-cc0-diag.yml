@@ -35,7 +35,8 @@ jobs:
              ["const binary=await new Response(stream).arrayBuffer();","const binary=await new Response(stream).arrayBuffer();console.log('CRP_HORSE_DBG_UNZIP',binary.byteLength);"],
              ["const gltf=await new GLTFLoader().parseAsync(","console.log('CRP_HORSE_DBG_PARSE_BEGIN');const gltf=await new GLTFLoader().parseAsync("],
              ["smoothHorseNormals(gltf.scene,{strength:.91});","console.log('CRP_HORSE_DBG_PARSE_END');smoothHorseNormals(gltf.scene,{strength:.91});"],
-             ["const asset=await loadHorseAsset(),model=clone(asset.scene);","console.log('CRP_HORSE_DBG_CREATE_ENTER');const asset=await loadHorseAsset(),model=clone(asset.scene);console.log('CRP_HORSE_DBG_CLONE_DONE');"]
+             ["const asset=await loadHorseAsset(),model=clone(asset.scene);","console.log('CRP_HORSE_DBG_CREATE_ENTER');const asset=await loadHorseAsset(),model=clone(asset.scene);console.log('CRP_HORSE_DBG_CLONE_DONE');"],
+             ["api.play(mode,0);mixer.update(phase);return api;","api.play(mode,0);mixer.update(phase);console.log('CRP_HORSE_DBG_READY');return api;"]
            ];
            for(const [oldv,newv] of patches){
             if(!code.includes(oldv))console.log('PATCH_MISS',oldv);
@@ -43,14 +44,27 @@ jobs:
            }
            await route.fulfill({response,body:code,contentType:'text/javascript'});
           });
+          await p.route('**/race-lab/source/src/tokenHorseFactory.js*',async route=>{
+           const res=await route.fetch();let code=await res.text();
+           code=code.replace("const horse=await createHorse({","console.log('CRP_FACTORY_CREATE_START',id.symbol);const horse=await createHorse({");
+           code=code.replace("horse.setTokenProfile=(next,activeProfiles=profiles)=>","console.log('CRP_FACTORY_CREATE_DONE',id.symbol);horse.setTokenProfile=(next,activeProfiles=profiles)=>");
+           code=code.replace("return horse;","console.log('CRP_FACTORY_RETURN',id.symbol);return horse;");
+           await route.fulfill({response:res,body:code,contentType:'text/javascript'});
+          });
+          await p.route('**/race-lab/source/src/main.js*',async route=>{
+           const res=await route.fetch();let code=await res.text();
+           code=code.replace("const models=await Promise.all(horses.map(","console.log('CRP_LAB_LOADING_12');const models=await Promise.all(horses.map(");
+           code=code.replace("models.forEach((model,index)=>{","console.log('CRP_LAB_READY_12',models.length);models.forEach((model,index)=>{");
+           await route.fulfill({response:res,body:code,contentType:'text/javascript'});
+          });
           p.on('pageerror',e=>logs.push('PAGEERROR '+e.message));
-          p.on('console',m=>{if(['error','warn'].includes(m.type())||m.text().startsWith('CRP_HORSE_DBG'))logs.push(m.type()+': '+m.text());});
+          p.on('console',m=>{if(['error','warn'].includes(m.type())||/^CRP_(HORSE|FACTORY|LAB)/.test(m.text()))logs.push(m.type()+': '+m.text());});
           p.on('requestfailed',req=>failures.push('FAIL '+req.url()+' '+req.failure()?.errorText));
           p.on('response',r=>{if(r.status()>=400)failures.push('HTTP '+r.status()+' '+r.url())});
           try{
            const res=await p.goto('https://race.cryptodromo.com/race-lab/source/?horse-qa=100&diag=loader-20261115',{waitUntil:'domcontentloaded',timeout:45000});
            console.log('NAV_HTTP',res.status());
-           await p.waitForTimeout(17000);
+           await p.waitForTimeout(11000);
            const s=await p.evaluate(()=>({
             qa:window.__crpUnifiedHorsesQA?.(),
             diag:[...document.querySelectorAll('#sceneWrap>div')].map(x=>x.textContent?.slice(0,120)),
