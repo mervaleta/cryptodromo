@@ -10,12 +10,14 @@ import {resolveHorseProfile,toMasterHorseOptions,applyHorseProfileToRenderer,fet
 export const CRP_UNIFIED_HORSE_BUILD='crp-100-cc0-groom-20261115-v1';
 export const CRP_HORSE_TOKEN_COUNT=TOKEN_ROSTER.length;
 const bySymbol=new Map(TOKEN_ROSTER.map(t=>[t.symbol,t]));
+const safeColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value:fallback;
+const identitySource=(token,original)=>({...original,color:safeColor(token.color,original.color),coat:safeColor(token.coat,original.coat)});
 
 export function tokenIdentity(token,profiles={}){
  const original=bySymbol.get(token?.symbol);
  if(!original)throw new TypeError('Corredor desconocido: '+String(token?.symbol));
  // Preserve the authoritative roster's token color and its stable race symbol.
- return toMasterHorseOptions({...original,...token,color:original.color,coat:original.coat},profiles);
+ return toMasterHorseOptions(identitySource(token,original),profiles);
 }
 export function allTokenIdentities(profiles={}){
  // 100 parameters only, never allocate 100 3D skeletons or mixers at once.
@@ -25,7 +27,7 @@ export function allTokenIdentities(profiles={}){
 export function updateTokenHorse(horse,token,profiles={}){
  const original=bySymbol.get(token?.symbol);
  if(!original)throw new TypeError('Corredor desconocido: '+String(token?.symbol));
- return applyHorseProfileToRenderer(horse,{...original,...token,color:original.color,coat:original.coat},profiles);
+ return applyHorseProfileToRenderer(horse,identitySource(token,original),profiles);
 }
 /**
  * Clone the single CC0 rig, native Gallop, and shared CC0 groom geometry.
