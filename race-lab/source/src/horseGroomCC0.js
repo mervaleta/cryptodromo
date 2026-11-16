@@ -118,9 +118,9 @@ function makeMaterial(){
   shader.uniforms.uCRPHairLength=length;
   shader.uniforms.uCRPHairWind=wind;
   shader.vertexShader=shader.vertexShader.replace('#include <common>',
-   '#include <common>\\nattribute float hairProgress;\\nattribute float hairSeed;\\nattribute vec3 hairAnchor;\\nuniform float uCRPHairTime;\\nuniform float uCRPHairLength;\\nuniform float uCRPHairWind;');
+   '#include <common>\nattribute float hairProgress;\nattribute float hairSeed;\nattribute vec3 hairAnchor;\nuniform float uCRPHairTime;\nuniform float uCRPHairLength;\nuniform float uCRPHairWind;');
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
-   '#include <begin_vertex>\\ntransformed=hairAnchor+(transformed-hairAnchor)*uCRPHairLength;\\nfloat crpSway=(sin(uCRPHairTime*8.7+hairSeed*1.71)*.00013+sin(uCRPHairTime*5.2+hairSeed*.73)*.000075)*uCRPHairWind;\\ntransformed.x+=crpSway*hairProgress*hairProgress;\\ntransformed.y+=cos(uCRPHairTime*5.7+hairSeed)*.000052*uCRPHairWind*hairProgress*hairProgress;');
+   '#include <begin_vertex>\ntransformed=hairAnchor+(transformed-hairAnchor)*uCRPHairLength;\nfloat crpSway=(sin(uCRPHairTime*8.7+hairSeed*1.71)*.00013+sin(uCRPHairTime*5.2+hairSeed*.73)*.000075)*uCRPHairWind;\ntransformed.x+=crpSway*hairProgress*hairProgress;\ntransformed.y+=cos(uCRPHairTime*5.7+hairSeed)*.000052*uCRPHairWind*hairProgress*hairProgress;');
  };
  material.customProgramCacheKey=()=>CRP_UNIFIED_GROOM_BUILD;
  return {material,clock,length,wind};
