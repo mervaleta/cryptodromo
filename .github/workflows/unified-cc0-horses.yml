@@ -1,0 +1,57 @@
+name: CC0 Horse Factory · 100 identities / 12 active / official results
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'race-lab/source/src/horse.js'
+      - 'race-lab/source/src/horseGroomCC0.js'
+      - 'race-lab/source/src/tokenHorseFactory.js'
+      - 'race-lab/source/src/main.js'
+      - 'visual-lab/scene.js'
+      - 'visual-lab/horseRenderer.js'
+      - 'racers/**'
+      - 'tests/unified-cc0-horses-100.mjs'
+      - '.github/workflows/unified-cc0-horses.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'race-lab/source/src/horse.js'
+      - 'race-lab/source/src/horseGroomCC0.js'
+      - 'race-lab/source/src/tokenHorseFactory.js'
+      - 'visual-lab/scene.js'
+      - 'tests/unified-cc0-horses-100.mjs'
+      - '.github/workflows/unified-cc0-horses.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  structure-and-fixture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22',cache: 'npm',cache-dependency-path: 'race-lab/source/package-lock.json'}
+      - name: Install pinned Three.js / Vite
+        run: npm ci --prefix race-lab/source --no-audit --no-fund
+      - name: Parse new 3D source and both live race entry points
+        run: |
+          set -euo pipefail
+          for f in \
+            race-lab/source/src/horseGroomCC0.js \
+            race-lab/source/src/tokenHorseFactory.js \
+            race-lab/source/src/horse.js \
+            race-lab/source/src/main.js \
+            visual-lab/horseRenderer.js \
+            visual-lab/scene.js \
+            visual-lab/presentationHorse.js \
+            racers/horse-preview.js \
+            racers/btc-atelier-preview.js \
+            racers/racers.js; do node --check "$f"; done
+      - name: Test 100 distinct token profiles and unchanged official race mechanics
+        run: node --test tests/unified-cc0-horses-100.mjs tests/official-race.mjs tests/horse-master-bridge.mjs tests/btc-master-change-policy.mjs
+      - name: Compile modern 3D Race Lab
+        run: cd race-lab/source && ./node_modules/.bin/vite build
+      - name: Summary
+        run: |
+          echo '100 distinct token profiles, 12 active rig clones, Quaternius CC0 groom, no fixture/ranking changes' >> "$GITHUB_STEP_SUMMARY"
