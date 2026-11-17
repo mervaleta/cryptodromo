@@ -708,14 +708,37 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     ?Math.max(.00010,localMinEdge[i]*.65):.00068);
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
    donorPos.setXYZ(i,x+deltaX*safe,y+deltaY*safe,z+deltaZ*safe);
-   // P0 animated seam experiment: retain the GLB donor's authored skin
-   // influences at the proximal collar. The Maya body currently uses
-   // nearest-neighbor-transferred weights on a different topology; mixing
-   // those approximate weights into an otherwise native donor introduces
-   // a second deformation field and can split the seam in Gallop phases.
-   // Geometry projection above remains, but the donor retains the same
-   // joint palette and original interpolation as its distal thigh.
-   // This is an isolated WebGL A/B candidate, NOT a V23 acceptance.
+   // P0 animation candidate: donor's original GLB weights remain 95%
+   // dominant at the upper collar. The host's Maya weights were transferred
+   // by proximity onto an unrelated 50-joint skeleton; the former 25%
+   // host blend could split the seam as the stifle rotates in Gallop.
+   // Preserve a small 5% host influence to maintain a continuous
+   // animated attachment, then judge only by 16-phase WebGL A/B.
+   const mayaFactor=.05*t,influences=new Map();
+   for(let k=0;k<4;k++){
+    const w=(1-mayaFactor)*donorWeights.getComponent(i,k);
+    if(w>1e-8){
+     const bone=donorSkin.getComponent(i,k);
+     influences.set(bone,(influences.get(bone)||0)+w);
+    }
+   }
+   for(let v=0;v<3;v++){
+    const factor=mayaFactor*bary.getComponent(v);
+    const id=best.face.ids[v];
+    for(let k=0;k<4;k++){
+     const w=factor*hostWeights.getComponent(id,k);
+     if(w>1e-8){
+      const bone=hostSkin.getComponent(id,k);
+      influences.set(bone,(influences.get(bone)||0)+w);
+     }
+    }
+   }
+   const top=[...influences].sort((p,q)=>q[1]-p[1]).slice(0,4);
+   const total=top.reduce((sum,p)=>sum+p[1],0)||1;
+   for(let k=0;k<4;k++){
+    donorSkin.setComponent(i,k,top[k]?.[0]||0);
+    donorWeights.setComponent(i,k,(top[k]?.[1]||0)/total);
+   }
    insetVertices++;
   }
   // BTC collar curvature relax (candidate, not a version): smooth only
