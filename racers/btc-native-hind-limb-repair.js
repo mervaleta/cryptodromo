@@ -428,18 +428,42 @@ function refineSkinnedDonor(source,passes=2){
  const getVertex=id=>{
   const point=[pos.getX(id),pos.getY(id),pos.getZ(id)];
   const key=point.map(x=>Math.round(x*1e7)).join(':');
-  if(unique.has(key))return unique.get(key);
-  const bones=new Map();
-  for(let k=0;k<4;k++){
-   const w=weights.getComponent(id,k);
-   if(w>1e-8)bones.set(joints.getComponent(id,k),w);
+  // UV/hard-normal seam duplicates can carry DIFFERENT skin influences.
+  // The old positional weld retained the first corner's weights and silently
+  // discarded every other source vertex at that same location. During Gallop
+  // this assigns an arbitrary bone to the entire welded ring. Accumulate each
+  // distinct authored source vertex exactly once before subdivision.
+  let v=unique.get(key);
+  if(v===undefined){
+   v=vertices.length;
+   vertices.push({p:point,w:new Map(),sources:new Set()});
+   unique.set(key,v);
   }
-  const v=vertices.length;vertices.push({p:point,w:bones});unique.set(key,v);
+  const target=vertices[v];
+  if(!target.sources.has(id)){
+   target.sources.add(id);
+   for(let k=0;k<4;k++){
+    const w=weights.getComponent(id,k);
+    if(w>1e-8){
+     const bone=joints.getComponent(id,k);
+     target.w.set(bone,(target.w.get(bone)||0)+w);
+    }
+   }
+  }
   return v;
  };
  for(let i=0;i<index.count;i+=3){
   const tri=[getVertex(index.getX(i)),getVertex(index.getX(i+1)),getVertex(index.getX(i+2))];
   if(new Set(tri).size===3)faces.push(tri);
+ }
+ // Average all coincident authored influences, independent of how often
+ // each vertex appeared in the triangle index buffer. Retain a normalized
+ // convex blend; downstream subdivision still interpolates bone weights.
+ for(const v of vertices){
+  const n=v.sources.size;
+  if(!n)throw Error('BTC welded donor vertex has no skin sources');
+  for(const [bone,w] of v.w)v.w.set(bone,w/n);
+  delete v.sources;
  }
  let vs=vertices,fs=faces;
  const combine=(parts)=>{
