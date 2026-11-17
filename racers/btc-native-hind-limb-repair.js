@@ -741,6 +741,74 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    insetVertices++;reattachedWeights++;
   }
+  // The exact donor cut creates an open rim at z=.0208, while the
+  // existing closest-triangle collar projection only visits z>.0208.
+  // Therefore it cannot sew the actual cut edge. Align ONLY donor rim
+  // vertices with nearby surviving Maya cut edges on the SAME flank.
+  // This is a small geometry candidate, not visual acceptance.
+  {
+   const edgeUses=new Map();
+   for(let j=0;j<hostIndex.count;j+=3){
+    const ids=[hostIndex.getX(j),hostIndex.getX(j+1),hostIndex.getX(j+2)];
+    for(const [a,b] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
+     const key=Math.min(a,b)+':'+Math.max(a,b);
+     const rec=edgeUses.get(key)||{a,b,n:0};
+     rec.n++;edgeUses.set(key,rec);
+    }
+   }
+   const hostRim=[...edgeUses.values()].filter(e=>{
+    if(e.n!==1)return false;
+    const ax=hostPos.getX(e.a),bx=hostPos.getX(e.b);
+    const ay=hostPos.getY(e.a),by=hostPos.getY(e.b);
+    const az=hostPos.getZ(e.a),bz=hostPos.getZ(e.b);
+    return Math.sign(ax)===Math.sign(bx)&&Math.abs(ax)>.0014&&
+     Math.abs(bx)>.0014&&Math.min(ay,by)>.0050&&
+     Math.abs(az-.0208)<.000015&&Math.abs(bz-.0208)<.000015;
+   });
+   const donorEdges=new Map(),di=donorGeo.getIndex();
+   for(let j=0;j<di.count;j+=3){
+    const ids=[di.getX(j),di.getX(j+1),di.getX(j+2)];
+    for(const [a,b] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
+     const key=Math.min(a,b)+':'+Math.max(a,b);
+     const rec=donorEdges.get(key)||{a,b,n:0};
+     rec.n++;donorEdges.set(key,rec);
+    }
+   }
+   const donorRim=new Set();
+   for(const e of donorEdges.values())if(e.n===1){
+    for(const id of [e.a,e.b]){
+     if(Math.abs(donorPos.getZ(id)-.0208)<.000015&&
+        donorPos.getY(id)>.0050&&Math.abs(donorPos.getX(id))>.0014)
+      donorRim.add(id);
+    }
+   }
+   let sewn=0;
+   for(const id of donorRim){
+    const x=donorPos.getX(id),y=donorPos.getY(id),z=donorPos.getZ(id);
+    let nearest=null,distSq=Infinity;
+    for(const e of hostRim){
+     const ax=hostPos.getX(e.a),ay=hostPos.getY(e.a),az=hostPos.getZ(e.a);
+     if(Math.sign(ax)!==Math.sign(x))continue;
+     const dx=hostPos.getX(e.b)-ax,dy=hostPos.getY(e.b)-ay,
+      dz=hostPos.getZ(e.b)-az;
+     const lenSq=dx*dx+dy*dy+dz*dz;
+     if(lenSq<1e-18)continue;
+     const t=THREE.MathUtils.clamp(((x-ax)*dx+(y-ay)*dy+(z-az)*dz)/lenSq,0,1);
+     const px=ax+t*dx,py=ay+t*dy,pz=az+t*dz;
+     const d=(px-x)**2+(py-y)**2+(pz-z)**2;
+     if(d<distSq){distSq=d;nearest=[px,py,pz];}
+    }
+    // Do not bridge nonmatching topologies. Bound the move to 0.18 mm
+    // and let the existing orientation/area gate reject damaged faces.
+    if(!nearest||distSq>.0012**2)continue;
+    const dist=Math.sqrt(distSq),blend=Math.min(1,.00018/Math.max(dist,1e-12));
+    donorPos.setXYZ(id,x+(nearest[0]-x)*blend,
+     y+(nearest[1]-y)*blend,z+(nearest[2]-z)*blend);
+    sewn++;
+   }
+   // No artificial acceptance counters: this is diagnostic only.
+   bodyCut.sewnRimVertices=sewn;
+  }
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
   // projection creates alternating triangular peaks in rear WebGL.
