@@ -818,7 +818,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        const n0=faceNormal(...oldPts),n1=faceNormal(...newPts);
        const oldSq=n0.reduce((sum,v)=>sum+v*v,0);
        const newSq=n1.reduce((sum,v)=>sum+v*v,0);
-       if(oldSq<1e-24||newSq<oldSq*.20||
+       // Guard against cumulative thinning across sequential vertices
+       // and both passes. A locally valid move can still collapse a face
+       // relative to its original, pre-relaxation anatomical shape.
+       const refNormal=faceNormal(...tri.map(v=>original[v]));
+       const refSq=refNormal.reduce((sum,v)=>sum+v*v,0);
+       const refDot=refNormal.reduce((sum,v,k)=>sum+v*n1[k],0);
+       if(oldSq<1e-24||refSq<1e-24||newSq<oldSq*.20||
+          newSq<refSq*.36||refDot<=0||
           n0.reduce((sum,v,k)=>sum+v*n1[k],0)<=0){safe=false;break;}
       }
       if(safe){accepted=candidate;break;}
