@@ -708,39 +708,15 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     ?Math.max(.00010,localMinEdge[i]*.65):.00068);
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
    donorPos.setXYZ(i,x+deltaX*safe,y+deltaY*safe,z+deltaZ*safe);
-   // P0 actual skinning candidate: the Maya host weights were nearest-neighbor
-   // transferred onto a different 50-joint rig. Copying 88% of those
-   // approximated weights onto the *authored* donor thigh corrupts the
-   // original Gallop deformation at the junction. Keep the donor's authored
-   // skin dominant (75%) and blend only a bounded host contribution near
-   // the collar; the donor geometry and lower leg remain untouched.
-   // Must be judged against real 16-phase rear/3Q WebGL captures; not V23.
-   const mayaFactor=.25*t,influences=new Map();
-   for(let k=0;k<4;k++){
-    const w=(1-mayaFactor)*donorWeights.getComponent(i,k);
-    if(w>1e-8){
-     const bone=donorSkin.getComponent(i,k);
-     influences.set(bone,(influences.get(bone)||0)+w);
-    }
-   }
-   for(let v=0;v<3;v++){
-    const factor=mayaFactor*bary.getComponent(v);
-    const id=best.face.ids[v];
-    for(let k=0;k<4;k++){
-     const w=factor*hostWeights.getComponent(id,k);
-     if(w>1e-8){
-      const bone=hostSkin.getComponent(id,k);
-      influences.set(bone,(influences.get(bone)||0)+w);
-     }
-    }
-   }
-   const top=[...influences].sort((p,q)=>q[1]-p[1]).slice(0,4);
-   const total=top.reduce((sum,p)=>sum+p[1],0)||1;
-   for(let k=0;k<4;k++){
-    donorSkin.setComponent(i,k,top[k]?.[0]||0);
-    donorWeights.setComponent(i,k,(top[k]?.[1]||0)/total);
-   }
-   insetVertices++;reattachedWeights++;
+   // P0 animated seam experiment: retain the GLB donor's authored skin
+   // influences at the proximal collar. The Maya body currently uses
+   // nearest-neighbor-transferred weights on a different topology; mixing
+   // those approximate weights into an otherwise native donor introduces
+   // a second deformation field and can split the seam in Gallop phases.
+   // Geometry projection above remains, but the donor retains the same
+   // joint palette and original interpolation as its distal thigh.
+   // This is an isolated WebGL A/B candidate, NOT a V23 acceptance.
+   insetVertices++;
   }
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
