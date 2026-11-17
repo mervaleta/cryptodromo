@@ -662,6 +662,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const original=Array.from({length:donorPos.count},(_,i)=>[
     donorPos.getX(i),donorPos.getY(i),donorPos.getZ(i)
    ]);
+   // Recompute the normals AFTER the host projection and again after each
+   // relaxation pass. Otherwise the tangent projector uses the PRE-SEWN
+   // Quaternius normal, pushing the new collar across its actual surface.
+   // This changes the skinned donor geometry, not just its shading.
+   donorGeo.computeVertexNormals();
    for(let pass=0;pass<2;pass++){
     const positions=Array.from({length:donorPos.count},(_,i)=>[
      donorPos.getX(i),donorPos.getY(i),donorPos.getZ(i)
@@ -701,6 +706,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(Math.sign(target[0])!==Math.sign(original[i][0]))continue;
      donorPos.setXYZ(i,...target);
     }
+    // The second pass must follow the deformed surface, not stale normals.
+    donorGeo.computeVertexNormals();
    }
    donorPos.needsUpdate=true;
    donorGeo.computeVertexNormals();
