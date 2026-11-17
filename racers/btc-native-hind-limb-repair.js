@@ -747,6 +747,20 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(count===1)for(const v of key.split(':'))rim.add(Number(v));
     if(count>2)throw Error('BTC donor collar non-manifold edge '+key);
    }
+   // Geometry surgery: each tangential collar relaxation must preserve the
+   // oriented incident faces. A near-tangent Laplacian step can still flip
+   // a tiny triangle and produce a black wedge in rear WebGL. Use a
+   // per-vertex backtracking line search against the pre-step triangles.
+   const incident=Array.from({length:donorPos.count},()=>[]);
+   for(let j=0;j<indices.count;j+=3){
+    const tri=[indices.getX(j),indices.getX(j+1),indices.getX(j+2)];
+    for(const v of tri)incident[v].push(tri);
+   }
+   const faceNormal=(a,b,c)=>{
+    const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2];
+    const vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+    return [uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];
+   };
    const original=Array.from({length:donorPos.count},(_,i)=>[
     donorPos.getX(i),donorPos.getY(i),donorPos.getZ(i)
    ]);
@@ -792,7 +806,24 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const target=positions[i].map((v,k)=>v+raw[k]*factor);
      // Avoid crossing the sagittal midline, or drifting into the tail cap.
      if(Math.sign(target[0])!==Math.sign(original[i][0]))continue;
-     donorPos.setXYZ(i,...target);
+     // Reject orientation flips relative to this pass's actual geometry.
+     // Shrink only this vertex's motion, never delete faces or relax QA.
+     let accepted=null;
+     for(let shrink=1;shrink>=1/32;shrink/=2){
+      const candidate=positions[i].map((v,k)=>v+(target[k]-v)*shrink);
+      let safe=true;
+      for(const tri of incident[i]){
+       const oldPts=tri.map(v=>positions[v]);
+       const newPts=tri.map(v=>v===i?candidate:positions[v]);
+       const n0=faceNormal(...oldPts),n1=faceNormal(...newPts);
+       const oldSq=n0.reduce((sum,v)=>sum+v*v,0);
+       const newSq=n1.reduce((sum,v)=>sum+v*v,0);
+       if(oldSq<1e-24||newSq<oldSq*.20||
+          n0.reduce((sum,v,k)=>sum+v*n1[k],0)<=0){safe=false;break;}
+      }
+      if(safe){accepted=candidate;break;}
+     }
+     if(accepted)donorPos.setXYZ(i,...accepted);
     }
     // The second pass must follow the deformed surface, not stale normals.
     donorGeo.computeVertexNormals();
