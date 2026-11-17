@@ -823,7 +823,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       }
       if(safe){accepted=candidate;break;}
      }
-     if(accepted)donorPos.setXYZ(i,...accepted);
+     if(accepted){
+      // Subsequent vertices must test against the ALREADY deformed
+      // neighboring faces. Testing every move against the frozen pass
+      // snapshot can approve individually safe steps that collectively
+      // fold a triangle across the rump/thigh seam.
+      donorPos.setXYZ(i,...accepted);
+      positions[i]=accepted;
+     }
     }
     // The second pass must follow the deformed surface, not stale normals.
     donorGeo.computeVertexNormals();
