@@ -650,6 +650,20 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
     }
    }
   }
+  // Prevent independently projected collar vertices from folding a shared
+  // thigh face. Evaluate each move against the LIVE indexed donor geometry.
+  const collarFaces=Array.from({length:donorPos.count},()=>[]);
+  for(let j=0;j<donorFaces.count;j+=3){
+   const tri=[donorFaces.getX(j),donorFaces.getX(j+1),donorFaces.getX(j+2)];
+   for(const v of tri)collarFaces[v].push(tri);
+  }
+  const collarNormal=(a,b,c)=>{
+   const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2];
+   const vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+   return [uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];
+  };
+  const collarPoint=v=>[donorPos.getX(v),donorPos.getY(v),donorPos.getZ(v)];
+  let collarRejectedMoves=0,collarBacktrackedMoves=0;
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
@@ -707,7 +721,25 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const maxDisplacement=Math.min(.00068,Number.isFinite(localMinEdge[i])
     ?Math.max(.00010,localMinEdge[i]*.65):.00068);
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
-   donorPos.setXYZ(i,x+deltaX*safe,y+deltaY*safe,z+deltaZ*safe);
+   const origin=[x,y,z],delta=[deltaX*safe,deltaY*safe,deltaZ*safe];
+   let accepted=null,backtracked=false;
+   for(let factor=1;factor>=1/64;factor/=2){
+    const candidate=origin.map((v,k)=>v+delta[k]*factor);
+    let valid=true;
+    for(const tri of collarFaces[i]){
+     const before=tri.map(collarPoint);
+     const after=tri.map(v=>v===i?candidate:collarPoint(v));
+     const n0=collarNormal(...before),n1=collarNormal(...after);
+     const sq0=n0.reduce((sum,v)=>sum+v*v,0);
+     const sq1=n1.reduce((sum,v)=>sum+v*v,0);
+     const dot=n0.reduce((sum,v,k)=>sum+v*n1[k],0);
+     if(sq0<1e-24||sq1<sq0*.55||dot<=0){valid=false;break;}
+    }
+    if(valid){accepted=candidate;backtracked=factor<1;break;}
+   }
+   if(!accepted){collarRejectedMoves++;continue;}
+   if(backtracked)collarBacktrackedMoves++;
+   donorPos.setXYZ(i,...accepted);
    // P0 animation candidate: donor's original GLB weights remain 95%
    // dominant at the upper collar. The host's Maya weights were transferred
    // by proximity onto an unrelated 50-joint skeleton; the former 25%
@@ -998,6 +1030,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
   };
   const uniqueSurfacePoints=smoothNormals(donorGeo);
   donorGeo.computeBoundingSphere();
+  bodyCut.collarRejectedMoves=collarRejectedMoves;
+  bodyCut.collarBacktrackedMoves=collarBacktrackedMoves;
   bodyCut.insetVertices=insetVertices;
   bodyCut.reattachedWeights=reattachedWeights;
   bodyCut.uniqueSurfacePoints=uniqueSurfacePoints;
@@ -1043,6 +1077,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    isolatedMayaPosteriorTrianglesRemoved:crop.isolatedMayaPosteriorTrianglesRemoved,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
+   collarRejectedMoves:bodyCut.collarRejectedMoves,collarBacktrackedMoves:bodyCut.collarBacktrackedMoves,
    donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
    donorSubdivisionPasses:bodyCut.subdivisionPasses,
    originalDonorTriangles:bodyCut.sourceTriangles,refinedDonorVertices:bodyCut.refinedVertices,
