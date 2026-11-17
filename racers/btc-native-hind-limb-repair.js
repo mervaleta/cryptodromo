@@ -739,7 +739,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     donorSkin.setComponent(i,k,top[k]?.[0]||0);
     donorWeights.setComponent(i,k,(top[k]?.[1]||0)/total);
    }
-   insetVertices++;
+   insetVertices++;reattachedWeights++;
   }
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
