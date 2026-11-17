@@ -462,7 +462,12 @@ function refineSkinnedDonor(source,passes=2){
   for(let i=0;i<vs.length;i++){
    const near=Array.from(boundary[i]),valence=adj[i].size;
    if(near.length===2){
-    next.push(combine([[vs[i],.75],[vs[near[0]],.125],[vs[near[1]],.125]]));
+    // A cut rim is a geometric constraint, not a free Loop boundary.
+    // Smoothing it inward moves the clipped thigh skirt away from the
+    // intended anatomical cut and opens a visible dark seam in WebGL.
+    // Keep the original boundary vertex fixed on BOTH subdivision passes;
+    // boundary edge midpoints below remain exact linear interpolations.
+    next.push(vs[i]);
    }else if(valence>=3){
     const beta=valence===3?3/16:3/(8*valence);
     const terms=[[vs[i],1-valence*beta],...Array.from(adj[i],v=>[vs[v],beta])];
