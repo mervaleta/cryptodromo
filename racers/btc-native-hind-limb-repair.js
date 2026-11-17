@@ -325,6 +325,96 @@ function clipNativeTriangles(mesh,predicate){
  * Preserve all native Gallop bone indices at old vertices; interpolate
  * influences at new edge vertices. No separately animated skeleton.
  */
+
+/**
+ * Candidate posterior donor boundary: cut ACTUAL skinned triangles at the
+ * anatomical planes. The old centroid selection kept whole triangles whose
+ * corners protruded into the rump, producing a sawtooth Quaternius skirt.
+ * This is an isolated BTC lookdev change, not a V23 approval.
+ */
+function clipNativeBodyHindExact(mesh){
+ const src=mesh.geometry,idx=src.getIndex(),pos=src.getAttribute('position'),
+  ji=src.getAttribute('skinIndex'),jw=src.getAttribute('skinWeight');
+ if(!idx||!pos||!ji||!jw)throw Error('BTC exact hind donor needs skinned indexed geometry');
+ const xyz=Array.from(pos.array),bones=Array.from(ji.array),weights=Array.from(jw.array);
+ const faces=[],edgePoints=new Map();
+ const planes=[
+  {id:'y',f:v=>xyz[3*v+1]-.00545},
+  {id:'z',f:v=>.02105-xyz[3*v+2]},
+  {id:'R',f:v=>xyz[3*v]-.0010},
+  {id:'L',f:v=>-xyz[3*v]-.0010}
+ ];
+ function intersection(a,b,plane){
+  const fa=plane.f(a),fb=plane.f(b);
+  if(Math.abs(fa)<1e-12)return a;
+  if(Math.abs(fb)<1e-12)return b;
+  const key=plane.id+':'+Math.min(a,b)+':'+Math.max(a,b);
+  if(edgePoints.has(key))return edgePoints.get(key);
+  const t=fa/(fa-fb);
+  if(!Number.isFinite(t)||t<0||t>1)
+   throw Error('BTC donor exact crop invalid edge crossing '+plane.id);
+  const v=xyz.length/3;
+  for(let k=0;k<3;k++)xyz.push(xyz[3*a+k]*(1-t)+xyz[3*b+k]*t);
+  const influence=new Map();
+  for(const [id,factor] of [[a,1-t],[b,t]])for(let k=0;k<4;k++){
+   const w=weights[4*id+k]*factor;
+   if(w>1e-9){const j=bones[4*id+k];influence.set(j,(influence.get(j)||0)+w);}
+  }
+  const sorted=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const total=sorted.reduce((sum,x)=>sum+x[1],0)||1;
+  for(let k=0;k<4;k++){
+   bones.push(sorted[k]?.[0]||0);
+   weights.push((sorted[k]?.[1]||0)/total);
+  }
+  edgePoints.set(key,v);return v;
+ }
+ function clip(poly,plane){
+  if(poly.length<3)return [];
+  const out=[];
+  for(let k=0;k<poly.length;k++){
+   const a=poly[k],b=poly[(k+1)%poly.length],
+    ia=plane.f(a)>=-1e-12,ib=plane.f(b)>=-1e-12;
+   if(ia)out.push(a);
+   if(ia!==ib)out.push(intersection(a,b,plane));
+  }
+  const unique=[];
+  for(const v of out)if(unique.at(-1)!==v)unique.push(v);
+  if(unique.length>1&&unique[0]===unique.at(-1))unique.pop();
+  return unique;
+ }
+ let sourceFaces=0,cutFaces=0;
+ for(let i=0;i<idx.count;i+=3){
+  const tri=[idx.getX(i),idx.getX(i+1),idx.getX(i+2)];
+  // The two disjoint flanks share the height and longitudinal cuts.
+  const common=clip(clip(tri,planes[0]),planes[1]);
+  if(common.length<3)continue;
+  sourceFaces++;
+  for(const side of [planes[2],planes[3]]){
+   const poly=clip(common,side);
+   if(poly.length<3)continue;
+   if(poly.length!==3||poly.some(v=>!tri.includes(v)))cutFaces++;
+   for(let j=1;j<poly.length-1;j++){
+    const a=poly[0],b=poly[j],c=poly[j+1];
+    if(a===b||b===c||a===c)continue;
+    const ux=xyz[3*b]-xyz[3*a],uy=xyz[3*b+1]-xyz[3*a+1],uz=xyz[3*b+2]-xyz[3*a+2];
+    const vx=xyz[3*c]-xyz[3*a],vy=xyz[3*c+1]-xyz[3*a+1],vz=xyz[3*c+2]-xyz[3*a+2];
+    const areaSq=(uy*vz-uz*vy)**2+(uz*vx-ux*vz)**2+(ux*vy-uy*vx)**2;
+    if(areaSq>1e-24)faces.push(a,b,c);
+   }
+  }
+ }
+ if(faces.length<300||cutFaces===0)
+  throw Error('BTC exact donor crop produced insufficient real geometry '+faces.length+'/'+cutFaces);
+ const out=new THREE.BufferGeometry();
+ out.setIndex(faces);
+ out.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
+ out.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
+ out.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+ out.computeVertexNormals();out.computeBoundingSphere();
+ return {geometry:out,triangles:faces.length/3,
+  discardedTinyDonorTriangles:0,exactCutFaces:cutFaces,sourceFaces};
+}
+
 function refineSkinnedDonor(source,passes=2){
  const pos=source.getAttribute('position'),joints=source.getAttribute('skinIndex'),
   weights=source.getAttribute('skinWeight'),index=source.getIndex();
@@ -460,35 +550,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
  const crop=cropMayaHind(anatomy);
  let donor=null,donorHooves=null,bodyCut=null,hoovesCut=null;
  try{
-  bodyCut=clipNativeTriangles(original,(p)=>{
-   const x=p.reduce((n,v)=>n+v[0],0)/3,
-     y=p.reduce((n,v)=>n+v[1],0)/3,z=p.reduce((n,v)=>n+v[2],0)/3;
-   // Full original Gallop joint topology from gaskin through fetlock.
-   // Upper end tucks into the still-continuous Maya rump.
-   // Stop the Quaternius thigh collar below the original Maya croup.
-   // The old z<.0268 allowed broad donor triangles to climb onto the
-   // rump and appear as a jagged skirt in real rear WebGL images.
-   // Candidate P0 visual surgery: lower the Quaternius donor thigh collar by 1.2 mm
-  // to keep its high polygon rim out of the Maya rump in rear poses.
-  // The full 16-phase WebGL gate must determine whether this creates a gap.
-  // BTC posterior collar A/B: the GLB upper rim formerly began 1.35 mm
-  // below the retained Maya flank boundary (y=.0052). That broad overlap
-  // forms a visible triangular skirt in rear/3Q frames. Move the donor
-  // cutoff 1.15 mm toward the retained host, keeping 0.20 mm of overlap
-  // for skinned attachment instead of deleting or faking a seam.
-  // This is an unapproved geometry candidate, not V23.
-  // P0 2026-11-16 geometry candidate: extend the skinned donor thigh by
-  // 0.55 mm into the intact host to test whether the dark rump/stifle
-  // wedge is caused by a zero-overlap butt seam. Keep the native host
-  // surface and the original Gallop; no version credit before WebGL A/B.
-  // P0 WebGL A/B candidate 2026-11-17: the extra 0.55 mm of
-  // donor upper thigh admitted more centroid-selected polygons, whose
-  // upper faces form a serrated overlap under the rump. Retain only
-  // 0.25 mm above the original 0.0208 m host cut while preserving
-  // the lower native skinned thigh and the complete original Gallop.
-  // Requires 16-phase rear/3Q/profile comparison before acceptance.
-  return y>.00545&&z<.02105&&Math.abs(x)>.0010;
-  });
+  bodyCut=clipNativeBodyHindExact(original);
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
   // Results are visibly rounded geometry, not a lighting-only cosmetic.
