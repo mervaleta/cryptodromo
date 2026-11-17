@@ -481,7 +481,13 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   // 0.55 mm into the intact host to test whether the dark rump/stifle
   // wedge is caused by a zero-overlap butt seam. Keep the native host
   // surface and the original Gallop; no version credit before WebGL A/B.
-  return y>.00545&&z<.02135&&Math.abs(x)>.0010;
+  // P0 WebGL A/B candidate 2026-11-17: the extra 0.55 mm of
+  // donor upper thigh admitted more centroid-selected polygons, whose
+  // upper faces form a serrated overlap under the rump. Retain only
+  // 0.25 mm above the original 0.0208 m host cut while preserving
+  // the lower native skinned thigh and the complete original Gallop.
+  // Requires 16-phase rear/3Q/profile comparison before acceptance.
+  return y>.00545&&z<.02105&&Math.abs(x)>.0010;
   });
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
