@@ -814,6 +814,20 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       donorRim.add(id);
     }
    }
+   // The previous rim snap bypassed the incident-face orientation gate:
+   // a 0.18 mm move could invert a tiny subdivided collar triangle.
+   // Use LIVE neighboring positions and backtrack each proposed snap.
+   const rimFaces=Array.from({length:donorPos.count},()=>[]);
+   for(let j=0;j<di.count;j+=3){
+    const face=[di.getX(j),di.getX(j+1),di.getX(j+2)];
+    for(const v of face)rimFaces[v].push(face);
+   }
+   const rimPoint=v=>[donorPos.getX(v),donorPos.getY(v),donorPos.getZ(v)];
+   const rimNormal=(a,b,c)=>{
+    const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]];
+    const v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+    return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+   };
    let sewn=0;
    for(const id of donorRim){
     const x=donorPos.getX(id),y=donorPos.getY(id),z=donorPos.getZ(id);
@@ -834,8 +848,23 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // and let the existing orientation/area gate reject damaged faces.
     if(!nearest||distSq>.0012**2)continue;
     const dist=Math.sqrt(distSq),blend=Math.min(1,.00018/Math.max(dist,1e-12));
-    donorPos.setXYZ(id,x+(nearest[0]-x)*blend,
-     y+(nearest[1]-y)*blend,z+(nearest[2]-z)*blend);
+    const origin=[x,y,z],delta=nearest.map((v,k)=>(v-origin[k])*blend);
+    let accepted=null;
+    for(let factor=1;factor>=1/64;factor/=2){
+     const candidate=origin.map((v,k)=>v+delta[k]*factor);
+     const safe=rimFaces[id].every(face=>{
+      const prior=face.map(rimPoint);
+      const moved=face.map(v=>v===id?candidate:rimPoint(v));
+      const a=rimNormal(...prior),b=rimNormal(...moved);
+      const area0=a.reduce((n,v)=>n+v*v,0);
+      const area1=b.reduce((n,v)=>n+v*v,0);
+      const dot=a.reduce((n,v,k)=>n+v*b[k],0);
+      return area0>1e-24&&area1>=area0*.55&&dot>0;
+     });
+     if(safe){accepted=candidate;break;}
+    }
+    if(!accepted)continue;
+    donorPos.setXYZ(id,...accepted);
     sewn++;
    }
    // No artificial acceptance counters: this is diagnostic only.
