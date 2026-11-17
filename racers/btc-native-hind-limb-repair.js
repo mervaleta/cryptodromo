@@ -603,7 +603,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     ?Math.max(.00010,localMinEdge[i]*.65):.00068);
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
    donorPos.setXYZ(i,x+deltaX*safe,y+deltaY*safe,z+deltaZ*safe);
-   const mayaFactor=.88*t,influences=new Map();
+   // P0 actual skinning candidate: the Maya host weights were nearest-neighbor
+   // transferred onto a different 50-joint rig. Copying 88% of those
+   // approximated weights onto the *authored* donor thigh corrupts the
+   // original Gallop deformation at the junction. Keep the donor's authored
+   // skin dominant (75%) and blend only a bounded host contribution near
+   // the collar; the donor geometry and lower leg remain untouched.
+   // Must be judged against real 16-phase rear/3Q WebGL captures; not V23.
+   const mayaFactor=.25*t,influences=new Map();
    for(let k=0;k<4;k++){
     const w=(1-mayaFactor)*donorWeights.getComponent(i,k);
     if(w>1e-8){
