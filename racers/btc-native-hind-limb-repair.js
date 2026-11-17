@@ -339,10 +339,15 @@ function clipNativeBodyHindExact(mesh){
  const xyz=Array.from(pos.array),bones=Array.from(ji.array),weights=Array.from(jw.array);
  const faces=[],edgePoints=new Map();
  const planes=[
-  {id:'y',f:v=>xyz[3*v+1]-.00545},
-  {id:'z',f:v=>.02105-xyz[3*v+2]},
-  {id:'R',f:v=>xyz[3*v]-.0010},
-  {id:'L',f:v=>-xyz[3*v]-.0010}
+  // Match the three exact planes of cropMayaHind's upper posterior
+  // subtraction. Previously the donor began 0.25 mm above and ahead of
+  // the host opening and 0.50 mm farther inward on each flank. Those
+  // mismatched cuts create an unfillable dark band before any rig motion.
+  // The donor remains an isolated candidate until rear/3Q WebGL A/B.
+  {id:'y',f:v=>xyz[3*v+1]-.0052},
+  {id:'z',f:v=>.0208-xyz[3*v+2]},
+  {id:'R',f:v=>xyz[3*v]-.0015},
+  {id:'L',f:v=>-xyz[3*v]-.0015}
  ];
  function intersection(a,b,plane){
   const fa=plane.f(a),fb=plane.f(b);
