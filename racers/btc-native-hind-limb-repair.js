@@ -461,7 +461,10 @@ function refineSkinnedDonor(source,passes=2){
   const next=[];
   for(let i=0;i<vs.length;i++){
    const near=Array.from(boundary[i]),valence=adj[i].size;
-   if(near.length===2){
+   if(near.length>0){
+    // Every vertex incident to an open boundary is constrained, including
+    // cut corners with one or three boundary neighbors. Leaving those
+    // corners in the interior smoothing branch distorts the exact seam.
     // A cut rim is a geometric constraint, not a free Loop boundary.
     // Smoothing it inward moves the clipped thigh skirt away from the
     // intended anatomical cut and opens a visible dark seam in WebGL.
