@@ -885,12 +885,19 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // A tangential relax reduces collar zig-zags without collapsing
      // the original sculpt's volume or pulling the cut rim out of place.
      const raw=positions[i].map((v,k)=>alpha*(avg[k]-v));
-     const normals=donorGeo.getAttribute('normal');
-     const nx=normals.getX(i),ny=normals.getY(i),nz=normals.getZ(i);
-     const nlen=Math.hypot(nx,ny,nz);
-     if(nlen>1e-8){
-      const dot=(raw[0]*nx+raw[1]*ny+raw[2]*nz)/(nlen*nlen);
-      raw[0]-=dot*nx;raw[1]-=dot*ny;raw[2]-=dot*nz;
+     // The mesh changes vertex by vertex. A normal cached before this
+     // pass no longer describes the actual collar tangent plane. Rebuild
+     // this vertex's area-weighted normal from the CURRENT incident faces,
+     // so sequential relaxation cannot drift through the newly sewn skin.
+     const liveNormal=[0,0,0];
+     for(const tri of incident[i]){
+      const face=faceNormal(...tri.map(v=>positions[v]));
+      for(let k=0;k<3;k++)liveNormal[k]+=face[k];
+     }
+     const nlen=Math.hypot(...liveNormal);
+     if(nlen>1e-12){
+      const dot=raw.reduce((sum,v,k)=>sum+v*liveNormal[k],0)/(nlen*nlen);
+      for(let k=0;k<3;k++)raw[k]-=dot*liveNormal[k];
      }
      const norm=Math.hypot(...raw);
      const factor=norm>.00012?.00012/norm:1;
