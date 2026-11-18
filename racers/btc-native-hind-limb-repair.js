@@ -509,9 +509,19 @@ function refineSkinnedDonor(source,passes=2){
   const mid=new Map();
   for(const [key,e] of edges){
    const [a,b]=[vs[e.a],vs[e.b]];
-   const m=e.opp.length===2
-    ?combine([[a,.375],[b,.375],[vs[e.opp[0]],.125],[vs[e.opp[1]],.125]])
-    :combine([[a,.5],[b,.5]]);
+   // Cut-plane constraints apply to EDGES as well as vertices. An edge
+   // between two points on the same exact y/z/x clipping plane can have
+   // two adjacent faces; ordinary Loop's opposite-vertex stencil then
+   // pushes its midpoint off the plane and reopens the rump/limb seam.
+   // Preserve a linear midpoint on all such coplanar cut edges.
+   const onCutPlane=(p,q)=>[
+    [1,.0052],[2,.0208],[0,.0015],[0,-.0015]
+   ].some(([axis,value])=>Math.abs(p[axis]-value)<1e-7&&
+                            Math.abs(q[axis]-value)<1e-7);
+   const constrained=e.opp.length!==2||onCutPlane(a.p,b.p);
+   const m=constrained
+    ?combine([[a,.5],[b,.5]])
+    :combine([[a,.375],[b,.375],[vs[e.opp[0]],.125],[vs[e.opp[1]],.125]]);
    mid.set(key,next.length);next.push(m);
   }
   const find=(a,b)=>mid.get(a<b?a+':'+b:b+':'+a);
