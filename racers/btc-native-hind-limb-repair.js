@@ -779,17 +779,35 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
   // vertices with nearby surviving Maya cut edges on the SAME flank.
   // This is a small geometry candidate, not visual acceptance.
   {
-   const edgeUses=new Map();
-   for(let j=0;j<hostIndex.count;j+=3){
-    const ids=[hostIndex.getX(j),hostIndex.getX(j+1),hostIndex.getX(j+2)];
-    for(const [a,b] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
-     const key=Math.min(a,b)+':'+Math.max(a,b);
-     const rec=edgeUses.get(key)||{a,b,n:0};
-     rec.n++;edgeUses.set(key,rec);
+   // Detect the physical open boundary, not the raw GLB/Maya index
+   // boundary. Both sources duplicate positions at UV/material seams.
+   // Counting those duplicates as open edges previously snapped interior
+   // triangles toward the host, while missing actual rim counterparts.
+   const seamKey=(attribute,id)=>[
+    attribute.getX(id),attribute.getY(id),attribute.getZ(id)
+   ].map(v=>Math.round(v*1e7)).join(':');
+   function physicalBoundary(index,position){
+    const edges=new Map(),byPosition=new Map();
+    for(let id=0;id<position.count;id++){
+     const key=seamKey(position,id);
+     if(!byPosition.has(key))byPosition.set(key,[]);
+     byPosition.get(key).push(id);
     }
+    for(let j=0;j<index.count;j+=3){
+     const ids=[index.getX(j),index.getX(j+1),index.getX(j+2)];
+     for(const [a,b] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
+      const ak=seamKey(position,a),bk=seamKey(position,b);
+      if(ak===bk)continue;
+      const key=ak<bk?ak+'|'+bk:bk+'|'+ak;
+      const entry=edges.get(key)||{a,b,n:0};
+      entry.n++;
+      edges.set(key,entry);
+     }
+    }
+    return {edges:[...edges.values()].filter(e=>e.n===1),byPosition};
    }
-   const hostRim=[...edgeUses.values()].filter(e=>{
-    if(e.n!==1)return false;
+   const hostBoundary=physicalBoundary(hostIndex,hostPos);
+   const hostRim=hostBoundary.edges.filter(e=>{
     const ax=hostPos.getX(e.a),bx=hostPos.getX(e.b);
     const ay=hostPos.getY(e.a),by=hostPos.getY(e.b);
     const az=hostPos.getZ(e.a),bz=hostPos.getZ(e.b);
@@ -797,18 +815,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      Math.abs(bx)>.0014&&Math.min(ay,by)>.0050&&
      Math.abs(az-.0208)<.000015&&Math.abs(bz-.0208)<.000015;
    });
-   const donorEdges=new Map(),di=donorGeo.getIndex();
-   for(let j=0;j<di.count;j+=3){
-    const ids=[di.getX(j),di.getX(j+1),di.getX(j+2)];
-    for(const [a,b] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
-     const key=Math.min(a,b)+':'+Math.max(a,b);
-     const rec=donorEdges.get(key)||{a,b,n:0};
-     rec.n++;donorEdges.set(key,rec);
-    }
-   }
+   const di=donorGeo.getIndex();
+   const donorBoundary=physicalBoundary(di,donorPos);
    const donorRim=new Set();
-   for(const e of donorEdges.values())if(e.n===1){
-    for(const id of [e.a,e.b]){
+   for(const e of donorBoundary.edges)for(const vertex of [e.a,e.b]){
+    const key=seamKey(donorPos,vertex);
+    for(const id of donorBoundary.byPosition.get(key)||[]){
      if(Math.abs(donorPos.getZ(id)-.0208)<.000015&&
         donorPos.getY(id)>.0050&&Math.abs(donorPos.getX(id))>.0014)
       donorRim.add(id);
