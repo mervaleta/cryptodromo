@@ -667,7 +667,11 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
-   if(z<=.0208||z>=.0226||y<.0039||Math.abs(x)<.0010)continue;
+   // Include the actual z=.0208 clipped rim in collar projection. The
+   // previous <= rejected every boundary vertex, so even the corrected
+   // descending fade acted only on interior points and left the cut seam
+   // geometrically detached. Keep a tiny tolerance for float32 rounding.
+   if(z<.0208-1e-7||z>=.0226||y<.0039||Math.abs(x)<.0010)continue;
    const u=THREE.MathUtils.clamp((z-.0208)/(.0226-.0208),0,1);
    // The attachment is a boundary constraint: strongest at the open
    // z=.0208 cut, fading into the intact donor thigh by z=.0226.
