@@ -669,7 +669,12 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
    if(z<=.0208||z>=.0226||y<.0039||Math.abs(x)<.0010)continue;
    const u=THREE.MathUtils.clamp((z-.0208)/(.0226-.0208),0,1);
-   const t=u*u*(3-2*u),side=Math.sign(x);
+   // The attachment is a boundary constraint: strongest at the open
+   // z=.0208 cut, fading into the intact donor thigh by z=.0226.
+   // The old ascending smoothstep did the opposite, dragging interior
+   // triangles toward the rump while leaving the actual rim unsown.
+   // This is a geometric candidate, not V23 visual approval.
+   const t=1-u*u*(3-2*u),side=Math.sign(x);
    donorPoint.set(x,y,z);
    let best=null,bestDist=Infinity;
    for(const face of attachment){
