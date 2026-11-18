@@ -859,6 +859,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
     return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
    };
+   // Freeze the unsewn collar as a geometric reference. Sequential rim
+   // snaps must not each pass locally while collectively flattening or
+   // reversing the same shared triangle.
+   const rimReference=Array.from({length:donorPos.count},(_,v)=>rimPoint(v));
    let sewn=0;
    for(const id of donorRim){
     const x=donorPos.getX(id),y=donorPos.getY(id),z=donorPos.getZ(id);
@@ -887,10 +891,15 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const prior=face.map(rimPoint);
       const moved=face.map(v=>v===id?candidate:rimPoint(v));
       const a=rimNormal(...prior),b=rimNormal(...moved);
+      const reference=rimNormal(...face.map(v=>rimReference[v]));
       const area0=a.reduce((n,v)=>n+v*v,0);
       const area1=b.reduce((n,v)=>n+v*v,0);
+      const referenceArea=reference.reduce((n,v)=>n+v*v,0);
       const dot=a.reduce((n,v,k)=>n+v*b[k],0);
-      return area0>1e-24&&area1>=area0*.55&&dot>0;
+      const referenceDot=reference.reduce((n,v,k)=>n+v*b[k],0);
+      return area0>1e-24&&referenceArea>1e-24&&
+       area1>=area0*.55&&area1>=referenceArea*.36&&
+       dot>0&&referenceDot>0;
      });
      if(safe){accepted=candidate;break;}
     }
