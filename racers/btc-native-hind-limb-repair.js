@@ -1070,8 +1070,27 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        const refNormal=faceNormal(...tri.map(v=>original[v]));
        const refSq=refNormal.reduce((sum,v)=>sum+v*v,0);
        const refDot=refNormal.reduce((sum,v,k)=>sum+v*n1[k],0);
+       // Preserve triangle shape, not just area: a long, needle-like
+       // rump triangle can keep 36% of its area while its shortest
+       // edge nearly vanishes. Such needles flicker as dark wedges
+       // in rear/three-quarter Gallop frames.
+       const refPts=tri.map(v=>original[v]);
+       const squaredEdges=pts=>[0,1,2].map(k=>{
+        const a=pts[k],b=pts[(k+1)%3];
+        return a.reduce((sum,x,d)=>sum+(x-b[d])**2,0);
+       });
+       const refEdges=squaredEdges(refPts);
+       const newEdges=squaredEdges(newPts);
+       const minRef=Math.min(...refEdges),minNew=Math.min(...newEdges);
+       const maxRef=Math.max(...refEdges),maxNew=Math.max(...newEdges);
+       // Aspect ratio is squared-length based and dimensionless.
+       // A 3x deterioration of the shortest-to-longest edge ratio
+       // is rejected, without altering any regression assertion.
+       const refAspect=minRef/Math.max(maxRef,1e-24);
+       const newAspect=minNew/Math.max(maxNew,1e-24);
        if(oldSq<1e-24||refSq<1e-24||newSq<oldSq*.20||
           newSq<refSq*.36||refDot<=0||
+          minNew<minRef*.25||newAspect<refAspect/3||
           n0.reduce((sum,v,k)=>sum+v*n1[k],0)<=0){safe=false;break;}
       }
       if(safe){accepted=candidate;break;}
