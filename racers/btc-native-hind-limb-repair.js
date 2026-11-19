@@ -638,6 +638,12 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const cz=(pts[0].z+pts[1].z+pts[2].z)/3;
    if(cz<=.0207||cz>=.032||cy<=.0042||Math.abs(cx)<=.0012)continue;
    if(pts.some(p=>Math.sign(p.x)!==Math.sign(cx)))continue;
+   // The centroid can lie in the rump while one corner extends deep
+   // into the excised hind leg. Projecting a donor collar onto such a
+   // triangle bridges the actual cut and produces a dark thigh wedge.
+   // Restrict attachment to entirely retained, local host faces; this
+   // changes the 3D collar projection, not an acceptance threshold.
+   if(pts.some(p=>p.z<.0207||p.y<.0038||Math.abs(p.x)<.0010))continue;
    attachment.push({ids,pts,side:Math.sign(cx)});
   }
   if(attachment.length<30)throw Error('BTC V23 host rump triangles missing');
