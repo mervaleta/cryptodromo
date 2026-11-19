@@ -34,6 +34,10 @@ function cropMayaHind(anatomy){
   normal:geo.getAttribute('normal'),groups:geo.groups.map(g=>({...g}))};
  const xyz=Array.from(pos.array),bones=Array.from(skinIndex.array),
   weights=Array.from(skinWeight.array);
+ // Preserve authored Maya surface normals on the open posterior cut.
+ // Recomputing normals from the cropped, open triangles tilts the rim
+ // toward the exposed interior and creates dark wedge-shaped shading.
+ const nativeNormals=old.normal?Array.from(old.normal.array):null;
  const originalCount=pos.count;
  const edgeCache=new Map(),next=[],groups=[];
  let fullyRemoved=0,clipped=0;
@@ -68,6 +72,11 @@ function cropMayaHind(anatomy){
   const t=da/(da-db),v=xyz.length/3;
   if(t<0||t>1||!Number.isFinite(t))throw Error('BTC invalid crop plane crossing');
   for(let k=0;k<3;k++)xyz.push(xyz[a*3+k]*(1-t)+xyz[b*3+k]*t);
+  if(nativeNormals){
+   const n=[0,1,2].map(k=>nativeNormals[3*a+k]*(1-t)+nativeNormals[3*b+k]*t);
+   const len=Math.hypot(...n)||1;
+   nativeNormals.push(...n.map(c=>c/len));
+  }
   const blend=new Map();
   for(const [u,f] of [[a,1-t],[b,t]])for(let k=0;k<4;k++){
    const weight=weights[4*u+k]*f;
@@ -233,8 +242,12 @@ function cropMayaHind(anatomy){
  geo.setIndex(new THREE.Uint16BufferAttribute(pruned,1));
  geo.clearGroups();
  for(const g of cleanGroups)geo.addGroup(g.start,g.count,g.materialIndex);
- geo.deleteAttribute('normal');
- geo.computeVertexNormals();
+ if(nativeNormals){
+  geo.setAttribute('normal',new THREE.Float32BufferAttribute(nativeNormals,3));
+ }else{
+  geo.deleteAttribute('normal');
+  geo.computeVertexNormals();
+ }
  geo.computeBoundingSphere();
  return {removedMayaTriangles:fullyRemoved,cutTriangles:clipped,
   addedCutVertices:xyz.length/3-originalCount,keptMayaTriangles:pruned.length/3,
