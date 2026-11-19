@@ -206,7 +206,13 @@ function cropMayaHind(anatomy){
   // Restrict cleanup to genuinely separate, small posterior components.
   // A scrap can straddle the cut, so meanZ<.002 was too restrictive.
   // Never remove the connected torso or either substantial limb shell.
-  if(count<=32&&l.y/l.n>.0035&&l.z/l.n<.0208)
+  // The previous <=32 rule captured 50 triangles in the real Nov 19
+  // Chromium run and correctly tripped the 20-face safety gate before
+  // rendering. A 22-32-face disconnected hoof shell is NOT proven debris.
+  // Prune only the known tiny old-Maya scraps (<=8 faces) in the low
+  // posterior-foot zone; keep larger islands visible for diagnosis.
+  // Do not change the 20-face hard rejection or the downstream 0/0 gate.
+  if(count<=8&&l.y/l.n>.0035&&l.z/l.n<.0208)
    islandRoots.add(r);
  }
  const pruned=[],cleanGroups=[];
