@@ -912,6 +912,46 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     if(!accepted)continue;
     donorPos.setXYZ(id,...accepted);
+    // The previous rim snap changed only the REST positions. During
+    // Gallop, the donor's original joint weights then pulled the aligned
+    // edge away from the Maya host. Interpolate the skin influences of
+    // the ACTUAL closest host edge at the same projected point, retaining
+    // 85% authored donor weighting to avoid collapsing the stifle.
+    // This is a real skinned-geometry candidate, not V23 acceptance.
+    let hostEdge=null,hostEdgeT=0,hostEdgeDist=Infinity;
+    for(const e of hostRim){
+     const ax=hostPos.getX(e.a),ay=hostPos.getY(e.a),az=hostPos.getZ(e.a);
+     if(Math.sign(ax)!==Math.sign(x))continue;
+     const dx=hostPos.getX(e.b)-ax,dy=hostPos.getY(e.b)-ay,dz=hostPos.getZ(e.b)-az;
+     const lenSq=dx*dx+dy*dy+dz*dz;
+     if(lenSq<1e-18)continue;
+     const t=THREE.MathUtils.clamp(((accepted[0]-ax)*dx+(accepted[1]-ay)*dy+
+      (accepted[2]-az)*dz)/lenSq,0,1);
+     const d=(ax+t*dx-accepted[0])**2+(ay+t*dy-accepted[1])**2+
+      (az+t*dz-accepted[2])**2;
+     if(d<hostEdgeDist){hostEdgeDist=d;hostEdge=e;hostEdgeT=t;}
+    }
+    if(hostEdge&&hostEdgeDist<.0012**2){
+     const influence=new Map();
+     for(let k=0;k<4;k++){
+      const w=donorWeights.getComponent(id,k)*.85;
+      if(w>1e-9){const joint=donorSkin.getComponent(id,k);
+       influence.set(joint,(influence.get(joint)||0)+w);}
+     }
+     for(const [hostId,fraction] of [[hostEdge.a,1-hostEdgeT],[hostEdge.b,hostEdgeT]]){
+      for(let k=0;k<4;k++){
+       const w=hostWeights.getComponent(hostId,k)*fraction*.15;
+       if(w>1e-9){const joint=hostSkin.getComponent(hostId,k);
+        influence.set(joint,(influence.get(joint)||0)+w);}
+      }
+     }
+     const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
+     const total=top.reduce((sum,item)=>sum+item[1],0)||1;
+     for(let k=0;k<4;k++){
+      donorSkin.setComponent(id,k,top[k]?.[0]||0);
+      donorWeights.setComponent(id,k,(top[k]?.[1]||0)/total);
+     }
+    }
     sewn++;
    }
    // No artificial acceptance counters: this is diagnostic only.
