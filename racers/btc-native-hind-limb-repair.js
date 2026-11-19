@@ -677,14 +677,15 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
-   // Include the actual z=.0208 clipped rim in collar projection. The
-   // previous <= rejected every boundary vertex, so even the corrected
-   // descending fade acted only on interior points and left the cut seam
-   // geometrically detached. Keep a tiny tolerance for float32 rounding.
-   if(z<.0208-1e-7||z>=.0226||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((z-.0208)/(.0226-.0208),0,1);
-   // The attachment is a boundary constraint: strongest at the open
-   // z=.0208 cut, fading into the intact donor thigh by z=.0226.
+   // Actual donor triangles satisfy z<=.0208 after exact clipping. The
+   // former collar range [.0208,.0226) was entirely OUTSIDE that mesh,
+   // so almost no donor vertices could be attached to the Maya rump.
+   // Project the real 1.8mm strip immediately BELOW the cut rim instead;
+   // keep the projection strongest on z=.0208 and fade toward the leg.
+   if(z<.0190||z>.0208+1e-7||y<.0039||Math.abs(x)<.0010)continue;
+   const u=THREE.MathUtils.clamp((.0208-z)/(.0208-.0190),0,1);
+   // Attachment is strongest on the z=.0208 cut and fades into the
+   // actual retained donor leg at z=.0190.
    // The old ascending smoothstep did the opposite, dragging interior
    // triangles toward the rump while leaving the actual rim unsown.
    // This is a geometric candidate, not V23 visual approval.
