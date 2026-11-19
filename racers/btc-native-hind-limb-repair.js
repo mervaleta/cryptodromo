@@ -838,23 +838,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     return {edges:[...edges.values()].filter(e=>e.n===1),byPosition};
    }
-   // The opening is the UNION of three orthogonal boundary segments:
-   // upper Z, lower Y, and medial X. Previous sewing visited only Z,
-   // leaving the two long sides of the thigh collar physically detached.
-   // Only select ACTUAL open edges on the posterior surgical boundary.
-   const near=(a,b,tol=.00002)=>Math.abs(a-b)<=tol;
-   function onPosteriorCut(x,y,z){
-    const side=Math.abs(x);
-    return (near(z,.0208)&&y>=.00518&&side>=.00148)||
-     (near(y,.0052)&&z<=.02082&&side>=.00148)||
-     (near(side,.0015)&&y>=.00518&&z<=.02082);
-   }
    const hostBoundary=physicalBoundary(hostIndex,hostPos);
    const hostRim=hostBoundary.edges.filter(e=>{
     const ax=hostPos.getX(e.a),bx=hostPos.getX(e.b);
-    if(Math.sign(ax)!==Math.sign(bx))return false;
-    return onPosteriorCut(ax,hostPos.getY(e.a),hostPos.getZ(e.a))&&
-     onPosteriorCut(bx,hostPos.getY(e.b),hostPos.getZ(e.b));
+    const ay=hostPos.getY(e.a),by=hostPos.getY(e.b);
+    const az=hostPos.getZ(e.a),bz=hostPos.getZ(e.b);
+    return Math.sign(ax)===Math.sign(bx)&&Math.abs(ax)>.0014&&
+     Math.abs(bx)>.0014&&Math.min(ay,by)>.0050&&
+     Math.abs(az-.0208)<.000015&&Math.abs(bz-.0208)<.000015;
    });
    const di=donorGeo.getIndex();
    const donorBoundary=physicalBoundary(di,donorPos);
@@ -862,7 +853,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    for(const e of donorBoundary.edges)for(const vertex of [e.a,e.b]){
     const key=seamKey(donorPos,vertex);
     for(const id of donorBoundary.byPosition.get(key)||[]){
-     if(onPosteriorCut(donorPos.getX(id),donorPos.getY(id),donorPos.getZ(id)))
+     if(Math.abs(donorPos.getZ(id)-.0208)<.000015&&
+        donorPos.getY(id)>.0050&&Math.abs(donorPos.getX(id))>.0014)
       donorRim.add(id);
     }
    }
