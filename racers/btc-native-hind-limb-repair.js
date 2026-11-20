@@ -939,12 +939,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     if(!accepted)continue;
     donorPos.setXYZ(id,...accepted);
-    // The previous rim snap changed only the REST positions. During
-    // Gallop, the donor's original joint weights then pulled the aligned
-    // edge away from the Maya host. Interpolate the skin influences of
-    // the ACTUAL closest host edge at the same projected point, retaining
-    // 85% authored donor weighting to avoid collapsing the stifle.
-    // This is a real skinned-geometry candidate, not V23 acceptance.
+    // A position-only seam snap cannot survive Gallop: donor and Maya
+    // skin influences move the same rest-space point differently. Blend
+    // the rim influences toward the ACTUAL closest host edge, weighted
+    // by the measured separation. This affects only open donor rim
+    // vertices and leaves the stifle, hock and all other horses intact.
+    // Candidate geometry/animation only, NOT V23 visual acceptance.
     let hostEdge=null,hostEdgeT=0,hostEdgeDist=Infinity;
     for(const e of hostRim){
      const ax=hostPos.getX(e.a),ay=hostPos.getY(e.a),az=hostPos.getZ(e.a);
@@ -959,15 +959,22 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(d<hostEdgeDist){hostEdgeDist=d;hostEdge=e;hostEdgeT=t;}
     }
     if(hostEdge&&hostEdgeDist<.0012**2){
+     // At a coincident rim, favor the host's deformation so the two
+     // surfaces do not peel apart under the hind-leg swing. At the
+     // 1.2 mm cutoff, retain the previous 15% host contribution.
+     // Only this exact open rim is reweighted, not the interior leg.
+     const proximity=1-Math.min(1,Math.sqrt(hostEdgeDist)/.0012);
+     const hostShare=.15+.45*proximity;
+     const donorShare=1-hostShare;
      const influence=new Map();
      for(let k=0;k<4;k++){
-      const w=donorWeights.getComponent(id,k)*.85;
+      const w=donorWeights.getComponent(id,k)*donorShare;
       if(w>1e-9){const joint=donorSkin.getComponent(id,k);
        influence.set(joint,(influence.get(joint)||0)+w);}
      }
      for(const [hostId,fraction] of [[hostEdge.a,1-hostEdgeT],[hostEdge.b,hostEdgeT]]){
       for(let k=0;k<4;k++){
-       const w=hostWeights.getComponent(hostId,k)*fraction*.15;
+       const w=hostWeights.getComponent(hostId,k)*fraction*hostShare;
        if(w>1e-9){const joint=hostSkin.getComponent(hostId,k);
         influence.set(joint,(influence.get(joint)||0)+w);}
       }
