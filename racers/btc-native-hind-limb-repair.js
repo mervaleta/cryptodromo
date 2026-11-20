@@ -1042,16 +1042,20 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // Quaternius normal, pushing the new collar across its actual surface.
    // This changes the skinned donor geometry, not just its shading.
    donorGeo.computeVertexNormals();
+   // The donor body is clipped at z <= .0208. The old smoothing window
+   // [.0211,.0237] was empty, leaving the jagged upper thigh untreated.
+   // Relax only the actual 1.8 mm collar below the physical cut rim;
+   // pin the open boundary and retain the face-orientation backtracking.
    for(let pass=0;pass<2;pass++){
     const positions=Array.from({length:donorPos.count},(_,i)=>[
      donorPos.getX(i),donorPos.getY(i),donorPos.getZ(i)
     ]);
     for(let i=0;i<positions.length;i++){
      const [x,y,z]=positions[i];
-     if(z<=.0211||z>=.0237||y<=.0041||edges[i].size<4||rim.has(i))continue;
+     if(z<=.0190||z>=.0208||y<=.0041||edges[i].size<4||rim.has(i))continue;
      // Pin the transition's endpoints AND the true open rim. Attenuate
      // the smoothing one edge inward to avoid a hard displacement step.
-     const u=(z-.0211)/(.0237-.0211);
+     const u=(z-.0190)/(.0208-.0190);
      const taper=Math.sin(Math.PI*u)**2;
      const rimNeighbor=[...edges[i]].some(v=>rim.has(v));
      const alpha=.28*taper*(rimNeighbor?.18:1);
