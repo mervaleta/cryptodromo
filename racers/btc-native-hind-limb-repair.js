@@ -1004,12 +1004,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(d<hostEdgeDist){hostEdgeDist=d;hostEdge=e;hostEdgeT=t;}
     }
     if(hostEdge&&hostEdgeDist<.0012**2){
-     // At a coincident rim, favor the host's deformation so the two
-     // surfaces do not peel apart under the hind-leg swing. At the
-     // 1.2 mm cutoff, retain the previous 15% host contribution.
-     // Only this exact open rim is reweighted, not the interior leg.
+     // The donor and Maya coat currently use different transferred
+     // influence distributions even where their cut rims coincide.
+     // A 60% host share still permits the donor rim to peel open as the
+     // hind legs load. Match the host skin EXACTLY at coincidence, and
+     // taper to the previous 15% host share over 1.2 mm. Interior donor
+     // vertices remain unchanged. This changes actual Gallop deformation.
      const proximity=1-Math.min(1,Math.sqrt(hostEdgeDist)/.0012);
-     const hostShare=.15+.45*proximity;
+     const hostShare=.15+.85*proximity;
      const donorShare=1-hostShare;
      const influence=new Map();
      for(let k=0;k<4;k++){
