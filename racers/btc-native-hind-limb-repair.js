@@ -429,14 +429,59 @@ function clipNativeBodyHindExact(mesh){
  }
  if(faces.length<300||cutFaces===0)
   throw Error('BTC exact donor crop produced insufficient real geometry '+faces.length+'/'+cutFaces);
+ // The exact donor clip runs AFTER the old centroid-based fragment cleanup.
+ // Cutting a triangle at the posterior planes can create NEW detached
+ // slivers which the old cleanup never sees. Remove only tiny, truly
+ // disconnected low-body components; do not remove the authored hoof mesh.
+ // Weld spatially for classification (UV seams have duplicate IDs), but
+ // preserve every actual skinned vertex and all accepted large surfaces.
+ const parent=Array.from({length:faces.length/3},(_,i)=>i);
+ const find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
+ const union=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[a]=b;};
+ const physicalVertex=new Map(),edgeOwner=new Map();
+ const keyFor=v=>{
+  const key=[xyz[3*v],xyz[3*v+1],xyz[3*v+2]]
+   .map(x=>Math.round(x*1e7)).join(':');
+  if(!physicalVertex.has(key))physicalVertex.set(key,physicalVertex.size);
+  return physicalVertex.get(key);
+ };
+ for(let i=0;i<faces.length;i+=3){
+  const t=i/3,ids=[keyFor(faces[i]),keyFor(faces[i+1]),keyFor(faces[i+2])];
+  for(let k=0;k<3;k++){
+   const a=ids[k],b=ids[(k+1)%3];
+   if(a===b)continue;
+   const edge=a<b?a+':'+b:b+':'+a;
+   if(edgeOwner.has(edge))union(t,edgeOwner.get(edge));
+   else edgeOwner.set(edge,t);
+  }
+ }
+ const components=new Map();
+ for(let i=0;i<faces.length;i+=3){
+  const id=find(i/3),c=components.get(id)||{count:0,y:0,n:0};
+  c.count++;
+  for(let k=0;k<3;k++){
+   c.y+=xyz[3*faces[i+k]+1];c.n++;
+  }
+  components.set(id,c);
+ }
+ const debris=new Set([...components].filter(([,c])=>
+  c.count<=8&&c.y/c.n<.012).map(([id])=>id));
+ const cleaned=[];
+ let removedDonorSliverTriangles=0;
+ for(let i=0;i<faces.length;i+=3){
+  if(debris.has(find(i/3))){removedDonorSliverTriangles++;continue;}
+  cleaned.push(faces[i],faces[i+1],faces[i+2]);
+ }
+ if(removedDonorSliverTriangles>20)
+  throw Error('BTC exact donor cleanup would remove legitimate anatomy: '+removedDonorSliverTriangles);
  const out=new THREE.BufferGeometry();
- out.setIndex(faces);
+ out.setIndex(cleaned);
  out.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
  out.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
  out.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
  out.computeVertexNormals();out.computeBoundingSphere();
- return {geometry:out,triangles:faces.length/3,
-  discardedTinyDonorTriangles:0,exactCutFaces:cutFaces,sourceFaces};
+ return {geometry:out,triangles:cleaned.length/3,
+  discardedTinyDonorTriangles:removedDonorSliverTriangles,exactCutFaces:cutFaces,sourceFaces};
 }
 
 function refineSkinnedDonor(source,passes=2){
