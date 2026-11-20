@@ -509,7 +509,15 @@ function refineSkinnedDonor(source,passes=2){
   const next=[];
   for(let i=0;i<vs.length;i++){
    const near=Array.from(boundary[i]),valence=adj[i].size;
-   if(near.length>0){
+   // Interior vertices on an exact clipping plane must be pinned too.
+   // Previous Loop smoothing constrained open-rim vertices and cut-plane
+   // edge midpoints, but could still pull a shared interior cut vertex
+   // off the plane. That bends adjacent triangles into the host surface
+   // and makes a visible serrated wedge at the Maya/GLB rump join.
+   const onExactCutPlane=[
+    [1,.0052],[2,.0208],[0,.0015],[0,-.0015]
+   ].some(([axis,value])=>Math.abs(vs[i].p[axis]-value)<1e-7);
+   if(near.length>0||onExactCutPlane){
     // Every vertex incident to an open boundary is constrained, including
     // cut corners with one or three boundary neighbors. Leaving those
     // corners in the interior smoothing branch distorts the exact seam.
