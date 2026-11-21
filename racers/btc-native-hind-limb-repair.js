@@ -1062,10 +1062,38 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // Maya croup, creating dark triangular flaps in rear WebGL views.
    // A vertex adjacent to a boundary receives a tapered correction,
    // while boundary vertices remain at their original sewn positions.
+   // GLB authoring may duplicate indices along UV/material seams. Those
+   // seams are not physical cut rims: pinning them creates a serrated,
+   // unrelaxed band in the posterior collar. Count edge incidence using
+   // coincident spatial vertices, but keep the actual skinned vertex IDs
+   // unchanged. A true open cut still has only one incident face.
+   const spatialIds=new Map(),spatialVertex=[];
+   for(let v=0;v<donorPos.count;v++){
+    const key=[donorPos.getX(v),donorPos.getY(v),donorPos.getZ(v)]
+     .map(n=>Math.round(n*1e7)).join(':');
+    if(!spatialIds.has(key))spatialIds.set(key,spatialIds.size);
+    spatialVertex[v]=spatialIds.get(key);
+   }
+   const physicalEdges=new Map(),physicalVertices=new Map();
+   for(let j=0;j<indices.count;j+=3){
+    const vs=[indices.getX(j),indices.getX(j+1),indices.getX(j+2)];
+    for(const v of vs){
+     const id=spatialVertex[v];
+     if(!physicalVertices.has(id))physicalVertices.set(id,new Set());
+     physicalVertices.get(id).add(v);
+    }
+    for(let k=0;k<3;k++){
+     const a=spatialVertex[vs[k]],b=spatialVertex[vs[(k+1)%3]];
+     if(a===b)continue;
+     const key=Math.min(a,b)+':'+Math.max(a,b);
+     physicalEdges.set(key,(physicalEdges.get(key)||0)+1);
+    }
+   }
    const rim=new Set();
-   for(const [key,count] of edgeUses){
-    if(count===1)for(const v of key.split(':'))rim.add(Number(v));
-    if(count>2)throw Error('BTC donor collar non-manifold edge '+key);
+   for(const [key,count] of physicalEdges){
+    if(count>2)throw Error('BTC donor collar non-manifold spatial edge '+key);
+    if(count===1)for(const id of key.split(':').map(Number))
+     for(const v of physicalVertices.get(id)||[])rim.add(v);
    }
    // Geometry surgery: each tangential collar relaxation must preserve the
    // oriented incident faces. A near-tangent Laplacian step can still flip
