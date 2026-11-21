@@ -1091,7 +1091,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const rim=new Set();
    for(const [key,count] of physicalEdges){
-    if(count>2)throw Error('BTC donor collar non-manifold spatial edge '+key);
+    // Keep the existing raw-index manifold rejection; coincident GLB shells
+    // can legitimately share a position without sharing a surface edge.
     if(count===1)for(const id of key.split(':').map(Number))
      for(const v of physicalVertices.get(id)||[])rim.add(v);
    }
