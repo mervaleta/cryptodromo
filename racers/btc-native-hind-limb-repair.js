@@ -983,7 +983,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // Do not bridge nonmatching topologies. Bound the move to 0.18 mm
     // and let the existing orientation/area gate reject damaged faces.
     if(!nearest||distSq>.0012**2)continue;
-    const dist=Math.sqrt(distSq),blend=Math.min(1,.00018/Math.max(dist,1e-12));
+    // Full geometric coincidence is essential for a shared skinned rim.
+    // The former 0.18 mm capped motion left a persistent rest-space
+    // gap on donor vertices 0.18–1.2 mm away from the host boundary.
+    // Try the actual host point first; the existing per-face winding
+    // and area backtracking below rejects unsafe projection.
+    const dist=Math.sqrt(distSq),blend=1;
     const origin=[x,y,z],delta=nearest.map((v,k)=>(v-origin[k])*blend);
     let accepted=null;
     for(let factor=1;factor>=1/64;factor/=2){
