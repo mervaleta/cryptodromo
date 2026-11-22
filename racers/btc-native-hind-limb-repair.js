@@ -770,9 +770,20 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const t=1-u*u*(3-2*u),side=Math.sign(x);
    donorPoint.set(x,y,z);
    let best=null,bestDist=Infinity;
+   // Do not sew the outward donor thigh onto the BACK of a Maya rump
+   // triangle. Nearest-point alone is blind to the facing direction at
+   // overlapping flank folds and can create inverted, black WebGL wedges.
+   const donorNormal=donorGeo.getAttribute('normal');
+   const donorFacing=donorNormal?new THREE.Vector3(
+    donorNormal.getX(i),donorNormal.getY(i),donorNormal.getZ(i)):null;
    for(const face of attachment){
     if(face.side!==side)continue;
     triangle.set(...face.pts);
+    if(donorFacing&&donorFacing.lengthSq()>1e-12){
+     const hostFacing=triangle.getNormal(new THREE.Vector3());
+     if(hostFacing.lengthSq()>1e-12&&
+        hostFacing.dot(donorFacing)<-.25)continue;
+    }
     triangle.closestPointToPoint(donorPoint,closest);
     const dx=closest.x-x,dy=closest.y-y,dz=closest.z-z;
     // Reject nonlocal attachments. The old 8.7 mm spherical search
