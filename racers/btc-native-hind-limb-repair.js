@@ -1161,7 +1161,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     ]);
     for(let i=0;i<positions.length;i++){
      const [x,y,z]=positions[i];
-     if(z<=.0190||z>=.0208||y<=.0041||edges[i].size<4||rim.has(i))continue;
+     // UV/material seams may duplicate the same physical vertex. Moving
+     // only one copy opens a real crack in the skinned thigh. Relax each
+     // spatially welded group atomically, or leave the whole group pinned.
+     const twins=[...(physicalVertices.get(spatialVertex[i])||[i])];
+     if(i!==Math.min(...twins)||twins.some(v=>rim.has(v))||
+        z<=.0190||z>=.0208||y<=.0041||edges[i].size<4)continue;
      // Pin the transition's endpoints AND the true open rim. Attenuate
      // the smoothing one edge inward to avoid a hard displacement step.
      const u=(z-.0190)/(.0208-.0190);
@@ -1205,9 +1210,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      for(let shrink=1;shrink>=1/32;shrink/=2){
       const candidate=positions[i].map((v,k)=>v+(target[k]-v)*shrink);
       let safe=true;
-      for(const tri of incident[i]){
+      for(const tri of twins.flatMap(v=>incident[v])){
        const oldPts=tri.map(v=>positions[v]);
-       const newPts=tri.map(v=>v===i?candidate:positions[v]);
+       const newPts=tri.map(v=>twins.includes(v)
+        ?positions[v].map((p,k)=>p+candidate[k]-positions[i][k])
+        :positions[v]);
        const n0=faceNormal(...oldPts),n1=faceNormal(...newPts);
        const oldSq=n0.reduce((sum,v)=>sum+v*v,0);
        const newSq=n1.reduce((sum,v)=>sum+v*v,0);
@@ -1247,8 +1254,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       // neighboring faces. Testing every move against the frozen pass
       // snapshot can approve individually safe steps that collectively
       // fold a triangle across the rump/thigh seam.
-      donorPos.setXYZ(i,...accepted);
-      positions[i]=accepted;
+      const delta=accepted.map((p,k)=>p-positions[i][k]);
+      for(const v of twins){
+       const moved=positions[v].map((p,k)=>p+delta[k]);
+       donorPos.setXYZ(v,...moved);
+       positions[v]=moved;
+      }
      }
     }
     // The second pass must follow the deformed surface, not stale normals.
