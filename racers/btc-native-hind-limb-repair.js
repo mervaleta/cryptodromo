@@ -849,13 +849,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    if(!accepted){collarRejectedMoves++;continue;}
    if(backtracked)collarBacktrackedMoves++;
    donorPos.setXYZ(i,...accepted);
-   // P0 animation candidate: donor's original GLB weights remain 95%
-   // dominant at the upper collar. The host's Maya weights were transferred
-   // by proximity onto an unrelated 50-joint skeleton; the former 25%
-   // host blend could split the seam as the stifle rotates in Gallop.
-   // Preserve a small 5% host influence to maintain a continuous
-   // animated attachment, then judge only by 16-phase WebGL A/B.
-   const mayaFactor=.05*t,influences=new Map();
+   // Candidate P0: the sewn rim can use nearly 100% host skinning
+   // while its immediate interior retained only 5%, producing an abrupt
+   // deformation gradient and a dark triangular shear in gallop phases.
+   // Ramp the host share continuously over the existing 1.8 mm collar;
+   // retain 100% donor influence below z=.0190 and never alter the hock.
+   // This is an unapproved animation/geometry A/B, not a V23 milestone.
+   const mayaFactor=.30*t*t,influences=new Map();
    for(let k=0;k<4;k++){
     const w=(1-mayaFactor)*donorWeights.getComponent(i,k);
     if(w>1e-8){
