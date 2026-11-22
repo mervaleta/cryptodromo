@@ -954,7 +954,18 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // reversing the same shared triangle.
    const rimReference=Array.from({length:donorPos.count},(_,v)=>rimPoint(v));
    let sewn=0;
+   // A UV/material seam may contain several vertex IDs at precisely the
+   // same rest-space position. Snapping only one ID opens a real crack
+   // even though the physical boundary classifier correctly welded them.
+   // Treat all coincident rim IDs as one anatomical vertex and validate
+   // every incident face before moving the group.
+   const processedRim=new Set();
    for(const id of donorRim){
+    if(processedRim.has(id))continue;
+    const coincident=(donorBoundary.byPosition.get(seamKey(donorPos,id))||[])
+     .filter(v=>donorRim.has(v));
+    const rimGroup=coincident.length?coincident:[id];
+    for(const v of rimGroup)processedRim.add(v);
     const x=donorPos.getX(id),y=donorPos.getY(id),z=donorPos.getZ(id);
     let nearest=null,distSq=Infinity;
     for(const e of hostRim){
@@ -977,9 +988,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     let accepted=null;
     for(let factor=1;factor>=1/64;factor/=2){
      const candidate=origin.map((v,k)=>v+delta[k]*factor);
-     const safe=rimFaces[id].every(face=>{
+     const groupSet=new Set(rimGroup);
+     const incident=new Set(rimGroup.flatMap(v=>rimFaces[v]));
+     const safe=[...incident].every(face=>{
       const prior=face.map(rimPoint);
-      const moved=face.map(v=>v===id?candidate:rimPoint(v));
+      const moved=face.map(v=>groupSet.has(v)?candidate:rimPoint(v));
       const a=rimNormal(...prior),b=rimNormal(...moved);
       const reference=rimNormal(...face.map(v=>rimReference[v]));
       const area0=a.reduce((n,v)=>n+v*v,0);
@@ -994,7 +1007,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(safe){accepted=candidate;break;}
     }
     if(!accepted)continue;
-    donorPos.setXYZ(id,...accepted);
+    for(const v of rimGroup)donorPos.setXYZ(v,...accepted);
     // A position-only seam snap cannot survive Gallop: donor and Maya
     // skin influences move the same rest-space point differently. Blend
     // the rim influences toward the ACTUAL closest host edge, weighted
@@ -1039,12 +1052,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
      const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
      const total=top.reduce((sum,item)=>sum+item[1],0)||1;
-     for(let k=0;k<4;k++){
-      donorSkin.setComponent(id,k,top[k]?.[0]||0);
-      donorWeights.setComponent(id,k,(top[k]?.[1]||0)/total);
+     for(const v of rimGroup)for(let k=0;k<4;k++){
+      donorSkin.setComponent(v,k,top[k]?.[0]||0);
+      donorWeights.setComponent(v,k,(top[k]?.[1]||0)/total);
      }
     }
-    sewn++;
+    sewn+=rimGroup.length;
    }
    // No artificial acceptance counters: this is diagnostic only.
    bodyCut.sewnRimVertices=sewn;
