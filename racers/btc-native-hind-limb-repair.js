@@ -1034,9 +1034,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // hind legs load. Match the host skin EXACTLY at coincidence, and
      // taper to the previous 15% host share over 1.2 mm. Interior donor
      // vertices remain unchanged. This changes actual Gallop deformation.
-     const proximity=1-Math.min(1,Math.sqrt(hostEdgeDist)/.0012);
-     const hostShare=.15+.85*proximity;
-     const donorShare=1-hostShare;
+     // The sewn cut rim is a shared deforming boundary, not a blend zone.
+     // A nonzero donor share at the exact rim pulls coincident vertices
+     // apart as Gallop bends the hock. Use the host's interpolated skin
+     // influences for every genuinely matched rim vertex. The donor
+     // interior retains its native weights; only the seam ring changes.
+     const hostShare=1;
+     const donorShare=0;
      const influence=new Map();
      for(let k=0;k<4;k++){
       const w=donorWeights.getComponent(id,k)*donorShare;
