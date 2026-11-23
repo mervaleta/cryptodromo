@@ -1204,7 +1204,16 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // this vertex's area-weighted normal from the CURRENT incident faces,
      // so sequential relaxation cannot drift through the newly sewn skin.
      const liveNormal=[0,0,0];
-     for(const tri of incident[i]){
+     // At a UV/material seam the representative vertex sees only ONE
+     // side's faces, although its spatial twins move atomically. Build
+     // the tangent plane from all incident faces of that welded vertex,
+     // de-duplicating coincident triangles so a split UV island cannot
+     // bias the direction and pull the opposite side into a dark fold.
+     const seenPhysicalFaces=new Set();
+     for(const twin of twins)for(const tri of incident[twin]){
+      const faceKey=tri.map(v=>spatialVertex[v]).sort((a,b)=>a-b).join(':');
+      if(seenPhysicalFaces.has(faceKey))continue;
+      seenPhysicalFaces.add(faceKey);
       const face=faceNormal(...tri.map(v=>positions[v]));
       for(let k=0;k<3;k++)liveNormal[k]+=face[k];
      }
