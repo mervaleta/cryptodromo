@@ -1216,7 +1216,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // spatially welded group atomically, or leave the whole group pinned.
      const twins=[...(physicalVertices.get(spatialVertex[i])||[i])];
      if(i!==Math.min(...twins)||twins.some(v=>rim.has(v))||
-        z<=.0190||z>=.0208||y<=.0041||edges[i].size<4)continue;
+        z<=.0190||z>=.0208||y<=.0041)continue;
+     // A UV split lowers the representative's indexed valence even when
+     // the welded physical one-ring is well formed. Use the physical
+     // neighbor count below, not edges[i].size, to decide eligibility.
      // Pin the transition's endpoints AND the true open rim. Attenuate
      // the smoothing one edge inward to avoid a hard displacement step.
      const u=(z-.0190)/(.0208-.0190);
