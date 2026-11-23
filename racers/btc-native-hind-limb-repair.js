@@ -1218,10 +1218,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       for(let k=0;k<3;k++)liveNormal[k]+=face[k];
      }
      const nlen=Math.hypot(...liveNormal);
-     if(nlen>1e-12){
-      const dot=raw.reduce((sum,v,k)=>sum+v*liveNormal[k],0)/(nlen*nlen);
-      for(let k=0;k<3;k++)raw[k]-=dot*liveNormal[k];
-     }
+     // When welded UV faces cancel or become degenerate, the local
+     // tangent plane is undefined. Do not apply an unprojected Laplacian:
+     // that can shrink the croup through its sewn skin and create wedges.
+     if(nlen<=1e-12)continue;
+     const dot=raw.reduce((sum,v,k)=>sum+v*liveNormal[k],0)/(nlen*nlen);
+     for(let k=0;k<3;k++)raw[k]-=dot*liveNormal[k];
      const norm=Math.hypot(...raw);
      const factor=norm>.00012?.00012/norm:1;
      const target=positions[i].map((v,k)=>v+raw[k]*factor);
