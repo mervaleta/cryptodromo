@@ -1047,8 +1047,19 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // apart as Gallop bends the hock. Use the host's interpolated skin
      // influences for every genuinely matched rim vertex. The donor
      // interior retains its native weights; only the seam ring changes.
-     const hostShare=1;
-     const donorShare=0;
+     // A backtracked snap may stop short of the host edge. Copying 100%
+     // Maya skinning to a rim point still separated by up to 1.2 mm
+     // shears the limb during Gallop: the donor vertex follows the rump
+     // despite never reaching its surface. Match host weights only when
+     // the accepted position is physically coincident (<= 0.03 mm).
+     // Otherwise taper the transfer to zero over the local 0.30 mm seam.
+     // This changes actual deformation, not a synthetic acceptance gate.
+     const separation=Math.sqrt(hostEdgeDist);
+     const hostShare=separation<=.00003?1:
+      separation>=.00030?0:
+      1-((separation-.00003)/.00027)**2*
+       (3-2*((separation-.00003)/.00027));
+     const donorShare=1-hostShare;
      const influence=new Map();
      for(let k=0;k<4;k++){
       const w=donorWeights.getComponent(id,k)*donorShare;
