@@ -895,10 +895,16 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // retain 100% donor influence below z=.0190 and never alter the hock.
    // This is an unapproved animation/geometry A/B, not a V23 milestone.
    const mayaFactor=.30*t*t,influences=new Map();
-   for(let k=0;k<4;k++){
-    const w=(1-mayaFactor)*donorWeights.getComponent(i,k);
+   // Coincident UV/material copies can have DIFFERENT source skin weights.
+   // Using only the first copy and broadcasting its four influences to all
+   // copies creates an abrupt gallop deformation seam. Average each distinct
+   // source vertex once, then give the welded collar one coherent rig blend.
+   // This changes real skinned animation, not a synthetic QA counter.
+   const donorShare=(1-mayaFactor)/twins.length;
+   for(const twin of twins)for(let k=0;k<4;k++){
+    const w=donorShare*donorWeights.getComponent(twin,k);
     if(w>1e-8){
-     const bone=donorSkin.getComponent(i,k);
+     const bone=donorSkin.getComponent(twin,k);
      influences.set(bone,(influences.get(bone)||0)+w);
     }
    }
