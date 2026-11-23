@@ -1187,9 +1187,21 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const taper=Math.sin(Math.PI*u)**2;
      const rimNeighbor=[...edges[i]].some(v=>rim.has(v));
      const alpha=.28*taper*(rimNeighbor?.18:1);
+     // A UV seam splits the same anatomical point into several vertex
+     // indices. Average its COMPLETE physical one-ring, not only the
+     // representative UV island. Otherwise the tangent relax biases the
+     // thigh toward one material side and creates a triangular crease.
+     const physicalNeighbors=new Map();
+     for(const twin of twins)for(const v of edges[twin]){
+      const key=spatialVertex[v];
+      if(key!==spatialVertex[i]&&!physicalNeighbors.has(key))
+       physicalNeighbors.set(key,v);
+     }
+     if(physicalNeighbors.size<3)continue;
      const avg=[0,0,0];
-     for(const v of edges[i])for(let k=0;k<3;k++)avg[k]+=positions[v][k];
-     for(let k=0;k<3;k++)avg[k]/=edges[i].size;
+     for(const v of physicalNeighbors.values())
+      for(let k=0;k<3;k++)avg[k]+=positions[v][k];
+     for(let k=0;k<3;k++)avg[k]/=physicalNeighbors.size;
      // Limit the smoothing to a small fraction of a millimetre per pass.
      // A stronger laplacian reduces sharp collar ridges without letting
      // long adjacent triangles collapse into the Maya rump.
