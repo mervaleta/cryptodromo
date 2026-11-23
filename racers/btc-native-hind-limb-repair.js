@@ -751,6 +751,15 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    return [uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];
   };
   const collarPoint=v=>[donorPos.getX(v),donorPos.getY(v),donorPos.getZ(v)];
+  // The sequential seam projection must preserve the ORIGINAL face winding,
+  // not just the face from the immediately preceding accepted displacement.
+  // Several individually small turns can otherwise accumulate into a fold.
+  const collarRestNormals=new Map();
+  for(const faces of collarFaces)for(const tri of faces){
+   const key=tri.join(':');
+   if(!collarRestNormals.has(key))
+    collarRestNormals.set(key,collarNormal(...tri.map(collarPoint)));
+  }
   let collarRejectedMoves=0,collarBacktrackedMoves=0;
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
@@ -845,7 +854,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const sq0=n0.reduce((sum,v)=>sum+v*v,0);
      const sq1=n1.reduce((sum,v)=>sum+v*v,0);
      const dot=n0.reduce((sum,v,k)=>sum+v*n1[k],0);
-     if(sq0<1e-24||sq1<sq0*.55||dot<=0){valid=false;break;}
+     const rest=collarRestNormals.get(tri.join(':'));
+     const restSq=rest.reduce((sum,v)=>sum+v*v,0);
+     const restDot=rest.reduce((sum,v,k)=>sum+v*n1[k],0);
+     // Both incremental and rest-space tests are required: the first
+     // rejects a sudden flip, the second cumulative drift and collapsed
+     // triangles that render as black wedges during Gallop.
+     if(sq0<1e-24||restSq<1e-24||sq1<Math.max(sq0,restSq)*.55||
+        dot<=0||restDot<=0){valid=false;break;}
     }
     if(valid){accepted=candidate;backtracked=factor<1;break;}
    }
