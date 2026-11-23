@@ -761,8 +761,23 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
     collarRestNormals.set(key,collarNormal(...tri.map(collarPoint)));
   }
   let collarRejectedMoves=0,collarBacktrackedMoves=0;
+  // UV/material splits duplicate vertices at identical rest positions.
+  // A per-index host projection tears these coincident seam copies apart:
+  // one copy can move toward the Maya rump while its twin stays behind.
+  // Group physical points BEFORE any movement and sew them atomically.
+  const collarSpatial=new Map(),collarTwins=Array.from({length:donorPos.count});
+  for(let v=0;v<donorPos.count;v++){
+   const key=[donorPos.getX(v),donorPos.getY(v),donorPos.getZ(v)]
+    .map(n=>Math.round(n*1e7)).join(':');
+   if(!collarSpatial.has(key))collarSpatial.set(key,[]);
+   collarSpatial.get(key).push(v);
+  }
+  for(const group of collarSpatial.values())
+   for(const v of group)collarTwins[v]=group;
   let insetVertices=0,reattachedWeights=0;
   for(let i=0;i<donorPos.count;i++){
+   const twins=collarTwins[i];
+   if(i!==twins[0])continue;
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
    // Actual donor triangles satisfy z<=.0208 after exact clipping. The
    // former collar range [.0208,.0226) was entirely OUTSIDE that mesh,
@@ -839,17 +854,22 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.90);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
    const displacement=Math.hypot(deltaX,deltaY,deltaZ);
-   const maxDisplacement=Math.min(.00068,Number.isFinite(localMinEdge[i])
-    ?Math.max(.00010,localMinEdge[i]*.65):.00068);
+   const twinMinEdge=Math.min(...twins.map(v=>localMinEdge[v]).filter(Number.isFinite));
+   const maxDisplacement=Math.min(.00068,Number.isFinite(twinMinEdge)
+    ?Math.max(.00010,twinMinEdge*.65):.00068);
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
    const origin=[x,y,z],delta=[deltaX*safe,deltaY*safe,deltaZ*safe];
    let accepted=null,backtracked=false;
    for(let factor=1;factor>=1/64;factor/=2){
     const candidate=origin.map((v,k)=>v+delta[k]*factor);
     let valid=true;
-    for(const tri of collarFaces[i]){
+    const checkedFaces=new Set();
+    for(const twin of twins)for(const tri of collarFaces[twin]){
+     const faceKey=tri.join(':');
+     if(checkedFaces.has(faceKey))continue;
+     checkedFaces.add(faceKey);
      const before=tri.map(collarPoint);
-     const after=tri.map(v=>v===i?candidate:collarPoint(v));
+     const after=tri.map(v=>twins.includes(v)?candidate:collarPoint(v));
      const n0=collarNormal(...before),n1=collarNormal(...after);
      const sq0=n0.reduce((sum,v)=>sum+v*v,0);
      const sq1=n1.reduce((sum,v)=>sum+v*v,0);
@@ -867,7 +887,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    if(!accepted){collarRejectedMoves++;continue;}
    if(backtracked)collarBacktrackedMoves++;
-   donorPos.setXYZ(i,...accepted);
+   for(const twin of twins)donorPos.setXYZ(twin,...accepted);
    // Candidate P0: the sewn rim can use nearly 100% host skinning
    // while its immediate interior retained only 5%, producing an abrupt
    // deformation gradient and a dark triangular shear in gallop phases.
@@ -895,11 +915,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const top=[...influences].sort((p,q)=>q[1]-p[1]).slice(0,4);
    const total=top.reduce((sum,p)=>sum+p[1],0)||1;
-   for(let k=0;k<4;k++){
-    donorSkin.setComponent(i,k,top[k]?.[0]||0);
-    donorWeights.setComponent(i,k,(top[k]?.[1]||0)/total);
+   for(const twin of twins)for(let k=0;k<4;k++){
+    donorSkin.setComponent(twin,k,top[k]?.[0]||0);
+    donorWeights.setComponent(twin,k,(top[k]?.[1]||0)/total);
    }
-   insetVertices++;reattachedWeights++;
+   insetVertices+=twins.length;reattachedWeights+=twins.length;
   }
   // The exact donor cut creates an open rim at z=.0208, while the
   // existing closest-triangle collar projection only visits z>.0208.
