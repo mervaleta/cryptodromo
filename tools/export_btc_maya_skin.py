@@ -50,13 +50,27 @@ def run():
         sel = om.MSelectionList()
         sel.add(skin_name)
         skin_fn = oma.MFnSkinCluster(sel.getDependNode(0))
+        # MFnSkinCluster.getOutputGeometry() returns MObjects, NOT
+        # MDagPaths. getWeights() requires a mesh MDagPath and the
+        # inclusive transform must come from that same path.
         geometries = skin_fn.getOutputGeometry()
         if len(geometries) != 1:
             raise RuntimeError("Expected one output geometry, found %d" %
                                len(geometries))
-        dag = geometries[0]
-        if dag.apiType() != om.MFn.kMesh:
+        output_object = geometries[0]
+        shape_names = cmds.skinCluster(skin_name, query=True, geometry=True) or []
+        if len(shape_names) != 1:
+            raise RuntimeError("Expected one skinCluster mesh path, found %r" %
+                               (shape_names,))
+        shape_selection = om.MSelectionList()
+        shape_selection.add(shape_names[0])
+        dag = shape_selection.getDagPath(0)
+        if dag.node().hasFn(om.MFn.kTransform):
             dag.extendToShape()
+        if not dag.node().hasFn(om.MFn.kMesh):
+            raise RuntimeError("skinCluster output is not a polygon mesh")
+        if dag.node() != output_object:
+            raise RuntimeError("skinCluster output object differs from resolved mesh path")
         mesh = om.MFnMesh(dag)
         count = mesh.numVertices
         points = mesh.getPoints(om.MSpace.kObject)
@@ -99,7 +113,6 @@ def run():
             sparse.append(row)
         # IDs and triangle order refer to the ORIGINAL Maya mesh, not the
         # Quaternius GLB. Keep these intact for an audited vertex remap.
-        transform = om.MFnDagNode(dag).parent(0)
         output = {
             "format": "btc-maya-native-skin-v1",
             "source": os.path.basename(a.scene),
