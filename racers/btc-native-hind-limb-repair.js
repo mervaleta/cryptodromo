@@ -824,7 +824,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // 16-phase/six-camera PNG artifact is compared with #14157413825.
 const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const targetY=THREE.MathUtils.lerp(y,best.point.y,blend);
-   const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.72);
+   // BTC isolated geometric seam candidate: align the upper donor collar
+   // more closely with the real retained Maya rump along the fore-aft axis.
+   // The existing 3D displacement and face-orientation guards remain active.
+   const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.90);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
    const displacement=Math.hypot(deltaX,deltaY,deltaZ);
    const maxDisplacement=Math.min(.00068,Number.isFinite(localMinEdge[i])
