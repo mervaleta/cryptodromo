@@ -49,6 +49,21 @@ function cropMayaHind(anatomy){
  const originalCount=pos.count;
  const edgeCache=new Map(),next=[],groups=[];
  let fullyRemoved=0,clipped=0;
+ // Exact original Maya face signatures of the two five-face posterior
+ // scraps found by running this same crop in unsculpted rest space. Runtime
+ // hoof flare can move their vertices across the cut and reconnect them to
+ // the retained shell, so post-sculpt component detection alone is too late.
+ // Remove these source faces before clipping, while preserving every other
+ // Maya face and its authored skin weights.
+ const auditedScrapFaces=new Map([
+  ['2565:2570:2571',-1],['2524:2525:2571',-1],
+  ['2525:2570:2571',-1],['2565:2571:2572',-1],
+  ['2524:2571:2572',-1],
+  ['4163:4167:4168',1],['4163:4168:4322',1],
+  ['4168:4322:4325',1],['4167:4168:4285',1],
+  ['4168:4285:4325',1]
+ ]);
+ const removedScrapFaces=new Set(),removedScrapSides=new Set();
  // Exact polygon difference for the two convex posterior-limb crop lobes.
  // Each face is partitioned by the three boundary planes; the surviving
  // pieces are triangulated independently, so hidden centerline islands
@@ -143,6 +158,20 @@ function cropMayaHind(anatomy){
   const start=next.length;
   for(let i=group.start;i<group.start+group.count;i+=3){
    const tri=[idx.getX(i),idx.getX(i+1),idx.getX(i+2)];
+   const sourceFaceKey=tri.slice().sort((a,b)=>a-b).join(':');
+   if(auditedScrapFaces.has(sourceFaceKey)){
+    const side=auditedScrapFaces.get(sourceFaceKey);
+    const center=[0,1,2].map(k=>(restXYZ[3*tri[0]+k]+restXYZ[3*tri[1]+k]+restXYZ[3*tri[2]+k])/3);
+    if(Math.sign(center[0])!==side||Math.abs(center[0])<.0012||
+       Math.abs(center[0])>.0018||center[1]<.007||center[1]>.011||
+       center[2]<0||center[2]>=.0015)
+     throw Error('BTC audited Maya scrap face moved outside its original rest-space signature: '+sourceFaceKey);
+    if(removedScrapFaces.has(sourceFaceKey))
+     throw Error('BTC audited Maya scrap face appears more than once: '+sourceFaceKey);
+    removedScrapFaces.add(sourceFaceKey);removedScrapSides.add(side);
+    fullyRemoved++;
+    continue;
+   }
    let polys=subtract(tri,planes[2]);
    polys=polys.flatMap(p=>subtract(p,planes[3]));
    // Surgical removal of the residual original low hind-foot strip.
@@ -172,6 +201,9 @@ function cropMayaHind(anatomy){
   }
   groups.push({start,count:next.length-start,materialIndex:group.materialIndex});
  }
+ if(removedScrapFaces.size!==10||removedScrapSides.size!==2)
+  throw Error('BTC original Maya posterior scraps were not all found and removed: '+
+   removedScrapFaces.size+'/10 faces across '+removedScrapSides.size+'/2 sides');
  if(fullyRemoved<1000||fullyRemoved>3600||clipped<15)
   throw Error('BTC V22 clipping outside known Maya anatomy: '+fullyRemoved+'/'+clipped);
  // A complete edge clip can leave tiny DISCONNECTED hoof islands from
@@ -221,43 +253,30 @@ function cropMayaHind(anatomy){
   }
   limits.set(r,l);
  }
- const islandRoots=new Set(),islandSides=new Set(),posteriorComponentAudit=[];
+ const posteriorComponentAudit=[];
  for(const [r,count] of counts){
   const l=limits.get(r),x=l.x/l.n,y=l.y/l.n,z=l.z/l.n;
-  // These are the two detached hind-foot scraps in the ORIGINAL Maya
-  // rest space. Their post-clip tessellation is not invariant: with the
-  // authored hoof flare they expand to ~25 triangles, while a slightly
-  // different exact cut can leave the five source faces intact. Identify
-  // them by their measured bilateral rest-space location plus a bounded
-  // small-component size, not one assumed triangulation count.
+  // After removing the exact ten source faces, no small disconnected
+  // component may remain in their measured rest-space band. If sculpted
+  // geometry creates a new fragment, reject it instead of counting or
+  // deleting an unrelated component.
   if(count<=32&&Math.abs(x)>=.0010&&Math.abs(x)<=.0020&&
      y>=.0060&&y<=.0120&&z>=0&&z<.0020){
    posteriorComponentAudit.push({triangles:count,side:Math.sign(x),center:[x,y,z]});
   }
-  // Only the two audited five-face scraps (or their clipped descendants)
-  // are eligible. The exact pair-and-opposite-side check below fails closed
-  // if another component appears in this anatomical band.
-  if(count>=5&&count<=25&&Math.abs(x)>=.0012&&Math.abs(x)<=.0018&&
-     y>=.0070&&y<=.0110&&z>=0&&z<.0015){
-   islandRoots.add(r);islandSides.add(Math.sign(x));
-  }
  }
- // Fail closed if the known bilateral pair is not present. Do not prune a
- // lone component or an unrelated shell and do not manufacture a pass.
- if(islandRoots.size!==2||islandSides.size!==2)islandRoots.clear();
+ if(posteriorComponentAudit.length)
+  throw Error('BTC runtime crop still contains posterior fragments after exact source-face removal: '+
+   JSON.stringify(posteriorComponentAudit));
  const pruned=[],cleanGroups=[];
- let isolatedTrianglesRemoved=0;
  for(const group of groups){
   const start=pruned.length;
-  for(let i=group.start;i<group.start+group.count;i+=3){
-   if(islandRoots.has(root(i/3))){isolatedTrianglesRemoved++;continue;}
+  for(let i=group.start;i<group.start+group.count;i+=3)
    pruned.push(next[i],next[i+1],next[i+2]);
-  }
   cleanGroups.push({start,count:pruned.length-start,materialIndex:group.materialIndex});
  }
- if(isolatedTrianglesRemoved>50)
-  throw Error('BTC posterior scrap cleanup exceeded the two audited 25-face components: '+isolatedTrianglesRemoved);
-  geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
+ const isolatedTrianglesRemoved=removedScrapFaces.size;
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
  geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
  geo.setIndex(new THREE.Uint16BufferAttribute(pruned,1));
@@ -272,9 +291,10 @@ function cropMayaHind(anatomy){
  geo.computeBoundingSphere();
  return {removedMayaTriangles:fullyRemoved,cutTriangles:clipped,
   addedCutVertices:xyz.length/3-originalCount,keptMayaTriangles:pruned.length/3,
-  isolatedMayaPosteriorIslandsRemoved:islandRoots.size,
+  isolatedMayaPosteriorIslandsRemoved:removedScrapSides.size,
   isolatedMayaPosteriorTrianglesRemoved:isolatedTrianglesRemoved,
   isolatedMayaPosteriorComponentAudit:posteriorComponentAudit,
+  isolatedMayaPosteriorSourceFaceKeys:[...removedScrapFaces].sort(),
   seamMethod:'shared-edge-skinned-plane-clipping',
   restore(){
    geo.setAttribute('position',old.position);
@@ -1607,6 +1627,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    isolatedMayaPosteriorIslandsRemoved:crop.isolatedMayaPosteriorIslandsRemoved,
    isolatedMayaPosteriorTrianglesRemoved:crop.isolatedMayaPosteriorTrianglesRemoved,
    isolatedMayaPosteriorComponentAudit:crop.isolatedMayaPosteriorComponentAudit,
+   isolatedMayaPosteriorSourceFaceKeys:crop.isolatedMayaPosteriorSourceFaceKeys,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
