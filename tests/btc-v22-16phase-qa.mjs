@@ -87,12 +87,41 @@ try{
  for(const i of [0,4,8,12])await capture('rear',i);
  for(const i of [0,4,8,12])await capture('front',i);
  for(const i of [0,8])await capture('detail',i);
+ // Actual WebGL attribution captures: isolate the tail groom and donor limbs
+ // without changing geometry or suppressing any acceptance assertion.
+ const diagnosticFrames=[];
+ async function captureDiagnostic(flags,name){
+  const suffix=flags?'&'+flags:'';
+  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1'+suffix+'#BTC',
+   {waitUntil:'domcontentloaded',timeout:90000});
+  await page.waitForFunction(build=>{
+   const s=window.__cryptodromoBTCAtelierQA?.();
+   return s?.heroGroom?.harmonyBuild===build&&s.drawCalls>0&&s.clips?.includes('Gallop');
+  },BUILD,{timeout:120000});
+  await page.evaluate(()=>document.querySelector('[data-btc-camera="rear"]')?.click());
+  await page.evaluate(()=>window.__cryptodromoBTCAtelierSetPose?.(0));
+  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===0,
+   {timeout:15000});
+  await page.waitForTimeout(180);
+  const png=await page.evaluate(()=>document.querySelector('#horse-canvas')?.toDataURL('image/png'));
+  assert.ok(png?.startsWith('data:image/png;base64,')&&png.length>20000,
+   'Empty BTC diagnostic WebGL frame '+name);
+  const bytes=Buffer.from(png.slice('data:image/png;base64,'.length),'base64');
+  const sha=await import('node:crypto').then(c=>c.createHash('sha256').update(bytes).digest('hex'));
+  writeFileSync(DIR+'/'+name+'.png',bytes);
+  diagnosticFrames.push({name:name+'.png',sha,bytes:bytes.length,flags});
+  console.log('BTC_V22_DIAGNOSTIC_FRAME',name,bytes.length,sha);
+ }
+ await captureDiagnostic('btcHideTailQA=1','rear-00-no-tail');
+ await captureDiagnostic('btcHideDonorQA=1','rear-00-no-donor');
+ await captureDiagnostic('btcHideTailQA=1&btcHideDonorQA=1','rear-00-native-only');
  assert.equal(all.size,16,'Original native Gallop must produce 16 distinct actual WebGL poses');
  assert.deepEqual(errors,[],errors.join('\n'));
  writeFileSync(DIR+'/qa.json',JSON.stringify({
   build:BUILD,source:'actual original Quaternius GLB authored Gallop plus original Maya 2017 torso',
   liveHostingerVerified:false,AAAApproved:false,photographs:frames,
   hind:baseline.heroGroom.hindRestoration,
+  diagnosticFrames,
   tailDock:{
    borderEdges:baseline.heroGroom.tailDockBorderEdges,
    capTriangles:baseline.heroGroom.integratedDockCapTriangles,
