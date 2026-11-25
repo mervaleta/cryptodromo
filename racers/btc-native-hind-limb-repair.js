@@ -1297,7 +1297,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       }
       const next=neighbors[0];
       if(closed&&next===start){current=start;finished=true;break;}
-      if(neighbors.length!==1||localVisited.has(next))break;
+      const validDegree=previous===null&&closed
+       ?neighbors.length===2:neighbors.length===1;
+      if(!validDegree||localVisited.has(next))break;
       previous=current;current=next;
      }
      if(!finished||path.length<(closed?3:2))
