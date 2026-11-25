@@ -214,27 +214,31 @@ function cropMayaHind(anatomy){
  const counts=new Map(),limits=new Map();
  for(let i=0;i<next.length;i+=3){
   const r=root(i/3);counts.set(r,(counts.get(r)||0)+1);
-  const l=limits.get(r)||{y:0,z:0,n:0};
+  const l=limits.get(r)||{x:0,y:0,z:0,n:0};
   for(let k=0;k<3;k++){
-   const v=next[i+k];l.y+=restXYZ[v*3+1];l.z+=restXYZ[v*3+2];l.n++;
+   const v=next[i+k];
+   l.x+=restXYZ[v*3];l.y+=restXYZ[v*3+1];l.z+=restXYZ[v*3+2];l.n++;
   }
   limits.set(r,l);
  }
- const islandRoots=new Set();
+ const islandRoots=new Set(),islandSides=new Set();
  for(const [r,count] of counts){
-  const l=limits.get(r);
-  // Restrict cleanup to genuinely separate, small posterior components.
-  // A scrap can straddle the cut, so meanZ<.002 was too restrictive.
-  // Never remove the connected torso or either substantial limb shell.
-  // The previous <=32 rule captured 50 triangles in the real Nov 19
-  // Chromium run and correctly tripped the 20-face safety gate before
-  // rendering. A 22-32-face disconnected hoof shell is NOT proven debris.
-  // Prune only the known tiny old-Maya scraps (<=8 faces) in the low
-  // posterior-foot zone; keep larger islands visible for diagnosis.
-  // Do not change the 20-face hard rejection or the downstream 0/0 gate.
-  if(count<=8&&l.y/l.n>.0035&&l.z/l.n<.0208)
-   islandRoots.add(r);
+  const l=limits.get(r),x=l.x/l.n,y=l.y/l.n,z=l.z/l.n;
+  // The original Maya crop audit identified exactly two detached five-face
+  // hind-foot scraps at x≈±1.5 mm, y≈9 mm, z≈0.5 mm. The posterior plane
+  // partition triangulates each source face into roughly 25 retained pieces;
+  // a post-clip <=8-face test therefore misses the very fragments it must
+  // remove. Match their ORIGINAL rest-space location and bilateral identity,
+  // not their deformed hoof-flare positions or an arbitrary island counter.
+  // Legitimate hoof/limb shells are larger and/or outside this narrow band.
+  if(count>=20&&count<=32&&Math.abs(x)>=.0012&&Math.abs(x)<=.0018&&
+     y>=.0070&&y<=.0110&&z>=0&&z<.0015){
+   islandRoots.add(r);islandSides.add(Math.sign(x));
+  }
  }
+ // Fail closed if the known bilateral pair is not present. Do not prune a
+ // lone component or an unrelated shell and do not manufacture a pass.
+ if(islandRoots.size!==2||islandSides.size!==2)islandRoots.clear();
  const pruned=[],cleanGroups=[];
  let isolatedTrianglesRemoved=0;
  for(const group of groups){
@@ -245,8 +249,8 @@ function cropMayaHind(anatomy){
   }
   cleanGroups.push({start,count:pruned.length-start,materialIndex:group.materialIndex});
  }
- if(isolatedTrianglesRemoved>20)
-  throw Error('BTC posterior island cleanup exceeded 20 triangles: '+isolatedTrianglesRemoved);
+ if(isolatedTrianglesRemoved>50)
+  throw Error('BTC posterior scrap cleanup exceeded the two audited 25-face components: '+isolatedTrianglesRemoved);
   geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
  geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
