@@ -8,6 +8,7 @@ on:
     paths:
       - 'racers/btc-native-hind-limb-repair.js'
       - 'racers/btc-maya-master.js'
+      - 'racers/btc-maya-groom.js'
       - 'racers/btc-atelier-preview.js'
       - 'tests/btc-v22-16phase-qa.mjs'
       - '.github/workflows/btc-v22-16phase-qa.yml'
@@ -16,6 +17,7 @@ on:
     paths:
       - 'racers/btc-native-hind-limb-repair.js'
       - 'racers/btc-maya-master.js'
+      - 'racers/btc-maya-groom.js'
       - 'racers/btc-atelier-preview.js'
       - 'racers/racers.js'
       - 'racers/index.html'
