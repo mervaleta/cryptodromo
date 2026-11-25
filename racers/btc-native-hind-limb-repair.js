@@ -1322,50 +1322,59 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const donorStride=Math.max(1,Math.ceil(donorCount/24));
     const hostStride=Math.max(1,Math.ceil(hostCount/24));
     const sampleStride=Math.max(1,Math.floor(donorCount/24));
-    let best=null;
-    function evaluate(donorStart,hostStart,reverseHost){
-     const donor=rotateLoop(donorLoop,donorStart);
-     const hostSource=reverseHost?hostLoop.slice().reverse():hostLoop;
-     const host=rotateLoop(hostSource,hostStart);
-     const donorArc=arcTable(donor,donorPos),hostArc=arcTable(host,hostPos);
-     if(donorArc.total<=1e-10||hostArc.total<=1e-10)return null;
+    function makeCandidates(loop,position,starts){
+     return [...starts].map(start=>{
+      const rotated=rotateLoop(loop,start),arc=arcTable(rotated,position);
+      return arc.total>1e-10?{start,loop:rotated,arc}:null;
+     }).filter(Boolean);
+    }
+    function scorePair(donor,host,step){
      let sumSq=0,maxGap=0,count=0;
-     for(let i=0;i<donorCount;i+=sampleStride){
-      const sample=sampleArc(hostArc,donorArc.lengths[i]/donorArc.total);
-      const gap=distance3(donorArc.points[i],sample.point);
+     for(let i=0;i<donorCount;i+=step){
+      const sample=sampleArc(host.arc,donor.arc.lengths[i]/donor.arc.total);
+      const gap=distance3(donor.arc.points[i],sample.point);
       sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);count++;
      }
      const meanSq=sumSq/Math.max(1,count);
-     return {donor,host,donorArc,hostArc,donorStart,hostStart,reverseHost,
-      meanSq,maxGap,score:meanSq+maxGap*maxGap*.35};
+     return {meanSq,maxGap,score:meanSq+maxGap*maxGap*.35};
     }
-    // Coarse circular search: at most 24x24 starts per orientation, rather
-    // than rebuilding both arc tables for every vertex-pair rotation.
+    const donorCoarseStarts=new Set();
+    for(let i=0;i<donorCount;i+=donorStride)donorCoarseStarts.add(i);
+    const donorCoarse=makeCandidates(donorLoop,donorPos,donorCoarseStarts);
+    let best=null;
+    // Arc tables are built once per candidate start, not once per pair.
+    // This bounds the circular alignment search even after Loop subdivision.
     for(const reverseHost of [false,true]){
-     for(let donorStart=0;donorStart<donorCount;donorStart+=donorStride){
-      for(let hostStart=0;hostStart<hostCount;hostStart+=hostStride){
-       const candidate=evaluate(donorStart,hostStart,reverseHost);
-       if(candidate&&(!best||candidate.score<best.score))best=candidate;
+     const hostSource=reverseHost?hostLoop.slice().reverse():hostLoop;
+     const hostCoarseStarts=new Set();
+     for(let i=0;i<hostCount;i+=hostStride)hostCoarseStarts.add(i);
+     const hostCoarse=makeCandidates(hostSource,hostPos,hostCoarseStarts);
+     for(const donor of donorCoarse){
+      for(const host of hostCoarse){
+       const score=scorePair(donor,host,sampleStride);
+       if(!best||score.score<best.score.score)best={donor,host,reverseHost,score};
       }
      }
     }
     if(!best)return null;
-    // Refine around the best coarse phase. This preserves sub-stride accuracy
-    // while keeping worst-case work bounded for subdivided boundary loops.
-    const donorStarts=new Set(),hostStarts=new Set();
+    // Refine only around the best orientation/phase, with cached arc tables.
+    const donorRefineStarts=new Set(),hostRefineStarts=new Set();
     for(let delta=-donorStride;delta<=donorStride;delta++)
-     donorStarts.add((best.donorStart+delta+donorCount)%donorCount);
+     donorRefineStarts.add((best.donor.start+delta+donorCount)%donorCount);
     for(let delta=-hostStride;delta<=hostStride;delta++)
-     hostStarts.add((best.hostStart+delta+hostCount)%hostCount);
-    const coarse=best;
-    for(const donorStart of donorStarts){
-     for(const hostStart of hostStarts){
-      const candidate=evaluate(donorStart,hostStart,coarse.reverseHost);
-      if(candidate&&candidate.score<best.score)best=candidate;
+     hostRefineStarts.add((best.host.start+delta+hostCount)%hostCount);
+    const donorRefine=makeCandidates(donorLoop,donorPos,donorRefineStarts);
+    const hostSource=best.reverseHost?hostLoop.slice().reverse():hostLoop;
+    const hostRefine=makeCandidates(hostSource,hostPos,hostRefineStarts);
+    const refineStride=Math.max(1,Math.floor(donorCount/48));
+    for(const donor of donorRefine){
+     for(const host of hostRefine){
+      const score=scorePair(donor,host,refineStride);
+      if(score.score<best.score.score)best={donor,host,reverseHost:best.reverseHost,score};
      }
     }
-    const donor=best.donor,host=best.host;
-    const donorArc=arcTable(donor,donorPos),hostArc=arcTable(host,hostPos);
+    const donor=best.donor.loop,host=best.host.loop;
+    const donorArc=best.donor.arc,hostArc=best.host.arc;
     const samples=[];let sumSq=0,maxGap=0;
     for(let i=0;i<donorCount;i++){
      const sample=sampleArc(hostArc,donorArc.lengths[i]/donorArc.total);
