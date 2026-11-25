@@ -93,6 +93,14 @@ try{
   build:BUILD,source:'actual original Quaternius GLB authored Gallop plus original Maya 2017 torso',
   liveHostingerVerified:false,AAAApproved:false,photographs:frames,
   hind:baseline.heroGroom.hindRestoration,
+  tailDock:{
+   borderEdges:baseline.heroGroom.tailDockBorderEdges,
+   capTriangles:baseline.heroGroom.integratedDockCapTriangles,
+   midlineBridgeTriangles:baseline.heroGroom.tailDockMidlineBridgeTriangles,
+   openCapEdges:baseline.heroGroom.tailDockOpenCapEdges,
+   normalAlignmentBefore:baseline.heroGroom.tailDockCapNormalAlignmentBefore,
+   orientationFlipped:baseline.heroGroom.tailDockCapOrientationFlipped
+  },
   visualGate:'Must compare with V21 actual Hostinger images: no posterior surface shards, no open stifle, no hoof detachment. Fail visually if rear or 3Q is worse.'
  },null,2));
  console.log('BTC_V22_16_POSES_REAL_WEBGL_COMPLETE',frames.length);
