@@ -1240,7 +1240,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const bridgeUnmatchedByPlane={z:0,y:0,'x-':0,'x+':0};
    const distance3=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
    const pointAt=(position,id)=>[position.getX(id),position.getY(id),position.getZ(id)];
-   function orderedBoundaryLoops(edges,position,plane,side){
+   // Each clipping plane exposes an OPEN seam chain whose endpoints lie
+   // on the adjacent cut planes. Treating every plane independently as a
+   // closed ring falsely labels those legitimate endpoints as branches.
+   // Preserve every physical boundary edge and classify each component as
+   // either one simple closed loop or one simple open chain. True junctions
+   // (degree > 2), dangling singletons and malformed endpoint counts remain
+   // hard failures; no edge is discarded to make the zipper pass.
+   function orderedBoundaryPaths(edges,position,plane,side){
     const adjacency=new Map(),representative=new Map();
     for(const edge of edges){
      if(edge.plane!==plane)continue;
@@ -1254,67 +1261,113 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(!representative.has(a))representative.set(a,edge.a);
      if(!representative.has(b))representative.set(b,edge.b);
     }
-    const degreeErrors=[...adjacency.values()].filter(neighbors=>neighbors.size!==2).length;
-    if(degreeErrors)return {loops:[],degreeErrors};
-    const loops=[],visited=new Set();
+    const paths=[],visited=new Set();
     for(const first of adjacency.keys()){
      if(visited.has(first))continue;
-     const loop=[];let previous=null,current=first;
-     for(let step=0;step<=adjacency.size;step++){
-      if(current===first&&loop.length)break;
-      if(visited.has(current))return {loops:[],degreeErrors:1};
-      visited.add(current);loop.push(representative.get(current));
-      const neighbors=[...adjacency.get(current)];
-      const next=neighbors[0]===previous?neighbors[1]:neighbors[0];
+     const component=[],stack=[first],members=new Set();
+     while(stack.length){
+      const key=stack.pop();
+      if(members.has(key))continue;
+      members.add(key);component.push(key);
+      for(const neighbor of adjacency.get(key)||[])
+       if(!members.has(neighbor))stack.push(neighbor);
+     }
+     const endpoints=component.filter(key=>adjacency.get(key)?.size===1);
+     const branches=component.filter(key=>(adjacency.get(key)?.size||0)>2);
+     const malformed=component.filter(key=>{
+      const degree=adjacency.get(key)?.size||0;
+      return degree<1||degree>2;
+     });
+     if(branches.length||malformed.length||
+        (endpoints.length!==0&&endpoints.length!==2))
+      return {paths:[],degreeErrors:branches.length+malformed.length+
+       (endpoints.length!==0&&endpoints.length!==2?1:0)};
+     const closed=endpoints.length===0;
+     const start=closed?first:endpoints[0];
+     const path=[],localVisited=new Set();
+     let previous=null,current=start,finished=false;
+     for(let step=0;step<=component.length;step++){
+      if(closed&&current===start&&path.length){finished=true;break;}
+      if(localVisited.has(current))break;
+      localVisited.add(current);path.push(representative.get(current));
+      const neighbors=[...(adjacency.get(current)||[])].filter(key=>key!==previous);
+      if(!neighbors.length){
+       if(!closed&&adjacency.get(current)?.size===1){finished=true;break;}
+       break;
+      }
+      const next=neighbors[0];
+      if(closed&&next===start){current=start;finished=true;break;}
+      if(neighbors.length!==1||localVisited.has(next))break;
       previous=current;current=next;
      }
-     if(current!==first||loop.length<3)return {loops:[],degreeErrors:1};
-     loops.push(loop);
+     if(!finished||path.length<(closed?3:2))
+      return {paths:[],degreeErrors:1};
+     for(const key of component)visited.add(key);
+     paths.push({ids:path,closed});
     }
-    return {loops,degreeErrors:0};
+    return {paths,degreeErrors:0};
    }
-   function loopCentroid(loop,position){
+   function pathCentroid(path,position){
     const sum=[0,0,0];
-    for(const id of loop){const p=pointAt(position,id);for(let k=0;k<3;k++)sum[k]+=p[k];}
-    return sum.map(v=>v/loop.length);
+    for(const id of path.ids){const p=pointAt(position,id);for(let k=0;k<3;k++)sum[k]+=p[k];}
+    return sum.map(v=>v/path.ids.length);
    }
-   function pairBoundaryLoops(donorLoops,hostLoops){
-    if(donorLoops.length!==hostLoops.length)
-     throw Error('BTC ordered seam loop count mismatch: donor '+donorLoops.length+' / Maya '+hostLoops.length);
-    const remaining=hostLoops.slice(),pairs=[];
-    for(const donorLoop of donorLoops){
-     const center=loopCentroid(donorLoop,donorPos);
-     let best=0,bestDistance=Infinity;
+   function pairBoundaryPaths(donorPaths,hostPaths){
+    if(donorPaths.length!==hostPaths.length)
+     throw Error('BTC ordered seam path count mismatch: donor '+donorPaths.length+' / Maya '+hostPaths.length);
+    const remaining=hostPaths.slice(),pairs=[];
+    for(const donorPath of donorPaths){
+     let best=-1,bestDistance=Infinity;
+     const center=pathCentroid(donorPath,donorPos);
      for(let i=0;i<remaining.length;i++){
-      const hostCenter=loopCentroid(remaining[i],hostPos);
+      if(remaining[i].closed!==donorPath.closed)continue;
+      const hostCenter=pathCentroid(remaining[i],hostPos);
       const d=distance3(center,hostCenter);
       if(d<bestDistance){bestDistance=d;best=i;}
      }
-     pairs.push({donorLoop,hostLoop:remaining.splice(best,1)[0]});
+     if(best<0)throw Error('BTC ordered seam has no matching open/closed host path');
+     const hostPath=remaining.splice(best,1)[0];
+     if(!donorPath.closed){
+      const donor=donorPath.ids,host=hostPath.ids;
+      const forward=distance3(pointAt(donorPos,donor[0]),pointAt(hostPos,host[0]))+
+       distance3(pointAt(donorPos,donor[donor.length-1]),pointAt(hostPos,host[host.length-1]));
+      const reverse=distance3(pointAt(donorPos,donor[0]),pointAt(hostPos,host[host.length-1]))+
+       distance3(pointAt(donorPos,donor[donor.length-1]),pointAt(hostPos,host[0]));
+      if(reverse<forward)hostPath.ids=host.slice().reverse();
+     }
+     pairs.push({donorPath,hostPath});
     }
     return pairs;
    }
    function rotateLoop(loop,start){
     return loop.slice(start).concat(loop.slice(0,start));
    }
-   function arcTable(loop,position){
+   function arcTable(loop,position,closed=true){
     const points=loop.map(id=>pointAt(position,id)),lengths=[0];
-    for(let i=0;i<loop.length;i++)
+    const segments=closed?loop.length:loop.length-1;
+    for(let i=0;i<segments;i++)
      lengths.push(lengths[i]+distance3(points[i],points[(i+1)%loop.length]));
-    return {loop,points,lengths,total:lengths[lengths.length-1]};
+    return {loop,points,lengths,total:lengths[lengths.length-1],closed};
    }
    function sampleArc(table,u){
-    const target=Math.min(.999999999,Math.max(0,u))*table.total;
-    let low=0,high=table.loop.length-1;
-    while(low<high){
-     const middle=(low+high)>>1;
-     if(table.lengths[middle+1]<target)low=middle+1;
-     else high=middle;
+    const segments=table.lengths.length-1;
+    const value=Math.max(0,Math.min(1,u));
+    const target=(table.closed?Math.min(.999999999,value):value)*table.total;
+    let edge=segments-1;
+    if(target<table.total){
+     let low=0,high=segments-1;
+     while(low<high){
+      const middle=(low+high)>>1;
+      if(table.lengths[middle+1]<target)low=middle+1;
+      else high=middle;
+     }
+     edge=low;
     }
-    const edge=low,span=table.lengths[edge+1]-table.lengths[edge];
+    const span=table.lengths[edge+1]-table.lengths[edge];
     const t=span>1e-12?(target-table.lengths[edge])/span:0;
-    const a=table.points[edge],b=table.points[(edge+1)%table.loop.length];
-    return {a:table.loop[edge],b:table.loop[(edge+1)%table.loop.length],t,
+    const next=table.closed?(edge+1)%table.loop.length:edge+1;
+    const a=table.points[edge],b=table.points[next];
+    return {a:table.loop[edge],b:table.loop[next],t,
      point:a.map((v,k)=>v+(b[k]-v)*t)};
    }
    function findBestLoopAlignment(donorLoop,hostLoop){
@@ -1382,7 +1435,26 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      samples.push(sample);sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);
     }
     const meanSq=sumSq/Math.max(1,donorCount);
-    return {donor,host,samples,score:meanSq+maxGap*maxGap*.35,maxGap,meanSq};
+    return {donor,host,samples,score:meanSq+maxGap*maxGap*.35,maxGap,meanSq,
+     donorArc,hostArc,closed:true};
+   }
+   function findBestBoundaryAlignment(donorPath,hostPath){
+    if(donorPath.closed!==hostPath.closed)return null;
+    if(donorPath.closed)
+     return findBestLoopAlignment(donorPath.ids,hostPath.ids);
+    const donor=donorPath.ids.slice(),host=hostPath.ids.slice();
+    const donorArc=arcTable(donor,donorPos,false),hostArc=arcTable(host,hostPos,false);
+    if(donorArc.total<=1e-10||hostArc.total<=1e-10)return null;
+    const samples=[];let sumSq=0,maxGap=0;
+    for(let i=0;i<donor.length;i++){
+     const u=donorArc.lengths[i]/donorArc.total;
+     const sample=sampleArc(hostArc,u);
+     const gap=distance3(donorArc.points[i],sample.point);
+     samples.push(sample);sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);
+    }
+    const meanSq=sumSq/Math.max(1,donor.length);
+    return {donor,host,samples,score:meanSq+maxGap*maxGap*.35,
+     maxGap,meanSq,donorArc,hostArc,closed:false};
    }
    function bridgeVertex(sample){
     const t=Math.max(0,Math.min(1,sample.t));
@@ -1473,38 +1545,44 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     return {quality,cost};
    }
    const planes=['z','y','x-','x+'];
+   let seamOpenPaths=0,seamClosedLoops=0;
    for(const plane of planes)for(const side of [-1,1]){
-    const hostLoops=orderedBoundaryLoops(hostRim,hostPos,plane,side);
-    const donorLoops=orderedBoundaryLoops(donorRimEdges,donorPos,plane,side);
-    if(hostLoops.degreeErrors||donorLoops.degreeErrors)
-     throw Error('BTC seam boundary is branched; refusing nearest-point fallback on '+plane+' side '+side);
-    if(!hostLoops.loops.length&&!donorLoops.loops.length)continue;
-    const pairs=pairBoundaryLoops(donorLoops.loops,hostLoops.loops);
-    for(const {donorLoop,hostLoop} of pairs){
-     const alignment=findBestLoopAlignment(donorLoop,hostLoop);
-     if(!alignment)throw Error('BTC seam loop has no nondegenerate arc-length alignment');
+    const hostPaths=orderedBoundaryPaths(hostRim,hostPos,plane,side);
+    const donorPaths=orderedBoundaryPaths(donorRimEdges,donorPos,plane,side);
+    if(hostPaths.degreeErrors||donorPaths.degreeErrors)
+     throw Error('BTC seam boundary has a true non-manifold branch on '+plane+
+      ' side '+side+' (host errors '+hostPaths.degreeErrors+', donor errors '+donorPaths.degreeErrors+')');
+    if(!hostPaths.paths.length&&!donorPaths.paths.length)continue;
+    const pairs=pairBoundaryPaths(donorPaths.paths,hostPaths.paths);
+    for(const {donorPath,hostPath} of pairs){
+     const alignment=findBestBoundaryAlignment(donorPath,hostPath);
+     if(!alignment)throw Error('BTC seam path has no nondegenerate arc-length alignment');
      bridgeLoopPairs++;
+     if(alignment.closed)seamClosedLoops++;else seamOpenPaths++;
      bridgeMaxGap=Math.max(bridgeMaxGap,alignment.maxGap);
-     bridgeGapTotal+=Math.sqrt(alignment.meanSq)*donorLoop.length;
-     bridgeGapCount+=donorLoop.length;
+     bridgeGapTotal+=Math.sqrt(alignment.meanSq)*alignment.donor.length;
+     bridgeGapCount+=alignment.donor.length;
      const donor=alignment.donor,host=alignment.host;
      const m=donor.length,n=host.length;
-     const donorArc=arcTable(donor,donorPos),hostArc=arcTable(host,hostPos);
+     const donorArc=alignment.donorArc,hostArc=alignment.hostArc;
+     const donorSteps=alignment.closed?m:m-1;
+     const hostSteps=alignment.closed?n:n-1;
      const hostIds=host.map(id=>bridgeVertex({
       a:id,b:id,t:0,point:pointAt(hostPos,id)
      }));
-     const meanStep=(donorArc.total/Math.max(1,m)+hostArc.total/Math.max(1,n))*.5;
+     const meanStep=(donorArc.total/Math.max(1,donorSteps)+
+      hostArc.total/Math.max(1,hostSteps))*.5;
      const scale=Math.max(meanStep,1e-6);
      let zipperPath=null;
-     if(m>=3&&n>=3){
-      const costs=Array.from({length:m+1},()=>Array(n+1).fill(Infinity));
-      const previous=Array.from({length:m+1},()=>Array(n+1).fill(null));
+     if(donorSteps>=1&&hostSteps>=1){
+      const costs=Array.from({length:donorSteps+1},()=>Array(hostSteps+1).fill(Infinity));
+      const previous=Array.from({length:donorSteps+1},()=>Array(hostSteps+1).fill(null));
       costs[0][0]=0;
-      for(let i=0;i<=m;i++)for(let j=0;j<=n;j++){
+      for(let i=0;i<=donorSteps;i++)for(let j=0;j<=hostSteps;j++){
        const base=costs[i][j];
-       if(!Number.isFinite(base)||(i===m&&j===n))continue;
+       if(!Number.isFinite(base)||(i===donorSteps&&j===hostSteps))continue;
        const d0=donor[i%m],h0=hostIds[j%n];
-       if(i<m){
+       if(i<donorSteps){
         const d1=donor[(i+1)%m];
         const tri=bridgeTriangle([d0,d1,h0],
          [0,1,2].map(k=>normalFor(d0)[k]+normalFor(d1)[k]));
@@ -1521,7 +1599,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          }
         }
        }
-       if(j<n){
+       if(j<hostSteps){
         const h1=hostIds[(j+1)%n];
         const tri=bridgeTriangle([d0,h1,h0],
          [0,1,2].map(k=>normalFor(h0)[k]+normalFor(h1)[k]));
@@ -1539,14 +1617,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
         }
        }
       }
-      if(Number.isFinite(costs[m][n])){
-       const path=[];let i=m,j=n;
+      if(Number.isFinite(costs[donorSteps][hostSteps])){
+       const path=[];let i=donorSteps,j=hostSteps;
        while(i||j){
         const step=previous[i][j];
         if(!step){path.length=0;break;}
         path.push(step);i=step.i;j=step.j;
        }
-       if(path.length===m+n)zipperPath=path.reverse();
+       if(path.length===donorSteps+hostSteps)zipperPath=path.reverse();
       }
      }
      if(zipperPath){
@@ -1565,19 +1643,19 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       bridgeEdges+=zipperPath.length;
       bridgeEdgesByPlane[plane]+=zipperPath.length;
       bridgeTrianglesByPlane[plane]+=zipperPath.length;
-      for(let j=0;j<n;j++){
+      for(let j=0;j<hostSteps;j++){
        const step=distance3(pointAt(hostPos,host[j]),pointAt(hostPos,host[(j+1)%n]));
        bridgeMaxHostStep=Math.max(bridgeMaxHostStep,step);
       }
      }else{
-      // Keep a renderable diagnostic candidate if the strip cannot be
-      // triangulated without a degenerate face. The strict visual/runtime
-      // gate remains responsible for rejecting this fallback.
+      // Preserve a diagnostic strip without inventing a closing edge on an
+      // open cut chain. Every original donor boundary segment is considered.
       bridgeZipperFallbackLoops++;
       const projectedIds=alignment.samples.map(bridgeVertex);
-      for(let i=0;i<m;i++){
+      for(let i=0;i<donorSteps;i++){
        const a=donor[i],b=donor[(i+1)%m];
-       const pa=projectedIds[i],pb=projectedIds[(i+1)%projectedIds.length];
+       const nextIndex=alignment.closed?(i+1)%projectedIds.length:i+1;
+       const pa=projectedIds[i],pb=projectedIds[nextIndex];
        const hostStep=distance3(positionFor(pa),positionFor(pb));
        bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
        const made=addBridgeQuad(a,b,pa,pb,hostStep);
@@ -1589,8 +1667,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
     }
    }
-   bodyCut.seamBridgeMethod='monotone-dp-zipper';
+   bodyCut.seamBridgeMethod='monotone-dp-zipper-open-chain';
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
+   bodyCut.seamBridgeOpenPaths=seamOpenPaths;
+   bodyCut.seamBridgeClosedLoops=seamClosedLoops;
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
    bodyCut.seamBridgeZipperMovesHost=bridgeZipperMovesHost;
    bodyCut.seamBridgeZipperFallbackLoops=bridgeZipperFallbackLoops;
