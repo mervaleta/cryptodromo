@@ -1295,28 +1295,31 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const normalFor=id=>id<donorBase?
     (donorNormal?[0,1,2].map(k=>donorNormal.getComponent(id,k)):[0,1,0]):
     bridgeNormals.slice((id-donorBase)*3,(id-donorBase)*3+3);
-   function bridgeTriangle(ids){
+   function bridgeTriangle(ids,fallbackNormal){
     const points=ids.map(positionFor);
     const u=points[1].map((v,k)=>v-points[0][k]);
     const v=points[2].map((x,k)=>x-points[0][k]);
-    let cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+    const cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
     const areaSq=cross.reduce((sum,x)=>sum+x*x,0);
     if(areaSq<1e-18)return null;
     const normals=ids.map(normalFor);
     let target=[0,1,2].map(k=>normals[0][k]+normals[1][k]+normals[2][k]);
-    if(Math.hypot(...target)<1e-8)return null;
-    let alignment=cross.reduce((sum,x,k)=>sum+x*target[k],0);
+    // At a hard Maya/Quaternius normal break, opposite normals can cancel.
+    // That is not a missing geometric triangle. Fall back to the donor-side
+    // or host-side face normal so the bridge is still wound consistently.
+    if(Math.hypot(...target)<1e-8)target=fallbackNormal;
+    if(Math.hypot(...target)<1e-8)
+     target=normals.find(n=>Math.hypot(...n)>1e-8)||[0,1,0];
+    const alignment=cross.reduce((sum,x,k)=>sum+x*target[k],0);
     const oriented=ids.slice();
-    if(alignment<0){
-     [oriented[1],oriented[2]]=[oriented[2],oriented[1]];
-     cross=cross.map(x=>-x);alignment=-alignment;
-    }
-    if(alignment<=1e-18)return null;
+    if(alignment<0)[oriented[1],oriented[2]]=[oriented[2],oriented[1]];
     return {ids:oriented,areaSq};
    }
    function addBridgeQuad(a,b,pa,pb,hostStep){
-    const first=[bridgeTriangle([a,b,pa]),bridgeTriangle([b,pb,pa])];
-    const second=[bridgeTriangle([a,b,pb]),bridgeTriangle([a,pb,pa])];
+    const donorFallback=[0,1,2].map(k=>normalFor(a)[k]+normalFor(b)[k]);
+    const hostFallback=[0,1,2].map(k=>normalFor(pa)[k]+normalFor(pb)[k]);
+    const first=[bridgeTriangle([a,b,pa],donorFallback),bridgeTriangle([b,pb,pa],hostFallback)];
+    const second=[bridgeTriangle([a,b,pb],donorFallback),bridgeTriangle([a,pb,pa],hostFallback)];
     const pairs=[first,second].filter(pair=>pair.every(Boolean));
     if(pairs.length){
      // Choose the diagonal whose weaker triangle has the larger area.
