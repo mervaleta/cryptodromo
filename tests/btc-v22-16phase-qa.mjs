@@ -4,12 +4,27 @@
  */
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
+import {resolve,sep} from 'node:path';
 import {chromium} from 'playwright';
 const DIR='artifacts/btc-v22-full-cycle';mkdirSync(DIR,{recursive:true});
 const BUILD='btc-v22-continuous-hind-seam-20261107';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:1100,height:750},deviceScaleFactor:1});
 const errors=[],consoleMessages=[],requestFailures=[],frames=[],all=new Set();
+// Pin the browser's Three.js module graph to the exact npm package installed by
+// this workflow. Chromium still renders real WebGL/SwiftShader; only CDN variance
+// is removed from the test environment.
+const threeRoot=resolve('node_modules/three');
+await page.route('https://cdn.jsdelivr.net/npm/three@0.187.0/**',async route=>{
+ const url=new URL(route.request().url());
+ const marker='/npm/three@0.187.0/';
+ const offset=url.pathname.indexOf(marker);
+ if(offset<0)return route.abort();
+ const relative=url.pathname.slice(offset+marker.length);
+ const target=resolve(threeRoot,relative);
+ if(!target.startsWith(threeRoot+sep))return route.abort();
+ await route.fulfill({path:target,contentType:'text/javascript'});
+});
 page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{
  if(!m.text().includes('favicon'))consoleMessages.push({type:m.type(),text:m.text()});
@@ -38,6 +53,8 @@ try{
   })).catch(x=>({evaluationError:String(x)}));
   const moduleDiagnostics=await page.evaluate(async()=>{
    const modules=[
+    'three',
+    'three/addons/controls/OrbitControls.js',
     './btc-atelier-preview.js?v=btc-v22-continuous-hind-seam-20261107',
     './btc-maya-master.js?v=btc-v22-continuous-hind-seam-20261107',
     './btc-native-hind-limb-repair.js?v=btc-v22-continuous-hind-seam-20261107',
@@ -109,6 +126,7 @@ try{
  for(const i of [0,4,8,12])await capture('threeQuarter',i);
  for(const i of [0,4,8,12])await capture('rear',i);
  for(const i of [0,4,8,12])await capture('front',i);
+ for(const i of [0,4,8,12])await capture('top',i);
  for(const i of [0,8])await capture('detail',i);
  // Actual WebGL attribution captures: isolate the tail groom and donor limbs
  // without changing geometry or suppressing any acceptance assertion.
