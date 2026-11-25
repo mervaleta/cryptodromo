@@ -1314,9 +1314,23 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     for(const id of path.ids){const p=pointAt(position,id);for(let k=0;k<3;k++)sum[k]+=p[k];}
     return sum.map(v=>v/path.ids.length);
    }
-   function pairBoundaryPaths(donorPaths,hostPaths){
-    if(donorPaths.length!==hostPaths.length)
-     throw Error('BTC ordered seam path count mismatch: donor '+donorPaths.length+' / Maya '+hostPaths.length);
+   function pairBoundaryPaths(donorPaths,hostPaths,plane,side){
+    if(donorPaths.length!==hostPaths.length){
+     const describe=(paths,position)=>paths.map(path=>{
+      const points=path.ids.map(id=>pointAt(position,id));
+      let length=0;
+      for(let i=1;i<points.length;i++)length+=distance3(points[i-1],points[i]);
+      const bounds=[0,1,2].map(k=>[
+       Math.min(...points.map(p=>p[k])),Math.max(...points.map(p=>p[k]))
+      ]);
+      return {closed:path.closed,vertices:path.ids.length,length,
+       first:points[0],last:points[points.length-1],
+       center:pathCentroid(path,position),bounds};
+     });
+     throw Error('BTC ordered seam path count mismatch on '+plane+' side '+side+
+      ': donor='+JSON.stringify(describe(donorPaths,donorPos))+
+      ' Maya='+JSON.stringify(describe(hostPaths,hostPos)));
+    }
     const remaining=hostPaths.slice();
     const promoteShortOpenPath=(path,position,label)=>{
      const points=path.ids.map(id=>pointAt(position,id));
@@ -1578,7 +1592,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      throw Error('BTC seam boundary has a true non-manifold branch on '+plane+
       ' side '+side+' (host errors '+hostPaths.degreeErrors+', donor errors '+donorPaths.degreeErrors+')');
     if(!hostPaths.paths.length&&!donorPaths.paths.length)continue;
-    const pairs=pairBoundaryPaths(donorPaths.paths,hostPaths.paths);
+    const pairs=pairBoundaryPaths(donorPaths.paths,hostPaths.paths,plane,side);
     for(const {donorPath,hostPath} of pairs){
      const alignment=findBestBoundaryAlignment(donorPath,hostPath);
      if(!alignment)throw Error('BTC seam path has no nondegenerate arc-length alignment');
