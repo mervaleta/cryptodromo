@@ -1223,49 +1223,125 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // No artificial acceptance counters: this is diagnostic only.
    bodyCut.sewnRimVertices=sewn;
 
-   // Stitch every donor boundary edge on ALL THREE cut planes to the
-   // corresponding retained Maya rim. Each plane has its own local
-   // projection cache so a corner shared by two cut planes cannot be
-   // incorrectly snapped to a different flank or boundary.
-   const donorRestPosition={
-    count:donorPos.count,
-    getX:id=>rimReference[id][0],
-    getY:id=>rimReference[id][1],
-    getZ:id=>rimReference[id][2]
-   };
+   // Match the donor and Maya cut rims as ordered closed loops. Independent
+   // nearest-edge projection jumped across adjacent limb folds (28 skipped
+   // cells in the prior WebGL artifact). Arc-length correspondence preserves
+   // cyclic order and creates one continuous skinned strip per flank.
    const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
    const projected=new Map(),donorBase=donorPos.count;
    const hostNormal=hostGeo.getAttribute('normal'),donorNormal=donorGeo.getAttribute('normal');
    let bridgeMaxGap=0,bridgeGapTotal=0,bridgeGapCount=0,bridgeEdges=0,
     bridgeUnmatchedVertices=0,bridgeUnmatchedEdges=0,bridgeSingleTriangleEdges=0,
-    bridgeMaxHostStep=0;
+    bridgeMaxHostStep=0,bridgeLoopPairs=0;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeEdgesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeUnmatchedByPlane={z:0,y:0,'x-':0,'x+':0};
    const distance3=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
    const pointAt=(position,id)=>[position.getX(id),position.getY(id),position.getZ(id)];
-   function projectRimVertex(id,plane){
-    const key=plane+':'+seamKey(donorRestPosition,id);
-    if(projected.has(key))return projected.get(key);
-    const p=pointAt(donorPos,id),side=Math.sign(p[0]);
-    let nearest=null,bestEdge=null,bestT=0,bestDistSq=Infinity;
-    for(const edge of hostRim){
+   function orderedBoundaryLoops(edges,position,plane,side){
+    const adjacency=new Map(),representative=new Map();
+    for(const edge of edges){
      if(edge.plane!==plane)continue;
-     const a=pointAt(hostPos,edge.a),b=pointAt(hostPos,edge.b);
-     if(Math.sign(a[0])!==side||Math.sign(b[0])!==side)continue;
-     const d=b.map((v,k)=>v-a[k]),lengthSq=d.reduce((sum,v)=>sum+v*v,0);
-     if(lengthSq<1e-18)continue;
-     const t=THREE.MathUtils.clamp(
-      ((p[0]-a[0])*d[0]+(p[1]-a[1])*d[1]+(p[2]-a[2])*d[2])/lengthSq,0,1);
-     const q=a.map((v,k)=>v+d[k]*t),gap=distance3(p,q),sq=gap*gap;
-     if(sq<bestDistSq){bestDistSq=sq;nearest=q;bestEdge=edge;bestT=t;}
+     const pa=pointAt(position,edge.a),pb=pointAt(position,edge.b);
+     if(Math.sign(pa[0])!==side||Math.sign(pb[0])!==side)continue;
+     const a=seamKey(position,edge.a),b=seamKey(position,edge.b);
+     if(a===b)continue;
+     if(!adjacency.has(a))adjacency.set(a,new Set());
+     if(!adjacency.has(b))adjacency.set(b,new Set());
+     adjacency.get(a).add(b);adjacency.get(b).add(a);
+     if(!representative.has(a))representative.set(a,edge.a);
+     if(!representative.has(b))representative.set(b,edge.b);
     }
-    const gap=Math.sqrt(bestDistSq);
-    if(!nearest||gap>.0045){
-     projected.set(key,null);bridgeUnmatchedVertices++;return null;
+    const degreeErrors=[...adjacency.values()].filter(neighbors=>neighbors.size!==2).length;
+    if(degreeErrors)return {loops:[],degreeErrors};
+    const loops=[],visited=new Set();
+    for(const first of adjacency.keys()){
+     if(visited.has(first))continue;
+     const loop=[];let previous=null,current=first;
+     for(let step=0;step<=adjacency.size;step++){
+      if(current===first&&loop.length)break;
+      if(visited.has(current))return {loops:[],degreeErrors:1};
+      visited.add(current);loop.push(representative.get(current));
+      const neighbors=[...adjacency.get(current)];
+      const next=neighbors[0]===previous?neighbors[1]:neighbors[0];
+      previous=current;current=next;
+     }
+     if(current!==first||loop.length<3)return {loops:[],degreeErrors:1};
+     loops.push(loop);
     }
+    return {loops,degreeErrors:0};
+   }
+   function loopCentroid(loop,position){
+    const sum=[0,0,0];
+    for(const id of loop){const p=pointAt(position,id);for(let k=0;k<3;k++)sum[k]+=p[k];}
+    return sum.map(v=>v/loop.length);
+   }
+   function pairBoundaryLoops(donorLoops,hostLoops){
+    if(donorLoops.length!==hostLoops.length)
+     throw Error('BTC ordered seam loop count mismatch: donor '+donorLoops.length+' / Maya '+hostLoops.length);
+    const remaining=hostLoops.slice(),pairs=[];
+    for(const donorLoop of donorLoops){
+     const center=loopCentroid(donorLoop,donorPos);
+     let best=0,bestDistance=Infinity;
+     for(let i=0;i<remaining.length;i++){
+      const hostCenter=loopCentroid(remaining[i],hostPos);
+      const d=distance3(center,hostCenter);
+      if(d<bestDistance){bestDistance=d;best=i;}
+     }
+     pairs.push({donorLoop,hostLoop:remaining.splice(best,1)[0]});
+    }
+    return pairs;
+   }
+   function rotateLoop(loop,start){
+    return loop.slice(start).concat(loop.slice(0,start));
+   }
+   function arcTable(loop,position){
+    const points=loop.map(id=>pointAt(position,id)),lengths=[0];
+    for(let i=0;i<loop.length;i++)
+     lengths.push(lengths[i]+distance3(points[i],points[(i+1)%loop.length]));
+    return {loop,points,lengths,total:lengths[lengths.length-1]};
+   }
+   function sampleArc(table,u){
+    const target=Math.min(.999999999,Math.max(0,u))*table.total;
+    let edge=0;
+    while(edge<table.loop.length-1&&table.lengths[edge+1]<target)edge++;
+    const span=table.lengths[edge+1]-table.lengths[edge];
+    const t=span>1e-12?(target-table.lengths[edge])/span:0;
+    const a=table.points[edge],b=table.points[(edge+1)%table.loop.length];
+    return {a:table.loop[edge],b:table.loop[(edge+1)%table.loop.length],t,
+     point:a.map((v,k)=>v+(b[k]-v)*t)};
+   }
+   function findBestLoopAlignment(donorLoop,hostLoop){
+    let best=null;
+    for(const reverseHost of [false,true]){
+     const hostSource=reverseHost?hostLoop.slice().reverse():hostLoop;
+     for(let donorStart=0;donorStart<donorLoop.length;donorStart++){
+      const donor=rotateLoop(donorLoop,donorStart),donorArc=arcTable(donor,donorPos);
+      if(donorArc.total<=1e-10)continue;
+      for(let hostStart=0;hostStart<hostSource.length;hostStart++){
+       const host=rotateLoop(hostSource,hostStart),hostArc=arcTable(host,hostPos);
+       if(hostArc.total<=1e-10)continue;
+       let sumSq=0,maxGap=0;const samples=[];
+       for(let i=0;i<donor.length;i++){
+        const sample=sampleArc(hostArc,donorArc.lengths[i]/donorArc.total);
+        const gap=distance3(pointAt(donorPos,donor[i]),sample.point);
+        sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);samples.push(sample);
+       }
+       const meanSq=sumSq/donor.length;
+       const score=meanSq+maxGap*maxGap*.35;
+       if(!best||score<best.score)
+        best={donor,host,samples,score,maxGap,meanSq};
+      }
+     }
+    }
+    return best;
+   }
+   function bridgeVertex(sample){
+    const t=Math.max(0,Math.min(1,sample.t));
+    const key=[sample.a,sample.b,Math.round(t*1e8)].join(':');
+    if(projected.has(key))return projected.get(key);
     const influence=new Map();
-    for(const [hostId,factor] of [[bestEdge.a,1-bestT],[bestEdge.b,bestT]]){
+    for(const [hostId,factor] of [[sample.a,1-t],[sample.b,t]]){
      for(let k=0;k<4;k++){
       const weight=hostWeights.getComponent(hostId,k)*factor;
       if(weight>1e-9){
@@ -1278,16 +1354,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const total=top.reduce((sum,x)=>sum+x[1],0)||1;
     let n=[0,1,0];
     if(hostNormal){
-     n=[0,1,2].map(k=>hostNormal.getComponent(bestEdge.a,k)*(1-bestT)+
-       hostNormal.getComponent(bestEdge.b,k)*bestT);
+     n=[0,1,2].map(k=>hostNormal.getComponent(sample.a,k)*(1-t)+hostNormal.getComponent(sample.b,k)*t);
      const length=Math.hypot(...n)||1;n=n.map(v=>v/length);
     }
     const index=donorBase+bridgePositions.length/3;
-    bridgePositions.push(...nearest);bridgeNormals.push(...n);
+    bridgePositions.push(...sample.point);bridgeNormals.push(...n);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     projected.set(key,index);
-    bridgeMaxGap=Math.max(bridgeMaxGap,gap);bridgeGapTotal+=gap;bridgeGapCount++;
     return index;
    }
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
@@ -1304,9 +1378,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(areaSq<1e-18)return null;
     const normals=ids.map(normalFor);
     let target=[0,1,2].map(k=>normals[0][k]+normals[1][k]+normals[2][k]);
-    // At a hard Maya/Quaternius normal break, opposite normals can cancel.
-    // That is not a missing geometric triangle. Fall back to the donor-side
-    // or host-side face normal so the bridge is still wound consistently.
     if(Math.hypot(...target)<1e-8)target=fallbackNormal||[0,1,0];
     if(Math.hypot(...target)<1e-8)
      target=normals.find(n=>Math.hypot(...n)>1e-8)||[0,1,0];
@@ -1322,39 +1393,48 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const second=[bridgeTriangle([a,b,pb],donorFallback),bridgeTriangle([a,pb,pa],hostFallback)];
     const pairs=[first,second].filter(pair=>pair.every(Boolean));
     if(pairs.length){
-     // Choose the diagonal whose weaker triangle has the larger area.
-     // This avoids the half-quad holes caused by a fixed diagonal crossing
-     // a nearly collinear donor/host rim pair.
      pairs.sort((p,q)=>Math.min(q[0].areaSq,q[1].areaSq)-
       Math.min(p[0].areaSq,p[1].areaSq));
      for(const tri of pairs[0])bridgeIndices.push(...tri.ids);
      return 2;
     }
-    // If both host projections collapse to one point, the zipper cell is
-    // genuinely triangular and one face closes it. Otherwise a missing
-    // half-cell is a real open seam and must be recorded, not hidden.
     if(hostStep<=.00001){
      const tri=bridgeTriangle([a,b,pa])||bridgeTriangle([a,b,pb]);
      if(tri){bridgeIndices.push(...tri.ids);return 1;}
     }
     return 0;
    }
-   for(const edge of donorRimEdges){
-    const a=edge.a,b=edge.b,plane=edge.plane;
-    const pa=projectRimVertex(a,plane),pb=projectRimVertex(b,plane);
-    if(pa===null||pb===null){bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;}
-    const hostStep=distance3(positionFor(pa),positionFor(pb));
-    bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
-    // A nearest-point jump across a different limb fold is not a seam.
-    if(hostStep>.0045){
-     bridgeUnmatchedVertices+=2;bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;
+   const planes=['z','y','x-','x+'];
+   for(const plane of planes)for(const side of [-1,1]){
+    const hostLoops=orderedBoundaryLoops(hostRim,hostPos,plane,side);
+    const donorLoops=orderedBoundaryLoops(donorRimEdges,donorPos,plane,side);
+    if(hostLoops.degreeErrors||donorLoops.degreeErrors)
+     throw Error('BTC seam boundary is branched; refusing nearest-point fallback on '+plane+' side '+side);
+    if(!hostLoops.loops.length&&!donorLoops.loops.length)continue;
+    const pairs=pairBoundaryLoops(donorLoops.loops,hostLoops.loops);
+    for(const {donorLoop,hostLoop} of pairs){
+     const alignment=findBestLoopAlignment(donorLoop,hostLoop);
+     if(!alignment)throw Error('BTC seam loop has no nondegenerate arc-length alignment');
+     bridgeLoopPairs++;
+     const projectedIds=alignment.samples.map(bridgeVertex);
+     bridgeMaxGap=Math.max(bridgeMaxGap,alignment.maxGap);
+     bridgeGapTotal+=Math.sqrt(alignment.meanSq)*donorLoop.length;
+     bridgeGapCount+=donorLoop.length;
+     for(let i=0;i<alignment.donor.length;i++){
+      const a=alignment.donor[i],b=alignment.donor[(i+1)%alignment.donor.length];
+      const pa=projectedIds[i],pb=projectedIds[(i+1)%projectedIds.length];
+      const hostStep=distance3(positionFor(pa),positionFor(pb));
+      bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
+      const made=addBridgeQuad(a,b,pa,pb,hostStep);
+      if(!made){bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;}
+      bridgeEdges++;bridgeEdgesByPlane[plane]++;
+      bridgeTrianglesByPlane[plane]+=made;
+      if(made===1)bridgeSingleTriangleEdges++;
+     }
     }
-    const made=addBridgeQuad(a,b,pa,pb,hostStep);
-    if(!made){bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;}
-    bridgeEdges++;bridgeEdgesByPlane[plane]++;
-    bridgeTrianglesByPlane[plane]+=made;
-    if(made===1)bridgeSingleTriangleEdges++;
    }
+   bodyCut.seamBridgeMethod='arc-length-loop-zipper';
+   bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
    bodyCut.seamBridgeTriangles=bridgeIndices.length/3;
    bodyCut.seamBridgeMaxGap=bridgeMaxGap;
    bodyCut.seamBridgeMeanGap=bridgeGapCount?bridgeGapTotal/bridgeGapCount:0;
@@ -1371,8 +1451,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bodyCut.seamBridgeData={positions:bridgePositions,normals:bridgeNormals,
      joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices};
    }
-   // Every clipped cut plane now contributes its own skinned zipper. Any
-   // unmatched edge remains a recorded defect; no QA assertion is relaxed.
+   // No donor rim edge is skipped for a distance threshold. The monotone
+   // loop correspondence must close every edge or fail visibly in QA.
   }
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
