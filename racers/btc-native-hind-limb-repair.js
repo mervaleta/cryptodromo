@@ -1027,27 +1027,52 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     return {edges:[...edges.values()].filter(e=>e.n===1),byPosition};
    }
    const hostBoundary=physicalBoundary(hostIndex,hostPos);
-   const hostRim=hostBoundary.edges.filter(e=>{
-    const ax=hostPos.getX(e.a),bx=hostPos.getX(e.b);
-    const ay=hostPos.getY(e.a),by=hostPos.getY(e.b);
-    const az=hostPos.getZ(e.a),bz=hostPos.getZ(e.b);
-    return Math.sign(ax)===Math.sign(bx)&&Math.abs(ax)>.0014&&
-     Math.abs(bx)>.0014&&Math.min(ay,by)>.0050&&
-     Math.abs(az-.0200)<.000015&&Math.abs(bz-.0200)<.000015;
+   // The cut is a three-plane boundary, not just the rear z plane:
+   // z=.0200, y=.0052 and the bilateral x=+/-.0015 flank planes.
+   // Stitching only z left the visible pale slit at the top of each hind
+   // thigh because the y/x cut arcs remained open in real WebGL.
+   const seamPlaneTolerance=.00003;
+   const classifySeamEdge=(position,e)=>{
+    const a=[position.getX(e.a),position.getY(e.a),position.getZ(e.a)];
+    const b=[position.getX(e.b),position.getY(e.b),position.getZ(e.b)];
+    const sideA=Math.sign(a[0]),sideB=Math.sign(b[0]);
+    if(!sideA||sideA!==sideB||Math.abs(a[0])<=.0014||Math.abs(b[0])<=.0014)return null;
+    const near=(p,axis,value)=>Math.abs(p[axis]-value)<=seamPlaneTolerance;
+    if(near(a,2,.0200)&&near(b,2,.0200)&&a[1]>=.0050&&b[1]>=.0050)return 'z';
+    if(near(a,1,.0052)&&near(b,1,.0052)&&
+       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)return 'y';
+    if(near(a,0,sideA*.0015)&&near(b,0,sideB*.0015)&&
+       a[1]>=.0050&&b[1]>=.0050&&
+       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)
+     return sideA<0?'x-':'x+';
+    return null;
+   };
+   const hostRim=hostBoundary.edges.flatMap(e=>{
+    const plane=classifySeamEdge(hostPos,e);
+    return plane?[{...e,plane}]:[];
    });
    const di=donorGeo.getIndex();
    const donorBoundary=physicalBoundary(di,donorPos);
-   const donorRim=new Set();
-   for(const e of donorBoundary.edges)for(const vertex of [e.a,e.b]){
-    const key=seamKey(donorPos,vertex);
-    for(const id of donorBoundary.byPosition.get(key)||[]){
-     if(Math.abs(donorPos.getZ(id)-.0200)<.000015&&
-        donorPos.getY(id)>.0050&&Math.abs(donorPos.getX(id))>.0014)
+   const donorRim=new Set(),donorRimPlanes=new Map(),donorRimEdges=[];
+   for(const e of donorBoundary.edges){
+    const plane=classifySeamEdge(donorPos,e);
+    if(!plane)continue;
+    donorRimEdges.push({...e,plane});
+    for(const vertex of [e.a,e.b]){
+     const key=seamKey(donorPos,vertex);
+     for(const id of donorBoundary.byPosition.get(key)||[]){
       donorRim.add(id);
+      const planes=donorRimPlanes.get(id)||new Set();
+      planes.add(plane);donorRimPlanes.set(id,planes);
+     }
     }
    }
+   const countByPlane=edges=>Object.fromEntries(['z','y','x-','x+'].map(p=>
+    [p,edges.filter(e=>e.plane===p).length]));
    bodyCut.hostRimEdges=hostRim.length;
    bodyCut.donorRimVertices=donorRim.size;
+   bodyCut.hostRimEdgesByPlane=countByPlane(hostRim);
+   bodyCut.donorRimEdgesByPlane=countByPlane(donorRimEdges);
    // The previous rim snap bypassed the incident-face orientation gate:
    // a 0.18 mm move could invert a tiny subdivided collar triangle.
    // Use LIVE neighboring positions and backtrack each proposed snap.
@@ -1195,36 +1220,34 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // No artificial acceptance counters: this is diagnostic only.
    bodyCut.sewnRimVertices=sewn;
 
-   // Stitch every donor boundary edge to its nearest retained Maya rim edge.
-   // The first zipper attempt found that the two cut boundaries are branched
-   // physical graphs rather than one clean chain per flank (0/2 chains).
-   // Project each actual donor boundary vertex to a local host edge, cache
-   // coincident UV twins, interpolate the host's Gallop weights, and build
-   // a narrow skinned quad strip. The strip is appended to the donor BODY
-   // geometry itself, so it is not a separate floating skin or decal.
+   // Stitch every donor boundary edge on ALL THREE cut planes to the
+   // corresponding retained Maya rim. Each plane has its own local
+   // projection cache so a corner shared by two cut planes cannot be
+   // incorrectly snapped to a different flank or boundary.
    const donorRestPosition={
     count:donorPos.count,
     getX:id=>rimReference[id][0],
     getY:id=>rimReference[id][1],
     getZ:id=>rimReference[id][2]
    };
-   const donorRimKeys=new Set([...donorRim].map(id=>seamKey(donorRestPosition,id)));
-   const donorRimEdges=donorBoundary.edges.filter(e=>
-    donorRimKeys.has(seamKey(donorRestPosition,e.a))&&
-    donorRimKeys.has(seamKey(donorRestPosition,e.b)));
    const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
    const projected=new Map(),donorBase=donorPos.count;
    const hostNormal=hostGeo.getAttribute('normal'),donorNormal=donorGeo.getAttribute('normal');
    let bridgeMaxGap=0,bridgeGapTotal=0,bridgeGapCount=0,bridgeEdges=0,
-    bridgeUnmatchedVertices=0,bridgeMaxHostStep=0;
+    bridgeUnmatchedVertices=0,bridgeUnmatchedEdges=0,bridgeSingleTriangleEdges=0,
+    bridgeMaxHostStep=0;
+   const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
+   const bridgeEdgesByPlane={z:0,y:0,'x-':0,'x+':0};
+   const bridgeUnmatchedByPlane={z:0,y:0,'x-':0,'x+':0};
    const distance3=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
    const pointAt=(position,id)=>[position.getX(id),position.getY(id),position.getZ(id)];
-   function projectRimVertex(id){
-    const key=seamKey(donorRestPosition,id);
+   function projectRimVertex(id,plane){
+    const key=plane+':'+seamKey(donorRestPosition,id);
     if(projected.has(key))return projected.get(key);
     const p=pointAt(donorPos,id),side=Math.sign(p[0]);
     let nearest=null,bestEdge=null,bestT=0,bestDistSq=Infinity;
     for(const edge of hostRim){
+     if(edge.plane!==plane)continue;
      const a=pointAt(hostPos,edge.a),b=pointAt(hostPos,edge.b);
      if(Math.sign(a[0])!==side||Math.sign(b[0])!==side)continue;
      const d=b.map((v,k)=>v-a[k]),lengthSq=d.reduce((sum,v)=>sum+v*v,0);
@@ -1269,27 +1292,62 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const normalFor=id=>id<donorBase?
     (donorNormal?[0,1,2].map(k=>donorNormal.getComponent(id,k)):[0,1,0]):
     bridgeNormals.slice((id-donorBase)*3,(id-donorBase)*3+3);
-   function addBridgeTriangle(a,b,c){
-    const p0=positionFor(a),p1=positionFor(b),p2=positionFor(c);
-    const u=p1.map((v,k)=>v-p0[k]),v=p2.map((x,k)=>x-p0[k]);
-    const cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
-    if(cross.reduce((sum,x)=>sum+x*x,0)<1e-18)return false;
-    const na=normalFor(a),nb=normalFor(b),nc=normalFor(c);
-    const target=[0,1,2].map(k=>na[k]+nb[k]+nc[k]);
-    if(cross.reduce((sum,x,k)=>sum+x*target[k],0)<0)[b,c]=[c,b];
-    bridgeIndices.push(a,b,c);return true;
+   function bridgeTriangle(ids){
+    const points=ids.map(positionFor);
+    const u=points[1].map((v,k)=>v-points[0][k]);
+    const v=points[2].map((x,k)=>x-points[0][k]);
+    let cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+    const areaSq=cross.reduce((sum,x)=>sum+x*x,0);
+    if(areaSq<1e-18)return null;
+    const normals=ids.map(normalFor);
+    let target=[0,1,2].map(k=>normals[0][k]+normals[1][k]+normals[2][k]);
+    if(Math.hypot(...target)<1e-8)return null;
+    let alignment=cross.reduce((sum,x,k)=>sum+x*target[k],0);
+    const oriented=ids.slice();
+    if(alignment<0){
+     [oriented[1],oriented[2]]=[oriented[2],oriented[1]];
+     cross=cross.map(x=>-x);alignment=-alignment;
+    }
+    if(alignment<=1e-18)return null;
+    return {ids:oriented,areaSq};
+   }
+   function addBridgeQuad(a,b,pa,pb,hostStep){
+    const first=[bridgeTriangle([a,b,pa]),bridgeTriangle([b,pb,pa])];
+    const second=[bridgeTriangle([a,b,pb]),bridgeTriangle([a,pb,pa])];
+    const pairs=[first,second].filter(pair=>pair.every(Boolean));
+    if(pairs.length){
+     // Choose the diagonal whose weaker triangle has the larger area.
+     // This avoids the half-quad holes caused by a fixed diagonal crossing
+     // a nearly collinear donor/host rim pair.
+     pairs.sort((p,q)=>Math.min(q[0].areaSq,q[1].areaSq)-
+      Math.min(p[0].areaSq,p[1].areaSq));
+     for(const tri of pairs[0])bridgeIndices.push(...tri.ids);
+     return 2;
+    }
+    // If both host projections collapse to one point, the zipper cell is
+    // genuinely triangular and one face closes it. Otherwise a missing
+    // half-cell is a real open seam and must be recorded, not hidden.
+    if(hostStep<=.00001){
+     const tri=bridgeTriangle([a,b,pa])||bridgeTriangle([a,b,pb]);
+     if(tri){bridgeIndices.push(...tri.ids);return 1;}
+    }
+    return 0;
    }
    for(const edge of donorRimEdges){
-    const a=edge.a,b=edge.b,pa=projectRimVertex(a),pb=projectRimVertex(b);
-    if(pa===null||pb===null)continue;
+    const a=edge.a,b=edge.b,plane=edge.plane;
+    const pa=projectRimVertex(a,plane),pb=projectRimVertex(b,plane);
+    if(pa===null||pb===null){bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;}
     const hostStep=distance3(positionFor(pa),positionFor(pb));
     bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
     // A nearest-point jump across a different limb fold is not a seam.
-    if(hostStep>.0045){bridgeUnmatchedVertices+=2;continue;}
-    const before=bridgeIndices.length;
-    addBridgeTriangle(a,b,pa);
-    addBridgeTriangle(b,pb,pa);
-    if(bridgeIndices.length>before)bridgeEdges++;
+    if(hostStep>.0045){
+     bridgeUnmatchedVertices+=2;bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;
+    }
+    const made=addBridgeQuad(a,b,pa,pb,hostStep);
+    if(!made){bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;}
+    bridgeEdges++;bridgeEdgesByPlane[plane]++;
+    bridgeTrianglesByPlane[plane]+=made;
+    if(made===1)bridgeSingleTriangleEdges++;
    }
    bodyCut.seamBridgeTriangles=bridgeIndices.length/3;
    bodyCut.seamBridgeMaxGap=bridgeMaxGap;
@@ -1297,14 +1355,18 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamBridgeEdges=bridgeEdges;
    bodyCut.seamBridgeVertices=bridgePositions.length/3;
    bodyCut.seamBridgeUnmatchedVertices=bridgeUnmatchedVertices;
+   bodyCut.seamBridgeUnmatchedEdges=bridgeUnmatchedEdges;
+   bodyCut.seamBridgeSingleTriangleEdges=bridgeSingleTriangleEdges;
    bodyCut.seamBridgeMaxHostStep=bridgeMaxHostStep;
+   bodyCut.seamBridgeTrianglesByPlane=bridgeTrianglesByPlane;
+   bodyCut.seamBridgeEdgesByPlane=bridgeEdgesByPlane;
+   bodyCut.seamBridgeUnmatchedByPlane=bridgeUnmatchedByPlane;
    if(bridgeIndices.length>=12){
     bodyCut.seamBridgeData={positions:bridgePositions,normals:bridgeNormals,
      joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices};
    }
-   // The bridge remains pending until rear/3Q WebGL proves that the
-   // previously open thigh slit is gone without creating a folded flap.
-  }
+   // Every clipped cut plane now contributes its own skinned zipper. Any
+   // unmatched edge remains a recorded defect; no QA assertion is relaxed.
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
   // projection creates alternating triangular peaks in rear WebGL.
@@ -1658,7 +1720,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
-   seamBridgeTriangles:bodyCut.seamBridgeTriangles||0,seamBridgeMaxGap:bodyCut.seamBridgeMaxGap||0,
+   hostRimEdgesByPlane:bodyCut.hostRimEdgesByPlane||{},donorRimEdgesByPlane:bodyCut.donorRimEdgesByPlane||{},
+   seamBridgeTriangles:bodyCut.seamBridgeTriangles||0,seamBridgeUnmatchedEdges:bodyCut.seamBridgeUnmatchedEdges||0,
+   seamBridgeSingleTriangleEdges:bodyCut.seamBridgeSingleTriangleEdges||0,
+   seamBridgeTrianglesByPlane:bodyCut.seamBridgeTrianglesByPlane||{},
+   seamBridgeEdgesByPlane:bodyCut.seamBridgeEdgesByPlane||{},
+   seamBridgeUnmatchedByPlane:bodyCut.seamBridgeUnmatchedByPlane||{},seamBridgeMaxGap:bodyCut.seamBridgeMaxGap||0,
    seamBridgeMeanGap:bodyCut.seamBridgeMeanGap||0,seamBridgeEdges:bodyCut.seamBridgeEdges||0,
    seamBridgeVertices:bodyCut.seamBridgeVertices||0,seamBridgeUnmatchedVertices:bodyCut.seamBridgeUnmatchedVertices||0,
    seamBridgeMaxHostStep:bodyCut.seamBridgeMaxHostStep||0,
