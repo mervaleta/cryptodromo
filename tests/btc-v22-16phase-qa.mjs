@@ -9,9 +9,13 @@ const DIR='artifacts/btc-v22-full-cycle';mkdirSync(DIR,{recursive:true});
 const BUILD='btc-v22-continuous-hind-seam-20261107';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:1100,height:750},deviceScaleFactor:1});
-const errors=[],frames=[],all=new Set();
+const errors=[],consoleMessages=[],requestFailures=[],frames=[],all=new Set();
 page.on('pageerror',e=>errors.push(e.message));
-page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text())});
+page.on('console',m=>{
+ if(!m.text().includes('favicon'))consoleMessages.push({type:m.type(),text:m.text()});
+ if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text());
+});
+page.on('requestfailed',r=>requestFailures.push({url:r.url(),error:r.failure()?.errorText||'unknown'}));
 try{
  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  try{
@@ -24,10 +28,16 @@ try{
    readyState:document.readyState,
    qa:window.__cryptodromoBTCAtelierQA?.()||null,
    text:document.body?.innerText?.slice(-1600)||'',
-   canvas:!!document.querySelector('#horse-canvas')
+   canvas:!!document.querySelector('#horse-canvas'),
+   bodyClasses:document.body?.className||'',
+   hash:location.hash,search:location.search,
+   previewState:document.querySelector('#preview-state')?.textContent||null,
+   fallbackHidden:document.querySelector('#preview-fallback')?.hidden??null,
+   canvasHidden:document.querySelector('#horse-canvas')?.hidden??null,
+   atelierPanelHidden:document.querySelector('#btc-atelier-panel')?.hidden??null
   })).catch(x=>({evaluationError:String(x)}));
-  writeFileSync(DIR+'/startup-failure.json',JSON.stringify({diagnostics,errors},null,2));
-  console.error('BTC_V22_STARTUP_FAILURE',JSON.stringify({diagnostics,errors}));
+  writeFileSync(DIR+'/startup-failure.json',JSON.stringify({diagnostics,errors,consoleMessages,requestFailures},null,2));
+  console.error('BTC_V22_STARTUP_FAILURE',JSON.stringify({diagnostics,errors,consoleMessages,requestFailures}));
   throw e;
  }
  const baseline=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
