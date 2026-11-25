@@ -221,17 +221,23 @@ function cropMayaHind(anatomy){
   }
   limits.set(r,l);
  }
- const islandRoots=new Set(),islandSides=new Set();
+ const islandRoots=new Set(),islandSides=new Set(),posteriorComponentAudit=[];
  for(const [r,count] of counts){
   const l=limits.get(r),x=l.x/l.n,y=l.y/l.n,z=l.z/l.n;
-  // The original Maya crop audit identified exactly two detached five-face
-  // hind-foot scraps at x≈±1.5 mm, y≈9 mm, z≈0.5 mm. The posterior plane
-  // partition triangulates each source face into roughly 25 retained pieces;
-  // a post-clip <=8-face test therefore misses the very fragments it must
-  // remove. Match their ORIGINAL rest-space location and bilateral identity,
-  // not their deformed hoof-flare positions or an arbitrary island counter.
-  // Legitimate hoof/limb shells are larger and/or outside this narrow band.
-  if(count>=20&&count<=32&&Math.abs(x)>=.0012&&Math.abs(x)<=.0018&&
+  // These are the two detached hind-foot scraps in the ORIGINAL Maya
+  // rest space. Their post-clip tessellation is not invariant: with the
+  // authored hoof flare they expand to ~25 triangles, while a slightly
+  // different exact cut can leave the five source faces intact. Identify
+  // them by their measured bilateral rest-space location plus a bounded
+  // small-component size, not one assumed triangulation count.
+  if(count<=32&&Math.abs(x)>=.0010&&Math.abs(x)<=.0020&&
+     y>=.0060&&y<=.0120&&z>=0&&z<.0020){
+   posteriorComponentAudit.push({triangles:count,side:Math.sign(x),center:[x,y,z]});
+  }
+  // Only the two audited five-face scraps (or their clipped descendants)
+  // are eligible. The exact pair-and-opposite-side check below fails closed
+  // if another component appears in this anatomical band.
+  if(count>=5&&count<=25&&Math.abs(x)>=.0012&&Math.abs(x)<=.0018&&
      y>=.0070&&y<=.0110&&z>=0&&z<.0015){
    islandRoots.add(r);islandSides.add(Math.sign(x));
   }
@@ -268,6 +274,7 @@ function cropMayaHind(anatomy){
   addedCutVertices:xyz.length/3-originalCount,keptMayaTriangles:pruned.length/3,
   isolatedMayaPosteriorIslandsRemoved:islandRoots.size,
   isolatedMayaPosteriorTrianglesRemoved:isolatedTrianglesRemoved,
+  isolatedMayaPosteriorComponentAudit:posteriorComponentAudit,
   seamMethod:'shared-edge-skinned-plane-clipping',
   restore(){
    geo.setAttribute('position',old.position);
@@ -1599,6 +1606,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    removedMayaTriangles:crop.removedMayaTriangles,
    isolatedMayaPosteriorIslandsRemoved:crop.isolatedMayaPosteriorIslandsRemoved,
    isolatedMayaPosteriorTrianglesRemoved:crop.isolatedMayaPosteriorTrianglesRemoved,
+   isolatedMayaPosteriorComponentAudit:crop.isolatedMayaPosteriorComponentAudit,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
