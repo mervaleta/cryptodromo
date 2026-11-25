@@ -1315,23 +1315,108 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     return sum.map(v=>v/path.ids.length);
    }
    function pairBoundaryPaths(donorPaths,hostPaths,plane,side){
-    if(donorPaths.length!==hostPaths.length){
-     const describe=(paths,position)=>paths.map(path=>{
-      const points=path.ids.map(id=>pointAt(position,id));
-      let length=0;
-      for(let i=1;i<points.length;i++)length+=distance3(points[i-1],points[i]);
-      const bounds=[0,1,2].map(k=>[
-       Math.min(...points.map(p=>p[k])),Math.max(...points.map(p=>p[k]))
-      ]);
-      return {closed:path.closed,vertices:path.ids.length,length,
-       first:points[0],last:points[points.length-1],
-       center:pathCentroid(path,position),bounds};
-     });
-     throw Error('BTC ordered seam path count mismatch on '+plane+' side '+side+
-      ': donor='+JSON.stringify(describe(donorPaths,donorPos))+
-      ' Maya='+JSON.stringify(describe(hostPaths,hostPos)));
+    const describe=(paths,position)=>paths.map(path=>{
+     const points=path.ids.map(id=>pointAt(position,id));
+     let length=0;
+     for(let i=1;i<points.length;i++)length+=distance3(points[i-1],points[i]);
+     const bounds=[0,1,2].map(k=>[
+      Math.min(...points.map(p=>p[k])),Math.max(...points.map(p=>p[k]))
+     ]);
+     return {closed:path.closed,vertices:path.ids.length,length,
+      first:points[0],last:points[points.length-1],
+      center:pathCentroid(path,position),bounds,
+      virtualClosureGap:path.virtualClosureGap??null};
+    });
+    const mergeOneLocalOpenPair=(paths,position)=>{
+     let best=null;
+     const segmentLength=ids=>{
+      let total=0;
+      for(let i=1;i<ids.length;i++)
+       total+=distance3(pointAt(position,ids[i-1]),pointAt(position,ids[i]));
+      return total;
+     };
+     const direction=(a,b)=>{
+      const p=pointAt(position,a),q=pointAt(position,b);
+      const v=q.map((x,k)=>x-p[k]),length=Math.hypot(...v)||1;
+      return v.map(x=>x/length);
+     };
+     const dot=(a,b)=>a.reduce((sum,v,k)=>sum+v*b[k],0);
+     const simpleLoop=(ids)=>{
+      const axes=plane==='z'?[0,1]:plane==='y'?[0,2]:[1,2];
+      const points=ids.map(id=>pointAt(position,id)).map(p=>[p[axes[0]],p[axes[1]]]);
+      const orient=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+      for(let i=0;i<points.length;i++)for(let j=i+1;j<points.length;j++){
+       if(j===i+1||(i===0&&j===points.length-1))continue;
+       const a=points[i],b=points[(i+1)%points.length],
+        c=points[j],d=points[(j+1)%points.length];
+       const o1=orient(a,b,c),o2=orient(a,b,d),o3=orient(c,d,a),o4=orient(c,d,b);
+       if(o1*o2< -1e-18&&o3*o4< -1e-18)return false;
+      }
+      return true;
+     };
+     for(let i=0;i<paths.length;i++)for(let j=i+1;j<paths.length;j++){
+      const a=paths[i],b=paths[j];
+      if(a.closed||b.closed||Math.min(a.ids.length,b.ids.length)>8)continue;
+      const lengthA=segmentLength(a.ids),lengthB=segmentLength(b.ids);
+      if(Math.min(lengthA,lengthB)>Math.max(lengthA,lengthB)*.20)continue;
+      const steps=[];
+      for(const ids of [a.ids,b.ids])for(let k=1;k<ids.length;k++)
+       steps.push(distance3(pointAt(position,ids[k-1]),pointAt(position,ids[k])));
+      steps.sort((x,y)=>x-y);
+      const median=steps[Math.floor(steps.length/2)]||0;
+      const maxGap=Math.max(.0012,median*2.5);
+      for(const reverseA of [false,true])for(const reverseB of [false,true]){
+       const aIds=reverseA?a.ids.slice().reverse():a.ids.slice();
+       const bIds=reverseB?b.ids.slice().reverse():b.ids.slice();
+       const aFirst=pointAt(position,aIds[0]),aLast=pointAt(position,aIds[aIds.length-1]);
+       const bFirst=pointAt(position,bIds[0]),bLast=pointAt(position,bIds[bIds.length-1]);
+       const joinGap=distance3(aLast,bFirst),closeGap=distance3(bLast,aFirst);
+       if(joinGap>maxGap||closeGap>maxGap)continue;
+       const joinDirection=direction(aIds[aIds.length-1],bIds[0]);
+       const closeDirection=direction(bIds[bIds.length-1],aIds[0]);
+       const turns=[
+        dot(direction(aIds[aIds.length-2],aIds[aIds.length-1]),joinDirection),
+        dot(joinDirection,direction(bIds[0],bIds[1])),
+        dot(direction(bIds[bIds.length-2],bIds[bIds.length-1]),closeDirection),
+        dot(closeDirection,direction(aIds[0],aIds[1]))
+       ];
+       const minTurn=Math.min(...turns);
+       if(minTurn<-.95)continue;
+       const ids=[...aIds,...bIds];
+       if(!simpleLoop(ids))continue;
+       const score=joinGap+closeGap+(1-minTurn)*.0002;
+       if(!best||score<best.score)best={i,j,ids,joinGap,closeGap,score};
+      }
+     }
+     return best;
+    };
+    let donors=donorPaths.slice(),hosts=hostPaths.slice();
+    const targetCount=Math.min(donors.length,hosts.length);
+    while(donors.length>targetCount){
+     const merge=mergeOneLocalOpenPair(donors,donorPos);
+     if(!merge)break;
+     const path={ids:merge.ids,closed:true,
+      virtualClosureGap:Math.max(merge.joinGap,merge.closeGap),
+      virtualClosureGaps:[merge.joinGap,merge.closeGap],
+      mergedBoundaryFragments:2};
+     donors.splice(merge.j,1);
+     donors.splice(merge.i,1,path);
     }
-    const remaining=hostPaths.slice();
+    while(hosts.length>targetCount){
+     const merge=mergeOneLocalOpenPair(hosts,hostPos);
+     if(!merge)break;
+     const path={ids:merge.ids,closed:true,
+      virtualClosureGap:Math.max(merge.joinGap,merge.closeGap),
+      virtualClosureGaps:[merge.joinGap,merge.closeGap],
+      mergedBoundaryFragments:2};
+     hosts.splice(merge.j,1);
+     hosts.splice(merge.i,1,path);
+    }
+    if(donors.length!==hosts.length)
+     throw Error('BTC ordered seam path count mismatch on '+plane+' side '+side+
+      ': donor='+JSON.stringify(describe(donors,donorPos))+
+      ' Maya='+JSON.stringify(describe(hosts,hostPos)));
+    const remaining=hosts.slice();
     const promoteShortOpenPath=(path,position,label)=>{
      const points=path.ids.map(id=>pointAt(position,id));
      const steps=[];
@@ -1351,7 +1436,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      return path;
     };
     const pairs=[];
-    for(const donorPath of donorPaths){
+    for(const donorPath of donors){
      let best=-1,bestDistance=Infinity;
      const center=pathCentroid(donorPath,donorPos);
      for(let i=0;i<remaining.length;i++){
