@@ -1370,6 +1370,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    // Every clipped cut plane now contributes its own skinned zipper. Any
    // unmatched edge remains a recorded defect; no QA assertion is relaxed.
+  }
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
   // projection creates alternating triangular peaks in rear WebGL.
