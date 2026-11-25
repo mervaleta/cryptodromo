@@ -57,14 +57,26 @@ function createHairMass(source,skinAt,{
  if(tail&&tailJoints.some(i=>i<0))throw Error('BTC Maya tail requires native Tail1..Tail7');
  function skinFor(sk,u){
   if(!tail)return sk;
+  // The first hair ring is physically embedded in the croup. It must keep
+  // the body's complete four-influence bind exactly; adding Tail1 at the
+  // root pulled the dock away from the skinned rump during the load phase.
+  // Gradually hand motion to the native Tail1..Tail7 chain only along the
+  // strand, while preserving every original body influence at u=0.
   const stretch=smooth(u)*5.99999,j=Math.min(5,Math.floor(stretch)),mix=stretch-j;
-  const follow=.12+.31*smooth(u);
-  const rootIndex=sk.joints[0],rootWeight=sk.weights[0];
+  const follow=.43*smooth(u);
+  const influences=new Map();
+  for(let k=0;k<4;k++){
+   const weight=(sk.weights[k]||0)*(1-follow),joint=sk.joints[k]||0;
+   if(weight>1e-9)influences.set(joint,(influences.get(joint)||0)+weight);
+  }
   const followA=tailJoints[j],followB=tailJoints[j+1];
-  // Keep headroom for blending with the existing croup influence.
-  return {joints:[rootIndex,followA,followB,sk.joints[1]||0],
-   weights:[(1-follow)*rootWeight,follow*(1-mix),follow*mix,
-    (1-follow)*(1-rootWeight)]};
+  const weightA=follow*(1-mix),weightB=follow*mix;
+  if(weightA>1e-9)influences.set(followA,(influences.get(followA)||0)+weightA);
+  if(weightB>1e-9)influences.set(followB,(influences.get(followB)||0)+weightB);
+  const top=[...influences].sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const total=top.reduce((sum,item)=>sum+item[1],0)||1;
+  return {joints:Array.from({length:4},(_,k)=>top[k]?.[0]||0),
+   weights:Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total)};
  }
  function guide(n,major,side,forelock=false,crown=false,hero=false){
   const seed=noise(n*13.7+(tail?141:27)+(side+3)*53.5+(major?3:17));
