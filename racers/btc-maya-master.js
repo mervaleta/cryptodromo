@@ -182,7 +182,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   throw Error('BTC tail root border unexpectedly changed');
  // The dock cap must follow the ACTUAL outward normals of the retained
  // Maya rump. A world-Y lift leaves the cap recessed on the curved croup.
- const tailBoundaryKeys=new Set(border.map(({a,b})=>edgeKey(a,b)));
+ const tailDockBoundaryKeys=new Set(border.map(({a,b})=>edgeKey(a,b)));
  const tailBoundaryNormalSums=new Map();
  for(let t=0;t<visibleTriangles.length;t+=3){
   const tri=[visibleTriangles[t],visibleTriangles[t+1],visibleTriangles[t+2]];
@@ -190,7 +190,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const u=p[1].map((v,k)=>v-p[0][k]),v=p[2].map((x,k)=>x-p[0][k]);
   const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
   for(const [a,b] of [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]){
-   if(!tailBoundaryKeys.has(edgeKey(a,b)))continue;
+   if(!tailDockBoundaryKeys.has(edgeKey(a,b)))continue;
    for(const id of [a,b]){
     const sum=tailBoundaryNormalSums.get(id)||[0,0,0];
     for(let k=0;k<3;k++)sum[k]+=n[k];
