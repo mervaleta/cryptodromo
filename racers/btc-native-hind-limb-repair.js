@@ -1571,10 +1571,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // Every zipper step advances exactly one ordered boundary edge. A
    // successful loop therefore covers both rims without skipped cells.
   }
-   }
    // No donor rim edge is skipped for a distance threshold. The monotone
    // loop correspondence must close every edge or fail visibly in QA.
-  }
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
   // projection creates alternating triangular peaks in rear WebGL.
