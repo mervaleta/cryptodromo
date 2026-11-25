@@ -5,12 +5,26 @@
  */
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
+import {resolve,sep} from 'node:path';
 import {chromium} from 'playwright';
 const dest='artifacts/btc-v22-hind-diagnostic';mkdirSync(dest,{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
 ]});
 const page=await browser.newPage({viewport:{width:1100,height:750}});
+// Keep this focused renderer on the same pinned Three.js bytes as npm install;
+// Chromium still uses real WebGL/SwiftShader, without relying on CDN responses.
+const threeRoot=resolve('node_modules/three');
+await page.route('https://cdn.jsdelivr.net/npm/three@0.187.0/**',async route=>{
+ const url=new URL(route.request().url());
+ const marker='/npm/three@0.187.0/';
+ const offset=url.pathname.indexOf(marker);
+ if(offset<0)return route.abort();
+ const relative=url.pathname.slice(offset+marker.length);
+ const target=resolve(threeRoot,relative);
+ if(!target.startsWith(threeRoot+sep))return route.abort();
+ await route.fulfill({path:target,contentType:'text/javascript'});
+});
 const shots=[],errors=[],consoleMessages=[],requestFailures=[];
 page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{
