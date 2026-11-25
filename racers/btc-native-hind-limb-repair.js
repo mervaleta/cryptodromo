@@ -682,7 +682,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
  // primitives even though both share the same 50 authored joint names.
  // Bind ALL donors to the Main skeleton to ensure matrix parity.
  const crop=cropMayaHind(anatomy);
- let donor=null,donorHooves=null,seamBridge=null,bodyCut=null,hoovesCut=null;
+ let donor=null,donorHooves=null,bodyCut=null,hoovesCut=null;
  try{
   bodyCut=clipNativeBodyHindExact(original);
 
@@ -1144,210 +1144,115 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // No artificial acceptance counters: this is diagnostic only.
    bodyCut.sewnRimVertices=sewn;
 
-   // Build a real skinned transition surface between the two unmatched
-   // physical cut chains. The previous projection moved only 36/76 donor
-   // rim vertices onto the Maya host; the remaining open edges produced the
-   // pale slit visible under the hindquarter in rear/three-quarter Gallop.
-   // This is a zipper bridge between the actual retained boundaries, not a
-   // floating cover: both boundary rows carry their source skin influences.
+   // Stitch every donor boundary edge to its nearest retained Maya rim edge.
+   // The first zipper attempt found that the two cut boundaries are branched
+   // physical graphs rather than one clean chain per flank (0/2 chains).
+   // Project each actual donor boundary vertex to a local host edge, cache
+   // coincident UV twins, interpolate the host's Gallop weights, and build
+   // a narrow skinned quad strip. The strip is appended to the donor BODY
+   // geometry itself, so it is not a separate floating skin or decal.
    const donorRestPosition={
     count:donorPos.count,
     getX:id=>rimReference[id][0],
     getY:id=>rimReference[id][1],
     getZ:id=>rimReference[id][2]
    };
-   const keyOf=(p,id)=>seamKey(p,id);
-   function makeKeyIndex(position,ids){
-    const map=new Map();
-    for(const id of ids){
-     const key=keyOf(position,id),bucket=map.get(key)||[];
-     bucket.push(id);map.set(key,bucket);
+   const donorRimKeys=new Set([...donorRim].map(id=>seamKey(donorRestPosition,id)));
+   const donorRimEdges=donorBoundary.edges.filter(e=>
+    donorRimKeys.has(seamKey(donorRestPosition,e.a))&&
+    donorRimKeys.has(seamKey(donorRestPosition,e.b)));
+   const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
+   const projected=new Map(),donorBase=donorPos.count;
+   const hostNormal=hostGeo.getAttribute('normal'),donorNormal=donorGeo.getAttribute('normal');
+   let bridgeMaxGap=0,bridgeGapTotal=0,bridgeGapCount=0,bridgeEdges=0,
+    bridgeUnmatchedVertices=0,bridgeMaxHostStep=0;
+   const distance3=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+   const pointAt=(position,id)=>[position.getX(id),position.getY(id),position.getZ(id)];
+   function projectRimVertex(id){
+    const key=seamKey(donorRestPosition,id);
+    if(projected.has(key))return projected.get(key);
+    const p=pointAt(donorPos,id),side=Math.sign(p[0]);
+    let nearest=null,bestEdge=null,bestT=0,bestDistSq=Infinity;
+    for(const edge of hostRim){
+     const a=pointAt(hostPos,edge.a),b=pointAt(hostPos,edge.b);
+     if(Math.sign(a[0])!==side||Math.sign(b[0])!==side)continue;
+     const d=b.map((v,k)=>v-a[k]),lengthSq=d.reduce((sum,v)=>sum+v*v,0);
+     if(lengthSq<1e-18)continue;
+     const t=THREE.MathUtils.clamp(
+      ((p[0]-a[0])*d[0]+(p[1]-a[1])*d[1]+(p[2]-a[2])*d[2])/lengthSq,0,1);
+     const q=a.map((v,k)=>v+d[k]*t),gap=distance3(p,q),sq=gap*gap;
+     if(sq<bestDistSq){bestDistSq=sq;nearest=q;bestEdge=edge;bestT=t;}
     }
-    return map;
-   }
-   function makeChains(edges,position,side,allowedIds){
-    const adjacency=new Map();
-    for(const edge of edges){
-     if(allowedIds&&(!allowedIds.has(edge.a)||!allowedIds.has(edge.b)))continue;
-     const ax=position.getX(edge.a),bx=position.getX(edge.b);
-     const ay=position.getY(edge.a),by=position.getY(edge.b);
-     const az=position.getZ(edge.a),bz=position.getZ(edge.b);
-     if(Math.sign(ax)!==side||Math.sign(bx)!==side||
-        Math.abs(ax)<=.0014||Math.abs(bx)<=.0014||
-        Math.min(ay,by)<=.0050||
-        Math.abs(az-.0208)>.000015||Math.abs(bz-.0208)>.000015)continue;
-     const a=keyOf(position,edge.a),b=keyOf(position,edge.b);
-     if(a===b)continue;
-     if(!adjacency.has(a))adjacency.set(a,new Set());
-     if(!adjacency.has(b))adjacency.set(b,new Set());
-     adjacency.get(a).add(b);adjacency.get(b).add(a);
+    const gap=Math.sqrt(bestDistSq);
+    if(!nearest||gap>.0045){
+     projected.set(key,null);bridgeUnmatchedVertices++;return null;
     }
-    const visited=new Set(),chains=[];
-    for(const seed of adjacency.keys()){
-     if(visited.has(seed))continue;
-     const stack=[seed],component=new Set();visited.add(seed);
-     while(stack.length){
-      const at=stack.pop();component.add(at);
-      for(const next of adjacency.get(at)||[])if(!visited.has(next)){
-       visited.add(next);stack.push(next);
+    const influence=new Map();
+    for(const [hostId,factor] of [[bestEdge.a,1-bestT],[bestEdge.b,bestT]]){
+     for(let k=0;k<4;k++){
+      const weight=hostWeights.getComponent(hostId,k)*factor;
+      if(weight>1e-9){
+       const joint=hostSkin.getComponent(hostId,k);
+       influence.set(joint,(influence.get(joint)||0)+weight);
       }
      }
-     const degrees=[...component].map(k=>(adjacency.get(k)||new Set()).size);
-     if(degrees.some(n=>n>2))continue;
-     const ends=[...component].filter(k=>(adjacency.get(k)||new Set()).size===1);
-     if(ends.length!==0&&ends.length!==2)continue;
-     let current=ends.length?ends.sort()[0]:[...component].sort()[0];
-     let previous=null,ordered=[],closed=false;
-     for(let guard=0;guard<=component.size;guard++){
-      ordered.push(current);
-      const choices=[...(adjacency.get(current)||[])].filter(k=>k!==previous).sort();
-      if(!choices.length)break;
-      const next=choices[0];
-      if(next===ordered[0]){closed=true;break;}
-      previous=current;current=next;
-     }
-     if(ordered.length===component.size&&
-        ((ends.length===2&&!closed)||(ends.length===0&&closed)))
-      chains.push({keys:ordered,closed});
     }
-    return chains;
-   }
-   function sampleBoundary(key,idsByKey,position,skin,weight,normal,uv){
-    const ids=idsByKey.get(key)||[];
-    if(!ids.length)throw Error('BTC seam bridge lost a boundary vertex');
-    const p=[0,0,0],n=[0,0,0],tex=[0,0],influence=new Map();
-    for(const id of ids){
-     p[0]+=position.getX(id);p[1]+=position.getY(id);p[2]+=position.getZ(id);
-     if(normal){n[0]+=normal.getX(id);n[1]+=normal.getY(id);n[2]+=normal.getZ(id);}
-     if(uv){tex[0]+=uv.getX(id);tex[1]+=uv.getY(id);}
-     for(let k=0;k<4;k++){
-      const w=weight.getComponent(id,k),joint=skin.getComponent(id,k);
-      if(w>1e-8)influence.set(joint,(influence.get(joint)||0)+w/ids.length);
-     }
-    }
-    for(let k=0;k<3;k++)p[k]/=ids.length;
-    if(normal){
-     const length=Math.hypot(...n)||1;
-     for(let k=0;k<3;k++)n[k]/=length;
-    }
-    if(uv){tex[0]/=ids.length;tex[1]/=ids.length;}
     const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
     const total=top.reduce((sum,x)=>sum+x[1],0)||1;
-    return {p,n:normal?n:[0,1,0],uv:tex,
-     joints:Array.from({length:4},(_,i)=>top[i]?.[0]||0),
-     weights:Array.from({length:4},(_,i)=>(top[i]?.[1]||0)/total)};
-   }
-   const bridgePositions=[],bridgeNormals=[],bridgeUvs=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
-   let bridgeMaxGap=0,bridgeMeanGap=0,bridgeGapSamples=0,bridgeChainCount=0;
-   const donorIds=[...donorRim],hostIds=Array.from({length:hostPos.count},(_,i)=>i);
-   const donorKeyIndex=makeKeyIndex(donorRestPosition,donorIds);
-   const hostKeyIndex=makeKeyIndex(hostPos,hostIds);
-   const donorRimEdges=donorBoundary.edges.filter(e=>donorRim.has(e.a)&&donorRim.has(e.b));
-   const donorNormal=donorGeo.getAttribute('normal'),hostNormal=hostGeo.getAttribute('normal');
-   const donorUv=donorGeo.getAttribute('uv'),hostUv=hostGeo.getAttribute('uv');
-   function appendSamples(samples){
-    const base=bridgePositions.length/3;
-    for(const s of samples){
-     bridgePositions.push(...s.p);bridgeNormals.push(...s.n);bridgeUvs.push(...s.uv);
-     bridgeJoints.push(...s.joints);bridgeWeights.push(...s.weights);
+    let n=[0,1,0];
+    if(hostNormal){
+     n=[0,1,2].map(k=>hostNormal.getComponent(bestEdge.a,k)*(1-bestT)+
+       hostNormal.getComponent(bestEdge.b,k)*bestT);
+     const length=Math.hypot(...n)||1;n=n.map(v=>v/length);
     }
-    return samples.map((_,i)=>base+i);
+    const index=donorBase+bridgePositions.length/3;
+    bridgePositions.push(...nearest);bridgeNormals.push(...n);
+    bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
+    bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
+    projected.set(key,index);
+    bridgeMaxGap=Math.max(bridgeMaxGap,gap);bridgeGapTotal+=gap;bridgeGapCount++;
+    return index;
    }
-   function appendTriangle(a,b,c){
-    const point=id=>bridgePositions.slice(id*3,id*3+3);
-    const p0=point(a),p1=point(b),p2=point(c);
+   const positionFor=id=>id<donorBase?pointAt(donorPos,id):
+    bridgePositions.slice((id-donorBase)*3,(id-donorBase)*3+3);
+   const normalFor=id=>id<donorBase?
+    (donorNormal?[0,1,2].map(k=>donorNormal.getComponent(id,k)):[0,1,0]):
+    bridgeNormals.slice((id-donorBase)*3,(id-donorBase)*3+3);
+   function addBridgeTriangle(a,b,c){
+    const p0=positionFor(a),p1=positionFor(b),p2=positionFor(c);
     const u=p1.map((v,k)=>v-p0[k]),v=p2.map((x,k)=>x-p0[k]);
     const cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
-    const areaSq=cross.reduce((sum,x)=>sum+x*x,0);
-    if(areaSq<1e-18)return;
-    const target=[0,1,2].map(k=>bridgeNormals[a*3+k]+bridgeNormals[b*3+k]+bridgeNormals[c*3+k]);
+    if(cross.reduce((sum,x)=>sum+x*x,0)<1e-18)return false;
+    const na=normalFor(a),nb=normalFor(b),nc=normalFor(c);
+    const target=[0,1,2].map(k=>na[k]+nb[k]+nc[k]);
     if(cross.reduce((sum,x,k)=>sum+x*target[k],0)<0)[b,c]=[c,b];
-    bridgeIndices.push(a,b,c);
+    bridgeIndices.push(a,b,c);return true;
    }
-   for(const side of [-1,1]){
-    const hostChains=makeChains(hostRim,hostPos,side);
-    const donorChains=makeChains(donorRimEdges,donorRestPosition,side,donorRim);
-    if(hostChains.length!==1||donorChains.length!==1)continue;
-    const hc=hostChains[0],dc=donorChains[0];
-    if(hc.closed!==dc.closed)continue;
-    let hostKeys=hc.keys.slice(),donorKeys=dc.keys.slice();
-    const hostSamples=hostKeys.map(k=>sampleBoundary(k,hostKeyIndex,hostPos,
-     hostSkin,hostWeights,hostNormal,hostUv));
-    let donorSamples=donorKeys.map(k=>sampleBoundary(k,donorKeyIndex,donorPos,
-     donorSkin,donorWeights,donorNormal,donorUv));
-    const distance=(a,b)=>Math.hypot(a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]);
-    if(hc.closed){
-     let best=Infinity,bestIndex=0;
-     for(let i=0;i<donorSamples.length;i++){
-      const d=distance(hostSamples[0],donorSamples[i]);
-      if(d<best){best=d;bestIndex=i;}
-     }
-     const rotated=donorSamples.slice(bestIndex).concat(donorSamples.slice(0,bestIndex));
-     const forward=distance(hostSamples[Math.min(1,hostSamples.length-1)],rotated[Math.min(1,rotated.length-1)]);
-     const reverse=distance(hostSamples[Math.min(1,hostSamples.length-1)],rotated[(rotated.length-1)%rotated.length]);
-     donorSamples=forward<=reverse?rotated:[rotated[0],...rotated.slice(1).reverse()];
-     hostSamples.push(hostSamples[0]);donorSamples.push(donorSamples[0]);
-    }else{
-     const direct=distance(hostSamples[0],donorSamples[0])+distance(hostSamples.at(-1),donorSamples.at(-1));
-     const reverse=distance(hostSamples[0],donorSamples.at(-1))+distance(hostSamples.at(-1),donorSamples[0]);
-     if(reverse<direct)donorSamples.reverse();
-    }
-    const cumulative=samples=>{
-     const out=[0];
-     for(let i=1;i<samples.length;i++)out.push(out[i-1]+distance(samples[i-1],samples[i]));
-     return out;
-    };
-    const hcumulative=cumulative(hostSamples),dcumulative=cumulative(donorSamples);
-    const htotal=hcumulative.at(-1),dtotal=dcumulative.at(-1);
-    if(!(htotal>1e-7&&dtotal>1e-7))continue;
-    const sampleCount=Math.max(32,Math.max(hostSamples.length,donorSamples.length)*2);
-    for(let k=0;k<=sampleCount;k++){
-     const t=k/sampleCount;
-     const at=(samples,cum,total)=>{
-      const target=t*total;
-      let i=0;while(i<cum.length-2&&cum[i+1]<target)i++;
-      const span=cum[i+1]-cum[i],u=span>1e-12?(target-cum[i])/span:0;
-      return samples[i].p.map((v,d)=>v+(samples[i+1].p[d]-v)*u);
-     };
-     const hp=at(hostSamples,hcumulative,htotal),dp=at(donorSamples,dcumulative,dtotal);
-     const gap=Math.hypot(hp[0]-dp[0],hp[1]-dp[1],hp[2]-dp[2]);
-     bridgeMaxGap=Math.max(bridgeMaxGap,gap);bridgeMeanGap+=gap;bridgeGapSamples++;
-    }
-    if(bridgeMaxGap>.0045)continue;
-    const hostBase=appendSamples(hostSamples),donorBase=appendSamples(donorSamples);
-    let i=0,j=0;
-    while(i<hostSamples.length-1||j<donorSamples.length-1){
-     const hn=i<hostSamples.length-1?hcumulative[i+1]/htotal:Infinity;
-     const dn=j<donorSamples.length-1?dcumulative[j+1]/dtotal:Infinity;
-     if(hn<=dn){
-      appendTriangle(hostBase[i],hostBase[i+1],donorBase[j]);i++;
-     }else{
-      appendTriangle(hostBase[i],donorBase[j+1],donorBase[j]);j++;
-     }
-    }
-    bridgeChainCount++;
+   for(const edge of donorRimEdges){
+    const a=edge.a,b=edge.b,pa=projectRimVertex(a),pb=projectRimVertex(b);
+    if(pa===null||pb===null)continue;
+    const hostStep=distance3(positionFor(pa),positionFor(pb));
+    bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
+    // A nearest-point jump across a different limb fold is not a seam.
+    if(hostStep>.0045){bridgeUnmatchedVertices+=2;continue;}
+    const before=bridgeIndices.length;
+    addBridgeTriangle(a,b,pa);
+    addBridgeTriangle(b,pb,pa);
+    if(bridgeIndices.length>before)bridgeEdges++;
    }
    bodyCut.seamBridgeTriangles=bridgeIndices.length/3;
    bodyCut.seamBridgeMaxGap=bridgeMaxGap;
-   bodyCut.seamBridgeMeanGap=bridgeGapSamples?bridgeMeanGap/bridgeGapSamples:0;
-   bodyCut.seamBridgeChains=bridgeChainCount;
+   bodyCut.seamBridgeMeanGap=bridgeGapCount?bridgeGapTotal/bridgeGapCount:0;
+   bodyCut.seamBridgeEdges=bridgeEdges;
+   bodyCut.seamBridgeVertices=bridgePositions.length/3;
+   bodyCut.seamBridgeUnmatchedVertices=bridgeUnmatchedVertices;
+   bodyCut.seamBridgeMaxHostStep=bridgeMaxHostStep;
    if(bridgeIndices.length>=12){
-    const bridgeGeo=new THREE.BufferGeometry();
-    bridgeGeo.setIndex(new THREE.Uint16BufferAttribute(bridgeIndices,1));
-    bridgeGeo.setAttribute('position',new THREE.Float32BufferAttribute(bridgePositions,3));
-    bridgeGeo.setAttribute('normal',new THREE.Float32BufferAttribute(bridgeNormals,3));
-    bridgeGeo.setAttribute('uv',new THREE.Float32BufferAttribute(bridgeUvs,2));
-    bridgeGeo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bridgeJoints,4));
-    bridgeGeo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(bridgeWeights,4));
-    bridgeGeo.computeBoundingSphere();
-    bodyCut.seamBridgeGeometry=bridgeGeo;
+    bodyCut.seamBridgeData={positions:bridgePositions,normals:bridgeNormals,
+     joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices};
    }
-   // No synthetic success is recorded: the bridge exists only when both
-   // physical boundaries form one unambiguous chain per flank and the
-   // measured gap remains within 4.5 mm. WebGL images decide acceptance.
-   bodyCut.seamBridgeRejected=bridgeIndices.length<12;
-
-  }
+   // The bridge remains pending until rear/3Q WebGL proves that the
+   // previously open thigh slit is gone without creating a folded flap.
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
   // projection creates alternating triangular peaks in rear WebGL.
@@ -1646,6 +1551,29 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
   hoovesCut.geometry.dispose();hoovesCut.geometry=smoothHooves.geometry;
   hoovesCut.sourceTriangles=smoothHooves.sourceTriangles;
   hoovesCut.triangles=smoothHooves.triangles;
+  // Append the seam strip to the donor BODY geometry before binding it.
+  // Its donor-side vertices are existing indices; only host-edge samples
+  // are new vertices, with Maya-derived weights on the same Gallop rig.
+  if(bodyCut.seamBridgeData){
+   const geo=bodyCut.geometry,data=bodyCut.seamBridgeData;
+   const position=geo.getAttribute('position'),normal=geo.getAttribute('normal');
+   const skin=geo.getAttribute('skinIndex'),weight=geo.getAttribute('skinWeight'),index=geo.getIndex();
+   if(!position||!normal||!skin||!weight||!index)
+    throw Error('BTC seam bridge cannot merge into the skinned donor body');
+   geo.setAttribute('position',new THREE.Float32BufferAttribute(
+    [...position.array,...data.positions],3));
+   geo.setAttribute('normal',new THREE.Float32BufferAttribute(
+    [...normal.array,...data.normals],3));
+   geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(
+    [...skin.array,...data.joints],4));
+   geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(
+    [...weight.array,...data.weights],4));
+   geo.setIndex(new THREE.Uint32BufferAttribute(
+    [...index.array,...data.indices],1));
+   geo.computeBoundingSphere();
+   bodyCut.triangles+=data.indices.length/3;
+   bodyCut.seamBridgeData=null;
+  }
   donor=attachNativeDonor(original,bodyCut.geometry,anatomy.materials[0],
    'BTC V20 original Gallop hind limbs with original skin weights');
   donorHooves=attachNativeDonor(original,hoovesCut.geometry,anatomy.materials[1],
@@ -1657,7 +1585,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    donor.visible=false;donorHooves.visible=false;
   }
  }catch(e){
-  donor?.removeFromParent();donorHooves?.removeFromParent();seamBridge?.removeFromParent();
+  donor?.removeFromParent();donorHooves?.removeFromParent();
   bodyCut?.geometry.dispose();hoovesCut?.geometry.dispose();
   crop.restore();throw e;
  }
@@ -1675,7 +1603,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
    seamBridgeTriangles:bodyCut.seamBridgeTriangles||0,seamBridgeMaxGap:bodyCut.seamBridgeMaxGap||0,
-   seamBridgeMeanGap:bodyCut.seamBridgeMeanGap||0,seamBridgeChains:bodyCut.seamBridgeChains||0,
+   seamBridgeMeanGap:bodyCut.seamBridgeMeanGap||0,seamBridgeEdges:bodyCut.seamBridgeEdges||0,
+   seamBridgeVertices:bodyCut.seamBridgeVertices||0,seamBridgeUnmatchedVertices:bodyCut.seamBridgeUnmatchedVertices||0,
+   seamBridgeMaxHostStep:bodyCut.seamBridgeMaxHostStep||0,
    collarRejectedMoves:bodyCut.collarRejectedMoves,collarBacktrackedMoves:bodyCut.collarBacktrackedMoves,
    donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
    donorSubdivisionPasses:bodyCut.subdivisionPasses,
@@ -1685,8 +1615,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
   },
   dispose(){
    if(disposed)return;disposed=true;
-   donor.removeFromParent();donorHooves.removeFromParent();seamBridge?.removeFromParent();
-   bodyCut.geometry.dispose();hoovesCut.geometry.dispose();bodyCut.seamBridgeGeometry?.dispose();
+   donor.removeFromParent();donorHooves.removeFromParent();
+   bodyCut.geometry.dispose();hoovesCut.geometry.dispose();
    crop.restore();
   }
  };
