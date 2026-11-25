@@ -126,6 +126,11 @@ try{
    borderEdges:baseline.heroGroom.tailDockBorderEdges,
    capTriangles:baseline.heroGroom.integratedDockCapTriangles,
    midlineBridgeTriangles:baseline.heroGroom.tailDockMidlineBridgeTriangles,
+   interiorRingVertices:baseline.heroGroom.tailDockCapInteriorRingVertices,
+   coreTriangles:baseline.heroGroom.tailDockCapCoreTriangles,
+   projectedSelfIntersections:baseline.heroGroom.tailDockCapProjectedSelfIntersections,
+   degenerateTriangles:baseline.heroGroom.tailDockCapDegenerateTriangles,
+   boundaryWindingErrors:baseline.heroGroom.tailDockBoundaryWindingErrors,
    openCapEdges:baseline.heroGroom.tailDockOpenCapEdges,
    normalAlignmentBefore:baseline.heroGroom.tailDockCapNormalAlignmentBefore,
    orientationFlipped:baseline.heroGroom.tailDockCapOrientationFlipped
@@ -137,5 +142,15 @@ try{
    'two disconnected old Maya hind-foot scraps must be removed; inspect archived PNGs and BTC_V22_POSTERIOR_AUDIT');
  assert.ok(posterior?.isolatedMayaPosteriorTrianglesRemoved>=10,
    'actual orphaned posterior 5-face scraps must be culled, not just hidden');
+ assert.equal(baseline.heroGroom?.tailDockCapInteriorRingVertices,baseline.heroGroom?.tailDockBorderEdges,
+   'Tail dock cap must use one skinned inset vertex per retained boundary vertex');
+ assert.equal(baseline.heroGroom?.tailDockCapCoreTriangles,baseline.heroGroom?.tailDockBorderEdges-2,
+   'Tail dock cap core must triangulate the entire inset boundary');
+ assert.equal(baseline.heroGroom?.tailDockCapProjectedSelfIntersections,0,
+   'Tail dock cap boundary must not self-intersect');
+ assert.equal(baseline.heroGroom?.tailDockCapDegenerateTriangles,0,
+   'Tail dock cap must not contain degenerate triangles');
+ assert.equal(baseline.heroGroom?.tailDockOpenCapEdges,0,
+   'Tail dock cap must be closed and manifold');
 
 }finally{await page.close();await browser.close();}
