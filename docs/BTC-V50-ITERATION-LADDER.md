@@ -206,3 +206,31 @@
 - **Métrica de deformación:** `rimHostWeightedVertices=98`, `sewnRimVertices=48`, `seamBridgeEdges=70/74`, `seamBridgeUnmatchedVertices=4`, `seamBridgeMaxGap=3.071 mm`, `seamBridgeMaxHostStep=4.846 mm`. El cambio alcanzó los 98 pesos esperados, pero no redujo los cuatro bordes sin puente.
 - **Comparación física de imágenes:** rear-00/rear-08, profile-00/profile-08 y threeQuarter-00/08 contra el candidato anterior commit `3993318e88bb89e628118c7de6e1ebc67ae02357` (artifact #15006632409 y #15007252044). La silueta, la costura y el desgarro posterior permanecen esencialmente iguales; las diferencias de píxeles son residuales de render y no una mejora visible. El root de cola sigue mostrando la cavidad/estrella dentada incluso en `rear-00-no-tail.png`. **No acreditar V23.**
 - **Decisión:** revertir este acoplamiento de pesos por no demostrar mejora visual. Mantener V21 pública, PR #136 draft, y los gates estrictos. Próxima raíz P0: resolver el cap real del dock de cola y la continuidad del collar mediante geometría visible, no más contadores. No publicar ni numerar versión.
+
+
+## CHECKPOINT 2026-11-25 12:58 ART (CAP DE COLA MANIFOLD; V23 NO ACREDITADA)
+
+**HEAD de rama:** `09033eb7cb91154feccd4138cbd1ddf20008e1e2` (PR #136 sigue draft/open; main y Hostinger no se tocaron).
+
+### Reparación real probada
+- `0e0d6d488f5a9ac0fc4ee73d430554d3148947ae` reemplazó la máscara ramificada de cola por un corte transversal real en `y=.0160`, con un único contorno de 24 aristas.
+- CI detectó un defecto real de orientación: las 24 aristas interiores del cap compartían winding incorrecto. `92968d81b4266ca4a728beadb60ff16b60a52e57` orienta siempre el núcleo contra el borde interior del anillo, sin condicionar el winding al signo del área proyectada. El test de manifold dejó de fallar.
+- `09033eb7cb91154feccd4138cbd1ddf20008e1e2` expone `tailDockCutPlaneY` en el snapshot runtime para que la QA compruebe el plano real, no una constante externa.
+
+### Evidencia WebGL real
+- Smoke Chromium/WebGL: run [45648806459](https://github.com/mervaleta/cryptodromo/actions/runs/45648806459), artifact #15039701498, ZIP SHA-256 `4712041a37701e14bd9a3ca0fe4ae44db2965be632c6052e45b809fe28bf342e`.
+- Ciclo completo: run [45648806480](https://github.com/mervaleta/cryptodromo/actions/runs/45648806480), artifact #15038648716, ZIP SHA-256 `66afc2e3847476cacb35e76a38d51a317f84d3a45902546aeeeae39600a36dd4`. 30 PNG reales Chromium/WebGL, 16 hashes distintos de perfil y 3 diagnósticos aislados. El set actual contiene cinco cámaras nombradas (profile, threeQuarter, rear, front, detail), no seis; falta añadir top para cumplir el contrato completo.
+- Baseline V21: artifact #13558229151, ZIP SHA-256 `4197bf1245a729d4693444512dbb2cb58881fb99372be1ca3453cbb1ea31d614`.
+- Mejor candidato previo de geometría: artifact #15006632409, ZIP SHA-256 `b845dc33906ced8b1b6caf554fc146ca9bd475e03fd1a6c0a52f58b3dfeb54a1`.
+
+### Métricas y decisión visual
+- Tail dock: 24 aristas de borde, 70 triángulos de cap, 22 triángulos de núcleo, 0 autointersecciones proyectadas, 0 degenerados, 0 errores de winding y 0 bordes abiertos. La cavidad negra/estrella de la versión anterior desaparece en los píxeles, pero queda visible un disco plano tipo botón en la raíz; no está artísticamente integrado.
+- Hind seam: host 74 aristas frente a donor 118; sólo 90 celdas bridge; **28 aristas sin emparejar**, 32 celdas de un triángulo, 4 vértices sin correspondencia, paso máximo de host 4.846 mm y gap medio 1.352 mm. En rear-04/rear-08/rear-12 y threeQuarter-08 siguen visibles cortes/grietas en la inserción de las patas, con patas posteriores demasiado finas y sin volumen muscular. El defecto P0 de grupa-muslo sigue abierto.
+- Comparativa física: mejora clara de la raíz respecto del candidato #15006632409 (estrella negra -> cap cerrado/disco), sin regresión evidente de la silueta de patas; pero el seam de ancas continúa abierto y el resultado general sigue lejos de aprobación. Frente a V21 hay menos fragmentos en la grupa, pero no se acepta el caballo.
+- `qa.json`: `liveHostingerVerified=false`, `AAAApproved=false`. La rama no se publicó. **V23 NO acreditada**: no contar esta mejora aislada como hito todavía; falta resolver la costura principal y la raíz de cola plana.
+
+### Próximo trabajo obligatorio
+1. Reemplazar la proyección independiente nearest-edge del seam por correspondencia ordenada de loops (zipper monotónico donor/host), emparejando los dos flancos y preservando skin weights; cerrar todas las aristas sin relajar asserts ni saltar celdas.
+2. Capturar rear/profile/3Q/front/top/detail y las 16 fases; comparar cada cámara con V21 y #15006632409. No contar V23 hasta demostrar cierre visual del seam sin regresión.
+3. Después del cierre, abordar el rig: el código todavía usa `makeSkinTransfer(source)` sobre el esqueleto Quaternius. Los scripts de exportación Maya están en el repo, pero en esta corrida no se encontró `Horse_VR_2017.ma` ni un JSON nativo de 70 influencias en repo, Library o `/mnt/data`; no afirmar que los pesos originales estén restaurados.
+4. Mantener V21 pública y las ramas V4/V5 como rollback. No tocar los otros 99 corredores, fixture, apuestas, precios ni estadio.
