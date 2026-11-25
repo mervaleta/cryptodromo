@@ -1918,8 +1918,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      let zipperPath=null;
      if(donorSteps>=1&&hostSteps>=1){
       const costs=Array.from({length:donorSteps+1},()=>Array(hostSteps+1).fill(Infinity));
+      // Optimize the worst bridge face first. The previous sum-only DP could
+      // accept a path with a few near-zero-area slivers because many good
+      // triangles hid them in the total score. Keep the best bottleneck
+      // quality at each monotone state, then use the original cost as tie-break.
+      const minimums=Array.from({length:donorSteps+1},()=>Array(hostSteps+1).fill(0));
       const previous=Array.from({length:donorSteps+1},()=>Array(hostSteps+1).fill(null));
       costs[0][0]=0;
+      minimums[0][0]=1;
       for(let i=0;i<=donorSteps;i++)for(let j=0;j<=hostSteps;j++){
        const base=costs[i][j];
        if(!Number.isFinite(base)||(i===donorSteps&&j===hostSteps))continue;
@@ -1934,7 +1940,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
          if(q){
           const next=base+q.cost;
-          if(next<costs[i+1][j]){
+          const bottleneck=Math.min(minimums[i][j],q.quality);
+          if(bottleneck>minimums[i+1][j]+1e-9||
+             (Math.abs(bottleneck-minimums[i+1][j])<=1e-9&&next<costs[i+1][j])){
+           minimums[i+1][j]=bottleneck;
            costs[i+1][j]=next;
            previous[i+1][j]={i,j,tri,move:'donor',quality:q.quality};
           }
@@ -1951,7 +1960,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
          if(q){
           const next=base+q.cost;
-          if(next<costs[i][j+1]){
+          const bottleneck=Math.min(minimums[i][j],q.quality);
+          if(bottleneck>minimums[i][j+1]+1e-9||
+             (Math.abs(bottleneck-minimums[i][j+1])<=1e-9&&next<costs[i][j+1])){
+           minimums[i][j+1]=bottleneck;
            costs[i][j+1]=next;
            previous[i][j+1]={i,j,tri,move:'host',quality:q.quality};
           }
