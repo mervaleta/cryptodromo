@@ -1,3 +1,8 @@
+## 2026-11-25 · BTC seam donor-rim skin coupling A/B · candidato rechazado, V23 no acreditada
+- Commit aislado `55e90aa83cc431ca960934da13f886f26b511b16`: el rim donante adopta los pesos del arco Maya correspondiente y el collar superior transiciona desde 100% de pesos host en el corte hacia pesos donantes en 1.8 mm.
+- Smoke real Chromium/WebGL: run `45682075311`, artifact `15054777682`, ZIP SHA256 `c170746dd4414c6c639bd92c76550f8266372c5fad714c58ae6bd14584351355`. Comparado físicamente con el smoke previo `45673685157` / artifact `15050628691`: la abertura triangular en rear-08 permanece y no hay mejora visual apreciable. El ciclo completo de 16 fases/seis cámaras `45682075287` seguía en curso al registrar esta entrada.
+- **Resultado:** no contar V23, no desplegar, V21 pública intacta. Próximo P0: geometría y topología del collar, gap de hasta 4.388 mm y calidad mínima de triángulo 0.000869; los pesos por sí solos no cierran la rotura.
+
 ## 2026-11-07 · V22 · cirugía topológica REAL sobre el muslo posterior · candidato visual aislado
 **Motivo:** el usuario verificó que V21 se ve prácticamente igual a V20b. Las capturas reales de Hostinger (Actions [42332885165](https://github.com/mervaleta/cryptodromo/actions/runs/42332885165)) muestran grandes triángulos sueltos entre grupa y pierna posterior, especialmente vista trasera. No es razonable seguir cambiando sólo roughness/color/tamaño de ojos y llamarlo avance visual.
 
