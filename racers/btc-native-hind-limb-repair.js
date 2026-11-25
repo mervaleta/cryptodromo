@@ -1383,7 +1383,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(Math.hypot(...target)<1e-8)target=fallbackNormal||[0,1,0];
     if(Math.hypot(...target)<1e-8)
      target=normals.find(n=>Math.hypot(...n)>1e-8)||[0,1,0];
-    const alignment=cross.reduce((su   function addBridgeQuad(a,b,pa,pb,hostStep){
+    const alignment=cross.reduce((sum,x,k)=>sum+x*target[k],0);
+    const oriented=ids.slice();
+    if(alignment<0)[oriented[1],oriented[2]]=[oriented[2],oriented[1]];
+    return {ids:oriented,areaSq};
+   }
+   function addBridgeQuad(a,b,pa,pb,hostStep){
     const donorFallback=[0,1,2].map(k=>normalFor(a)[k]+normalFor(b)[k]);
     const hostFallback=[0,1,2].map(k=>normalFor(pa)[k]+normalFor(pb)[k]);
     const first=[bridgeTriangle([a,b,pa],donorFallback),bridgeTriangle([b,pb,pa],hostFallback)];
@@ -1566,7 +1571,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // Every zipper step advances exactly one ordered boundary edge. A
    // successful loop therefore covers both rims without skipped cells.
   }
-:bridgeIndices};
    }
    // No donor rim edge is skipped for a distance threshold. The monotone
    // loop correspondence must close every edge or fail visibly in QA.
