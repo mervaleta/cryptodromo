@@ -136,17 +136,40 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const visibleTriangles=[];
  const retiredTailEdges=new Set();
  const retiredEarEdges=new Set();
+ const tailCutSkinAnchors=new Map();
  const edgeKey=(a,b)=>a<b?a+':'+b:b+':'+a;
  const earVertex=id=>{
   const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
   return Math.abs(x)>.00113&&y>-.0302&&y<-.0230&&z>.04485;
  };
- const tailVertex=id=>{
-  const i=id*3,x=positions[i],y=positions[i+1],z=positions[i+2];
-  // The dock joins the rump here. Removing the root tears an open hole.
-  // Only retire the old free end; preserve the skinned croup envelope.
-  return y>.0155&&Math.abs(x)<.00155&&z>.016&&z<.0355;
+ // The old vertex-mask tail removal produced 48 boundary edges on only
+ // 46 vertices: the left/right arcs touched at FOUR midline vertices
+ // (226, 228, 231, 260), leaving two degree-4 branches. A single fan or
+ // self-touching ear-clipped polygon cannot close that surface cleanly.
+ // Cut only the narrow tail stem with one exact transverse plane instead.
+ // On the original 5,406-vertex Maya sculpt, y=.0160 yields one simple
+ // 24-edge loop, 24 cut vertices, no branches, and preserves the croup.
+ const tailDockPlaneY=.0160;
+ const clippedPositions=Array.from(positions);
+ const tailCutVertexCache=new Map();
+ const sourcePoint=id=>[positions[id*3],positions[id*3+1],positions[id*3+2]];
+ const clipTailEdge=(a,b)=>{
+  const key=edgeKey(a.id,b.id);
+  if(tailCutVertexCache.has(key)){
+   const id=tailCutVertexCache.get(key);
+   return {id,p:clippedPositions.slice(id*3,id*3+3)};
+  }
+  const t=(tailDockPlaneY-a.p[1])/(b.p[1]-a.p[1]);
+  const point=a.p.map((value,k)=>value+(b.p[k]-value)*t);
+  point[1]=tailDockPlaneY;
+  const id=clippedPositions.length/3;
+  clippedPositions.push(...point);
+  const low=Math.min(a.id,b.id),high=Math.max(a.id,b.id);
+  tailCutSkinAnchors.set(id,{a:low,b:high,t:a.id===low?t:1-t});
+  tailCutVertexCache.set(key,id);
+  return {id,p:point};
  };
+ let tailFullyRemovedTriangles=0,tailClippedTriangles=0;
  for(let t=0;t<originalIndices.length;t+=3){
   const tri=[originalIndices[t],originalIndices[t+1],originalIndices[t+2]];
   if(tri.filter(earVertex).length>=2){
@@ -154,18 +177,49 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
    for(let k=0;k<3;k++)retiredEarEdges.add(edgeKey(tri[k],tri[(k+1)%3]));
    continue;
   }
-  if(tri.filter(tailVertex).length>=2){
-   removed.extraTailFaces++;
-   for(let k=0;k<3;k++)retiredTailEdges.add(edgeKey(tri[k],tri[(k+1)%3]));
+  const polygon=tri.map(id=>({id,p:sourcePoint(id)}));
+  const inside=polygon.map(vertex=>vertex.p[1]<=tailDockPlaneY);
+  if(inside.every(Boolean)){
+   visibleTriangles.push(...tri);
    continue;
   }
-  visibleTriangles.push(...tri);
+  removed.extraTailFaces++;
+  if(inside.every(value=>!value)){
+   tailFullyRemovedTriangles++;
+   continue;
+  }
+  tailClippedTriangles++;
+  const clipped=[];
+  for(let i=0;i<polygon.length;i++){
+   const current=polygon[i],previous=polygon[(i+polygon.length-1)%polygon.length];
+   const currentInside=current.p[1]<=tailDockPlaneY;
+   const previousInside=previous.p[1]<=tailDockPlaneY;
+   if(currentInside){
+    if(!previousInside)clipped.push(clipTailEdge(previous,current));
+    clipped.push(current);
+   }else if(previousInside){
+    clipped.push(clipTailEdge(previous,current));
+   }
+  }
+  if(clipped.length<3)continue;
+  // The new cut edge is the only edge of this clipped polygon lying on
+  // the plane. Cache by exact vertex IDs so adjacent faces share it.
+  for(let i=0;i<clipped.length;i++){
+   const a=clipped[i],b=clipped[(i+1)%clipped.length];
+   if(Math.abs(a.p[1]-tailDockPlaneY)<1e-10&&
+      Math.abs(b.p[1]-tailDockPlaneY)<1e-10)
+    retiredTailEdges.add(edgeKey(a.id,b.id));
+  }
+  for(let i=1;i<clipped.length-1;i++)
+   visibleTriangles.push(clipped[0].id,clipped[i].id,clipped[i+1].id);
  }
- // The old free tail leaves a polygonal opening at its skinned dock.
- // Close the actual body manifold rather than adding another tail-shaped
- // capsule. Each retained boundary edge gets a triangle to a single
- // depressed interior center. Reverse the inherited edge orientation so
- // the cap meets the source's normal winding.
+ positions=Float32Array.from(clippedPositions);
+ removed.tailDockCutPlaneY=tailDockPlaneY;
+ removed.tailDockFullyRemovedTriangles=tailFullyRemovedTriangles;
+ removed.tailDockClippedTriangles=tailClippedTriangles;
+ // The exact transverse tail-stem cut leaves one small, simple
+ // polygonal opening on the retained Maya croup. Close this actual body
+ // manifold in-place, with one skinned inset ring and an ear-clipped core.
  const keptEdges=new Map();
  for(let t=0;t<visibleTriangles.length;t+=3){
   for(let k=0;k<3;k++){
@@ -205,18 +259,11 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   if(length<1e-15)throw Error('BTC tail cap boundary normal collapsed: '+id);
   return n.map(v=>v/length);
  };
- // The free-tail cut has TWO bilateral rim loops that share two vertices
- // on the midline. V21 forced all 48 edges into a SINGLE fan: a non-manifold
- // bow-tie of triangles that visibly tore through the rump during Gallop.
- // Seal each anatomical half independently, with a smooth intermediate ring
- // generated IN the actual skinned Maya body mesh (not a floating patch).
+ // The 24-edge plane cut is a simple closed loop, not the previous
+ // self-touching pair of 24-edge arcs. Reconstruct it from adjacency and
+ // triangulate its inset polygon without a center fan or floating patch.
  const capPosition=Array.from(positions),capSkinAnchors=new Map(),capCenterRims=new Map();
  const tailCapTriangleStart=visibleTriangles.length;
- // The 48 retained Maya border edges are two open anatomical arcs sharing
- // their two midline endpoints. Together they form ONE closed boundary loop.
- // Reconstruct that loop from edge adjacency, then triangulate its interior.
- // Two independent center fans created a star-shaped, self-overlapping cap
- // in rear WebGL even though their edge-count manifold test passed.
  const boundaryAdjacency=new Map(),borderEdgeByKey=new Map();
  for(const edge of border){
   const key=edgeKey(edge.a,edge.b);
@@ -655,10 +702,29 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const bone=new Uint16Array(positions.length/3*4);
  const weights=new Float32Array(positions.length/3*4);
  for(let i=0;i<positions.length;i+=3){
-  const refId=capSkinAnchors.get(i/3);
+  const vertex=i/3,cutAnchor=tailCutSkinAnchors.get(vertex);
+  const refId=capSkinAnchors.get(vertex);
   const ref=refId===undefined?i:refId*3;
-  let skin=skinAt(skinRest[ref],skinRest[ref+1],skinRest[ref+2]);
-  const rim=capCenterRims.get(i/3);
+  let skin;
+  if(cutAnchor){
+   // A plane-cut vertex inherits the exact interpolation of the two
+   // original Maya-edge endpoint samples, not a fresh nearest-neighbor guess.
+   const left=skinAt(skinRest[cutAnchor.a*3],skinRest[cutAnchor.a*3+1],skinRest[cutAnchor.a*3+2]);
+   const right=skinAt(skinRest[cutAnchor.b*3],skinRest[cutAnchor.b*3+1],skinRest[cutAnchor.b*3+2]);
+   const influences=new Map();
+   for(let k=0;k<4;k++){
+    const lw=left.weights[k]*(1-cutAnchor.t),rw=right.weights[k]*cutAnchor.t;
+    if(lw>1e-9)influences.set(left.joints[k],(influences.get(left.joints[k])||0)+lw);
+    if(rw>1e-9)influences.set(right.joints[k],(influences.get(right.joints[k])||0)+rw);
+   }
+   const top=[...influences].sort((a,b)=>b[1]-a[1]).slice(0,4);
+   const total=top.reduce((sum,item)=>sum+item[1],0)||1;
+   skin={joints:Array.from({length:4},(_,k)=>top[k]?.[0]||0),
+    weights:Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total)};
+  }else{
+   skin=skinAt(skinRest[ref],skinRest[ref+1],skinRest[ref+2]);
+  }
+  const rim=capCenterRims.get(vertex);
   if(rim){
    // The cap center must not acquire a different bone merely because
    // its centroid was moved into the rump. Average the existing rim
