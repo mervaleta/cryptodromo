@@ -54,7 +54,7 @@ function cropMayaHind(anatomy){
  // pieces are triangulated independently, so hidden centerline islands
  // cannot be bridged by an edge with two crossings.
  const planes=[
-  {id:'z',f:v=>.0208-xyz[3*v+2]},
+  {id:'z',f:v=>.0145-xyz[3*v+2]},
   // P0 anatomy A/B: remove low hanging Maya rump flaps up to 5.2 mm,
   // leaving the upper haunch untouched. Must be judged on real WebGL
   // rear/threeQuarter frames against artifact 14135961152; not approved.
@@ -379,7 +379,7 @@ function clipNativeBodyHindExact(mesh){
   // mismatched cuts create an unfillable dark band before any rig motion.
   // The donor remains an isolated candidate until rear/3Q WebGL A/B.
   {id:'y',f:v=>xyz[3*v+1]-.0052},
-  {id:'z',f:v=>.0208-xyz[3*v+2]},
+  {id:'z',f:v=>.0145-xyz[3*v+2]},
   {id:'R',f:v=>xyz[3*v]-.0015},
   {id:'L',f:v=>-xyz[3*v]-.0015}
  ];
@@ -575,7 +575,7 @@ function refineSkinnedDonor(source,passes=2){
    // off the plane. That bends adjacent triangles into the host surface
    // and makes a visible serrated wedge at the Maya/GLB rump join.
    const onExactCutPlane=[
-    [1,.0052],[2,.0208],[0,.0015],[0,-.0015]
+    [1,.0052],[2,.0145],[0,.0015],[0,-.0015]
    ].some(([axis,value])=>Math.abs(vs[i].p[axis]-value)<1e-7);
    if(near.length>0||onExactCutPlane){
     // Every vertex incident to an open boundary is constrained, including
@@ -602,7 +602,7 @@ function refineSkinnedDonor(source,passes=2){
    // pushes its midpoint off the plane and reopens the rump/limb seam.
    // Preserve a linear midpoint on all such coplanar cut edges.
    const onCutPlane=(p,q)=>[
-    [1,.0052],[2,.0208],[0,.0015],[0,-.0015]
+    [1,.0052],[2,.0145],[0,.0015],[0,-.0015]
    ].some(([axis,value])=>Math.abs(p[axis]-value)<1e-7&&
                             Math.abs(q[axis]-value)<1e-7);
    const constrained=e.opp.length!==2||onCutPlane(a.p,b.p);
@@ -794,15 +794,15 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const twins=collarTwins[i];
    if(i!==twins[0])continue;
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
-   // Actual donor triangles satisfy z<=.0208 after exact clipping. The
-   // former collar range [.0208,.0226) was entirely OUTSIDE that mesh,
+   // Actual donor triangles satisfy z<=.0145 after exact clipping. The
+   // former collar range [.0145,.0163) was entirely OUTSIDE that mesh,
    // so almost no donor vertices could be attached to the Maya rump.
    // Project the real 1.8mm strip immediately BELOW the cut rim instead;
-   // keep the projection strongest on z=.0208 and fade toward the leg.
-   if(z<.0190||z>.0208+1e-7||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((.0208-z)/(.0208-.0190),0,1);
-   // Attachment is strongest on the z=.0208 cut and fades into the
-   // actual retained donor leg at z=.0190.
+   // keep the projection strongest on z=.0145 and fade toward the leg.
+   if(z<.0130||z>.0145+1e-7||y<.0039||Math.abs(x)<.0010)continue;
+   const u=THREE.MathUtils.clamp((.0145-z)/(.0145-.0130),0,1);
+   // Attachment is strongest on the z=.0145 cut and fades into the
+   // actual retained donor leg at z=.0130.
    // The old ascending smoothstep did the opposite, dragging interior
    // triangles toward the rump while leaving the actual rim unsown.
    // This is a geometric candidate, not V23 visual approval.
@@ -906,8 +906,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // Candidate P0: the sewn rim can use nearly 100% host skinning
    // while its immediate interior retained only 5%, producing an abrupt
    // deformation gradient and a dark triangular shear in gallop phases.
-   // Ramp the host share continuously over the existing 1.8 mm collar;
-   // retain 100% donor influence below z=.0190 and never alter the hock.
+   // Ramp the host share continuously over the existing 1.5 mm collar;
+   // retain 100% donor influence below z=.0130 and never alter the hock.
    // This is an unapproved animation/geometry A/B, not a V23 milestone.
    const mayaFactor=.30*t*t,influences=new Map();
    // Coincident UV/material copies can have DIFFERENT source skin weights.
@@ -942,7 +942,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    insetVertices+=twins.length;reattachedWeights+=twins.length;
   }
-  // The exact donor cut creates an open rim at z=.0208, while the
+  // The exact donor cut creates an open rim at z=.0145, while the
   // existing closest-triangle collar projection only visits z>.0208.
   // Therefore it cannot sew the actual cut edge. Align ONLY donor rim
   // vertices with nearby surviving Maya cut edges on the SAME flank.
@@ -982,7 +982,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const az=hostPos.getZ(e.a),bz=hostPos.getZ(e.b);
     return Math.sign(ax)===Math.sign(bx)&&Math.abs(ax)>.0014&&
      Math.abs(bx)>.0014&&Math.min(ay,by)>.0050&&
-     Math.abs(az-.0208)<.000015&&Math.abs(bz-.0208)<.000015;
+     Math.abs(az-.0145)<.000015&&Math.abs(bz-.0145)<.000015;
    });
    const di=donorGeo.getIndex();
    const donorBoundary=physicalBoundary(di,donorPos);
@@ -990,11 +990,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    for(const e of donorBoundary.edges)for(const vertex of [e.a,e.b]){
     const key=seamKey(donorPos,vertex);
     for(const id of donorBoundary.byPosition.get(key)||[]){
-     if(Math.abs(donorPos.getZ(id)-.0208)<.000015&&
+     if(Math.abs(donorPos.getZ(id)-.0145)<.000015&&
         donorPos.getY(id)>.0050&&Math.abs(donorPos.getX(id))>.0014)
       donorRim.add(id);
     }
    }
+   bodyCut.hostRimEdges=hostRim.length;
+   bodyCut.donorRimVertices=donorRim.size;
    // The previous rim snap bypassed the incident-face orientation gate:
    // a 0.18 mm move could invert a tiny subdivided collar triangle.
    // Use LIVE neighboring positions and backtrack each proposed snap.
@@ -1223,8 +1225,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // This changes the skinned donor geometry, not just its shading.
    donorGeo.computeVertexNormals();
    // The donor body is clipped at z <= .0208. The old smoothing window
-   // [.0211,.0237] was empty, leaving the jagged upper thigh untreated.
-   // Relax only the actual 1.8 mm collar below the physical cut rim;
+   // [.0148,.0170] was empty, leaving the jagged upper thigh untreated.
+   // Relax only the actual 1.5 mm collar below the physical cut rim;
    // pin the open boundary and retain the face-orientation backtracking.
    for(let pass=0;pass<2;pass++){
     const positions=Array.from({length:donorPos.count},(_,i)=>[
@@ -1237,13 +1239,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // spatially welded group atomically, or leave the whole group pinned.
      const twins=[...(physicalVertices.get(spatialVertex[i])||[i])];
      if(i!==Math.min(...twins)||twins.some(v=>rim.has(v))||
-        z<=.0190||z>=.0208||y<=.0041)continue;
+        z<=.0130||z>=.0145||y<=.0041)continue;
      // A UV split lowers the representative's indexed valence even when
      // the welded physical one-ring is well formed. Use the physical
      // neighbor count below, not edges[i].size, to decide eligibility.
      // Pin the transition's endpoints AND the true open rim. Attenuate
      // the smoothing one edge inward to avoid a hard displacement step.
-     const u=(z-.0190)/(.0208-.0190);
+     const u=(z-.0130)/(.0145-.0130);
      const taper=Math.sin(Math.PI*u)**2;
      const rimNeighbor=[...edges[i]].some(v=>rim.has(v));
      const alpha=.28*taper*(rimNeighbor?.18:1);
@@ -1467,6 +1469,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    isolatedMayaPosteriorTrianglesRemoved:crop.isolatedMayaPosteriorTrianglesRemoved,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
+   sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
    collarRejectedMoves:bodyCut.collarRejectedMoves,collarBacktrackedMoves:bodyCut.collarBacktrackedMoves,
    donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
    donorSubdivisionPasses:bodyCut.subdivisionPasses,
