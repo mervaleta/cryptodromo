@@ -1066,7 +1066,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // snaps must not each pass locally while collectively flattening or
    // reversing the same shared triangle.
    const rimReference=Array.from({length:donorPos.count},(_,v)=>rimPoint(v));
-   let sewn=0;
+   let sewn=0,rimHostWeighted=0;
    // A UV/material seam may contain several vertex IDs at precisely the
    // same rest-space position. Snapping only one ID opens a real crack
    // even though the physical boundary classifier correctly welded them.
@@ -1095,43 +1095,52 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     // Do not bridge nonmatching topologies. Bound the move to 0.18 mm
     // and let the existing orientation/area gate reject damaged faces.
-    if(!nearest||distSq>.0012**2)continue;
+    if(!nearest||distSq>.0045**2)continue;
     // Full geometric coincidence is essential for a shared skinned rim.
     // The former 0.18 mm capped motion left a persistent rest-space
     // gap on donor vertices 0.18–1.2 mm away from the host boundary.
     // Try the actual host point first; the existing per-face winding
     // and area backtracking below rejects unsafe projection.
-    const dist=Math.sqrt(distSq),blend=1;
-    const origin=[x,y,z],delta=nearest.map((v,k)=>(v-origin[k])*blend);
-    let accepted=null;
-    for(let factor=1;factor>=1/64;factor/=2){
-     const candidate=origin.map((v,k)=>v+delta[k]*factor);
-     const groupSet=new Set(rimGroup);
-     const incident=new Set(rimGroup.flatMap(v=>rimFaces[v]));
-     const safe=[...incident].every(face=>{
-      const prior=face.map(rimPoint);
-      const moved=face.map(v=>groupSet.has(v)?candidate:rimPoint(v));
-      const a=rimNormal(...prior),b=rimNormal(...moved);
-      const reference=rimNormal(...face.map(v=>rimReference[v]));
-      const area0=a.reduce((n,v)=>n+v*v,0);
-      const area1=b.reduce((n,v)=>n+v*v,0);
-      const referenceArea=reference.reduce((n,v)=>n+v*v,0);
-      const dot=a.reduce((n,v,k)=>n+v*b[k],0);
-      const referenceDot=reference.reduce((n,v,k)=>n+v*b[k],0);
-      return area0>1e-24&&referenceArea>1e-24&&
-       area1>=area0*.55&&area1>=referenceArea*.36&&
-       dot>0&&referenceDot>0;
-     });
-     if(safe){accepted=candidate;break;}
+    const dist=Math.sqrt(distSq);
+    const origin=[x,y,z];
+    let finalPoint=origin,snapped=false;
+    // Only move the donor surface when the full projection is local enough
+    // to preserve its incident faces. A farther point still receives the
+    // same seam skin as the host and is joined by the integrated bridge below.
+    if(dist<=.0012){
+     const delta=nearest.map((v,k)=>v-origin[k]);
+     let accepted=null;
+     for(let factor=1;factor>=1/64;factor/=2){
+      const candidate=origin.map((v,k)=>v+delta[k]*factor);
+      const groupSet=new Set(rimGroup);
+      const incident=new Set(rimGroup.flatMap(v=>rimFaces[v]));
+      const safe=[...incident].every(face=>{
+       const prior=face.map(rimPoint);
+       const moved=face.map(v=>groupSet.has(v)?candidate:rimPoint(v));
+       const a=rimNormal(...prior),b=rimNormal(...moved);
+       const reference=rimNormal(...face.map(v=>rimReference[v]));
+       const area0=a.reduce((n,v)=>n+v*v,0);
+       const area1=b.reduce((n,v)=>n+v*v,0);
+       const referenceArea=reference.reduce((n,v)=>n+v*v,0);
+       const dot=a.reduce((n,v,k)=>n+v*b[k],0);
+       const referenceDot=reference.reduce((n,v,k)=>n+v*b[k],0);
+       return area0>1e-24&&referenceArea>1e-24&&
+        area1>=area0*.55&&area1>=referenceArea*.36&&
+        dot>0&&referenceDot>0;
+      });
+      if(safe){accepted=candidate;break;}
+     }
+     if(accepted){
+      for(const v of rimGroup)donorPos.setXYZ(v,...accepted);
+      finalPoint=accepted;snapped=true;
+     }
     }
-    if(!accepted)continue;
-    for(const v of rimGroup)donorPos.setXYZ(v,...accepted);
-    // A position-only seam snap cannot survive Gallop: donor and Maya
-    // skin influences move the same rest-space point differently. Blend
-    // the rim influences toward the ACTUAL closest host edge, weighted
-    // by the measured separation. This affects only open donor rim
-    // vertices and leaves the stifle, hock and all other horses intact.
-    // Candidate geometry/animation only, NOT V23 visual acceptance.
+    // The bridge projects every donor rim point within 4.5 mm. Its two
+    // ends must deform identically: a 0.3 mm weight fade left most of the
+    // real cut rim on Quaternius weights while the host-side bridge used
+    // Maya-derived weights, so the strip sheared open during Gallop.
+    // Match the entire connected boundary group to the interpolated host
+    // edge weights, even when geometric backtracking leaves a small gap.
     let hostEdge=null,hostEdgeT=0,hostEdgeDist=Infinity;
     for(const e of hostRim){
      const ax=hostPos.getX(e.a),ay=hostPos.getY(e.a),az=hostPos.getZ(e.a);
@@ -1139,48 +1148,21 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const dx=hostPos.getX(e.b)-ax,dy=hostPos.getY(e.b)-ay,dz=hostPos.getZ(e.b)-az;
      const lenSq=dx*dx+dy*dy+dz*dz;
      if(lenSq<1e-18)continue;
-     const t=THREE.MathUtils.clamp(((accepted[0]-ax)*dx+(accepted[1]-ay)*dy+
-      (accepted[2]-az)*dz)/lenSq,0,1);
-     const d=(ax+t*dx-accepted[0])**2+(ay+t*dy-accepted[1])**2+
-      (az+t*dz-accepted[2])**2;
+     const t=THREE.MathUtils.clamp(((finalPoint[0]-ax)*dx+(finalPoint[1]-ay)*dy+
+      (finalPoint[2]-az)*dz)/lenSq,0,1);
+     const d=(ax+t*dx-finalPoint[0])**2+(ay+t*dy-finalPoint[1])**2+
+      (az+t*dz-finalPoint[2])**2;
      if(d<hostEdgeDist){hostEdgeDist=d;hostEdge=e;hostEdgeT=t;}
     }
-    if(hostEdge&&hostEdgeDist<.0012**2){
-     // The donor and Maya coat currently use different transferred
-     // influence distributions even where their cut rims coincide.
-     // A 60% host share still permits the donor rim to peel open as the
-     // hind legs load. Match the host skin EXACTLY at coincidence, and
-     // taper to the previous 15% host share over 1.2 mm. Interior donor
-     // vertices remain unchanged. This changes actual Gallop deformation.
-     // The sewn cut rim is a shared deforming boundary, not a blend zone.
-     // A nonzero donor share at the exact rim pulls coincident vertices
-     // apart as Gallop bends the hock. Use the host's interpolated skin
-     // influences for every genuinely matched rim vertex. The donor
-     // interior retains its native weights; only the seam ring changes.
-     // A backtracked snap may stop short of the host edge. Copying 100%
-     // Maya skinning to a rim point still separated by up to 1.2 mm
-     // shears the limb during Gallop: the donor vertex follows the rump
-     // despite never reaching its surface. Match host weights only when
-     // the accepted position is physically coincident (<= 0.03 mm).
-     // Otherwise taper the transfer to zero over the local 0.30 mm seam.
-     // This changes actual deformation, not a synthetic acceptance gate.
-     const separation=Math.sqrt(hostEdgeDist);
-     const hostShare=separation<=.00003?1:
-      separation>=.00030?0:
-      1-((separation-.00003)/.00027)**2*
-       (3-2*((separation-.00003)/.00027));
-     const donorShare=1-hostShare;
+    if(hostEdge&&hostEdgeDist<.0045**2){
      const influence=new Map();
-     for(let k=0;k<4;k++){
-      const w=donorWeights.getComponent(id,k)*donorShare;
-      if(w>1e-9){const joint=donorSkin.getComponent(id,k);
-       influence.set(joint,(influence.get(joint)||0)+w);}
-     }
      for(const [hostId,fraction] of [[hostEdge.a,1-hostEdgeT],[hostEdge.b,hostEdgeT]]){
       for(let k=0;k<4;k++){
-       const w=hostWeights.getComponent(hostId,k)*fraction*hostShare;
-       if(w>1e-9){const joint=hostSkin.getComponent(hostId,k);
-        influence.set(joint,(influence.get(joint)||0)+w);}
+       const w=hostWeights.getComponent(hostId,k)*fraction;
+       if(w>1e-9){
+        const joint=hostSkin.getComponent(hostId,k);
+        influence.set(joint,(influence.get(joint)||0)+w);
+       }
       }
      }
      const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
@@ -1189,11 +1171,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       donorSkin.setComponent(v,k,top[k]?.[0]||0);
       donorWeights.setComponent(v,k,(top[k]?.[1]||0)/total);
      }
+     rimHostWeighted+=rimGroup.length;
     }
-    sewn+=rimGroup.length;
+    if(snapped)sewn+=rimGroup.length;
    }
    // No artificial acceptance counters: this is diagnostic only.
    bodyCut.sewnRimVertices=sewn;
+   bodyCut.rimHostWeightedVertices=rimHostWeighted;
 
    // Stitch every donor boundary edge to its nearest retained Maya rim edge.
    // The first zipper attempt found that the two cut boundaries are branched
@@ -1657,7 +1641,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    isolatedMayaPosteriorSourceFaceKeys:crop.isolatedMayaPosteriorSourceFaceKeys,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
-   sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
+   sewnRimVertices:bodyCut.sewnRimVertices||0,rimHostWeightedVertices:bodyCut.rimHostWeightedVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
    seamBridgeTriangles:bodyCut.seamBridgeTriangles||0,seamBridgeMaxGap:bodyCut.seamBridgeMaxGap||0,
    seamBridgeMeanGap:bodyCut.seamBridgeMeanGap||0,seamBridgeEdges:bodyCut.seamBridgeEdges||0,
    seamBridgeVertices:bodyCut.seamBridgeVertices||0,seamBridgeUnmatchedVertices:bodyCut.seamBridgeUnmatchedVertices||0,
