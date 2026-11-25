@@ -1238,7 +1238,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeMaxHostStep=0,bridgeLoopPairs=0,bridgeZipperMovesDonor=0,
     bridgeZipperMovesHost=0,bridgeZipperFallbackLoops=0,
     bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity,
-    bridgeOrientationFlips=0,bridgeOrientationComponents=0;
+    bridgeZipperResampledLoops=0,bridgeOrientationFlips=0,bridgeOrientationComponents=0;
    let seamWarpFactor=1,seamWarpMaxMove=0,seamWarpMeanMove=0,seamWarpMaxResidualGap=0;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeEdgesByPlane={z:0,y:0,'x-':0,'x+':0};
@@ -1969,7 +1969,78 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        if(path.length===donorSteps+hostSteps)zipperPath=path.reverse();
       }
      }
-     if(zipperPath){
+     // Prefer a balanced zipper: sample the host arc at every donor-rim
+     // vertex, so each quad advances both boundaries together. The previous
+     // dynamic path often advanced the denser donor rim several times while
+     // the host stayed fixed, creating extremely skinny bridge triangles
+     // (observed minimum quality 0.0038) and dark wedges at the hock.
+     // The samples lie exactly on existing host boundary edges and carry
+     // interpolated Maya weights. Fall back to the original monotone DP only
+     // when every balanced quad cannot meet the geometric quality floor.
+     let resampledBridge=false;
+     {
+      const indexStart=bridgeIndices.length;
+      const positionStart=bridgePositions.length,normalStart=bridgeNormals.length,
+       jointStart=bridgeJoints.length,weightStart=bridgeWeights.length;
+      const projectedBefore=new Set(projected.keys());
+      const projectedIds=alignment.samples.map(bridgeVertex);
+      const triangles=[],qualityValues=[];
+      let valid=donorSteps>0;
+      for(let i=0;i<donorSteps&&valid;i++){
+       const nextDonor=(i+1)%m;
+       const nextHost=alignment.closed?(i+1)%projectedIds.length:i+1;
+       const a=donor[i],b=donor[nextDonor],pa=projectedIds[i],pb=projectedIds[nextHost];
+       const donorFallback=[0,1,2].map(k=>normalFor(a)[k]+normalFor(b)[k]);
+       const hostFallback=[0,1,2].map(k=>normalFor(pa)[k]+normalFor(pb)[k]);
+       const pairs=[
+        [bridgeTriangle([a,b,pa],donorFallback),
+         bridgeTriangle([b,pb,pa],hostFallback)],
+        [bridgeTriangle([a,b,pb],donorFallback),
+         bridgeTriangle([a,pb,pa],hostFallback)]
+       ].filter(pair=>pair.every(Boolean)).map(pair=>{
+        const quality=pair.map(triangle=>zipperTriangleQuality(triangle,scale,0));
+        if(quality.some(value=>!value))return null;
+        return {pair,min:Math.min(...quality.map(value=>value.quality)),
+         sum:quality.reduce((total,value)=>total+value.quality,0)};
+       }).filter(Boolean).sort((left,right)=>
+        right.min-left.min||right.sum-left.sum);
+       const best=pairs[0];
+       // A 1.5% normalized triangle-quality floor rejects near-line slivers
+       // instead of sealing the cut with a visually dark, unstable ribbon.
+       if(!best||best.min<.015){valid=false;break;}
+       triangles.push(...best.pair.map(triangle=>triangle.ids));
+       qualityValues.push(...best.pair.map(triangle=>
+        zipperTriangleQuality(triangle,scale,0).quality));
+       const hostStep=distance3(positionFor(pa),positionFor(pb));
+       bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
+      }
+      if(valid&&triangles.length===donorSteps*2){
+       const oriented=orientBridgeStrip(triangles);
+       bridgeIndices.length=indexStart;
+       for(const triangle of oriented)bridgeIndices.push(...triangle);
+       const minQuality=Math.min(...qualityValues);
+       bridgeZipperResampledLoops++;
+       bridgeZipperMovesDonor+=donorSteps;
+       bridgeZipperMovesHost+=donorSteps;
+       bridgeZipperQualitySum+=qualityValues.reduce((sum,value)=>sum+value,0);
+       bridgeZipperQualityCount+=qualityValues.length;
+       bridgeZipperMinQuality=Math.min(bridgeZipperMinQuality,minQuality);
+       bridgeEdges+=oriented.length;
+       bridgeEdgesByPlane[plane]+=oriented.length;
+       bridgeTrianglesByPlane[plane]+=oriented.length;
+       resampledBridge=true;
+      }else{
+       bridgeIndices.length=indexStart;
+       for(const key of [...projected.keys()])if(!projectedBefore.has(key))projected.delete(key);
+       bridgePositions.length=positionStart;
+       bridgeNormals.length=normalStart;
+       bridgeJoints.length=jointStart;
+       bridgeWeights.length=weightStart;
+      }
+     }
+     if(resampledBridge){
+      // Balanced strip accepted; its shared edges were globally oriented.
+     }else if(zipperPath){
       let localDonorMoves=0,localHostMoves=0,qualitySum=0,qualityMin=1;
       const orientedTriangles=orientBridgeStrip(zipperPath.map(step=>step.tri.ids));
       for(let k=0;k<zipperPath.length;k++){
@@ -2024,6 +2095,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamBridgeVirtualClosureMaxGap=seamVirtualClosureMaxGap;
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
    bodyCut.seamBridgeZipperMovesHost=bridgeZipperMovesHost;
+   bodyCut.seamBridgeZipperResampledLoops=bridgeZipperResampledLoops;
    bodyCut.seamBridgeZipperFallbackLoops=bridgeZipperFallbackLoops;
    bodyCut.seamBridgeZipperMeanQuality=bridgeZipperQualityCount?
     bridgeZipperQualitySum/bridgeZipperQualityCount:0;
@@ -2410,6 +2482,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamWarpFactor:bodyCut.seamWarpFactor||0,seamWarpMaxMove:bodyCut.seamWarpMaxMove||0,
    seamWarpMeanMove:bodyCut.seamWarpMeanMove||0,seamWarpMaxResidualGap:bodyCut.seamWarpMaxResidualGap||0,
    seamBridgeZipperMovesDonor:bodyCut.seamBridgeZipperMovesDonor||0,seamBridgeZipperMovesHost:bodyCut.seamBridgeZipperMovesHost||0,
+   seamBridgeZipperResampledLoops:bodyCut.seamBridgeZipperResampledLoops||0,
    seamBridgeZipperFallbackLoops:bodyCut.seamBridgeZipperFallbackLoops||0,
    seamBridgeZipperMeanQuality:bodyCut.seamBridgeZipperMeanQuality||0,seamBridgeZipperMinQuality:bodyCut.seamBridgeZipperMinQuality||0,
    seamBridgeOrientationFlips:bodyCut.seamBridgeOrientationFlips||0,
