@@ -1237,7 +1237,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeUnmatchedVertices=0,bridgeUnmatchedEdges=0,bridgeSingleTriangleEdges=0,
     bridgeMaxHostStep=0,bridgeLoopPairs=0,bridgeZipperMovesDonor=0,
     bridgeZipperMovesHost=0,bridgeZipperFallbackLoops=0,
-    bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity;
+    bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity,
+    bridgeOrientationFlips=0,bridgeOrientationComponents=0;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeEdgesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeUnmatchedByPlane={z:0,y:0,'x-':0,'x+':0};
@@ -1650,6 +1651,75 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     return 0;
    }
+   // The prior zipper oriented every triangle independently against local
+   // averaged normals. Across a curved hind rim that can flip neighboring
+   // faces independently, leaving same-direction shared edges and backface
+   // holes even though every triangle is nondegenerate. Orient the entire
+   // connected strip as one manifold, then choose its outward side once.
+   function orientBridgeStrip(source){
+    const triangles=source.map(ids=>ids.slice());
+    const uses=new Map();
+    for(let face=0;face<triangles.length;face++){
+     const ids=triangles[face];
+     for(const [from,to] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
+      const key=from<to?from+':'+to:to+':'+from;
+      const list=uses.get(key)||[];
+      list.push({face,from,to});uses.set(key,list);
+     }
+    }
+    const links=Array.from({length:triangles.length},()=>[]);
+    for(const [edge,list] of uses){
+     if(list.length>2)
+      throw Error('BTC seam bridge has a non-manifold indexed edge '+edge+
+       ' used by '+list.length+' faces');
+     if(list.length!==2)continue;
+     const [a,b]=list;
+     const same=a.from===b.from&&a.to===b.to;
+     const toggle=same?1:0;
+     links[a.face].push({face:b.face,toggle});
+     links[b.face].push({face:a.face,toggle});
+    }
+    const state=new Int8Array(triangles.length);state.fill(-1);
+    const components=[];
+    for(let start=0;start<triangles.length;start++){
+     if(state[start]!==-1)continue;
+     const component=[],stack=[start];state[start]=0;
+     while(stack.length){
+      const face=stack.pop();component.push(face);
+      for(const link of links[face]){
+       const expected=state[face]^link.toggle;
+       if(state[link.face]===-1){
+        state[link.face]=expected;stack.push(link.face);
+       }else if(state[link.face]!==expected){
+        throw Error('BTC seam bridge winding conflict across connected zipper strip');
+       }
+      }
+     }
+     components.push(component);
+    }
+    // A coherent component can still be globally inward. Use its actual
+    // skinned vertex normals to select the outward orientation once.
+    for(const component of components){
+     let score=0;
+     for(const face of component){
+      const ids=triangles[face],oriented=state[face]?
+       [ids[0],ids[2],ids[1]]:ids;
+      const p=oriented.map(positionFor);
+      const u=p[1].map((v,k)=>v-p[0][k]),v=p[2].map((x,k)=>x-p[0][k]);
+      const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+      const target=[0,1,2].map(k=>oriented.reduce((sum,id)=>sum+normalFor(id)[k],0));
+      score+=n.reduce((sum,value,k)=>sum+value*target[k],0);
+     }
+     if(score<0)for(const face of component)state[face]^=1;
+    }
+    for(let face=0;face<triangles.length;face++)if(state[face]){
+     [triangles[face][1],triangles[face][2]]=
+      [triangles[face][2],triangles[face][1]];
+     bridgeOrientationFlips++;
+    }
+    bridgeOrientationComponents+=components.length;
+    return triangles;
+   }
    function zipperTriangleQuality(triangle,scale,progressError){
     const p=triangle.ids.map(positionFor);
     const lengths=[
@@ -1789,8 +1859,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
      if(zipperPath){
       let localDonorMoves=0,localHostMoves=0,qualitySum=0,qualityMin=1;
-      for(const step of zipperPath){
-       bridgeIndices.push(...step.tri.ids);
+      const orientedTriangles=orientBridgeStrip(zipperPath.map(step=>step.tri.ids));
+      for(let k=0;k<zipperPath.length;k++){
+       const step=zipperPath[k];
+       bridgeIndices.push(...orientedTriangles[k]);
        qualitySum+=step.quality;qualityMin=Math.min(qualityMin,step.quality);
        if(step.move==='donor')localDonorMoves++;
        else localHostMoves++;
@@ -1841,6 +1913,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeZipperQualitySum/bridgeZipperQualityCount:0;
    bodyCut.seamBridgeZipperMinQuality=Number.isFinite(bridgeZipperMinQuality)?
     bridgeZipperMinQuality:0;
+   bodyCut.seamBridgeOrientationFlips=bridgeOrientationFlips;
+   bodyCut.seamBridgeOrientationComponents=bridgeOrientationComponents;
    bodyCut.seamBridgeTriangles=bridgeIndices.length/3;
    bodyCut.seamBridgeMaxGap=bridgeMaxGap;
    bodyCut.seamBridgeMeanGap=bridgeGapCount?bridgeGapTotal/bridgeGapCount:0;
@@ -2220,6 +2294,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamBridgeZipperMovesDonor:bodyCut.seamBridgeZipperMovesDonor||0,seamBridgeZipperMovesHost:bodyCut.seamBridgeZipperMovesHost||0,
    seamBridgeZipperFallbackLoops:bodyCut.seamBridgeZipperFallbackLoops||0,
    seamBridgeZipperMeanQuality:bodyCut.seamBridgeZipperMeanQuality||0,seamBridgeZipperMinQuality:bodyCut.seamBridgeZipperMinQuality||0,
+   seamBridgeOrientationFlips:bodyCut.seamBridgeOrientationFlips||0,
+   seamBridgeOrientationComponents:bodyCut.seamBridgeOrientationComponents||0,
    seamBridgeTriangles:bodyCut.seamBridgeTriangles||0,seamBridgeUnmatchedEdges:bodyCut.seamBridgeUnmatchedEdges||0,
    seamBridgeSingleTriangleEdges:bodyCut.seamBridgeSingleTriangleEdges||0,
    seamBridgeTrianglesByPlane:bodyCut.seamBridgeTrianglesByPlane||{},
