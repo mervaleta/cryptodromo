@@ -1280,6 +1280,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    // The bridge remains pending until rear/3Q WebGL proves that the
    // previously open thigh slit is gone without creating a folded flap.
+  }
   // BTC collar curvature relax (candidate, not a version): smooth only
   // the refined donor's upper transition, where the four-neighbor host
   // projection creates alternating triangular peaks in rear WebGL.
