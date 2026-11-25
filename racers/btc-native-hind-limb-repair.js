@@ -34,6 +34,14 @@ function cropMayaHind(anatomy){
   normal:geo.getAttribute('normal'),groups:geo.groups.map(g=>({...g}))};
  const xyz=Array.from(pos.array),bones=Array.from(skinIndex.array),
   weights=Array.from(skinWeight.array);
+ // Preserve the Maya source rest coordinates alongside the sculpted runtime
+ // positions. Hoof flare can make two originally disconnected five-face
+ // scraps appear coincident in deformed space; topology must be classified
+ // in source space, before the sculpt can weld those fragments by accident.
+ const restSource=anatomy.restPositions;
+ if(!restSource||restSource.length!==pos.array.length)
+  throw Error('BTC posterior cleanup requires original Maya rest-space positions');
+ const restXYZ=Array.from(restSource);
  // Preserve authored Maya surface normals on the open posterior cut.
  // Recomputing normals from the cropped, open triangles tilts the rim
  // toward the exposed interior and creates dark wedge-shaped shading.
@@ -71,7 +79,10 @@ function cropMayaHind(anatomy){
   if(edgeCache.has(key))return edgeCache.get(key);
   const t=da/(da-db),v=xyz.length/3;
   if(t<0||t>1||!Number.isFinite(t))throw Error('BTC invalid crop plane crossing');
-  for(let k=0;k<3;k++)xyz.push(xyz[a*3+k]*(1-t)+xyz[b*3+k]*t);
+  for(let k=0;k<3;k++){
+   xyz.push(xyz[a*3+k]*(1-t)+xyz[b*3+k]*t);
+   restXYZ.push(restXYZ[a*3+k]*(1-t)+restXYZ[b*3+k]*t);
+  }
   if(nativeNormals){
    const n=[0,1,2].map(k=>nativeNormals[3*a+k]*(1-t)+nativeNormals[3*b+k]*t);
    const len=Math.hypot(...n)||1;
@@ -185,7 +196,7 @@ function cropMayaHind(anatomy){
  // Weld only for TOPOLOGICAL CONNECTIVITY, never alter geometry or weights.
  const welded=new Map(),edgeOwner=new Map();
  function weldedId(v){
-  const key=[xyz[3*v],xyz[3*v+1],xyz[3*v+2]]
+  const key=[restXYZ[3*v],restXYZ[3*v+1],restXYZ[3*v+2]]
    .map(n=>Math.round(n*1e7)).join(':');
   if(!welded.has(key))welded.set(key,welded.size);
   return welded.get(key);
@@ -205,7 +216,7 @@ function cropMayaHind(anatomy){
   const r=root(i/3);counts.set(r,(counts.get(r)||0)+1);
   const l=limits.get(r)||{y:0,z:0,n:0};
   for(let k=0;k<3;k++){
-   const v=next[i+k];l.y+=xyz[v*3+1];l.z+=xyz[v*3+2];l.n++;
+   const v=next[i+k];l.y+=restXYZ[v*3+1];l.z+=restXYZ[v*3+2];l.n++;
   }
   limits.set(r,l);
  }
