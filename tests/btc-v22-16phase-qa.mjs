@@ -36,7 +36,28 @@ try{
    canvasHidden:document.querySelector('#horse-canvas')?.hidden??null,
    atelierPanelHidden:document.querySelector('#btc-atelier-panel')?.hidden??null
   })).catch(x=>({evaluationError:String(x)}));
-  writeFileSync(DIR+'/startup-failure.json',JSON.stringify({diagnostics,errors,consoleMessages,requestFailures},null,2));
+  const moduleDiagnostics=await page.evaluate(async()=>{
+   const modules=[
+    './btc-atelier-preview.js?v=btc-v22-continuous-hind-seam-20261107',
+    './btc-maya-master.js?v=btc-v22-continuous-hind-seam-20261107',
+    './btc-native-hind-limb-repair.js?v=btc-v22-continuous-hind-seam-20261107',
+    './btc-maya-groom.js?v=btc-v22-continuous-hind-seam-20261107',
+    './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12',
+    './btc-maya-face-details.js?v=btc-maya-face-native-gallop-20261105-v16',
+    './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12',
+    './btc-maya-pose-volume.js?v=btc-hind-skin-continuity-20261104-v13b',
+    './btc-maya-body-data.js',
+    '../race-lab/source/src/horse.js?v=btc-native-lookdev-20261105-v1',
+    './btc-terrain-stage.js?v=btc-restore-v5-hair-gallop-20261105-v1',
+    './btc-hero-v5.js?v=btc-v5-neck-tail-premium-20261105-v4',
+    './btc-hero-v4.js?v=btc-real-hero-v4-20261103'
+   ];
+   return await Promise.all(modules.map(async url=>{
+    try{await import(url);return {url,ok:true};}
+    catch(error){return {url,ok:false,name:error?.name||'Error',message:error?.message||String(error),stack:error?.stack||''};}
+   }));
+  }).catch(error=>[{url:'module-diagnostics',ok:false,message:String(error)}]);
+  writeFileSync(DIR+'/startup-failure.json',JSON.stringify({diagnostics,moduleDiagnostics,errors,consoleMessages,requestFailures},null,2));
   console.error('BTC_V22_STARTUP_FAILURE',JSON.stringify({diagnostics,errors,consoleMessages,requestFailures}));
   throw e;
  }
