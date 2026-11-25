@@ -248,8 +248,26 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   throw Error('BTC tail dock boundary topology: '+JSON.stringify({
    edges:border.length,vertices:boundaryAdjacency.size,
    degreeHistogram:boundaryDegreeHistogram,
-   branchVertices:[...boundaryAdjacency].filter(([,n])=>n.size>2).map(([id,n])=>({id,degree:n.size})),
+   branchVertices:[...boundaryAdjacency].filter(([,n])=>n.size>2).map(([id,n])=>({
+    id,degree:n.size,point:[positions[id*3],positions[id*3+1],positions[id*3+2]],
+    neighbors:[...n].map(next=>({id:next,point:[positions[next*3],positions[next*3+1],positions[next*3+2]]}))
+   })),
    openVertices:[...boundaryAdjacency].filter(([,n])=>n.size<2).map(([id,n])=>({id,degree:n.size})),
+   sideGraphs:Object.fromEntries([-1,1].map(side=>{
+    const edges=border.filter(({a,b})=>{
+     const midpoint=(positions[a*3]+positions[b*3])*.5;
+     return side<0?midpoint<0:midpoint>0;
+    });
+    const degree=new Map();
+    for(const {a,b} of edges){
+     degree.set(a,(degree.get(a)||0)+1);degree.set(b,(degree.get(b)||0)+1);
+    }
+    const histogram={};
+    for(const n of degree.values())histogram[n]=(histogram[n]||0)+1;
+    return [side<0?'left':'right',{edges:edges.length,vertices:degree.size,histogram,
+     endpoints:[...degree].filter(([,n])=>n===1).map(([id])=>id),
+     branches:[...degree].filter(([,n])=>n>2).map(([id,n])=>({id,degree:n}))}];
+   })),
    componentSizes:boundaryComponents
   }));
  const orderedBoundary=[];
