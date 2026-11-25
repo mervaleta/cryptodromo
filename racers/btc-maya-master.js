@@ -227,9 +227,31 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
    boundaryAdjacency.get(a).add(b);
   }
  }
+ const boundaryDegreeHistogram={};
+ for(const neighbors of boundaryAdjacency.values())
+  boundaryDegreeHistogram[neighbors.size]=(boundaryDegreeHistogram[neighbors.size]||0)+1;
+ const boundaryComponents=[],boundaryVisited=new Set();
+ for(const vertex of boundaryAdjacency.keys()){
+  if(boundaryVisited.has(vertex))continue;
+  const stack=[vertex],component=[];
+  boundaryVisited.add(vertex);
+  while(stack.length){
+   const at=stack.pop();component.push(at);
+   for(const next of boundaryAdjacency.get(at)||[])if(!boundaryVisited.has(next)){
+    boundaryVisited.add(next);stack.push(next);
+   }
+  }
+  boundaryComponents.push(component.length);
+ }
  if(boundaryAdjacency.size!==border.length||
     [...boundaryAdjacency.values()].some(neighbors=>neighbors.size!==2))
-  throw Error('BTC tail dock boundary is not one 48-vertex manifold loop');
+  throw Error('BTC tail dock boundary topology: '+JSON.stringify({
+   edges:border.length,vertices:boundaryAdjacency.size,
+   degreeHistogram:boundaryDegreeHistogram,
+   branchVertices:[...boundaryAdjacency].filter(([,n])=>n.size>2).map(([id,n])=>({id,degree:n.size})),
+   openVertices:[...boundaryAdjacency].filter(([,n])=>n.size<2).map(([id,n])=>({id,degree:n.size})),
+   componentSizes:boundaryComponents
+  }));
  const orderedBoundary=[];
  const startVertex=border[0].a;
  let previous=-1,current=startVertex;
