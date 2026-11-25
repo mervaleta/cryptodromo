@@ -1123,14 +1123,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const d=(px-x)**2+(py-y)**2+(pz-z)**2;
      if(d<distSq){distSq=d;nearest=[px,py,pz];}
     }
-    // Candidate P0 geometry A/B: the previous 1.2 mm search radius left
-    // 71 of 121 donor-rim vertices unsnapped even though the ordered host
-    // boundary exists on the same flank and cut plane. Permit a 4.8 mm
-    // correspondence search, but do NOT force the displacement: the live
-    // incident-face winding/area line search below backtracks each group
-    // until every adjacent triangle remains oriented and noncollapsed.
-    // This tests whether the visible rump/thigh slit is a residual rim gap
-    // rather than a need for another synthetic topology counter.
+    // Do not bridge nonmatching topologies. Bound the move to 0.18 mm
+    // and let the existing orientation/area gate reject damaged faces.
+    if(!nearest||distSq>.0012**2)continue;
+    // Full geometric coincidence is essential for a shared skinned rim.
+    // The former 0.18 mm capped motion left a persistent rest-space
+    // gap on donor vertices 0.18–1.2 mm away from the host boundary.
+    // Try the actual host point first; the existing per-face winding
+    // and area backtracking below rejects unsafe projection.
     const dist=Math.sqrt(distSq),blend=1;
     const origin=[x,y,z],delta=nearest.map((v,k)=>(v-origin[k])*blend);
     let accepted=null;
