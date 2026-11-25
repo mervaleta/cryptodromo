@@ -1228,7 +1228,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     let nearest=null,bestEdge=null,bestT=0,bestDistSq=Infinity;
     for(const edge of hostRim){
      const a=pointAt(hostPos,edge.a),b=pointAt(hostPos,edge.b);
-     if(Math.sign(a[0])!==side||Math.sign(b[0])!==side)continue;
+     // Maya's medial rim edges may terminate on x≈0; classify by the
+     // first endpoint as the original seam projection does, not both ends.
+     if(Math.sign(a[0])!==side)continue;
      const d=b.map((v,k)=>v-a[k]),lengthSq=d.reduce((sum,v)=>sum+v*v,0);
      if(lengthSq<1e-18)continue;
      const t=THREE.MathUtils.clamp(
