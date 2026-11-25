@@ -1105,8 +1105,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const rimGroup=coincident.length?coincident:[id];
     for(const v of rimGroup)processedRim.add(v);
     const x=donorPos.getX(id),y=donorPos.getY(id),z=donorPos.getZ(id);
+    const allowedPlanes=donorRimPlanes.get(id)||new Set();
     let nearest=null,distSq=Infinity;
     for(const e of hostRim){
+     if(!allowedPlanes.has(e.plane))continue;
      const ax=hostPos.getX(e.a),ay=hostPos.getY(e.a),az=hostPos.getZ(e.a);
      if(Math.sign(ax)!==Math.sign(x))continue;
      const dx=hostPos.getX(e.b)-ax,dy=hostPos.getY(e.b)-ay,
@@ -1159,6 +1161,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // Candidate geometry/animation only, NOT V23 visual acceptance.
     let hostEdge=null,hostEdgeT=0,hostEdgeDist=Infinity;
     for(const e of hostRim){
+     if(!allowedPlanes.has(e.plane))continue;
      const ax=hostPos.getX(e.a),ay=hostPos.getY(e.a),az=hostPos.getZ(e.a);
      if(Math.sign(ax)!==Math.sign(x))continue;
      const dx=hostPos.getX(e.b)-ax,dy=hostPos.getY(e.b)-ay,dz=hostPos.getZ(e.b)-az;
