@@ -186,6 +186,7 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  // Seal each anatomical half independently, with a smooth intermediate ring
  // generated IN the actual skinned Maya body mesh (not a floating patch).
  const capPosition=Array.from(positions),capSkinAnchors=new Map(),capCenterRims=new Map(),halfCaps=[];
+ const tailCapTriangleStart=visibleTriangles.length;
  const sideEdges=[-1,1].map(side=>border.filter(({a,b})=>{
   // Midline vertices are shared by BOTH half-loops; classify each EDGE
   // exactly once by its midpoint, rather than counting centerline pairs
@@ -245,6 +246,41 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   [lC,lB,rC],[rC,lB,rB],[lB,endB,rB]
  ];
  for(const tri of bridge)visibleTriangles.push(...tri);
+ // The cap can be manifold yet still face inward. The edge-count gate above
+ // cannot detect a globally reversed patch because its outer edges are shared
+ // with the original body. Orient the entire cap against the retained body's
+ // actual boundary-face normals before building the final skinned geometry.
+ const tailCapTriangleEnd=visibleTriangles.length;
+ const tailBoundaryKeys=new Set(border.map(({a,b})=>edgeKey(a,b)));
+ const bodyNormal=[0,0,0],capNormal=[0,0,0];
+ const addFaceNormal=(target,xyz,a,b,c)=>{
+  const ax=xyz[a*3],ay=xyz[a*3+1],az=xyz[a*3+2];
+  const ux=xyz[b*3]-ax,uy=xyz[b*3+1]-ay,uz=xyz[b*3+2]-az;
+  const vx=xyz[c*3]-ax,vy=xyz[c*3+1]-ay,vz=xyz[c*3+2]-az;
+  target[0]+=uy*vz-uz*vy;
+  target[1]+=uz*vx-ux*vz;
+  target[2]+=ux*vy-uy*vx;
+ };
+ for(let t=0;t<tailCapTriangleStart;t+=3){
+  const a=visibleTriangles[t],b=visibleTriangles[t+1],c=visibleTriangles[t+2];
+  if(![[a,b],[b,c],[c,a]].some(([u,v])=>tailBoundaryKeys.has(edgeKey(u,v))))continue;
+  addFaceNormal(bodyNormal,positions,a,b,c);
+ }
+ for(let t=tailCapTriangleStart;t<tailCapTriangleEnd;t+=3)
+  addFaceNormal(capNormal,capPosition,visibleTriangles[t],visibleTriangles[t+1],visibleTriangles[t+2]);
+ const bodyLength=Math.hypot(...bodyNormal),capLength=Math.hypot(...capNormal);
+ const tailCapNormalAlignmentBefore=bodyLength>1e-15&&capLength>1e-15?
+  (bodyNormal[0]*capNormal[0]+bodyNormal[1]*capNormal[1]+bodyNormal[2]*capNormal[2])/(bodyLength*capLength):0;
+ const tailCapOrientationFlipped=tailCapNormalAlignmentBefore<0;
+ if(tailCapOrientationFlipped){
+  for(let t=tailCapTriangleStart;t<tailCapTriangleEnd;t+=3){
+   const swap=visibleTriangles[t+1];
+   visibleTriangles[t+1]=visibleTriangles[t+2];
+   visibleTriangles[t+2]=swap;
+  }
+ }
+ removed.tailDockCapNormalAlignmentBefore=tailCapNormalAlignmentBefore;
+ removed.tailDockCapOrientationFlipped=tailCapOrientationFlipped;
  // Fail before rendering if the added cap contains an exposed edge,
  // an edge shared by more than two faces, or inconsistent winding.
  const capStart=positions.length/3,capEdges=new Map();
