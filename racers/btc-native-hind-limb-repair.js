@@ -1219,18 +1219,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeUnmatchedVertices=0,bridgeMaxHostStep=0;
    const distance3=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
    const pointAt=(position,id)=>[position.getX(id),position.getY(id),position.getZ(id)];
-   // Project arbitrary points on the donor rim to the same-flank Maya
-   // boundary. Midpoint projection below subdivides long/degenerate zipper
-   // edges instead of leaving a one-face slit in the posterior seam.
-   function projectRimPoint(p,key,countUnmatched=true){
+   function projectRimVertex(id){
+    const key=seamKey(donorRestPosition,id);
     if(projected.has(key))return projected.get(key);
-    const side=Math.sign(p[0]);
+    const p=pointAt(donorPos,id),side=Math.sign(p[0]);
     let nearest=null,bestEdge=null,bestT=0,bestDistSq=Infinity;
     for(const edge of hostRim){
      const a=pointAt(hostPos,edge.a),b=pointAt(hostPos,edge.b);
-     // Maya's medial rim edges may terminate on x≈0; classify by the
-     // first endpoint as the original seam projection does, not both ends.
-     if(Math.sign(a[0])!==side)continue;
+     if(Math.sign(a[0])!==side||Math.sign(b[0])!==side)continue;
      const d=b.map((v,k)=>v-a[k]),lengthSq=d.reduce((sum,v)=>sum+v*v,0);
      if(lengthSq<1e-18)continue;
      const t=THREE.MathUtils.clamp(
@@ -1240,9 +1236,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     const gap=Math.sqrt(bestDistSq);
     if(!nearest||gap>.0045){
-     projected.set(key,null);
-     if(countUnmatched)bridgeUnmatchedVertices++;
-     return null;
+     projected.set(key,null);bridgeUnmatchedVertices++;return null;
     }
     const influence=new Map();
     for(const [hostId,factor] of [[bestEdge.a,1-bestT],[bestEdge.b,bestT]]){
@@ -1270,9 +1264,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeMaxGap=Math.max(bridgeMaxGap,gap);bridgeGapTotal+=gap;bridgeGapCount++;
     return index;
    }
-   function projectRimVertex(id){
-    return projectRimPoint(pointAt(donorPos,id),seamKey(donorRestPosition,id),true);
-   }
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
     bridgePositions.slice((id-donorBase)*3,(id-donorBase)*3+3);
    const normalFor=id=>id<donorBase?
@@ -1288,63 +1279,22 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(cross.reduce((sum,x,k)=>sum+x*target[k],0)<0)[b,c]=[c,b];
     bridgeIndices.push(a,b,c);return true;
    }
-   let bridgeSplitEdges=0,bridgeRejectedEdges=0;
    for(const edge of donorRimEdges){
     const a=edge.a,b=edge.b,pa=projectRimVertex(a),pb=projectRimVertex(b);
-    if(pa===null||pb===null){bridgeRejectedEdges++;continue;}
-    const qa=positionFor(pa),qb=positionFor(pb);
-    const hostStep=distance3(qa,qb);
+    if(pa===null||pb===null)continue;
+    const hostStep=distance3(positionFor(pa),positionFor(pb));
+    bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
+    // A nearest-point jump across a different limb fold is not a seam.
+    if(hostStep>.0045){bridgeUnmatchedVertices+=2;continue;}
     const before=bridgeIndices.length;
-    // A normal quad is accepted only when BOTH triangles exist. Previously
-    // one surviving triangle was enough to count an edge as bridged.
-    if(hostStep<=.0045){
-     const first=addBridgeTriangle(a,b,pa);
-     const second=addBridgeTriangle(b,pb,pa);
-     if(first&&second){
-      bridgeEdges++;bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
-      continue;
-     }
-     bridgeIndices.length=before;
-    }
-    // Split the donor edge against a projected midpoint on the host rim.
-    // The midpoint must lie between endpoint projections, rejecting jumps
-    // across a different limb fold instead of disguising them as a seam.
-    const pA=pointAt(donorPos,a),pB=pointAt(donorPos,b);
-    const pMid=pA.map((v,k)=>(v+pB[k])*.5);
-    const midKey='edge-mid:'+Math.min(a,b)+':'+Math.max(a,b);
-    const pm=projectRimPoint(pMid,midKey,false);
-    if(pm===null){
-     bridgeIndices.length=before;bridgeUnmatchedVertices+=2;bridgeRejectedEdges++;continue;
-    }
-    const qm=positionFor(pm);
-    const stepA=distance3(qa,qm),stepB=distance3(qm,qb);
-    const chord=qb.map((v,k)=>v-qa[k]);
-    const chordSq=chord.reduce((sum,v)=>sum+v*v,0);
-    const along=chordSq>1e-18?
-     qm.reduce((sum,v,k)=>sum+(v-qa[k])*chord[k],0)/chordSq:0;
-    const nearest=qa.map((v,k)=>v+chord[k]*along);
-    const deviation=distance3(qm,nearest);
-    if(stepA>.0045||stepB>.0045||along<.12||along>.88||deviation>.0020){
-     bridgeIndices.length=before;bridgeUnmatchedVertices+=2;bridgeRejectedEdges++;continue;
-    }
-    const splitStart=bridgeIndices.length;
-    const first=addBridgeTriangle(a,b,pm);
-    const second=addBridgeTriangle(b,pb,pm);
-    const third=addBridgeTriangle(a,pm,pa);
-    if(first&&second&&third){
-     bridgeEdges++;bridgeSplitEdges++;
-     bridgeMaxHostStep=Math.max(bridgeMaxHostStep,stepA,stepB);
-    }else{
-     bridgeIndices.length=splitStart;
-     bridgeUnmatchedVertices+=2;bridgeRejectedEdges++;
-    }
+    addBridgeTriangle(a,b,pa);
+    addBridgeTriangle(b,pb,pa);
+    if(bridgeIndices.length>before)bridgeEdges++;
    }
    bodyCut.seamBridgeTriangles=bridgeIndices.length/3;
    bodyCut.seamBridgeMaxGap=bridgeMaxGap;
    bodyCut.seamBridgeMeanGap=bridgeGapCount?bridgeGapTotal/bridgeGapCount:0;
    bodyCut.seamBridgeEdges=bridgeEdges;
-   bodyCut.seamBridgeSplitEdges=bridgeSplitEdges;
-   bodyCut.seamBridgeRejectedEdges=bridgeRejectedEdges;
    bodyCut.seamBridgeVertices=bridgePositions.length/3;
    bodyCut.seamBridgeUnmatchedVertices=bridgeUnmatchedVertices;
    bodyCut.seamBridgeMaxHostStep=bridgeMaxHostStep;
@@ -1711,7 +1661,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamBridgeTriangles:bodyCut.seamBridgeTriangles||0,seamBridgeMaxGap:bodyCut.seamBridgeMaxGap||0,
    seamBridgeMeanGap:bodyCut.seamBridgeMeanGap||0,seamBridgeEdges:bodyCut.seamBridgeEdges||0,
    seamBridgeVertices:bodyCut.seamBridgeVertices||0,seamBridgeUnmatchedVertices:bodyCut.seamBridgeUnmatchedVertices||0,
-   seamBridgeSplitEdges:bodyCut.seamBridgeSplitEdges||0,seamBridgeRejectedEdges:bodyCut.seamBridgeRejectedEdges||0,
    seamBridgeMaxHostStep:bodyCut.seamBridgeMaxHostStep||0,
    collarRejectedMoves:bodyCut.collarRejectedMoves,collarBacktrackedMoves:bodyCut.collarBacktrackedMoves,
    donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
