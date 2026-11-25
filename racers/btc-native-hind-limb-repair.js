@@ -960,7 +960,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // Ramp the host share continuously over the existing 1.5 mm collar;
    // retain 100% donor influence below z=.0130 and never alter the hock.
    // This is an unapproved animation/geometry A/B, not a V23 milestone.
-   const mayaFactor=.30*t*t,influences=new Map();
+   // The cut boundary must deform with the Maya host surface, not with a
+   // nearest-neighbour donor approximation. Use 100% host skin at z=.0200
+   // and decay smoothly to the donor's authored limb weights over 1.8 mm.
+   const mayaFactor=1.0*t*t,influences=new Map();
    // Coincident UV/material copies can have DIFFERENT source skin weights.
    // Using only the first copy and broadcasting its four influences to all
    // copies creates an abrupt gallop deformation seam. Average each distinct
@@ -1670,6 +1673,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const planes=['z','y','x-','x+'];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
     seamVirtualClosureMaxGap=0;
+   let seamDonorRimWeightOverrides=0;
    for(const plane of planes)for(const side of [-1,1]){
     const hostPaths=orderedBoundaryPaths(hostRim,hostPos,plane,side);
     const donorPaths=orderedBoundaryPaths(donorRimEdges,donorPos,plane,side);
@@ -1691,6 +1695,34 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      bridgeGapTotal+=Math.sqrt(alignment.meanSq)*alignment.donor.length;
      bridgeGapCount+=alignment.donor.length;
      const donor=alignment.donor,host=alignment.host;
+    // The zipper's host-side vertices use interpolated Maya skin weights.
+    // The donor-side boundary must use those SAME weights at corresponding
+    // arc-length samples or the strip peels open when Gallop bends the hock.
+    // Transfer only the physical cut-rim vertices (including UV/material
+    // duplicates); keep the donor's interior limb weights untouched.
+    for(let i=0;i<donor.length;i++){
+     const donorId=donor[i],sample=alignment.samples[i];
+     const physicalKey=seamKey(donorPos,donorId);
+     const twins=donorBoundary.byPosition.get(physicalKey)||[donorId];
+     const influence=new Map(),t=Math.max(0,Math.min(1,sample.t));
+     for(const [hostId,factor] of [[sample.a,1-t],[sample.b,t]]){
+      for(let k=0;k<4;k++){
+       const weight=hostWeights.getComponent(hostId,k)*factor;
+       if(weight>1e-9){
+        const joint=hostSkin.getComponent(hostId,k);
+        influence.set(joint,(influence.get(joint)||0)+weight);
+       }
+      }
+     }
+     const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
+     const total=top.reduce((sum,item)=>sum+item[1],0);
+     if(total<1e-8)throw Error('BTC seam correspondence has no host skin influences');
+     for(const twin of twins)for(let k=0;k<4;k++){
+      donorSkin.setComponent(twin,k,top[k]?.[0]||0);
+      donorWeights.setComponent(twin,k,(top[k]?.[1]||0)/total);
+     }
+     seamDonorRimWeightOverrides+=twins.length;
+    }
      const m=donor.length,n=host.length;
      const donorArc=alignment.donorArc,hostArc=alignment.hostArc;
      const donorSteps=alignment.closed?m:m-1;
@@ -1795,6 +1827,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
     }
    }
+   bodyCut.seamDonorRimWeightOverrides=seamDonorRimWeightOverrides;
    bodyCut.seamBridgeMethod='monotone-dp-zipper-open-chain';
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
    bodyCut.seamBridgeOpenPaths=seamOpenPaths;
