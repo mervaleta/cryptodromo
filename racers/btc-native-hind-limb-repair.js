@@ -1318,27 +1318,39 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(donorPaths.length!==hostPaths.length)
      throw Error('BTC ordered seam path count mismatch: donor '+donorPaths.length+' / Maya '+hostPaths.length);
     const remaining=hostPaths.slice(),pairs=[];
+    const promoteShortOpenPath=(path,position,label)=>{
+     const points=path.ids.map(id=>pointAt(position,id));
+     const steps=[];
+     for(let i=0;i<points.length-1;i++)steps.push(distance3(points[i],points[i+1]));
+     steps.sort((a,b)=>a-b);
+     const median=steps[Math.floor(steps.length/2)]||0;
+     const closureGap=distance3(points[0],points[points.length-1]);
+     // A clipped donor ring can lose exactly one physical boundary edge at
+     // a material/UV seam. Close it only when the missing chord is local to
+     // the ring; a long chord would fabricate an anatomical surface and is
+     // still rejected. The new zipper triangles then own this closure edge.
+     const maxClosureGap=Math.max(.0012,median*2.5);
+     if(closureGap>maxClosureGap)
+      throw Error('BTC '+label+' seam endpoint gap is not a local ring closure: '+
+       closureGap.toFixed(6)+' m > '+maxClosureGap.toFixed(6)+' m');
+     path.closed=true;path.virtualClosureGap=closureGap;
+     return path;
+    };
+    const pairs=[];
     for(const donorPath of donorPaths){
      let best=-1,bestDistance=Infinity;
      const center=pathCentroid(donorPath,donorPos);
      for(let i=0;i<remaining.length;i++){
-      if(remaining[i].closed!==donorPath.closed)continue;
       const hostCenter=pathCentroid(remaining[i],hostPos);
       const d=distance3(center,hostCenter);
       if(d<bestDistance){bestDistance=d;best=i;}
      }
-     if(best<0){
-      const describe=(path,position)=>({
-       closed:path.closed,vertices:path.ids.length,
-       first:pointAt(position,path.ids[0]),
-       last:pointAt(position,path.ids[path.ids.length-1]),
-       center:pathCentroid(path,position)
-      });
-      throw Error('BTC ordered seam open/closed mismatch: donor='+
-       JSON.stringify(donorPaths.map(path=>describe(path,donorPos)))+' host='+
-       JSON.stringify(hostPaths.map(path=>describe(path,hostPos))));
-     }
+     if(best<0)throw Error('BTC ordered seam path has no host counterpart');
      const hostPath=remaining.splice(best,1)[0];
+     if(donorPath.closed!==hostPath.closed){
+      if(!donorPath.closed)promoteShortOpenPath(donorPath,donorPos,'donor');
+      else promoteShortOpenPath(hostPath,hostPos,'Maya host');
+     }
      if(!donorPath.closed){
       const donor=donorPath.ids,host=hostPath.ids;
       const forward=distance3(pointAt(donorPos,donor[0]),pointAt(hostPos,host[0]))+
@@ -1557,7 +1569,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     return {quality,cost};
    }
    const planes=['z','y','x-','x+'];
-   let seamOpenPaths=0,seamClosedLoops=0;
+   let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
+    seamVirtualClosureMaxGap=0;
    for(const plane of planes)for(const side of [-1,1]){
     const hostPaths=orderedBoundaryPaths(hostRim,hostPos,plane,side);
     const donorPaths=orderedBoundaryPaths(donorRimEdges,donorPos,plane,side);
@@ -1571,6 +1584,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(!alignment)throw Error('BTC seam path has no nondegenerate arc-length alignment');
      bridgeLoopPairs++;
      if(alignment.closed)seamClosedLoops++;else seamOpenPaths++;
+     for(const path of [donorPath,hostPath])if(Number.isFinite(path.virtualClosureGap)){
+      seamVirtualClosures++;
+      seamVirtualClosureMaxGap=Math.max(seamVirtualClosureMaxGap,path.virtualClosureGap);
+     }
      bridgeMaxGap=Math.max(bridgeMaxGap,alignment.maxGap);
      bridgeGapTotal+=Math.sqrt(alignment.meanSq)*alignment.donor.length;
      bridgeGapCount+=alignment.donor.length;
@@ -1683,6 +1700,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
    bodyCut.seamBridgeOpenPaths=seamOpenPaths;
    bodyCut.seamBridgeClosedLoops=seamClosedLoops;
+   bodyCut.seamBridgeVirtualClosures=seamVirtualClosures;
+   bodyCut.seamBridgeVirtualClosureMaxGap=seamVirtualClosureMaxGap;
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
    bodyCut.seamBridgeZipperMovesHost=bridgeZipperMovesHost;
    bodyCut.seamBridgeZipperFallbackLoops=bridgeZipperFallbackLoops;
