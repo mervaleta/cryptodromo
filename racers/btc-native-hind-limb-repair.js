@@ -1317,7 +1317,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    function pairBoundaryPaths(donorPaths,hostPaths){
     if(donorPaths.length!==hostPaths.length)
      throw Error('BTC ordered seam path count mismatch: donor '+donorPaths.length+' / Maya '+hostPaths.length);
-    const remaining=hostPaths.slice(),pairs=[];
+    const remaining=hostPaths.slice();
     const promoteShortOpenPath=(path,position,label)=>{
      const points=path.ids.map(id=>pointAt(position,id));
      const steps=[];
