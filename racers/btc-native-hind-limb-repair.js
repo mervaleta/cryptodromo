@@ -1327,7 +1327,17 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const d=distance3(center,hostCenter);
       if(d<bestDistance){bestDistance=d;best=i;}
      }
-     if(best<0)throw Error('BTC ordered seam has no matching open/closed host path');
+     if(best<0){
+      const describe=(path,position)=>({
+       closed:path.closed,vertices:path.ids.length,
+       first:pointAt(position,path.ids[0]),
+       last:pointAt(position,path.ids[path.ids.length-1]),
+       center:pathCentroid(path,position)
+      });
+      throw Error('BTC ordered seam open/closed mismatch: donor='+
+       JSON.stringify(donorPaths.map(path=>describe(path,donorPos)))+' host='+
+       JSON.stringify(hostPaths.map(path=>describe(path,hostPos))));
+     }
      const hostPath=remaining.splice(best,1)[0];
      if(!donorPath.closed){
       const donor=donorPath.ids,host=hostPath.ids;
