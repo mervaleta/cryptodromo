@@ -1239,6 +1239,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeZipperMovesHost=0,bridgeZipperFallbackLoops=0,
     bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity,
     bridgeOrientationFlips=0,bridgeOrientationComponents=0;
+   let seamWarpFactor=1,seamWarpMaxMove=0,seamWarpMeanMove=0,seamWarpMaxResidualGap=0;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeEdgesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeUnmatchedByPlane={z:0,y:0,'x-':0,'x+':0};
@@ -1761,9 +1762,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       seamVirtualClosures++;
       seamVirtualClosureMaxGap=Math.max(seamVirtualClosureMaxGap,path.virtualClosureGap);
      }
-     bridgeMaxGap=Math.max(bridgeMaxGap,alignment.maxGap);
-     bridgeGapTotal+=Math.sqrt(alignment.meanSq)*alignment.donor.length;
-     bridgeGapCount+=alignment.donor.length;
      const donor=alignment.donor,host=alignment.host;
     // The zipper's host-side vertices use interpolated Maya skin weights.
     // The donor-side boundary must use those SAME weights at corresponding
@@ -1793,8 +1791,110 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
      seamDonorRimWeightOverrides+=twins.length;
     }
+    // Conform the donor cut rim to the actual Maya boundary instead of
+    // leaving a 3-4 mm floating zipper sheet between two unrelated curves.
+    // The displacement is distributed over a 12 mm geodesic-like collar
+    // using local spatial samples, then backtracked as one deformation so
+    // no donor triangle can invert or collapse.
+    {
+     const side=Math.sign(pointAt(donorPos,donor[0])[0]);
+     const radius=.012,sigma=.0048,radiusSq=radius*radius;
+     const targets=donor.map((id,i)=>{
+      const sample=alignment.samples[i],t=Math.max(0,Math.min(1,sample.t));
+      let normal=hostNormal?[0,1,2].map(k=>
+       hostNormal.getComponent(sample.a,k)*(1-t)+hostNormal.getComponent(sample.b,k)*t
+      ):[0,1,0];
+      const normalLength=Math.hypot(...normal);
+      normal=normalLength>1e-10?normal.map(v=>v/normalLength):[0,1,0];
+      const target=sample.point.map((v,k)=>v+normal[k]*.00012);
+      const origin=pointAt(donorPos,id);
+      return {id,key:seamKey(donorPos,id),origin,target,
+       delta:target.map((v,k)=>v-origin[k]),normal};
+     });
+     const exact=new Map(targets.map(item=>[item.key,item.delta]));
+     const warp=Array.from({length:donorPos.count},()=>[0,0,0]);
+     const moved=new Uint8Array(donorPos.count);
+     for(const [key,ids] of donorBoundary.byPosition){
+      const representative=ids[0],point=pointAt(donorPos,representative);
+      if(Math.sign(point[0])!==side)continue;
+      let nearestSq=Infinity,weightSum=0;
+      const sum=[0,0,0];
+      for(const target of targets){
+       const dx=point[0]-target.origin[0],dy=point[1]-target.origin[1],
+        dz=point[2]-target.origin[2];
+       const d2=dx*dx+dy*dy+dz*dz;
+       if(d2>radiusSq)continue;
+       nearestSq=Math.min(nearestSq,d2);
+       const weight=Math.exp(-d2/(2*sigma*sigma));
+       weightSum+=weight;
+       for(let k=0;k<3;k++)sum[k]+=target.delta[k]*weight;
+      }
+      if(nearestSq>radiusSq||weightSum<1e-10)continue;
+      const delta=exact.get(key)||(()=>{
+       const u=Math.max(0,Math.min(1,1-Math.sqrt(nearestSq)/radius));
+       const falloff=u*u*(3-2*u);
+       return sum.map(v=>v/weightSum*falloff);
+      })();
+      for(const id of ids){warp[id]=delta.slice();moved[id]=1;}
+     }
+     const base=Array.from({length:donorPos.count},(_,id)=>pointAt(donorPos,id));
+     const faces=[];
+     for(let j=0;j<di.count;j+=3)
+      faces.push([di.getX(j),di.getX(j+1),di.getX(j+2)]);
+     const normalOf=(a,b,c)=>{
+      const u=b.map((v,k)=>v-a[k]),v=c.map((x,k)=>x-a[k]);
+      return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+     };
+     const edgeSquares=points=>[0,1,2].map(k=>
+      points[k].reduce((sum,v,d)=>sum+(v-points[(k+1)%3][d])**2,0));
+     let accepted=0;
+     for(const factor of [1,.75,.5,.375,.25,.125,.0625]){
+      let safe=true;
+      for(const face of faces){
+       if(!face.some(id=>moved[id]))continue;
+       const before=face.map(id=>base[id]);
+       const after=face.map(id=>base[id].map((v,k)=>v+warp[id][k]*factor));
+       const n0=normalOf(...before),n1=normalOf(...after);
+       const oldSq=n0.reduce((sum,v)=>sum+v*v,0);
+       const newSq=n1.reduce((sum,v)=>sum+v*v,0);
+       if(oldSq<1e-24||newSq<oldSq*.20||
+          n0.reduce((sum,v,k)=>sum+v*n1[k],0)<=0){safe=false;break;}
+       const oldEdges=edgeSquares(before),newEdges=edgeSquares(after);
+       const oldMin=Math.min(...oldEdges),newMin=Math.min(...newEdges);
+       const oldAspect=oldMin/Math.max(...oldEdges,1e-24);
+       const newAspect=newMin/Math.max(...newEdges,1e-24);
+       if(newMin<oldMin*.20||newAspect<oldAspect/4){safe=false;break;}
+      }
+      if(safe){accepted=factor;break;}
+     }
+     if(!accepted)
+      throw Error('BTC seam conform warp would invert or collapse donor collar topology');
+     let movedCount=0,totalMove=0;
+     for(let id=0;id<donorPos.count;id++)if(moved[id]){
+      const delta=warp[id].map(v=>v*accepted);
+      const next=base[id].map((v,k)=>v+delta[k]);
+      donorPos.setXYZ(id,...next);
+      const amount=Math.hypot(...delta);
+      seamWarpMaxMove=Math.max(seamWarpMaxMove,amount);
+      totalMove+=amount;movedCount++;
+     }
+     seamWarpFactor=Math.min(seamWarpFactor,accepted);
+     seamWarpMeanMove=movedCount?totalMove/movedCount:0;
+     donorPos.needsUpdate=true;
+     donorGeo.computeVertexNormals();
+     let gapTotal=0,gapMax=0;
+     for(let i=0;i<donor.length;i++){
+      const gap=distance3(pointAt(donorPos,donor[i]),alignment.samples[i].point);
+      gapTotal+=gap;gapMax=Math.max(gapMax,gap);
+     }
+     seamWarpMaxResidualGap=Math.max(seamWarpMaxResidualGap,gapMax);
+     bridgeMaxGap=Math.max(bridgeMaxGap,gapMax);
+     bridgeGapTotal+=gapTotal;
+     bridgeGapCount+=donor.length;
+    }
      const m=donor.length,n=host.length;
-     const donorArc=alignment.donorArc,hostArc=alignment.hostArc;
+     const donorArc=arcTable(donor,donorPos,alignment.closed),
+      hostArc=arcTable(host,hostPos,alignment.closed);
      const donorSteps=alignment.closed?m:m-1;
      const hostSteps=alignment.closed?n:n-1;
      const hostIds=host.map(id=>bridgeVertex({
@@ -1900,6 +2000,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
    }
    bodyCut.seamDonorRimWeightOverrides=seamDonorRimWeightOverrides;
+   bodyCut.seamWarpFactor=seamWarpFactor;
+   bodyCut.seamWarpMaxMove=seamWarpMaxMove;
+   bodyCut.seamWarpMeanMove=seamWarpMeanMove;
+   bodyCut.seamWarpMaxResidualGap=seamWarpMaxResidualGap;
    bodyCut.seamBridgeMethod='monotone-dp-zipper-open-chain';
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
    bodyCut.seamBridgeOpenPaths=seamOpenPaths;
@@ -2291,6 +2395,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
    hostRimEdgesByPlane:bodyCut.hostRimEdgesByPlane||{},donorRimEdgesByPlane:bodyCut.donorRimEdgesByPlane||{},
    seamBridgeMethod:bodyCut.seamBridgeMethod||'none',seamBridgeLoopPairs:bodyCut.seamBridgeLoopPairs||0,
+   seamWarpFactor:bodyCut.seamWarpFactor||0,seamWarpMaxMove:bodyCut.seamWarpMaxMove||0,
+   seamWarpMeanMove:bodyCut.seamWarpMeanMove||0,seamWarpMaxResidualGap:bodyCut.seamWarpMaxResidualGap||0,
    seamBridgeZipperMovesDonor:bodyCut.seamBridgeZipperMovesDonor||0,seamBridgeZipperMovesHost:bodyCut.seamBridgeZipperMovesHost||0,
    seamBridgeZipperFallbackLoops:bodyCut.seamBridgeZipperFallbackLoops||0,
    seamBridgeZipperMeanQuality:bodyCut.seamBridgeZipperMeanQuality||0,seamBridgeZipperMinQuality:bodyCut.seamBridgeZipperMinQuality||0,
