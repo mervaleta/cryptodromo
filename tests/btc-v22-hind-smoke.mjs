@@ -40,8 +40,12 @@ try{
   throw error;
  }
  const qa=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
- assert.equal(qa.heroGroom?.tailDockCapRimSkinnedCenters,2,'Both rump cap centers must follow their original rim skin weights');
- assert.equal(qa.heroGroom?.tailDockMidlineBridgeTriangles,6,'Six triangles must close the sagittal tail-dock slit');
+ assert.equal(qa.heroGroom?.tailDockCapRimSkinnedCenters,0,'The single-loop cap must not use centroid-weighted fan centers');
+ assert.equal(qa.heroGroom?.tailDockCapInteriorRingVertices,qa.heroGroom?.tailDockBorderEdges,'Every boundary vertex must have one skinned inset counterpart');
+ assert.equal(qa.heroGroom?.tailDockCapCoreTriangles,qa.heroGroom?.tailDockBorderEdges-2,'The inset polygon must be fully ear-triangulated');
+ assert.equal(qa.heroGroom?.tailDockCapProjectedSelfIntersections,0,'The cap polygon must be simple in its local tangent plane');
+ assert.equal(qa.heroGroom?.tailDockCapDegenerateTriangles,0,'The cap must contain no degenerate faces');
+ assert.equal(qa.heroGroom?.tailDockMidlineBridgeTriangles,0,'The shared endpoints must be closed by one continuous boundary loop');
  assert.equal(qa.heroGroom?.tailDockOpenCapEdges,0,'Tail dock must have no open/nonmanifold cap edges');
  console.log('BTC_V22_HIND_DIAGNOSTIC',JSON.stringify(qa.heroGroom?.hindRestoration));
  writeFileSync(dest+'/metadata.json',JSON.stringify({
