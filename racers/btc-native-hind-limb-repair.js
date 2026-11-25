@@ -943,7 +943,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    insetVertices+=twins.length;reattachedWeights+=twins.length;
   }
   // The exact donor cut creates an open rim at z=.0145, while the
-  // existing closest-triangle collar projection only visits z>.0208.
+  // existing closest-triangle collar projection now targets the 1.5 mm band below z=.0145.
   // Therefore it cannot sew the actual cut edge. Align ONLY donor rim
   // vertices with nearby surviving Maya cut edges on the SAME flank.
   // This is a small geometry candidate, not visual acceptance.
@@ -1460,7 +1460,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
  let disposed=false;
  return {
   snapshot:{
-   build:'btc-v22-continuous-hind-seam-20261107',
+   build:'btc-v22-continuous-hind-seam-20261107',seamCutZ:.0145,
    originalNativeSkeleton:true,originalGallopPreserved:true,
    donorHindTriangles:bodyCut.triangles,
    donorHoofTriangles:hoovesCut.triangles,
