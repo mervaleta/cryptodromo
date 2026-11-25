@@ -1305,38 +1305,75 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    function sampleArc(table,u){
     const target=Math.min(.999999999,Math.max(0,u))*table.total;
-    let edge=0;
-    while(edge<table.loop.length-1&&table.lengths[edge+1]<target)edge++;
-    const span=table.lengths[edge+1]-table.lengths[edge];
+    let low=0,high=table.loop.length-1;
+    while(low<high){
+     const middle=(low+high)>>1;
+     if(table.lengths[middle+1]<target)low=middle+1;
+     else high=middle;
+    }
+    const edge=low,span=table.lengths[edge+1]-table.lengths[edge];
     const t=span>1e-12?(target-table.lengths[edge])/span:0;
     const a=table.points[edge],b=table.points[(edge+1)%table.loop.length];
     return {a:table.loop[edge],b:table.loop[(edge+1)%table.loop.length],t,
      point:a.map((v,k)=>v+(b[k]-v)*t)};
    }
    function findBestLoopAlignment(donorLoop,hostLoop){
+    const donorCount=donorLoop.length,hostCount=hostLoop.length;
+    const donorStride=Math.max(1,Math.ceil(donorCount/24));
+    const hostStride=Math.max(1,Math.ceil(hostCount/24));
+    const sampleStride=Math.max(1,Math.floor(donorCount/24));
     let best=null;
-    for(const reverseHost of [false,true]){
+    function evaluate(donorStart,hostStart,reverseHost){
+     const donor=rotateLoop(donorLoop,donorStart);
      const hostSource=reverseHost?hostLoop.slice().reverse():hostLoop;
-     for(let donorStart=0;donorStart<donorLoop.length;donorStart++){
-      const donor=rotateLoop(donorLoop,donorStart),donorArc=arcTable(donor,donorPos);
-      if(donorArc.total<=1e-10)continue;
-      for(let hostStart=0;hostStart<hostSource.length;hostStart++){
-       const host=rotateLoop(hostSource,hostStart),hostArc=arcTable(host,hostPos);
-       if(hostArc.total<=1e-10)continue;
-       let sumSq=0,maxGap=0;const samples=[];
-       for(let i=0;i<donor.length;i++){
-        const sample=sampleArc(hostArc,donorArc.lengths[i]/donorArc.total);
-        const gap=distance3(pointAt(donorPos,donor[i]),sample.point);
-        sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);samples.push(sample);
-       }
-       const meanSq=sumSq/donor.length;
-       const score=meanSq+maxGap*maxGap*.35;
-       if(!best||score<best.score)
-        best={donor,host,samples,score,maxGap,meanSq};
+     const host=rotateLoop(hostSource,hostStart);
+     const donorArc=arcTable(donor,donorPos),hostArc=arcTable(host,hostPos);
+     if(donorArc.total<=1e-10||hostArc.total<=1e-10)return null;
+     let sumSq=0,maxGap=0,count=0;
+     for(let i=0;i<donorCount;i+=sampleStride){
+      const sample=sampleArc(hostArc,donorArc.lengths[i]/donorArc.total);
+      const gap=distance3(donorArc.points[i],sample.point);
+      sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);count++;
+     }
+     const meanSq=sumSq/Math.max(1,count);
+     return {donor,host,donorArc,hostArc,donorStart,hostStart,reverseHost,
+      meanSq,maxGap,score:meanSq+maxGap*maxGap*.35};
+    }
+    // Coarse circular search: at most 24x24 starts per orientation, rather
+    // than rebuilding both arc tables for every vertex-pair rotation.
+    for(const reverseHost of [false,true]){
+     for(let donorStart=0;donorStart<donorCount;donorStart+=donorStride){
+      for(let hostStart=0;hostStart<hostCount;hostStart+=hostStride){
+       const candidate=evaluate(donorStart,hostStart,reverseHost);
+       if(candidate&&(!best||candidate.score<best.score))best=candidate;
       }
      }
     }
-    return best;
+    if(!best)return null;
+    // Refine around the best coarse phase. This preserves sub-stride accuracy
+    // while keeping worst-case work bounded for subdivided boundary loops.
+    const donorStarts=new Set(),hostStarts=new Set();
+    for(let delta=-donorStride;delta<=donorStride;delta++)
+     donorStarts.add((best.donorStart+delta+donorCount)%donorCount);
+    for(let delta=-hostStride;delta<=hostStride;delta++)
+     hostStarts.add((best.hostStart+delta+hostCount)%hostCount);
+    const coarse=best;
+    for(const donorStart of donorStarts){
+     for(const hostStart of hostStarts){
+      const candidate=evaluate(donorStart,hostStart,coarse.reverseHost);
+      if(candidate&&candidate.score<best.score)best=candidate;
+     }
+    }
+    const donor=best.donor,host=best.host;
+    const donorArc=arcTable(donor,donorPos),hostArc=arcTable(host,hostPos);
+    const samples=[];let sumSq=0,maxGap=0;
+    for(let i=0;i<donorCount;i++){
+     const sample=sampleArc(hostArc,donorArc.lengths[i]/donorArc.total);
+     const gap=distance3(donorArc.points[i],sample.point);
+     samples.push(sample);sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);
+    }
+    const meanSq=sumSq/Math.max(1,donorCount);
+    return {donor,host,samples,score:meanSq+maxGap*maxGap*.35,maxGap,meanSq};
    }
    function bridgeVertex(sample){
     const t=Math.max(0,Math.min(1,sample.t));
