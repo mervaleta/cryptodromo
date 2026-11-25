@@ -256,26 +256,50 @@ function cropMayaHind(anatomy){
  const posteriorComponentAudit=[];
  for(const [r,count] of counts){
   const l=limits.get(r),x=l.x/l.n,y=l.y/l.n,z=l.z/l.n;
-  // After removing the exact ten source faces, no small disconnected
-  // component may remain in their measured rest-space band. If sculpted
-  // geometry creates a new fragment, reject it instead of counting or
-  // deleting an unrelated component.
+  // The ten authored source scrap faces are removed above. Exact clipping
+  // then leaves four disconnected descendants in the same original
+  // rest-space island: 5- and 11-triangle fragments on each flank. These
+  // are still the two measured Maya hind-foot scraps, not connected flesh.
   if(count<=32&&Math.abs(x)>=.0010&&Math.abs(x)<=.0020&&
      y>=.0060&&y<=.0120&&z>=0&&z<.0020){
-   posteriorComponentAudit.push({triangles:count,side:Math.sign(x),center:[x,y,z]});
+   posteriorComponentAudit.push({root:r,triangles:count,side:Math.sign(x),center:[x,y,z]});
   }
  }
- if(posteriorComponentAudit.length)
-  throw Error('BTC runtime crop still contains posterior fragments after exact source-face removal: '+
-   JSON.stringify(posteriorComponentAudit));
+ // Fail closed unless the residual geometry is exactly the bilateral,
+ // mirrored 5+11-triangle split observed after the ten source faces are
+ // removed. A new component, changed anatomy, or one-sided remnant must
+ // be inspected rather than silently culled.
+ if(posteriorComponentAudit.length){
+  const bySide=new Map([[-1,[]],[1,[]]]);
+  for(const c of posteriorComponentAudit)bySide.get(c.side)?.push(c);
+  const left=bySide.get(-1).sort((a,b)=>a.triangles-b.triangles);
+  const right=bySide.get(1).sort((a,b)=>a.triangles-b.triangles);
+  const valid=posteriorComponentAudit.length===4&&left.length===2&&right.length===2&&
+   left.every((c,i)=>c.triangles===[5,11][i]&&
+    Math.abs(c.center[0])>=.0015&&Math.abs(c.center[0])<=.0018&&
+    c.center[1]>=.0095&&c.center[1]<=.0107&&c.center[2]>=0&&c.center[2]<.0010)&&
+   right.every((c,i)=>c.triangles===[5,11][i]&&
+    Math.abs(c.center[0])>=.0015&&Math.abs(c.center[0])<=.0018&&
+    c.center[1]>=.0095&&c.center[1]<=.0107&&c.center[2]>=0&&c.center[2]<.0010)&&
+   [0,1].every(i=>Math.abs(Math.abs(left[i].center[0])-Math.abs(right[i].center[0]))<.00008&&
+    Math.abs(left[i].center[1]-right[i].center[1])<.00008&&
+    Math.abs(left[i].center[2]-right[i].center[2])<.00008);
+  if(!valid)
+   throw Error('BTC unexpected posterior remnants after exact Maya scrap-face removal: '+
+    JSON.stringify(posteriorComponentAudit));
+ }
+ const posteriorFragmentRoots=new Set(posteriorComponentAudit.map(c=>c.root));
  const pruned=[],cleanGroups=[];
+ let residualTrianglesRemoved=0;
  for(const group of groups){
   const start=pruned.length;
-  for(let i=group.start;i<group.start+group.count;i+=3)
+  for(let i=group.start;i<group.start+group.count;i+=3){
+   if(posteriorFragmentRoots.has(root(i/3))){residualTrianglesRemoved++;continue;}
    pruned.push(next[i],next[i+1],next[i+2]);
+  }
   cleanGroups.push({start,count:pruned.length-start,materialIndex:group.materialIndex});
  }
- const isolatedTrianglesRemoved=removedScrapFaces.size;
+ const isolatedTrianglesRemoved=removedScrapFaces.size+residualTrianglesRemoved;
  geo.setAttribute('position',new THREE.Float32BufferAttribute(xyz,3));
  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(bones,4));
  geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
@@ -1628,6 +1652,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    isolatedMayaPosteriorIslandsRemoved:crop.isolatedMayaPosteriorIslandsRemoved,
    isolatedMayaPosteriorTrianglesRemoved:crop.isolatedMayaPosteriorTrianglesRemoved,
    isolatedMayaPosteriorComponentAudit:crop.isolatedMayaPosteriorComponentAudit,
+   isolatedMayaPosteriorResidualComponentsRemoved:crop.isolatedMayaPosteriorComponentAudit.length,
+   isolatedMayaPosteriorResidualTrianglesRemoved:crop.isolatedMayaPosteriorComponentAudit.reduce((sum,c)=>sum+c.triangles,0),
    isolatedMayaPosteriorSourceFaceKeys:crop.isolatedMayaPosteriorSourceFaceKeys,
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
