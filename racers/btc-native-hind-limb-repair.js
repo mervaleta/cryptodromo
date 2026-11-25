@@ -1307,7 +1307,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // At a hard Maya/Quaternius normal break, opposite normals can cancel.
     // That is not a missing geometric triangle. Fall back to the donor-side
     // or host-side face normal so the bridge is still wound consistently.
-    if(Math.hypot(...target)<1e-8)target=fallbackNormal;
+    if(Math.hypot(...target)<1e-8)target=fallbackNormal||[0,1,0];
     if(Math.hypot(...target)<1e-8)
      target=normals.find(n=>Math.hypot(...n)>1e-8)||[0,1,0];
     const alignment=cross.reduce((sum,x,k)=>sum+x*target[k],0);
