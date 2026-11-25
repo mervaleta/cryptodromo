@@ -438,9 +438,11 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const x=orient2(a,b,p)*winding,y=orient2(b,c,p)*winding,z=orient2(c,a,p)*winding;
   return x>=-epsilon&&y>=-epsilon&&z>=-epsilon;
  };
- const orientedCore=(a,b,c)=>winding>0?
-  [innerIds[a],innerIds[c],innerIds[b]]:
-  [innerIds[a],innerIds[b],innerIds[c]];
+ // The annulus inner edge follows orderedBoundary (a -> b). The core
+ // must traverse every shared boundary edge in the opposite direction so
+ // each physical edge has exactly two opposed uses, regardless of the
+ // projected polygon's signed area. Winding is only for ear classification.
+ const orientedCore=(a,b,c)=>[innerIds[a],innerIds[c],innerIds[b]];
  while(polygon.length>3){
   let clippedEar=false;
   for(let i=0;i<polygon.length;i++){
