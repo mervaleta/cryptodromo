@@ -203,7 +203,10 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const center=[0,0,0];
   for(const id of ids)for(let j=0;j<3;j++)center[j]+=positions[id*3+j]/ids.length;
   center[0]=side*Math.max(Math.abs(center[0]),.00055);
-  center[1]-=.00044; // cap lives INSIDE the rump, no artificial tail stump
+  // Keep the integrated dock cap nearly tangent to the croup. The prior
+  // 0.44 mm inward step made the radial fill read as a dark crater/star in
+  // rear WebGL; a shallow 0.08 mm recess avoids a floating tail stump.
+  center[1]-=.00008;
   const inner=new Map();
   for(const id of ids){
    const old=[positions[id*3],positions[id*3+1],positions[id*3+2]];
