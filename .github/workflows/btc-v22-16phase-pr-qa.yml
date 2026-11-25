@@ -1,0 +1,43 @@
+name: BTC V22 · 16-phase real WebGL evidence (PR)
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'racers/btc-native-hind-limb-repair.js'
+      - 'racers/btc-maya-master.js'
+      - 'tests/btc-v22-16phase-qa.mjs'
+      - '.github/workflows/btc-v22-16phase-pr-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: btc-v22-16phase-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  full-cycle-webgl:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Three.js and Chromium WebGL runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2 three@0.187.0
+          npx playwright install chromium --with-deps
+      - name: Render all 16 native Gallop phases and six cameras
+        run: |
+          python3 -m http.server 8799 --bind 127.0.0.1 >/tmp/btc-v22-16phase-server.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          sleep 2
+          node tests/btc-v22-16phase-qa.mjs
+      - name: Preserve real WebGL PNGs and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-v22-16-gallop-six-cameras
+          path: artifacts/btc-v22-full-cycle/**
+          if-no-files-found: warn
+          retention-days: 30
