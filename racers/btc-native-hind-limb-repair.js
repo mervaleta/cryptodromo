@@ -1232,7 +1232,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const hostNormal=hostGeo.getAttribute('normal'),donorNormal=donorGeo.getAttribute('normal');
    let bridgeMaxGap=0,bridgeGapTotal=0,bridgeGapCount=0,bridgeEdges=0,
     bridgeUnmatchedVertices=0,bridgeUnmatchedEdges=0,bridgeSingleTriangleEdges=0,
-    bridgeMaxHostStep=0,bridgeLoopPairs=0;
+    bridgeMaxHostStep=0,bridgeLoopPairs=0,bridgeZipperMovesDonor=0,
+    bridgeZipperMovesHost=0,bridgeZipperFallbackLoops=0,
+    bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeEdgesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeUnmatchedByPlane={z:0,y:0,'x-':0,'x+':0};
@@ -1381,12 +1383,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(Math.hypot(...target)<1e-8)target=fallbackNormal||[0,1,0];
     if(Math.hypot(...target)<1e-8)
      target=normals.find(n=>Math.hypot(...n)>1e-8)||[0,1,0];
-    const alignment=cross.reduce((sum,x,k)=>sum+x*target[k],0);
-    const oriented=ids.slice();
-    if(alignment<0)[oriented[1],oriented[2]]=[oriented[2],oriented[1]];
-    return {ids:oriented,areaSq};
-   }
-   function addBridgeQuad(a,b,pa,pb,hostStep){
+    const alignment=cross.reduce((su   function addBridgeQuad(a,b,pa,pb,hostStep){
     const donorFallback=[0,1,2].map(k=>normalFor(a)[k]+normalFor(b)[k]);
     const hostFallback=[0,1,2].map(k=>normalFor(pa)[k]+normalFor(pb)[k]);
     const first=[bridgeTriangle([a,b,pa],donorFallback),bridgeTriangle([b,pb,pa],hostFallback)];
@@ -1404,6 +1401,26 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     return 0;
    }
+   function zipperTriangleQuality(triangle,scale,progressError){
+    const p=triangle.ids.map(positionFor);
+    const lengths=[
+     distance3(p[0],p[1]),distance3(p[1],p[2]),distance3(p[2],p[0])
+    ];
+    const edgeSq=lengths.reduce((sum,v)=>sum+v*v,0);
+    const u=p[1].map((v,k)=>v-p[0][k]),v=p[2].map((x,k)=>x-p[0][k]);
+    const cross=[
+     u[1]*v[2]-u[2]*v[1],
+     u[2]*v[0]-u[0]*v[2],
+     u[0]*v[1]-u[1]*v[0]
+    ];
+    const twiceArea=Math.hypot(...cross);
+    if(!Number.isFinite(twiceArea)||twiceArea<1e-9||edgeSq<1e-18)return null;
+    const quality=Math.min(1,(2*Math.sqrt(3)*twiceArea)/edgeSq);
+    if(!Number.isFinite(quality)||quality<1e-5)return null;
+    const edgePenalty=edgeSq/(3*scale*scale);
+    const cost=(1-quality)+.08*edgePenalty+.35*progressError*progressError;
+    return {quality,cost};
+   }
    const planes=['z','y','x-','x+'];
    for(const plane of planes)for(const side of [-1,1]){
     const hostLoops=orderedBoundaryLoops(hostRim,hostPos,plane,side);
@@ -1416,25 +1433,120 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const alignment=findBestLoopAlignment(donorLoop,hostLoop);
      if(!alignment)throw Error('BTC seam loop has no nondegenerate arc-length alignment');
      bridgeLoopPairs++;
-     const projectedIds=alignment.samples.map(bridgeVertex);
      bridgeMaxGap=Math.max(bridgeMaxGap,alignment.maxGap);
      bridgeGapTotal+=Math.sqrt(alignment.meanSq)*donorLoop.length;
      bridgeGapCount+=donorLoop.length;
-     for(let i=0;i<alignment.donor.length;i++){
-      const a=alignment.donor[i],b=alignment.donor[(i+1)%alignment.donor.length];
-      const pa=projectedIds[i],pb=projectedIds[(i+1)%projectedIds.length];
-      const hostStep=distance3(positionFor(pa),positionFor(pb));
-      bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
-      const made=addBridgeQuad(a,b,pa,pb,hostStep);
-      if(!made){bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;}
-      bridgeEdges++;bridgeEdgesByPlane[plane]++;
-      bridgeTrianglesByPlane[plane]+=made;
-      if(made===1)bridgeSingleTriangleEdges++;
+     const donor=alignment.donor,host=alignment.host;
+     const m=donor.length,n=host.length;
+     const donorArc=arcTable(donor,donorPos),hostArc=arcTable(host,hostPos);
+     const hostIds=host.map(id=>bridgeVertex({
+      a:id,b:id,t:0,point:pointAt(hostPos,id)
+     }));
+     const meanStep=(donorArc.total/Math.max(1,m)+hostArc.total/Math.max(1,n))*.5;
+     const scale=Math.max(meanStep,1e-6);
+     let zipperPath=null;
+     if(m>=3&&n>=3){
+      const costs=Array.from({length:m+1},()=>Array(n+1).fill(Infinity));
+      const previous=Array.from({length:m+1},()=>Array(n+1).fill(null));
+      costs[0][0]=0;
+      for(let i=0;i<=m;i++)for(let j=0;j<=n;j++){
+       const base=costs[i][j];
+       if(!Number.isFinite(base)||(i===m&&j===n))continue;
+       const d0=donor[i%m],h0=hostIds[j%n];
+       if(i<m){
+        const d1=donor[(i+1)%m];
+        const tri=bridgeTriangle([d0,d1,h0],
+         [0,1,2].map(k=>normalFor(d0)[k]+normalFor(d1)[k]));
+        if(tri){
+         const td=donorArc.lengths[i+1]/donorArc.total;
+         const th=hostArc.lengths[j]/hostArc.total;
+         const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
+         if(q){
+          const next=base+q.cost;
+          if(next<costs[i+1][j]){
+           costs[i+1][j]=next;
+           previous[i+1][j]={i,j,tri,move:'donor',quality:q.quality};
+          }
+         }
+        }
+       }
+       if(j<n){
+        const h1=hostIds[(j+1)%n];
+        const tri=bridgeTriangle([d0,h1,h0],
+         [0,1,2].map(k=>normalFor(h0)[k]+normalFor(h1)[k]));
+        if(tri){
+         const td=donorArc.lengths[i]/donorArc.total;
+         const th=hostArc.lengths[j+1]/hostArc.total;
+         const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
+         if(q){
+          const next=base+q.cost;
+          if(next<costs[i][j+1]){
+           costs[i][j+1]=next;
+           previous[i][j+1]={i,j,tri,move:'host',quality:q.quality};
+          }
+         }
+        }
+       }
+      }
+      if(Number.isFinite(costs[m][n])){
+       const path=[];let i=m,j=n;
+       while(i||j){
+        const step=previous[i][j];
+        if(!step){path.length=0;break;}
+        path.push(step);i=step.i;j=step.j;
+       }
+       if(path.length===m+n)zipperPath=path.reverse();
+      }
+     }
+     if(zipperPath){
+      let localDonorMoves=0,localHostMoves=0,qualitySum=0,qualityMin=1;
+      for(const step of zipperPath){
+       bridgeIndices.push(...step.tri.ids);
+       qualitySum+=step.quality;qualityMin=Math.min(qualityMin,step.quality);
+       if(step.move==='donor')localDonorMoves++;
+       else localHostMoves++;
+      }
+      bridgeZipperMovesDonor+=localDonorMoves;
+      bridgeZipperMovesHost+=localHostMoves;
+      bridgeZipperQualitySum+=qualitySum;
+      bridgeZipperQualityCount+=zipperPath.length;
+      bridgeZipperMinQuality=Math.min(bridgeZipperMinQuality,qualityMin);
+      bridgeEdges+=zipperPath.length;
+      bridgeEdgesByPlane[plane]+=zipperPath.length;
+      bridgeTrianglesByPlane[plane]+=zipperPath.length;
+      for(let j=0;j<n;j++){
+       const step=distance3(pointAt(hostPos,host[j]),pointAt(hostPos,host[(j+1)%n]));
+       bridgeMaxHostStep=Math.max(bridgeMaxHostStep,step);
+      }
+     }else{
+      // Keep a renderable diagnostic candidate if the strip cannot be
+      // triangulated without a degenerate face. The strict visual/runtime
+      // gate remains responsible for rejecting this fallback.
+      bridgeZipperFallbackLoops++;
+      const projectedIds=alignment.samples.map(bridgeVertex);
+      for(let i=0;i<m;i++){
+       const a=donor[i],b=donor[(i+1)%m];
+       const pa=projectedIds[i],pb=projectedIds[(i+1)%projectedIds.length];
+       const hostStep=distance3(positionFor(pa),positionFor(pb));
+       bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
+       const made=addBridgeQuad(a,b,pa,pb,hostStep);
+       if(!made){bridgeUnmatchedEdges++;bridgeUnmatchedByPlane[plane]++;continue;}
+       bridgeEdges++;bridgeEdgesByPlane[plane]++;
+       bridgeTrianglesByPlane[plane]+=made;
+       if(made===1)bridgeSingleTriangleEdges++;
+      }
      }
     }
    }
-   bodyCut.seamBridgeMethod='arc-length-loop-zipper';
+   bodyCut.seamBridgeMethod='monotone-dp-zipper';
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
+   bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
+   bodyCut.seamBridgeZipperMovesHost=bridgeZipperMovesHost;
+   bodyCut.seamBridgeZipperFallbackLoops=bridgeZipperFallbackLoops;
+   bodyCut.seamBridgeZipperMeanQuality=bridgeZipperQualityCount?
+    bridgeZipperQualitySum/bridgeZipperQualityCount:0;
+   bodyCut.seamBridgeZipperMinQuality=Number.isFinite(bridgeZipperMinQuality)?
+    bridgeZipperMinQuality:0;
    bodyCut.seamBridgeTriangles=bridgeIndices.length/3;
    bodyCut.seamBridgeMaxGap=bridgeMaxGap;
    bodyCut.seamBridgeMeanGap=bridgeGapCount?bridgeGapTotal/bridgeGapCount:0;
@@ -1450,6 +1562,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    if(bridgeIndices.length>=12){
     bodyCut.seamBridgeData={positions:bridgePositions,normals:bridgeNormals,
      joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices};
+   }
+   // Every zipper step advances exactly one ordered boundary edge. A
+   // successful loop therefore covers both rims without skipped cells.
+  }
+:bridgeIndices};
    }
    // No donor rim edge is skipped for a distance threshold. The monotone
    // loop correspondence must close every edge or fail visibly in QA.
@@ -1808,6 +1925,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
    hostRimEdgesByPlane:bodyCut.hostRimEdgesByPlane||{},donorRimEdgesByPlane:bodyCut.donorRimEdgesByPlane||{},
+   seamBridgeMethod:bodyCut.seamBridgeMethod||'none',seamBridgeLoopPairs:bodyCut.seamBridgeLoopPairs||0,
+   seamBridgeZipperMovesDonor:bodyCut.seamBridgeZipperMovesDonor||0,seamBridgeZipperMovesHost:bodyCut.seamBridgeZipperMovesHost||0,
+   seamBridgeZipperFallbackLoops:bodyCut.seamBridgeZipperFallbackLoops||0,
+   seamBridgeZipperMeanQuality:bodyCut.seamBridgeZipperMeanQuality||0,seamBridgeZipperMinQuality:bodyCut.seamBridgeZipperMinQuality||0,
    seamBridgeTriangles:bodyCut.seamBridgeTriangles||0,seamBridgeUnmatchedEdges:bodyCut.seamBridgeUnmatchedEdges||0,
    seamBridgeSingleTriangleEdges:bodyCut.seamBridgeSingleTriangleEdges||0,
    seamBridgeTrianglesByPlane:bodyCut.seamBridgeTrianglesByPlane||{},
