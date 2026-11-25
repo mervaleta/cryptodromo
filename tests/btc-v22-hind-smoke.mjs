@@ -11,15 +11,34 @@ const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
 ]});
 const page=await browser.newPage({viewport:{width:1100,height:750}});
-const shots=[],errors=[];
+const shots=[],errors=[],consoleMessages=[],requestFailures=[];
 page.on('pageerror',e=>errors.push(e.message));
+page.on('console',m=>{
+ if(!m.text().includes('favicon'))consoleMessages.push({type:m.type(),text:m.text()});
+ if(m.type()==='error'&&!m.text().includes('favicon'))errors.push(m.text());
+});
+page.on('requestfailed',r=>requestFailures.push({url:r.url(),error:r.failure()?.errorText||'unknown'}));
 try{
  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
- await page.waitForFunction(()=>{
-  const s=window.__cryptodromoBTCAtelierQA?.();
-  return s?.heroGroom?.harmonyBuild==='btc-v22-continuous-hind-seam-20261107'
-    && s?.clips?.includes('Gallop') && s.drawCalls>0;
- },null,{timeout:120000});
+ try{
+  await page.waitForFunction(()=>{
+   const s=window.__cryptodromoBTCAtelierQA?.();
+   return s?.heroGroom?.harmonyBuild==='btc-v22-continuous-hind-seam-20261107'
+     && s?.clips?.includes('Gallop') && s.drawCalls>0;
+  },null,{timeout:120000});
+ }catch(error){
+  const diagnostics=await page.evaluate(()=>({
+   readyState:document.readyState,qa:window.__cryptodromoBTCAtelierQA?.()||null,
+   bodyClasses:document.body?.className||'',hash:location.hash,search:location.search,
+   previewState:document.querySelector('#preview-state')?.textContent||null,
+   fallbackHidden:document.querySelector('#preview-fallback')?.hidden??null,
+   canvasHidden:document.querySelector('#horse-canvas')?.hidden??null,
+   atelierPanelHidden:document.querySelector('#btc-atelier-panel')?.hidden??null
+  })).catch(e=>({evaluationError:String(e)}));
+  writeFileSync(dest+'/startup-failure.json',JSON.stringify({diagnostics,errors,consoleMessages,requestFailures},null,2));
+  console.error('BTC_V22_SMOKE_STARTUP_FAILURE',JSON.stringify({diagnostics,errors,consoleMessages,requestFailures}));
+  throw error;
+ }
  const qa=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
  assert.equal(qa.heroGroom?.tailDockCapRimSkinnedCenters,2,'Both rump cap centers must follow their original rim skin weights');
  assert.equal(qa.heroGroom?.tailDockMidlineBridgeTriangles,6,'Six triangles must close the sagittal tail-dock slit');
