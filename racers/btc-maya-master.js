@@ -203,14 +203,16 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   const center=[0,0,0];
   for(const id of ids)for(let j=0;j<3;j++)center[j]+=positions[id*3+j]/ids.length;
   center[0]=side*Math.max(Math.abs(center[0]),.00055);
-  // Keep the integrated dock cap nearly tangent to the croup. The prior
-  // 0.44 mm inward step made the radial fill read as a dark crater/star in
-  // rear WebGL; a shallow 0.08 mm recess avoids a floating tail stump.
-  center[1]-=.00008;
+  // The cap was still recessed in real rear WebGL even after reducing
+  // the center inset: the inner ring was pulled 52% toward that recessed
+  // centroid, leaving a dark star-shaped cavity. Keep the rim close to its
+  // authored boundary and give the integrated skin a shallow convex dock.
+  // Positive local Y follows the rump's outward/rearward surface.
+  center[1]+=.00035;
   const inner=new Map();
   for(const id of ids){
    const old=[positions[id*3],positions[id*3+1],positions[id*3+2]];
-   const v=old.map((p,k)=>p*.48+center[k]*.52);
+   const v=old.map((p,k)=>p*.70+center[k]*.30);
    const n=capPosition.length/3;capPosition.push(...v);inner.set(id,n);
    capSkinAnchors.set(n,id); // boundary and new ring follow same authored tissue
   }
@@ -778,7 +780,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
-   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,tailDockCapRimSkinnedCenters:anatomy.tailDockCapRimSkinnedCenters,tailDockMidlineBridgeTriangles:anatomy.tailDockMidlineBridgeTriangles,tailDockOpenCapEdges:anatomy.tailDockOpenCapEdges,
+   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,tailDockCapRimSkinnedCenters:anatomy.tailDockCapRimSkinnedCenters,tailDockMidlineBridgeTriangles:anatomy.tailDockMidlineBridgeTriangles,tailDockOpenCapEdges:anatomy.tailDockOpenCapEdges,tailDockCapNormalAlignmentBefore:anatomy.tailDockCapNormalAlignmentBefore,tailDockCapOrientationFlipped:anatomy.tailDockCapOrientationFlipped,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,skinTransferSameFlank:true,skinTransferFlankBoundary:.00072,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
