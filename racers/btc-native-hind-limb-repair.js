@@ -1708,7 +1708,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const p=oriented.map(positionFor);
       const u=p[1].map((v,k)=>v-p[0][k]),v=p[2].map((x,k)=>x-p[0][k]);
       const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
-      const target=[0,1,2].map(k=>oriented.reduce((sum,id)=>sum+normalFor(id)[k],0));
+      // The bridge is sewn to the Maya host surface. Donor normals can
+      // be locally inconsistent at the cut after independent GLB subdivision,
+      // so select the component's global side from host-side normals only.
+      const hostSide=oriented.filter(id=>id>=donorBase);
+      const target=[0,1,2].map(k=>(hostSide.length?hostSide:oriented)
+       .reduce((sum,id)=>sum+normalFor(id)[k],0));
       score+=n.reduce((sum,value,k)=>sum+value*target[k],0);
      }
      if(score<0)for(const face of component)state[face]^=1;
@@ -1763,6 +1768,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       seamVirtualClosureMaxGap=Math.max(seamVirtualClosureMaxGap,path.virtualClosureGap);
      }
      const donor=alignment.donor,host=alignment.host;
+    // Rebuild physical UV/material twins after the earlier guarded rim snap;
+    // donorBoundary.byPosition keys still describe the pre-snap coordinates.
+    const currentDonorGroups=new Map();
+    for(let id=0;id<donorPos.count;id++){
+     const key=seamKey(donorPos,id),group=currentDonorGroups.get(key)||[];
+     group.push(id);currentDonorGroups.set(key,group);
+    }
     // The zipper's host-side vertices use interpolated Maya skin weights.
     // The donor-side boundary must use those SAME weights at corresponding
     // arc-length samples or the strip peels open when Gallop bends the hock.
@@ -1771,7 +1783,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     for(let i=0;i<donor.length;i++){
      const donorId=donor[i],sample=alignment.samples[i];
      const physicalKey=seamKey(donorPos,donorId);
-     const twins=donorBoundary.byPosition.get(physicalKey)||[donorId];
+     const twins=currentDonorGroups.get(physicalKey)||[donorId];
      const influence=new Map(),t=Math.max(0,Math.min(1,sample.t));
      for(const [hostId,factor] of [[sample.a,1-t],[sample.b,t]]){
       for(let k=0;k<4;k++){
@@ -1793,12 +1805,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     }
     // Conform the donor cut rim to the actual Maya boundary instead of
     // leaving a 3-4 mm floating zipper sheet between two unrelated curves.
-    // The displacement is distributed over a 12 mm geodesic-like collar
+    // The displacement is distributed over a 24 mm geodesic-like collar
     // using local spatial samples, then backtracked as one deformation so
     // no donor triangle can invert or collapse.
     {
      const side=Math.sign(pointAt(donorPos,donor[0])[0]);
-     const radius=.012,sigma=.0048,radiusSq=radius*radius;
+     const radius=.024,sigma=.0096,radiusSq=radius*radius;
      const targets=donor.map((id,i)=>{
       const sample=alignment.samples[i],t=Math.max(0,Math.min(1,sample.t));
       let normal=hostNormal?[0,1,2].map(k=>
@@ -1814,7 +1826,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const exact=new Map(targets.map(item=>[item.key,item.delta]));
      const warp=Array.from({length:donorPos.count},()=>[0,0,0]);
      const moved=new Uint8Array(donorPos.count);
-     for(const [key,ids] of donorBoundary.byPosition){
+     for(const [key,ids] of currentDonorGroups){
       const representative=ids[0],point=pointAt(donorPos,representative);
       if(Math.sign(point[0])!==side)continue;
       let nearestSq=Infinity,weightSum=0;
