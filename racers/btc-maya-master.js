@@ -180,6 +180,31 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
   e.count===1&&retiredTailEdges.has(key)).map(([,e])=>e);
  if(border.length<20||border.length>100)
   throw Error('BTC tail root border unexpectedly changed');
+ // The dock cap must follow the ACTUAL outward normals of the retained
+ // Maya rump. A world-Y lift leaves the cap recessed on the curved croup.
+ const tailBoundaryKeys=new Set(border.map(({a,b})=>edgeKey(a,b)));
+ const tailBoundaryNormalSums=new Map();
+ for(let t=0;t<visibleTriangles.length;t+=3){
+  const tri=[visibleTriangles[t],visibleTriangles[t+1],visibleTriangles[t+2]];
+  const p=tri.map(id=>[positions[id*3],positions[id*3+1],positions[id*3+2]]);
+  const u=p[1].map((v,k)=>v-p[0][k]),v=p[2].map((x,k)=>x-p[0][k]);
+  const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+  for(const [a,b] of [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]){
+   if(!tailBoundaryKeys.has(edgeKey(a,b)))continue;
+   for(const id of [a,b]){
+    const sum=tailBoundaryNormalSums.get(id)||[0,0,0];
+    for(let k=0;k<3;k++)sum[k]+=n[k];
+    tailBoundaryNormalSums.set(id,sum);
+   }
+  }
+ }
+ const tailBoundaryNormal=id=>{
+  const n=tailBoundaryNormalSums.get(id);
+  if(!n)throw Error('BTC tail cap boundary vertex has no retained surface normal: '+id);
+  const length=Math.hypot(...n);
+  if(length<1e-15)throw Error('BTC tail cap boundary normal collapsed: '+id);
+  return n.map(v=>v/length);
+ };
  // The free-tail cut has TWO bilateral rim loops that share two vertices
  // on the midline. V21 forced all 48 edges into a SINGLE fan: a non-manifold
  // bow-tie of triangles that visibly tore through the rump during Gallop.
@@ -200,22 +225,33 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  for(const [i,edges] of sideEdges.entries()){
   const side=i===0?-1:1;
   const ids=[...new Set(edges.flatMap(e=>[e.a,e.b]))];
-  const center=[0,0,0];
-  for(const id of ids)for(let j=0;j<3;j++)center[j]+=positions[id*3+j]/ids.length;
+  const center=[0,0,0],averageNormal=[0,0,0];
+  for(const id of ids){
+   const normal=tailBoundaryNormal(id);
+   for(let j=0;j<3;j++){
+    center[j]+=positions[id*3+j]/ids.length;
+    averageNormal[j]+=normal[j]/ids.length;
+   }
+  }
+  const normalLength=Math.hypot(...averageNormal);
+  if(normalLength<1e-12)throw Error('BTC tail dock has no stable outward normal');
+  for(let j=0;j<3;j++)averageNormal[j]/=normalLength;
   center[0]=side*Math.max(Math.abs(center[0]),.00055);
-  // The cap was still recessed in real rear WebGL even after reducing
-  // the center inset: the inner ring was pulled 52% toward that recessed
-  // centroid, leaving a dark star-shaped cavity. Keep the rim close to its
-  // authored boundary and give the integrated skin a shallow convex dock.
-  // Positive local Y follows the rump's outward/rearward surface.
-  center[1]+=.00035;
+  // Lift the integrated cap along the retained rump's measured surface
+  // normal, not a guessed world axis. The ring stays close to the source
+  // skin while the center forms a shallow convex dock instead of a crater.
+  const centerNormalLift=.00065,ringNormalLift=.00022;
+  for(let j=0;j<3;j++)center[j]+=averageNormal[j]*centerNormalLift;
   const inner=new Map();
   for(const id of ids){
    const old=[positions[id*3],positions[id*3+1],positions[id*3+2]];
-   const v=old.map((p,k)=>p*.70+center[k]*.30);
+   const normal=tailBoundaryNormal(id);
+   const v=old.map((p,k)=>p*.70+center[k]*.30+normal[k]*ringNormalLift);
    const n=capPosition.length/3;capPosition.push(...v);inner.set(id,n);
    capSkinAnchors.set(n,id); // boundary and new ring follow same authored tissue
   }
+  removed.tailDockCenterNormalLift=centerNormalLift;
+  removed.tailDockRimNormalLift=ringNormalLift;
   const centerId=capPosition.length/3;capPosition.push(...center);
   // Anchor each inset center to its own bilateral rim during Gallop.
   capCenterRims.set(centerId,ids);
@@ -301,6 +337,29 @@ function makeAnatomy(source,skinAt,{coatColor,brandAccent,brandMode='natural_coa
  const badCapEdges=[...capEdges].filter(([,v])=>v.count!==2||v.winding!==0);
  if(badCapEdges.length)
   throw Error('BTC tail cap midline remains open/nonmanifold: '+badCapEdges.length);
+ // The cap's outer rim must be traversed exactly once in the direction
+ // opposite to the retained body's boundary. Do not let a global normal
+ // flip silently turn a closed-looking cap into a backface-culling hole.
+ const tailBoundaryUse=new Map();
+ for(let t=tailCapTriangleStart;t<tailCapTriangleEnd;t+=3){
+  const tri=[visibleTriangles[t],visibleTriangles[t+1],visibleTriangles[t+2]];
+  for(let k=0;k<3;k++){
+   const a=tri[k],b=tri[(k+1)%3],key=edgeKey(a,b);
+   if(!tailBoundaryKeys.has(key))continue;
+   const use=tailBoundaryUse.get(key)||{count:0,opposed:0};
+   use.count++;
+   const edge=border.find(e=>edgeKey(e.a,e.b)===key);
+   if(edge&&a===edge.b&&b===edge.a)use.opposed++;
+   tailBoundaryUse.set(key,use);
+  }
+ }
+ const badTailBoundary=[...tailBoundaryKeys].filter(key=>{
+  const use=tailBoundaryUse.get(key);
+  return !use||use.count!==1||use.opposed!==1;
+ });
+ if(badTailBoundary.length)
+  throw Error('BTC tail cap boundary winding mismatch: '+badTailBoundary.length);
+ removed.tailDockBoundaryWindingErrors=badTailBoundary.length;
  positions=Float32Array.from(capPosition);
  removed.tailDockBorderEdges=border.length;
  removed.integratedDockCapTriangles=border.length*3+bridge.length;
@@ -780,7 +839,7 @@ export function createBTCHeroMaya(root,{maneSize=1.2,tailSize=1.1,color='#35251e
    nativeEarFacesRemoved:anatomy.nativeEarFaces,extraTailFacesRemoved:anatomy.extraTailFaces,
    earCutBorderEdges:anatomy.earCutBorderEdges,integratedEarRootCapTriangles:anatomy.integratedEarRootCapTriangles,earRootCapCenters:anatomy.earRootCapCenters,
    tailDockBorderEdges:anatomy.tailDockBorderEdges,integratedDockCapTriangles:anatomy.integratedDockCapTriangles,
-   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,tailDockCapRimSkinnedCenters:anatomy.tailDockCapRimSkinnedCenters,tailDockMidlineBridgeTriangles:anatomy.tailDockMidlineBridgeTriangles,tailDockOpenCapEdges:anatomy.tailDockOpenCapEdges,tailDockCapNormalAlignmentBefore:anatomy.tailDockCapNormalAlignmentBefore,tailDockCapOrientationFlipped:anatomy.tailDockCapOrientationFlipped,
+   tailDockCapHalves:anatomy.tailDockCapHalves,tailDockCapRingVertices:anatomy.tailDockCapRingVertices,tailDockCapRimSkinnedCenters:anatomy.tailDockCapRimSkinnedCenters,tailDockMidlineBridgeTriangles:anatomy.tailDockMidlineBridgeTriangles,tailDockOpenCapEdges:anatomy.tailDockOpenCapEdges,tailDockCapNormalAlignmentBefore:anatomy.tailDockCapNormalAlignmentBefore,tailDockCapOrientationFlipped:anatomy.tailDockCapOrientationFlipped,tailDockCenterNormalLift:anatomy.tailDockCenterNormalLift,tailDockRimNormalLift:anatomy.tailDockRimNormalLift,tailDockBoundaryWindingErrors:anatomy.tailDockBoundaryWindingErrors,
    poweredHindVertices:anatomy.poweredHindVertices,hindMaxExpansion:anatomy.hindMaxExpansion,
    hindTextureGenerated:anatomy.generatedHindCoat,hindGaitCorrective:false,hindVolumeConsistent:true,hindSkinMethod:'side-stabilized-native-linear',hindCrossSideBefore:anatomy.hindWeightReport.crossSideBefore,hindCrossSideAfter:anatomy.hindWeightReport.crossSideAfter,skinTransferSameFlank:true,skinTransferFlankBoundary:.00072,hindLimbRig:'native-GLB-distal-limbs-clipped-seam-v22',hindRestoration:hindRepair.snapshot,hindBuild:BTC_HINDQUARTER_BUILD,
    triangles:anatomy.triangles,beveledHoofVertices:anatomy.beveledHoofVertices,elevatedEarVertices:anatomy.elevatedEarVertices,oldHairHidden:!best.visible,
