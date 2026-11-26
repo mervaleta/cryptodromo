@@ -2123,9 +2123,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      const radius=.024,sigma=.0096,radiusSq=radius*radius;
      // A full projection asks the coarse donor collar to absorb a 3-4 mm
      // shape mismatch in one pass. Its face-preserving line search accepted
-     // under 10% of that motion. Start with a controlled 35% conform target;
+     // under 10% of that motion. Allow a 70% conform request; per-vertex face-preserving backtracking remains the safety limit;
      // the skinned zipper carries the remaining measured gap.
-     const seamWarpTargetFraction=.35;
+     const seamWarpTargetFraction=.70;
      const targets=donor.map((id,i)=>{
       const sample=alignment.samples[i],t=Math.max(0,Math.min(1,sample.t));
       let normal=hostNormal?[0,1,2].map(k=>
@@ -2588,7 +2588,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamHostBoundarySplitMissing=hostBoundarySplit.missing;
    bodyCut.seamDonorRimWeightOverrides=seamDonorRimWeightOverrides;
    bodyCut.seamWarpFactor=seamWarpFactor;
-   bodyCut.seamWarpTargetFraction=.35;
+   bodyCut.seamWarpTargetFraction=.70;
    bodyCut.seamWarpMaxMove=seamWarpMaxMove;
    bodyCut.seamWarpMeanMove=seamWarpMeanMove;
    bodyCut.seamWarpAcceptedGroups=seamWarpAcceptedGroups;
