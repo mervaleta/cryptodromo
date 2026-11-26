@@ -2934,7 +2934,8 @@ const fractions=[.2,.4,.6,.8];
    }
    // Every zipper step advances exactly one ordered boundary edge. A
    // successful loop therefore covers both rims without skipped cells.
-  }
+   // Keep the seam-build scope alive through collar relaxation so the
+   // curved bridge can be reprojected onto the final donor surface.
    // No donor rim edge is skipped for a distance threshold. The monotone
    // loop correspondence must close every edge or fail visibly in QA.
   // BTC collar curvature relax (candidate, not a version): smooth only
@@ -3260,6 +3261,7 @@ const fractions=[.2,.4,.6,.8];
   }
   bodyCut.seamBridgePostRelaxReprojectedVertices=bridgeVertexSpecs.size;
   bodyCut.seamBridgePostRelaxMaxShift=seamBridgePostRelaxMaxShift;
+  }
   bodyCut.collarRejectedMoves=collarRejectedMoves;
   bodyCut.collarBacktrackedMoves=collarBacktrackedMoves;
   bodyCut.insetVertices=insetVertices;
