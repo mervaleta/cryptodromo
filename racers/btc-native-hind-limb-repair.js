@@ -1767,8 +1767,21 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // one-ring; at the Maya rim it arrives along the host's interior
      // one-ring. These signs make both endpoint derivatives tangent to the
      // real source surfaces, independent of the direction of the 3D gap.
-     const donorOut=projectSurfaceDirection(donorSurfaceInward,donorRimTangent,-1);
-     const hostIn=projectSurfaceDirection(hostSurfaceInward,hostRimTangent,1);
+     const orientTowardGap=sample=>{
+      if(!sample)return null;
+      if(dot(sample.direction,gap)>=0)return sample;
+      seamBridgeTangentDirectionFlips++;
+      return {...sample,direction:sample.direction.map(v=>-v)};
+     };
+     // One-ring tangents are local, but their sign is not guaranteed by
+     // UV/material seam winding. At the donor rim the derivative must leave
+     // the donor toward the host; at the host rim it must enter the host from
+     // the gap. Orient both projected surface tangents against the measured
+     // donor-to-host gap before constructing the Hermite loft. A reversed
+     // endpoint tangent curls the bridge under the rump and renders as a
+     // dark triangular cut even when the zipper is topologically closed.
+     const donorOut=orientTowardGap(projectSurfaceDirection(donorSurfaceInward,donorRimTangent,-1));
+     const hostIn=orientTowardGap(projectSurfaceDirection(hostSurfaceInward,hostRimTangent,1));
      if(donorOut&&hostIn){
       reach0=Math.min(gapLength*.55,Math.max(gapLength*.12,donorOut.reach*.85));
       reach1=Math.min(gapLength*.55,Math.max(gapLength*.12,hostIn.reach*.85));
@@ -2188,7 +2201,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const planes=['z','y','x-','x+'];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
     seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
-    seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
+    seamBridgeTangentDirectionFlips=0,seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
    let seamDonorRimWeightOverrides=0;
    for(const plane of planes)for(const side of [-1,1]){
     const hostPaths=orderedBoundaryPaths(hostRim,hostPos,plane,side);
@@ -2768,6 +2781,7 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeVirtualClosures=seamVirtualClosures;
    bodyCut.seamBridgeVirtualClosureMaxGap=seamVirtualClosureMaxGap;
    bodyCut.seamBridgeSurfaceTangentFallbacks=seamBridgeSurfaceTangentFallbacks;
+   bodyCut.seamBridgeTangentDirectionFlips=seamBridgeTangentDirectionFlips;
    bodyCut.seamBridgeMeanTangentReach=seamBridgeTangentReachCount?
     seamBridgeTangentReachSum/seamBridgeTangentReachCount:0;
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
@@ -3274,6 +3288,7 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeVirtualClosures:bodyCut.seamBridgeVirtualClosures||0,
    seamBridgeVirtualClosureMaxGap:bodyCut.seamBridgeVirtualClosureMaxGap||0,
    seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
+   seamBridgeTangentDirectionFlips:bodyCut.seamBridgeTangentDirectionFlips||0,
    seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
    seamWarpFactor:bodyCut.seamWarpFactor||0,seamWarpTargetFraction:bodyCut.seamWarpTargetFraction||0,
    seamWarpMaxMove:bodyCut.seamWarpMaxMove||0,
