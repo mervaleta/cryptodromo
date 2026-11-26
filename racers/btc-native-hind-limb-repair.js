@@ -3034,6 +3034,13 @@ const fractions=[.2,.4,.6,.8];
      joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices,
      donorBase,
      hostEndpointVertices:[...new Set([...projected.values()].map(id=>id-donorBase))],
+     // Preserve the exact Maya vertex selected by orderedBoundaryPaths.
+     // A position-only lookup can silently choose a coincident UV/material
+     // twin that is not referenced by the cut boundary faces, leaving the
+     // bridge floating even though its coordinates and weights match.
+     hostEndpointSources:[...new Map([...projected.values()]
+      .map(id=>[id-donorBase,bridgeEndpointInfo.get(id)?.hostSourceId])
+      .filter(([,source])=>Number.isInteger(source)))],
      donorEndpointVertices:[...new Set(bridgeIndices.filter(id=>id<donorBase))]};
    }
    // Every zipper step advances exactly one ordered boundary edge. A
@@ -3455,10 +3462,23 @@ const fractions=[.2,.4,.6,.8];
     return score;
    };
    const hostEndpointMap=new Map();
+   const hostEndpointSources=new Map(data.hostEndpointSources||[]);
+   let exactHostSourceMatches=0,fallbackHostSourceMatches=0,hostSourceMismatches=0;
    for(const local of data.hostEndpointVertices){
     const donorId=data.donorBase+local;
     if(donorId<data.donorBase||donorId>=donorCount)
      throw Error('BTC host seam endpoint index outside appended bridge vertices');
+    const exactSource=hostEndpointSources.get(local);
+    if(Number.isInteger(exactSource)&&exactSource>=0&&exactSource<hostCount&&
+       positionKey(hp,exactSource)===positionKey(dp,donorId)&&
+       skinDistance(exactSource,donorId)<=1e-3){
+     // This is the actual host rim vertex used to construct the boundary
+     // path, not an arbitrary coincident vertex from a UV/material split.
+     hostEndpointMap.set(donorId,exactSource);
+     exactHostSourceMatches++;
+     continue;
+    }
+    if(Number.isInteger(exactSource))hostSourceMismatches++;
     const candidates=hostByPosition.get(positionKey(dp,donorId))||[];
     if(!candidates.length)
      throw Error('BTC host zipper endpoint has no exact split Maya vertex at '+positionKey(dp,donorId));
@@ -3470,6 +3490,7 @@ const fractions=[.2,.4,.6,.8];
     if(bestScore>1e-3)
      throw Error('BTC host zipper endpoint skin weights do not match split Maya edge: '+bestScore.toFixed(6));
     hostEndpointMap.set(donorId,best);
+    fallbackHostSourceMatches++;
    }
    if(hostEndpointMap.size!==data.hostEndpointVertices.length)
     throw Error('BTC unified hind mesh failed to weld every host zipper endpoint');
@@ -3533,11 +3554,130 @@ const fractions=[.2,.4,.6,.8];
      hostCount+(donorId===undefined?id:donorId):hostId;
    }
    combined.setIndex(new THREE.BufferAttribute(mergedIndex,1));
+   const donorSurfaceIndexCount=di.count-data.indices.length;
+   const bridgeIndexStart=hi.count+donorSurfaceIndexCount;
+   const bridgeIndexEnd=hi.count+di.count;
+   if(donorSurfaceIndexCount<0||data.indices.length%3!==0||
+      bridgeIndexStart%3!==0||bridgeIndexEnd%3!==0)
+    throw Error('BTC unified seam bridge index ranges are not triangle-aligned');
    const groups=hostGeo.groups.length?hostGeo.groups:
     [{start:0,count:hi.count,materialIndex:0}];
    for(const group of groups)
     combined.addGroup(group.start,group.count,group.materialIndex||0);
-   combined.addGroup(hi.count,di.count,2);
+   combined.addGroup(hi.count,donorSurfaceIndexCount,2);
+   combined.addGroup(bridgeIndexStart,data.indices.length,2);
+   // Solve bridge winding against BOTH real source surfaces after welding.
+   // Orienting the zipper internally is insufficient: its outer edges must
+   // run opposite to the adjacent Maya and donor faces, or WebGL back-face
+   // culling leaves dark wedges despite coincident positions.
+   const bridgeFaceStart=bridgeIndexStart/3;
+   const bridgeFaceCount=data.indices.length/3;
+   const bridgeEdges=new Map();
+   for(let offset=0;offset<mergedIndex.length;offset+=3){
+    const face=offset/3;
+    const isBridge=offset>=bridgeIndexStart&&offset<bridgeIndexEnd;
+    const isHost=offset<hi.count;
+    const ids=[mergedIndex[offset],mergedIndex[offset+1],mergedIndex[offset+2]];
+    for(const [from,to] of [[ids[0],ids[1]],[ids[1],ids[2]],[ids[2],ids[0]]]){
+     const key=from<to?from+':'+to:to+':'+from;
+     const list=bridgeEdges.get(key)||[];
+     list.push({face,from,to,isBridge,isHost});
+     bridgeEdges.set(key,list);
+    }
+   }
+   const bridgeLinks=Array.from({length:bridgeFaceCount},()=>[]);
+   const bridgeBoundaryConstraints=[];
+   let bridgeBoundaryUnmatchedEdges=0,bridgeBoundaryNonManifoldEdges=0;
+   for(const list of bridgeEdges.values()){
+    const bridgeUses=list.filter(use=>use.isBridge);
+    if(!bridgeUses.length)continue;
+    if(list.length>2){bridgeBoundaryNonManifoldEdges++;continue;}
+    if(bridgeUses.length===2){
+     const [a,b]=bridgeUses;
+     const same=a.from===b.from&&a.to===b.to;
+     const toggle=same?1:0;
+     const ai=a.face-bridgeFaceStart,bi=b.face-bridgeFaceStart;
+     bridgeLinks[ai].push({face:bi,toggle});
+     bridgeLinks[bi].push({face:ai,toggle});
+    }else if(bridgeUses.length===1){
+     const bridgeUse=bridgeUses[0],external=list.find(use=>!use.isBridge);
+     if(!external){bridgeBoundaryUnmatchedEdges++;continue;}
+     const same=bridgeUse.from===external.from&&bridgeUse.to===external.to;
+     bridgeBoundaryConstraints.push({
+      face:bridgeUse.face-bridgeFaceStart,
+      requiredFlip:same?1:0,
+      surface:external.isHost?'host':'donor'
+     });
+    }else{
+     bridgeBoundaryNonManifoldEdges++;
+    }
+   }
+   const bridgeState=new Int8Array(bridgeFaceCount);bridgeState.fill(-1);
+   const bridgeComponents=[],bridgeComponentOf=new Int32Array(bridgeFaceCount);
+   bridgeComponentOf.fill(-1);
+   let bridgeInternalWindingConflicts=0;
+   for(let start=0;start<bridgeFaceCount;start++){
+    if(bridgeState[start]!==-1)continue;
+    const component=[],stack=[start],componentId=bridgeComponents.length;
+    bridgeState[start]=0;
+    while(stack.length){
+     const face=stack.pop();component.push(face);
+     bridgeComponentOf[face]=componentId;
+     for(const link of bridgeLinks[face]){
+      const expected=bridgeState[face]^link.toggle;
+      if(bridgeState[link.face]===-1){
+       bridgeState[link.face]=expected;stack.push(link.face);
+      }else if(bridgeState[link.face]!==expected){
+       bridgeInternalWindingConflicts++;
+      }
+     }
+    }
+    bridgeComponents.push(component);
+   }
+   const bridgeVotes=bridgeComponents.map(()=>({keep:0,flip:0,hostKeep:0,hostFlip:0}));
+   for(const constraint of bridgeBoundaryConstraints){
+    const component=bridgeComponentOf[constraint.face];
+    const globalFlip=bridgeState[constraint.face]^constraint.requiredFlip;
+    const vote=bridgeVotes[component];
+    if(globalFlip){vote.flip++;if(constraint.surface==='host')vote.hostFlip++;}
+    else{vote.keep++;if(constraint.surface==='host')vote.hostKeep++;}
+   }
+   let bridgeBoundaryFlippedComponents=0;
+   const bridgeComponentFlip=bridgeVotes.map(vote=>{
+    // Host-side boundary orientation is the tie-break because it is the
+    // authored retained torso; donor winding must agree with that surface.
+    const flip=vote.flip>vote.keep||
+     (vote.flip===vote.keep&&vote.hostFlip>vote.hostKeep);
+    if(flip)bridgeBoundaryFlippedComponents++;
+    return flip?1:0;
+   });
+   for(let local=0;local<bridgeFaceCount;local++){
+    if(!(bridgeState[local]^bridgeComponentFlip[bridgeComponentOf[local]]))continue;
+    const offset=(bridgeFaceStart+local)*3;
+    [mergedIndex[offset+1],mergedIndex[offset+2]]=
+     [mergedIndex[offset+2],mergedIndex[offset+1]];
+   }
+   let bridgeBoundaryOrientationMismatches=0,bridgeBoundaryHostEdges=0,
+    bridgeBoundaryDonorEdges=0;
+   for(const constraint of bridgeBoundaryConstraints){
+    if(constraint.surface==='host')bridgeBoundaryHostEdges++;
+    else bridgeBoundaryDonorEdges++;
+    const actual=bridgeState[constraint.face]^
+     bridgeComponentFlip[bridgeComponentOf[constraint.face]];
+    if(actual!==constraint.requiredFlip)bridgeBoundaryOrientationMismatches++;
+   }
+   bodyCut.seamBridgeExactHostSourceMatches=exactHostSourceMatches;
+   bodyCut.seamBridgeFallbackHostSourceMatches=fallbackHostSourceMatches;
+   bodyCut.seamBridgeHostSourceMismatches=hostSourceMismatches;
+   bodyCut.seamBridgeBoundaryComponents=bridgeComponents.length;
+   bodyCut.seamBridgeBoundaryEdges=bridgeBoundaryConstraints.length;
+   bodyCut.seamBridgeBoundaryHostEdges=bridgeBoundaryHostEdges;
+   bodyCut.seamBridgeBoundaryDonorEdges=bridgeBoundaryDonorEdges;
+   bodyCut.seamBridgeBoundaryUnmatchedEdges=bridgeBoundaryUnmatchedEdges;
+   bodyCut.seamBridgeBoundaryNonManifoldEdges=bridgeBoundaryNonManifoldEdges;
+   bodyCut.seamBridgeBoundaryOrientationMismatches=bridgeBoundaryOrientationMismatches;
+   bodyCut.seamBridgeBoundaryInternalWindingConflicts=bridgeInternalWindingConflicts;
+   bodyCut.seamBridgeBoundaryFlippedComponents=bridgeBoundaryFlippedComponents;
    // Recompute normals only after host and donor seam indices are welded.
    // This averages the transition over actual adjacent faces, not a detached
    // strip's guessed normal field.
@@ -3656,6 +3796,18 @@ const fractions=[.2,.4,.6,.8];
    originalHoofTriangles:hoovesCut.sourceTriangles,
    seamBridgeWeldedHostVertices:bodyCut.seamBridgeWeldedHostVertices||0,
    seamBridgeHostEndpointCount:bodyCut.seamBridgeHostEndpointCount||0,
+   seamBridgeExactHostSourceMatches:bodyCut.seamBridgeExactHostSourceMatches||0,
+   seamBridgeFallbackHostSourceMatches:bodyCut.seamBridgeFallbackHostSourceMatches||0,
+   seamBridgeHostSourceMismatches:bodyCut.seamBridgeHostSourceMismatches||0,
+   seamBridgeBoundaryComponents:bodyCut.seamBridgeBoundaryComponents||0,
+   seamBridgeBoundaryEdges:bodyCut.seamBridgeBoundaryEdges||0,
+   seamBridgeBoundaryHostEdges:bodyCut.seamBridgeBoundaryHostEdges||0,
+   seamBridgeBoundaryDonorEdges:bodyCut.seamBridgeBoundaryDonorEdges||0,
+   seamBridgeBoundaryUnmatchedEdges:bodyCut.seamBridgeBoundaryUnmatchedEdges||0,
+   seamBridgeBoundaryNonManifoldEdges:bodyCut.seamBridgeBoundaryNonManifoldEdges||0,
+   seamBridgeBoundaryOrientationMismatches:bodyCut.seamBridgeBoundaryOrientationMismatches||0,
+   seamBridgeBoundaryInternalWindingConflicts:bodyCut.seamBridgeBoundaryInternalWindingConflicts||0,
+   seamBridgeBoundaryFlippedComponents:bodyCut.seamBridgeBoundaryFlippedComponents||0,
    seamBridgeWeldedDonorVertices:bodyCut.seamBridgeWeldedDonorVertices||0,
    seamBridgeDonorEndpointGroups:bodyCut.seamBridgeDonorEndpointGroups||0,
    seamBridgeWeldedDonorTwins:bodyCut.seamBridgeWeldedDonorTwins||0,
