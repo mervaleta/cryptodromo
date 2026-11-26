@@ -1544,14 +1544,59 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }).filter(Boolean);
     }
     function scorePair(donor,host,step){
-     let sumSq=0,maxGap=0,count=0;
+     let sumSq=0,maxGap=0,count=0,minQuality=1,qualitySum=0,qualityCount=0;
+     const triangleQuality=points=>{
+      const u=points[1].map((v,k)=>v-points[0][k]);
+      const v=points[2].map((x,k)=>x-points[0][k]);
+      const cross=[
+       u[1]*v[2]-u[2]*v[1],
+       u[2]*v[0]-u[0]*v[2],
+       u[0]*v[1]-u[1]*v[0]
+      ];
+      const twiceArea=Math.hypot(...cross);
+      const edgeSq=distance3(points[0],points[1])**2+
+       distance3(points[1],points[2])**2+
+       distance3(points[2],points[0])**2;
+      if(!Number.isFinite(twiceArea)||twiceArea<1e-9||edgeSq<1e-18)return 0;
+      return Math.min(1,(2*Math.sqrt(3)*twiceArea)/edgeSq);
+     };
      for(let i=0;i<donorCount;i+=step){
-      const sample=sampleArc(host.arc,donor.arc.lengths[i]/donor.arc.total);
-      const gap=distance3(donor.arc.points[i],sample.point);
+      const next=(i+step)%donorCount;
+      const u0=donor.arc.lengths[i]/donor.arc.total;
+      let u1=donor.arc.lengths[next]/donor.arc.total;
+      if(next<=i)u1+=1;
+      u1-=Math.floor(u1);
+      const h0=sampleArc(host.arc,u0).point;
+      const h1=sampleArc(host.arc,u1).point;
+      const d0=donor.arc.points[i],d1=donor.arc.points[next];
+      const gap=distance3(d0,h0);
       sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);count++;
+      // A low-distance correspondence can still twist the zipper into
+      // needle triangles. Score both quad diagonals and use their better
+      // bottleneck quality when choosing the cyclic start and winding.
+      // This makes the alignment search optimize the actual bridge surface,
+      // not only the Euclidean distance between unrelated loop samples.
+      const q0=Math.min(
+       triangleQuality([d0,d1,h0]),
+       triangleQuality([d1,h1,h0])
+      );
+      const q1=Math.min(
+       triangleQuality([d0,d1,h1]),
+       triangleQuality([d0,h1,h0])
+      );
+      const quality=Math.max(q0,q1);
+      minQuality=Math.min(minQuality,quality);
+      qualitySum+=quality;qualityCount++;
      }
      const meanSq=sumSq/Math.max(1,count);
-     return {meanSq,maxGap,score:meanSq+maxGap*maxGap*.35};
+     const meanQuality=qualitySum/Math.max(1,qualityCount);
+     // Keep gap as the primary objective, but penalize an alignment whose
+     // worst sampled bridge cell is nearly degenerate. The penalty is scaled
+     // to the measured gap energy so it cannot dominate a clearly superior
+     // anatomical match merely because of one noisy sample.
+     const score=meanSq+maxGap*maxGap*.35+
+      meanSq*2.5*(1-minQuality)+meanSq*.35*(1-meanQuality);
+     return {meanSq,maxGap,minQuality,meanQuality,score};
     }
     const donorCoarseStarts=new Set();
     for(let i=0;i<donorCount;i+=donorStride)donorCoarseStarts.add(i);
