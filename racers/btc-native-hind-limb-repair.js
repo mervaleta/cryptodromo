@@ -1364,7 +1364,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const a=paths[i],b=paths[j];
       if(a.closed||b.closed||Math.min(a.ids.length,b.ids.length)>8)continue;
       const lengthA=segmentLength(a.ids),lengthB=segmentLength(b.ids);
-      if(Math.min(lengthA,lengthB)>Math.max(lengthA,lengthB)*.20)continue;
+      // Equal-length open chains can be the two complementary halves of one
+      // anatomical cut loop. Endpoint proximity, tangent continuity and a
+      // non-self-intersecting projection are the actual safety tests; a 20%
+      // length-ratio heuristic incorrectly prevented those loops from closing.
       const steps=[];
       for(const ids of [a.ids,b.ids])for(let k=1;k<ids.length;k++)
        steps.push(distance3(pointAt(position,ids[k-1]),pointAt(position,ids[k])));
@@ -1397,6 +1400,32 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      return best;
     };
     let donors=donorPaths.slice(),hosts=hostPaths.slice();
+    const mergeAllLocalOpenPairs=(paths,position)=>{
+     let current=paths.slice(),closures=0,maxGap=0;
+     while(current.length>1){
+      const merge=mergeOneLocalOpenPair(current,position);
+      if(!merge)break;
+      const gap=Math.max(merge.joinGap,merge.closeGap);
+      const joined={ids:merge.ids,closed:true,virtualClosureGap:gap,
+       virtualClosureGaps:[merge.joinGap,merge.closeGap],mergedBoundaryFragments:2};
+      current.splice(merge.j,1);
+      current.splice(merge.i,1,joined);
+      closures++;maxGap=Math.max(maxGap,gap);
+     }
+     return {paths:current,closures,maxGap};
+    };
+    // Close complementary open arcs on BOTH surfaces before matching them.
+    // Adopting only one side would manufacture a topology mismatch, so the
+    // paired closure is accepted only when donor and Maya produce the same
+    // number of local, geometrically valid loop closures.
+    const donorJoined=mergeAllLocalOpenPairs(donors,donorPos);
+    const hostJoined=mergeAllLocalOpenPairs(hosts,hostPos);
+    if(donorJoined.closures>0&&
+       donorJoined.closures===hostJoined.closures&&
+       donorJoined.paths.length===hostJoined.paths.length){
+     donors=donorJoined.paths;
+     hosts=hostJoined.paths;
+    }
     const targetCount=Math.min(donors.length,hosts.length);
     while(donors.length>targetCount){
      const merge=mergeOneLocalOpenPair(donors,donorPos);
@@ -2537,6 +2566,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
    hostRimEdgesByPlane:bodyCut.hostRimEdgesByPlane||{},donorRimEdgesByPlane:bodyCut.donorRimEdgesByPlane||{},
    seamBridgeMethod:bodyCut.seamBridgeMethod||'none',seamBridgeLoopPairs:bodyCut.seamBridgeLoopPairs||0,
+   seamBridgeOpenPaths:bodyCut.seamBridgeOpenPaths||0,
+   seamBridgeClosedLoops:bodyCut.seamBridgeClosedLoops||0,
+   seamBridgeVirtualClosures:bodyCut.seamBridgeVirtualClosures||0,
+   seamBridgeVirtualClosureMaxGap:bodyCut.seamBridgeVirtualClosureMaxGap||0,
    seamWarpFactor:bodyCut.seamWarpFactor||0,seamWarpMaxMove:bodyCut.seamWarpMaxMove||0,
    seamWarpMeanMove:bodyCut.seamWarpMeanMove||0,seamWarpMaxResidualGap:bodyCut.seamWarpMaxResidualGap||0,
    seamWarpAcceptedGroups:bodyCut.seamWarpAcceptedGroups||0,
