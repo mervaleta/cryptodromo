@@ -89,7 +89,10 @@ try{
  const posterior=baseline.heroGroom?.hindRestoration;
  console.log('BTC_V22_POSTERIOR_AUDIT',JSON.stringify(posterior));
 
- assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,'two topology-smoothing passes on the real native leg');
+ // The BTC collar now uses three real Loop passes; keep this exact geometry
+ // contract in sync with the added subdivision band rather than weakening
+ // the topology or visual gates.
+ assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,3,'three topology-smoothing passes on the real native leg');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorHindTriangles>4000,'real limb geometry must have substantially more smooth faces');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorReweightedVertices>10,'upper donor transition must follow Maya thigh during Gallop');
  assert.equal(baseline.heroGroom?.tailDockCapHalves,1,'the transverse tail-stem cut must close as one simple cap loop');
