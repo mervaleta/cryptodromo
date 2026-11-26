@@ -89,7 +89,9 @@ try{
  const posterior=baseline.heroGroom?.hindRestoration;
  console.log('BTC_V22_POSTERIOR_AUDIT',JSON.stringify(posterior));
 
- assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,'two topology-smoothing passes on the real native leg');
+ // Keep the two-pass geometry gate strict, but evaluate the candidate in
+ // actual WebGL first. A rejected subdivision-count change must still leave
+ // the 16-pose/six-camera evidence needed to decide whether to retain it.
  assert.ok(baseline.heroGroom?.hindRestoration?.donorHindTriangles>4000,'real limb geometry must have substantially more smooth faces');
  assert.ok(baseline.heroGroom?.hindRestoration?.donorReweightedVertices>10,'upper donor transition must follow Maya thigh during Gallop');
  assert.equal(baseline.heroGroom?.tailDockCapHalves,1,'the transverse tail-stem cut must close as one simple cap loop');
@@ -179,6 +181,8 @@ try{
   visualGate:'Must compare with V21 actual Hostinger images: no posterior surface shards, no open stifle, no hoof detachment. Fail visually if rear or 3Q is worse.'
  },null,2));
  console.log('BTC_V22_16_POSES_REAL_WEBGL_COMPLETE',frames.length);
+ assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,
+  'two topology-smoothing passes on the real native leg; retain the strict gate until the third pass is visually approved');
  assert.ok(posterior?.isolatedMayaPosteriorIslandsRemoved>=2,
    'two disconnected old Maya hind-foot scraps must be removed; inspect archived PNGs and BTC_V22_POSTERIOR_AUDIT');
  assert.ok(posterior?.isolatedMayaPosteriorTrianglesRemoved>=10,
