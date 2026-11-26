@@ -1255,7 +1255,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeZipperResampledLoops=0,bridgeZipperLayers=0,bridgeZipperCenterFanCells=0,
     bridgeZipperAdaptiveLoops=0,bridgeZipperAdaptiveTriangles=0,
     bridgeZipperAdaptiveSourceTriangles=0,bridgeZipperAdaptiveRejects=0,bridgeZipperAdaptiveCenterFanCells=0,
-    bridgeZipperAdaptiveCapFanTriangles=0,bridgeZipperMaxAdaptiveTriangles=0,
+    bridgeZipperAdaptiveCapFanTriangles=0,bridgeZipperAdaptiveTriangleFanCells=0,
+    bridgeZipperMaxAdaptiveTriangles=0,
     bridgeOrientationFlips=0,bridgeOrientationComponents=0;
    let seamWarpFactor=1,seamWarpMaxMove=0,seamWarpMeanMove=0,seamWarpMaxResidualGap=0;
    let seamWarpAcceptedGroups=0,seamWarpRejectedGroups=0;
@@ -2658,8 +2659,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        if(!quality||quality.quality<.015)return null;
        return {ids:triangle.ids,quality:quality.quality};
       };
-      let adaptiveCenterFanCells=0,adaptiveCapFanTriangles=0;
-      const addTriangle=(ids,fallback)=>{
+      let adaptiveCenterFanCells=0,adaptiveCapFanTriangles=0,adaptiveQuadTriangleFanCells=0;
+      const addTriangle=(ids,fallback,fanKind='cap')=>{
        const candidate=makeCandidate(ids,fallback);
        if(candidate){candidateTriangles.push(candidate);qualityValues.push(candidate.quality);return true;}
        // Subdivide a slender DP end cap into a skinned fan before rejecting
@@ -2674,12 +2675,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        ];
        if(fan.every(Boolean)){
         for(const item of fan){candidateTriangles.push(item);qualityValues.push(item.quality);}
-        adaptiveCapFanTriangles++;
+        if(fanKind==='quad')adaptiveQuadTriangleFanCells++;
+        else adaptiveCapFanTriangles++;
         return true;
        }
        bridgePositions.length=starts[0];bridgeNormals.length=starts[1];
        bridgeJoints.length=starts[2];bridgeWeights.length=starts[3];
-       adaptiveRejectReason||='end-cap fan failed;quality='+fan.map(item=>item?.quality??'degenerate').join(',')+';ids='+ids.join(',');
+       if(fanKind==='cap')adaptiveRejectReason||='end-cap fan failed;quality='+fan.map(item=>item?.quality??'degenerate').join(',')+';ids='+ids.join(',');
        return false;
       };
       const addQuad=(a0,b0,a1,b1,fallback)=>{
@@ -2700,6 +2702,52 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        // cells are healthy. Match the resampled bridge's center-fan fallback:
        // the center is skinned from the four boundary samples and every face
        // still has to meet the unchanged minimum triangle-quality threshold.
+       // If a diagonal pair contains one poor triangle, subdivide that triangle
+       // alone instead of forcing a four-face fan over the whole twisted quad.
+       // This preserves the quad boundary and lets each child meet the same .015 floor.
+       const trianglePairs=[
+        [[a0,b0,a1],[b0,b1,a1]],
+        [[a0,b0,b1],[a0,b1,a1]]
+       ];
+       let bestTrianglePair=null;
+       for(const pair of trianglePairs){
+        const starts=[bridgePositions.length,bridgeNormals.length,
+         bridgeJoints.length,bridgeWeights.length];
+        const candidateStart=candidateTriangles.length,qualityStart=qualityValues.length;
+        const fanStart=adaptiveQuadTriangleFanCells;
+        const accepted=addTriangle(pair[0],fallback,'quad')&&addTriangle(pair[1],fallback,'quad');
+        if(accepted){
+         const values=qualityValues.slice(qualityStart);
+         const minimum=Math.min(...values),average=values.reduce((sum,value)=>sum+value,0)/values.length;
+         const score=minimum+average*.02;
+         if(!bestTrianglePair||score>bestTrianglePair.score){
+          bestTrianglePair={
+           score,
+           positions:bridgePositions.slice(starts[0]),
+           normals:bridgeNormals.slice(starts[1]),
+           joints:bridgeJoints.slice(starts[2]),
+           weights:bridgeWeights.slice(starts[3]),
+           candidates:candidateTriangles.slice(candidateStart),
+           qualities:values,
+           fanCells:adaptiveQuadTriangleFanCells-fanStart
+          };
+         }
+        }
+        bridgePositions.length=starts[0];bridgeNormals.length=starts[1];
+        bridgeJoints.length=starts[2];bridgeWeights.length=starts[3];
+        candidateTriangles.length=candidateStart;qualityValues.length=qualityStart;
+        adaptiveQuadTriangleFanCells=fanStart;
+       }
+       if(bestTrianglePair){
+        bridgePositions.push(...bestTrianglePair.positions);
+        bridgeNormals.push(...bestTrianglePair.normals);
+        bridgeJoints.push(...bestTrianglePair.joints);
+        bridgeWeights.push(...bestTrianglePair.weights);
+        candidateTriangles.push(...bestTrianglePair.candidates);
+        qualityValues.push(...bestTrianglePair.qualities);
+        adaptiveQuadTriangleFanCells+=bestTrianglePair.fanCells;
+        return true;
+       }
        const starts=[bridgePositions.length,bridgeNormals.length,
         bridgeJoints.length,bridgeWeights.length];
        const center=bridgeCellCenterVertex([a0,b0,b1,a1]);
@@ -2752,6 +2800,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
         bridgeZipperAdaptiveLoops++;
         bridgeZipperAdaptiveCenterFanCells+=adaptiveCenterFanCells;
         bridgeZipperAdaptiveCapFanTriangles+=adaptiveCapFanTriangles;
+        bridgeZipperAdaptiveTriangleFanCells+=adaptiveQuadTriangleFanCells;
         bridgeZipperAdaptiveTriangles+=oriented.length;
         bridgeZipperAdaptiveSourceTriangles+=zipperPath.length;
         bridgeZipperMovesDonor+=zipperPath.filter(step=>step.move==='donor').length;
@@ -2945,6 +2994,7 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeZipperAdaptiveRejectReasons=seamBridgeZipperAdaptiveRejectReasons;
    bodyCut.seamBridgeZipperAdaptiveCenterFanCells=bridgeZipperAdaptiveCenterFanCells;
    bodyCut.seamBridgeZipperAdaptiveCapFanTriangles=bridgeZipperAdaptiveCapFanTriangles;
+   bodyCut.seamBridgeZipperAdaptiveTriangleFanCells=bridgeZipperAdaptiveTriangleFanCells;
    bodyCut.seamBridgeZipperMaxAdaptiveTriangles=bridgeZipperMaxAdaptiveTriangles;
    bodyCut.seamBridgeLayerCount=bridgeZipperLayers;
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
