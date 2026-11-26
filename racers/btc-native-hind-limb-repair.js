@@ -865,8 +865,8 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // so almost no donor vertices could be attached to the Maya rump.
    // Project the real 1.8mm strip immediately BELOW the cut rim instead;
    // keep the projection strongest on z=.0200 and fade toward the leg.
-   if(z<.0176||z>.0200+1e-7||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((.0200-z)/(.0200-.0176),0,1);
+   if(z<.0176||z>.0198+1e-7||y<.0039||Math.abs(x)<.0010)continue;
+   const u=THREE.MathUtils.clamp((.0198-z)/(.0198-.0176),0,1);
    // Attachment is strongest on the z=.0200 cut and fades into the
    // actual retained donor leg at z=.0130.
    // The old ascending smoothstep did the opposite, dragging interior
@@ -909,18 +909,11 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    triangle.set(...best.face.pts);
    THREE.Triangle.getBarycoord(best.point,...best.face.pts,bary);
    if(![bary.x,bary.y,bary.z].every(Number.isFinite))continue;
-   // Visual candidate P0: the 2026-11-14 rear-00 Chromium capture still
-   // shows sharp triangular wedges at the rump/thigh join. Reduce collar
-   // projection amplitude and cap displacement to 0.48 mm (was 0.85 mm).
-   // This changes actual skinned vertex positions, not a validator.
-   // The prior unconstrained projection could move a donor collar vertex
-   // several times its local edge length, producing stretched dark triangles
-   // in rear/3Q WebGL frames. Limit the *actual 3D displacement* instead
-   // of clipping each axis independently. This preserves the anatomical
-   // donor silhouette when the host is near but not genuinely coincident.
-   // A/B after real Chromium 43703166983 vs 43649277060: the 0.76
-   // collar pull leaves a protruding shoulder above the rear thigh.
-   // Restore most of the host projection, but retain the bounded 3D move.
+   // Visual candidate: widen the collar search while keeping the final 0.2 mm
+   // below the exact z=.0200 cut rim untouched. The previous wider projection
+   // moved donor vertices across the cut plane and split the left donor rim
+   // into three open chains before the zipper. The face-quality and live
+   // backtracking guards remain active for all interior collar vertices.
    const blend=t*.90;
       // P0 seam A/B: reduce the 0.22 mm inward projection offset to 0.08 mm.
    // The larger offset displaced the upper thigh laterally into the host
@@ -932,7 +925,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // BTC isolated geometric seam candidate: align the upper donor collar
    // more closely with the real retained Maya rump along the fore-aft axis.
    // The existing 3D displacement and face-orientation guards remain active.
-   const targetZ=THREE.MathUtils.lerp(z,best.point.z,blend*.90);
+   const targetZ=Math.min(THREE.MathUtils.lerp(z,best.point.z,blend*.90),.0198);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
    const displacement=Math.hypot(deltaX,deltaY,deltaZ);
    const twinMinEdge=Math.min(...twins.map(v=>localMinEdge[v]).filter(Number.isFinite));
