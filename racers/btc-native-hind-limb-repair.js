@@ -1234,6 +1234,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // cyclic order and creates one continuous skinned strip per flank.
    const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
    const projected=new Map(),layerProjected=new Map(),donorBase=donorPos.count;
+   const bridgeEndpointInfo=new Map();
+   let donorBoundaryInward=new Map(),hostBoundaryInward=new Map();
+   let donorRimTangentById=new Map(),hostRimTangentById=new Map();
    // Keep the host-side zipper samples as real subdivisions of the Maya
    // boundary. A separate bridge ending at points inside an unsplit host
    // edge creates a T-junction even when its coordinates and weights match.
@@ -1672,7 +1675,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    function bridgeVertex(sample){
     const t=Math.max(0,Math.min(1,sample.t));
     const key=[sample.a,sample.b,Math.round(t*1e8)].join(':');
-    if(projected.has(key))return projected.get(key);
+    const hostSourceId=sample.a===sample.b?sample.a:null;
+    if(projected.has(key)){
+     const existing=projected.get(key);
+     bridgeEndpointInfo.set(existing,{hostSourceId});
+     return existing;
+    }
     const influence=new Map();
     for(const [hostId,factor] of [[sample.a,1-t],[sample.b,t]]){
      for(let k=0;k<4;k++){
@@ -1695,6 +1703,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     projected.set(key,index);
+    bridgeEndpointInfo.set(index,{hostSourceId});
     return index;
    }
    // Recover the cross-boundary tangent from the actual adjacent source
@@ -2004,8 +2013,21 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(cache.has(key))return cache.get(key);
     const donorPoint=positionFor(donorId),hostPoint=positionFor(hostId);
     const donorNormal=normalFor(donorId),hostNormal=normalFor(hostId);
-    const {point,outward}=tangentHermiteBridgePoint(
-     donorPoint,hostPoint,donorNormal,hostNormal,t);
+    const hostSourceId=bridgeEndpointInfo.get(hostId)?.hostSourceId;
+    const donorSurface=donorBoundaryInward.get(seamKey(donorPos,donorId))||null;
+    const hostSurface=Number.isInteger(hostSourceId)?
+     hostBoundaryInward.get(seamKey(hostPos,hostSourceId))||null:null;
+    const bridge=tangentHermiteBridgePoint(
+     donorPoint,hostPoint,donorNormal,hostNormal,t,
+     donorRimTangentById.get(donorId)||null,
+     Number.isInteger(hostSourceId)?hostRimTangentById.get(hostSourceId)||null:null,
+     donorSurface,hostSurface);
+    const {point,outward}=bridge;
+    if(!bridge.usedSurfaceTangents)seamBridgeSurfaceTangentFallbacks++;
+    else{
+     seamBridgeTangentReachSum+=bridge.reach0+bridge.reach1;
+     seamBridgeTangentReachCount+=2;
+    }
     const influence=new Map();
     for(const [id,factor] of [[donorId,1-t],[hostId,t]]){
      const offset=(id-donorBase)*4;
@@ -2371,6 +2393,35 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      bridgeGapCount+=donor.length;
     }
      const m=donor.length,n=host.length;
+      const donorRimTangents=donor.map((id,i)=>{
+       const previous=alignment.closed?donor[(i-1+m)%m]:donor[Math.max(0,i-1)];
+       const next=alignment.closed?donor[(i+1)%m]:donor[Math.min(m-1,i+1)];
+       const a=pointAt(donorPos,previous),b=pointAt(donorPos,next);
+       return b.map((v,k)=>v-a[k]);
+      });
+      const hostPathRimTangents=host.map((id,i)=>{
+       const previous=alignment.closed?host[(i-1+n)%n]:host[Math.max(0,i-1)];
+       const next=alignment.closed?host[(i+1)%n]:host[Math.min(n-1,i+1)];
+       const a=pointAt(hostPos,previous),b=pointAt(hostPos,next);
+       return b.map((v,k)=>v-a[k]);
+      });
+      const hostRimTangents=alignment.samples.map(sample=>{
+       const a=pointAt(hostPos,sample.a),b=pointAt(hostPos,sample.b);
+       return b.map((v,k)=>v-a[k]);
+      });
+      donorBoundaryInward=boundaryInteriorMap(donorRimEdges,di,donorPos);
+      hostBoundaryInward=boundaryInteriorMap(hostRim,hostIndex,hostPos);
+      const donorSurfaceInwards=donor.map(id=>
+       donorBoundaryInward.get(seamKey(donorPos,id))||null);
+      const hostSurfaceInwards=alignment.samples.map(sample=>{
+       const a=hostBoundaryInward.get(seamKey(hostPos,sample.a));
+       const b=hostBoundaryInward.get(seamKey(hostPos,sample.b));
+       if(!a||!b)return null;
+       const t=Math.max(0,Math.min(1,sample.t));
+       return {vector:a.vector.map((v,k)=>v*(1-t)+b.vector[k]*t)};
+      });
+      donorRimTangentById=new Map(donor.map((id,i)=>[id,donorRimTangents[i]]));
+      hostRimTangentById=new Map(host.map((id,i)=>[id,hostPathRimTangents[i]]));
      const donorArc=arcTable(donor,donorPos,alignment.closed),
       hostArc=arcTable(host,hostPos,alignment.closed);
      const donorSteps=alignment.closed?m:m-1;
@@ -2556,29 +2607,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const projectedBefore=new Set(projected.keys());
       const layerProjectedBefore=new Set(layerProjected.keys());
       const projectedIds=alignment.samples.map(bridgeVertex);
-      const donorRimTangents=donor.map((id,i)=>{
-       const count=donor.length;
-       const previous=alignment.closed?donor[(i-1+count)%count]:donor[Math.max(0,i-1)];
-       const next=alignment.closed?donor[(i+1)%count]:donor[Math.min(count-1,i+1)];
-       const a=pointAt(donorPos,previous),b=pointAt(donorPos,next);
-       return b.map((v,k)=>v-a[k]);
-      });
-      const hostRimTangents=alignment.samples.map(sample=>{
-       const a=pointAt(hostPos,sample.a),b=pointAt(hostPos,sample.b);
-       return b.map((v,k)=>v-a[k]);
-      });
-      const donorBoundaryInward=boundaryInteriorMap(donorRimEdges,di,donorPos);
-      const hostBoundaryInward=boundaryInteriorMap(hostRim,hostIndex,hostPos);
-      const donorSurfaceInwards=donor.map(id=>
-       donorBoundaryInward.get(seamKey(donorPos,id))||null);
-      const hostSurfaceInwards=alignment.samples.map(sample=>{
-       const a=hostBoundaryInward.get(seamKey(hostPos,sample.a));
-       const b=hostBoundaryInward.get(seamKey(hostPos,sample.b));
-       if(!a||!b)return null;
-       const t=Math.max(0,Math.min(1,sample.t));
-       return {vector:a.vector.map((v,k)=>v*(1-t)+b.vector[k]*t)};
-      });
-      const fractions=[.2,.4,.6,.8];
+const fractions=[.2,.4,.6,.8];
       const rows=[donor];
       for(const fraction of fractions)
        rows.push(donor.map((id,i)=>bridgeLayerVertex(id,alignment.samples[i],fraction,
