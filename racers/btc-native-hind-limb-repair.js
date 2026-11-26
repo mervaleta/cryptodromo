@@ -741,7 +741,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
   // Results are visibly rounded geometry, not a lighting-only cosmetic.
-  const refined=refineSkinnedDonor(bodyCut.geometry,2);
+  const refined=refineSkinnedDonor(bodyCut.geometry,1);
   bodyCut.geometry.dispose();
   bodyCut.geometry=refined.geometry;
   bodyCut.sourceTriangles=refined.sourceTriangles;
@@ -1431,7 +1431,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      while(current.length>1){
       const merge=mergeOneLocalOpenPair(current,position);
       if(!merge)break;
-      // Candidate pairing is diagnostic only; physical closure is applied after path-count selection.
+      recordVirtualClosure(merge,position,surface);
       const gap=Math.max(merge.joinGap,merge.closeGap);
       const joined={ids:merge.ids,closed:true,virtualClosureGap:gap,
        virtualClosureGaps:[merge.joinGap,merge.closeGap],mergedBoundaryFragments:2};
@@ -1457,97 +1457,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     while(donors.length>targetCount){
      const merge=mergeOneLocalOpenPair(donors,donorPos);
      if(!merge)break;
-     // The donor arcs are physically open. A virtual chord creates an
-     // unmatched boundary edge in the final bridge. Weld both endpoint
-     // pairs in rest geometry, then zipper the resulting real closed loop.
-     const endpointPairs=[
-      [merge.aIds.at(-1),merge.bIds[0]],
-      [merge.bIds.at(-1),merge.aIds[0]]
-     ];
-     const twinsByPosition=new Map();
-     for(let id=0;id<donorPos.count;id++){
-      const key=seamKey(donorPos,id),bucket=twinsByPosition.get(key)||[];
-      bucket.push(id);twinsByPosition.set(key,bucket);
-     }
-     const pairGroups=endpointPairs.map(([a,b])=>{
-      const keyA=seamKey(donorPos,a),keyB=seamKey(donorPos,b);
-      if(keyA===keyB)throw Error('BTC donor endpoint weld pair is already coincident');
-      const twinsA=twinsByPosition.get(keyA)||[a];
-      const twinsB=twinsByPosition.get(keyB)||[b];
-      return {a,b,pa:pointAt(donorPos,a),pb:pointAt(donorPos,b),
-       twins:[...new Set([...twinsA,...twinsB])]};
-     });
-     const endpointIds=new Set();
-     for(const pair of pairGroups)for(const id of pair.twins){
-      if(endpointIds.has(id))throw Error('BTC donor endpoint weld groups overlap');
-      endpointIds.add(id);
-     }
-     const faceNormal=(a,b,c)=>{
-      const u=b.map((value,k)=>value-a[k]),v=c.map((value,k)=>value-a[k]);
-      return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
-     };
-     const relevantFaces=[];
-     for(let j=0;j<di.count;j+=3){
-      const ids=[di.getX(j),di.getX(j+1),di.getX(j+2)];
-      if(!ids.some(id=>endpointIds.has(id)))continue;
-      const before=ids.map(id=>pointAt(donorPos,id)),normal=faceNormal(...before);
-      const length=Math.hypot(...normal);
-      if(length<1e-12)throw Error('BTC donor endpoint weld found degenerate source face '+(j/3));
-      relevantFaces.push({face:j/3,ids,before,normal,length});
-     }
-     const fractions=[0,.125,.25,.375,.5,.625,.75,.875,1];
-     let bestWeld=null,bestFailure=null;
-     for(const t0 of fractions)for(const t1 of fractions){
-      const ts=[t0,t1],moves=new Map(),reports=[];
-      let cost=0;
-      for(let p=0;p<pairGroups.length;p++){
-       const pair=pairGroups[p],t=ts[p];
-       const point=pair.pa.map((value,k)=>value*(1-t)+pair.pb[k]*t);
-       for(const id of pair.twins){
-        moves.set(id,point);
-        const old=pointAt(donorPos,id);
-        cost+=(old[0]-point[0])**2+(old[1]-point[1])**2+(old[2]-point[2])**2;
-       }
-       reports.push({endpointIds:[pair.a,pair.b],gap:distance3(pair.pa,pair.pb),
-        weldFraction:t,weldedVertices:pair.twins.length,position:point});
-      }
-      let safe=true,failure=null,minAreaRatio=Infinity;
-      for(const face of relevantFaces){
-       const after=face.ids.map(id=>moves.get(id)||pointAt(donorPos,id));
-       const normal=faceNormal(...after),length=Math.hypot(...normal);
-       const ratio=length/face.length;
-       const alignment=face.normal.reduce((sum,value,k)=>sum+value*normal[k],0)/
-        Math.max(face.length*length,1e-24);
-       minAreaRatio=Math.min(minAreaRatio,ratio);
-       if(length<face.length*.20||alignment<=0){
-        safe=false;failure={face:face.face,vertexIds:face.ids,
-         areaRatio:ratio,normalAlignment:alignment};break;
-       }
-      }
-      if(!safe){bestFailure=failure;continue;}
-      if(!bestWeld||cost<bestWeld.cost)
-       bestWeld={moves,reports,cost,minAreaRatio};
-     }
-     if(!bestWeld)
-      throw Error('BTC donor endpoint weld has no face-safe placement; best failure '+JSON.stringify(bestFailure));
-     const weldMoves=bestWeld.moves,weldReports=bestWeld.reports;
-     for(const [id,point] of weldMoves)donorPos.setXYZ(id,...point);
-     donorPos.needsUpdate=true;
-     const closedIds=[];
-     for(const id of merge.ids){
-      const key=seamKey(donorPos,id);
-      if(!closedIds.length||seamKey(donorPos,closedIds.at(-1))!==key)
-       closedIds.push(id);
-     }
-     if(closedIds.length>2&&
-        seamKey(donorPos,closedIds[0])===seamKey(donorPos,closedIds.at(-1)))
-      closedIds.pop();
-     if(closedIds.length<3)
-      throw Error('BTC donor endpoint weld collapsed the closed rim path');
-     seamBoundaryEndpointWeldDiagnostics.push({
-      plane,side,joinGap:merge.joinGap,closeGap:merge.closeGap,pairs:weldReports
-     });
-     const path={ids:closedIds,closed:true,physicalEndpointWelds:2,
+     recordVirtualClosure(merge,donorPos,'donor');
+     const path={ids:merge.ids,closed:true,
+      virtualClosureGap:Math.max(merge.joinGap,merge.closeGap),
+      virtualClosureGaps:[merge.joinGap,merge.closeGap],
       mergedBoundaryFragments:2};
      donors.splice(merge.j,1);
      donors.splice(merge.i,1,path);
@@ -2385,7 +2298,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const planes=['z','y','x-','x+'];
    const seamBoundaryClosureDiagnostics=[];
-    const seamBoundaryEndpointWeldDiagnostics=[];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
     seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
     seamBridgeTangentDirectionFlips=0,seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
@@ -3103,7 +3015,6 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeVirtualClosures=seamVirtualClosures;
    bodyCut.seamBridgeVirtualClosureMaxGap=seamVirtualClosureMaxGap;
    bodyCut.seamBridgeVirtualClosureDiagnostics=seamBoundaryClosureDiagnostics;
-    bodyCut.seamBridgeEndpointWeldDiagnostics=seamBoundaryEndpointWeldDiagnostics;
    bodyCut.seamBridgeSurfaceTangentFallbacks=seamBridgeSurfaceTangentFallbacks;
    bodyCut.seamBridgeTangentDirectionFlips=seamBridgeTangentDirectionFlips;
    bodyCut.seamBridgeMeanTangentReach=seamBridgeTangentReachCount?
@@ -3876,7 +3787,6 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeVirtualClosures:bodyCut.seamBridgeVirtualClosures||0,
    seamBridgeVirtualClosureMaxGap:bodyCut.seamBridgeVirtualClosureMaxGap||0,
     seamBridgeVirtualClosureDiagnostics:bodyCut.seamBridgeVirtualClosureDiagnostics||[],
-     seamBridgeEndpointWeldDiagnostics:bodyCut.seamBridgeEndpointWeldDiagnostics||[],
    seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
    seamBridgeTangentDirectionFlips:bodyCut.seamBridgeTangentDirectionFlips||0,
    seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
