@@ -2150,14 +2150,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          zipperTriangleQuality(triangle,scale,0).quality));
        }
       }
-      if(valid&&triangles.length===donorSteps*fractions.length*2){
+      if(valid&&triangles.length===donorSteps*(rows.length-1)*2){
        const oriented=orientBridgeStrip(triangles);
        bridgeIndices.length=indexStart;
        for(const triangle of oriented)bridgeIndices.push(...triangle);
        const minQuality=Math.min(...qualityValues);
        bridgeZipperResampledLoops++;
-       bridgeZipperMovesDonor+=donorSteps*fractions.length;
-       bridgeZipperMovesHost+=donorSteps*fractions.length;
+       bridgeZipperMovesDonor+=donorSteps*(rows.length-1);
+       bridgeZipperMovesHost+=donorSteps*(rows.length-1);
        bridgeZipperQualitySum+=qualityValues.reduce((sum,value)=>sum+value,0);
        bridgeZipperQualityCount+=qualityValues.length;
        bridgeZipperMinQuality=Math.min(bridgeZipperMinQuality,minQuality);
