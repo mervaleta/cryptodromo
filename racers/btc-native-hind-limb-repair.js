@@ -1232,6 +1232,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // cyclic order and creates one continuous skinned strip per flank.
    const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
    const projected=new Map(),layerProjected=new Map(),donorBase=donorPos.count;
+   // Keep the host-side zipper samples as real subdivisions of the Maya
+   // boundary. A separate bridge ending at points inside an unsplit host
+   // edge creates a T-junction even when its coordinates and weights match.
+   // The host edge must use the exact same interpolated points as the strip.
+   const hostBoundarySplitSamples=new Map();
    const hostNormal=hostGeo.getAttribute('normal'),donorNormal=donorGeo.getAttribute('normal');
    let bridgeMaxGap=0,bridgeGapTotal=0,bridgeGapCount=0,bridgeEdges=0,
     bridgeUnmatchedVertices=0,bridgeUnmatchedEdges=0,bridgeSingleTriangleEdges=0,
@@ -1685,6 +1690,119 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     layerProjected.set(key,index);
     return index;
    }
+   function splitHostBoundaryEdges(samplesByEdge){
+    const index=hostGeo.getIndex();
+    if(!index)throw Error('BTC seam host subdivision requires indexed Maya geometry');
+    const entries=Object.entries(hostGeo.attributes);
+    const originals=new Map(entries.map(([name,attr])=>[name,Array.from(attr.array)]));
+    const arrays=new Map(entries.map(([name,attr])=>[name,Array.from(attr.array)]));
+    const skinIndex=hostGeo.getAttribute('skinIndex');
+    const skinWeight=hostGeo.getAttribute('skinWeight');
+    if(!skinIndex||!skinWeight||skinIndex.itemSize!==4||skinWeight.itemSize!==4)
+     throw Error('BTC seam host subdivision lost four-weight skin attributes');
+    const vertexStart=hostPos.count,vertexCache=new Map();
+    const appendVertex=(ids,factors,cacheKey)=>{
+     if(cacheKey&&vertexCache.has(cacheKey))return vertexCache.get(cacheKey);
+     const influence=new Map();
+     for(let i=0;i<ids.length;i++)for(let k=0;k<4;k++){
+      const joint=skinIndex.array[ids[i]*4+k];
+      const weight=skinWeight.array[ids[i]*4+k]*factors[i];
+      if(weight>1e-9)influence.set(joint,(influence.get(joint)||0)+weight);
+     }
+     const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
+     const total=top.reduce((sum,item)=>sum+item[1],0)||1;
+     for(const [name,attr] of entries){
+      const target=arrays.get(name),size=attr.itemSize;
+      if(name==='skinIndex'){
+       for(let k=0;k<4;k++)target.push(top[k]?.[0]||0);
+      }else if(name==='skinWeight'){
+       for(let k=0;k<4;k++)target.push((top[k]?.[1]||0)/total);
+      }else{
+       const values=[];
+       for(let c=0;c<size;c++){
+        let value=0;
+        for(let i=0;i<ids.length;i++)
+         value+=originals.get(name)[ids[i]*size+c]*factors[i];
+        values.push(value);
+       }
+       if(name==='normal'&&size>=3){
+        const length=Math.hypot(values[0],values[1],values[2])||1;
+        values[0]/=length;values[1]/=length;values[2]/=length;
+       }
+       const integer=!(attr.array instanceof Float32Array)&&!(attr.array instanceof Float64Array);
+       for(const value of values)target.push(integer?Math.round(value):value);
+      }
+     }
+     const id=vertexStart+(arrays.get('position').length/hostGeo.getAttribute('position').itemSize-vertexStart);
+     if(cacheKey)vertexCache.set(cacheKey,id);
+     return id;
+    };
+    const splitLists=new Map();
+    for(const [key,values] of samplesByEdge){
+     const sorted=values.slice().sort((a,b)=>a-b),unique=[];
+     for(const t of sorted)if(t>1e-5&&t<1-1e-5&&
+       (!unique.length||Math.abs(t-unique[unique.length-1])>1e-6))unique.push(t);
+     if(unique.length)splitLists.set(key,unique);
+    }
+    const originalGroups=hostGeo.groups.length?hostGeo.groups.slice():
+     [{start:0,count:index.count,materialIndex:0}];
+    const nextIndices=[],nextGroups=[],seenEdges=new Set();
+    for(const group of originalGroups){
+     const start=nextIndices.length;
+     for(let offset=group.start;offset<group.start+group.count;offset+=3){
+      if(offset+2>=index.count)throw Error('BTC seam host subdivision found a partial triangle');
+      const ids=[index.getX(offset),index.getX(offset+1),index.getX(offset+2)];
+      const polygon=[],faceSplits=[];
+      for(let edge=0;edge<3;edge++){
+       const a=ids[edge],b=ids[(edge+1)%3];
+       polygon.push(a);
+       const ka=seamKey(hostPos,a),kb=seamKey(hostPos,b);
+       if(ka===kb)continue;
+       const key=ka<kb?ka+'|'+kb:kb+'|'+ka;
+       const values=splitLists.get(key);
+       if(!values?.length)continue;
+       seenEdges.add(key);faceSplits.push(key);
+       const forward=ka<kb;
+       const ordered=forward?values:values.slice().reverse();
+       for(const canonicalT of ordered){
+        const t=forward?canonicalT:1-canonicalT;
+        const fromLowId=a<b?t:1-t;
+        const cacheKey=[Math.min(a,b),Math.max(a,b),Math.round(fromLowId*1e8)].join(':');
+        polygon.push(appendVertex([a,b],[1-t,t],cacheKey));
+       }
+      }
+      if(!faceSplits.length){nextIndices.push(...ids);continue;}
+      // A center fan handles one, two or three subdivided edges without
+      // changing the original triangle's planar footprint or winding.
+      const center=appendVertex(ids,[1/3,1/3,1/3],'face:'+offset+':'+group.materialIndex);
+      for(let i=0;i<polygon.length;i++)
+       nextIndices.push(center,polygon[i],polygon[(i+1)%polygon.length]);
+     }
+     if(nextIndices.length>start)
+      nextGroups.push({start,count:nextIndices.length-start,materialIndex:group.materialIndex});
+    }
+    let missing=0;
+    for(const key of splitLists.keys())if(!seenEdges.has(key))missing++;
+    if(missing)throw Error('BTC seam host subdivision could not resolve '+missing+' sampled Maya rim edges');
+    const vertexCount=arrays.get('position').length/hostGeo.getAttribute('position').itemSize;
+    for(const [name,attr] of entries){
+     const C=attr.array.constructor;
+     const replacement=new THREE.BufferAttribute(new C(arrays.get(name)),attr.itemSize,attr.normalized);
+     if(attr.usage!==undefined)replacement.setUsage(attr.usage);
+     hostGeo.setAttribute(name,replacement);
+    }
+    const IndexArray=vertexCount>65535?Uint32Array:Uint16Array;
+    hostGeo.setIndex(new THREE.BufferAttribute(new IndexArray(nextIndices),1));
+    hostGeo.clearGroups();
+    for(const group of nextGroups)hostGeo.addGroup(group.start,group.count,group.materialIndex);
+    hostGeo.setDrawRange(0,nextIndices.length);
+    hostGeo.computeBoundingBox();hostGeo.computeBoundingSphere();
+    return {points:vertexCount-vertexStart,edges:seenEdges.size,missing};
+   }
+   const hostBoundarySplit=splitHostBoundaryEdges(hostBoundarySplitSamples);
+   bodyCut.seamHostBoundarySplitPoints=hostBoundarySplit.points;
+   bodyCut.seamHostBoundarySplitEdges=hostBoundarySplit.edges;
+   bodyCut.seamHostBoundarySplitMissing=hostBoundarySplit.missing;
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
     bridgePositions.slice((id-donorBase)*3,(id-donorBase)*3+3);
    const normalFor=id=>id<donorBase?
@@ -1841,6 +1959,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       seamVirtualClosureMaxGap=Math.max(seamVirtualClosureMaxGap,path.virtualClosureGap);
      }
      const donor=alignment.donor,host=alignment.host;
+     for(const sample of alignment.samples){
+      const ka=seamKey(hostPos,sample.a),kb=seamKey(hostPos,sample.b);
+      if(ka===kb||sample.t<=1e-5||sample.t>=1-1e-5)continue;
+      const forward=ka<kb,key=forward?ka+'|'+kb:kb+'|'+ka;
+      const t=forward?sample.t:1-sample.t;
+      const list=hostBoundarySplitSamples.get(key)||[];
+      list.push(t);hostBoundarySplitSamples.set(key,list);
+     }
     // Rebuild physical UV/material twins after the earlier guarded rim snap;
     // donorBoundary.byPosition keys still describe the pre-snap coordinates.
     const currentDonorGroups=new Map();
@@ -2625,6 +2751,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    cutTriangles:crop.cutTriangles,addedCutVertices:crop.addedCutVertices,
    seamMethod:crop.seamMethod,donorUpperInsetVertices:bodyCut.insetVertices,
    sewnRimVertices:bodyCut.sewnRimVertices||0,hostRimEdges:bodyCut.hostRimEdges||0,donorRimVertices:bodyCut.donorRimVertices||0,
+   seamHostBoundarySplitPoints:bodyCut.seamHostBoundarySplitPoints||0,
+   seamHostBoundarySplitEdges:bodyCut.seamHostBoundarySplitEdges||0,
+   seamHostBoundarySplitMissing:bodyCut.seamHostBoundarySplitMissing||0,
    hostRimEdgesByPlane:bodyCut.hostRimEdgesByPlane||{},donorRimEdgesByPlane:bodyCut.donorRimEdgesByPlane||{},
    seamBridgeMethod:bodyCut.seamBridgeMethod||'none',seamBridgeLoopPairs:bodyCut.seamBridgeLoopPairs||0,
    seamBridgeOpenPaths:bodyCut.seamBridgeOpenPaths||0,
