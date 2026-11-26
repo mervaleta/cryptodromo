@@ -1642,7 +1642,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     return index;
    }
    function bridgeLayerVertex(donorId,sample,fraction){
-    const key=[donorId,Math.round(fraction*1e8)].join(':');
+    const key=[donorId,sample.a,sample.b,Math.round(sample.t*1e8),Math.round(fraction*1e8)].join(':');
     if(layerProjected.has(key))return layerProjected.get(key);
     const donorPoint=pointAt(donorPos,donorId),hostPoint=sample.point;
     const donorN=donorNormal?[0,1,2].map(k=>donorNormal.getComponent(donorId,k)):[0,1,0];
