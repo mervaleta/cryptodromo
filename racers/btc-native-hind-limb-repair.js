@@ -1850,49 +1850,90 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       for(const id of ids){warp[id]=delta.slice();moved[id]=1;}
      }
      const base=Array.from({length:donorPos.count},(_,id)=>pointAt(donorPos,id));
-     const faces=[];
-     for(let j=0;j<di.count;j+=3)
-      faces.push([di.getX(j),di.getX(j+1),di.getX(j+2)]);
+     const positions=base.map(point=>point.slice());
+     const faces=[],incident=Array.from({length:donorPos.count},()=>[]);
+     for(let j=0;j<di.count;j+=3){
+      const face=[di.getX(j),di.getX(j+1),di.getX(j+2)];
+      const faceIndex=faces.length;
+      faces.push(face);
+      for(const id of face)incident[id].push(faceIndex);
+     }
      const normalOf=(a,b,c)=>{
       const u=b.map((v,k)=>v-a[k]),v=c.map((x,k)=>x-a[k]);
       return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
      };
      const edgeSquares=points=>[0,1,2].map(k=>
       points[k].reduce((sum,v,d)=>sum+(v-points[(k+1)%3][d])**2,0));
-     let accepted=0;
-     for(const factor of [1,.75,.5,.375,.25,.125,.0625]){
-      let safe=true;
-      for(const face of faces){
-       if(!face.some(id=>moved[id]))continue;
-       const before=face.map(id=>base[id]);
-       const after=face.map(id=>base[id].map((v,k)=>v+warp[id][k]*factor));
-       const n0=normalOf(...before),n1=normalOf(...after);
-       const oldSq=n0.reduce((sum,v)=>sum+v*v,0);
-       const newSq=n1.reduce((sum,v)=>sum+v*v,0);
-       if(oldSq<1e-24||newSq<oldSq*.20||
-          n0.reduce((sum,v,k)=>sum+v*n1[k],0)<=0){safe=false;break;}
-       const oldEdges=edgeSquares(before),newEdges=edgeSquares(after);
-       const oldMin=Math.min(...oldEdges),newMin=Math.min(...newEdges);
-       const oldAspect=oldMin/Math.max(...oldEdges,1e-24);
-       const newAspect=newMin/Math.max(...newEdges,1e-24);
-       if(newMin<oldMin*.20||newAspect<oldAspect/4){safe=false;break;}
+     // The old global line search let ONE difficult triangle clamp the entire
+     // 24 mm collar to 1/16 displacement. Move welded UV twins locally instead:
+     // each group backtracks against its live incident faces and the original
+     // sculpt, so safe regions can meet the Maya contour without folding a
+     // distant face elsewhere on the rump.
+     const groups=[];
+     let requestedMove=0,acceptedMove=0,acceptedGroups=0,rejectedGroups=0;
+     for(const [key,ids] of currentDonorGroups){
+      const representative=ids[0];
+      if(!moved[representative])continue;
+      const requested=Math.hypot(...warp[representative]);
+      if(requested<=1e-10)continue;
+      groups.push({key,ids,representative,requested});
+      requestedMove+=requested;
+     }
+     // Interior, low-displacement vertices move first. The cut rim moves last,
+     // after its supporting collar has already absorbed the deformation.
+     groups.sort((a,b)=>a.requested-b.requested||a.representative-b.representative);
+     let totalMove=0;
+     for(const group of groups){
+      const {ids,representative,requested}=group;
+      const twinSet=new Set(ids),affectedSet=new Set();
+      for(const id of ids)for(const faceIndex of incident[id])affectedSet.add(faceIndex);
+      const affected=[...affectedSet].map(faceIndex=>faces[faceIndex]);
+      let accepted=null,acceptedFactor=0;
+      for(const factor of [1,.75,.5,.375,.25,.125,.0625,.03125]){
+       const delta=warp[representative].map(value=>value*factor);
+       const nextById=new Map(ids.map(id=>[
+        id,positions[id].map((value,k)=>value+delta[k])
+       ]));
+       let safe=true;
+       for(const face of affected){
+        const before=face.map(id=>positions[id]);
+        const after=face.map(id=>nextById.get(id)||positions[id]);
+        const reference=face.map(id=>base[id]);
+        const n0=normalOf(...before),n1=normalOf(...after),nr=normalOf(...reference);
+        const oldSq=n0.reduce((sum,value)=>sum+value*value,0);
+        const newSq=n1.reduce((sum,value)=>sum+value*value,0);
+        const refSq=nr.reduce((sum,value)=>sum+value*value,0);
+        if(oldSq<1e-24||refSq<1e-24||newSq<oldSq*.20||
+           newSq<refSq*.36||nr.reduce((sum,value,k)=>sum+value*n1[k],0)<=0||
+           n0.reduce((sum,value,k)=>sum+value*n1[k],0)<=0){
+         safe=false;break;
+        }
+        const oldEdges=edgeSquares(before),newEdges=edgeSquares(after),
+         refEdges=edgeSquares(reference);
+        const oldMin=Math.min(...oldEdges),newMin=Math.min(...newEdges),
+         refMin=Math.min(...refEdges);
+        const oldAspect=oldMin/Math.max(...oldEdges,1e-24),
+         newAspect=newMin/Math.max(...newEdges,1e-24),
+         refAspect=refMin/Math.max(...refEdges,1e-24);
+        if(newMin<oldMin*.20||newMin<refMin*.25||
+           newAspect<oldAspect/3||newAspect<refAspect/3){
+         safe=false;break;
+        }
+       }
+       if(safe){accepted=nextById;acceptedFactor=factor;break;}
       }
-      if(safe){accepted=factor;break;}
+      if(!accepted){rejectedGroups++;continue;}
+      const applied=requested*acceptedFactor;
+      acceptedMove+=applied;totalMove+=applied;acceptedGroups++;
+      seamWarpMaxMove=Math.max(seamWarpMaxMove,applied);
+      for(const [id,next] of accepted){
+       positions[id]=next;
+       donorPos.setXYZ(id,...next);
+      }
      }
-     if(!accepted)
-      throw Error('BTC seam conform warp would invert or collapse donor collar topology');
-     let movedCount=0,totalMove=0;
-     for(let id=0;id<donorPos.count;id++)if(moved[id]){
-      const delta=warp[id].map(v=>v*accepted);
-      const next=base[id].map((v,k)=>v+delta[k]);
-      donorPos.setXYZ(id,...next);
-      const amount=Math.hypot(...delta);
-      seamWarpMaxMove=Math.max(seamWarpMaxMove,amount);
-      totalMove+=amount;movedCount++;
-     }
-     seamWarpFactor=Math.min(seamWarpFactor,accepted);
-     seamWarpMeanMove=movedCount?totalMove/movedCount:0;
-     donorPos.needsUpdate=true;
+     seamWarpFactor=Math.min(seamWarpFactor,
+      requestedMove>1e-10?acceptedMove/requestedMove:0);
+     seamWarpMeanMove=acceptedGroups?totalMove/acceptedGroups:0;
      donorGeo.computeVertexNormals();
      let gapTotal=0,gapMax=0;
      for(let i=0;i<donor.length;i++){
@@ -1930,17 +1971,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        const base=costs[i][j];
        if(!Number.isFinite(base)||(i===donorSteps&&j===hostSteps))continue;
        const d0=donor[i%m],h0=hostIds[j%n];
-       const commit=(ni,nj,triangles,move,qualities)=>{
-        const bottleneck=Math.min(minimums[i][j],...qualities.map(q=>q.quality));
-        const next=base+qualities.reduce((sum,q)=>sum+q.cost,0);
-        if(bottleneck>minimums[ni][nj]+1e-9||
-           (Math.abs(bottleneck-minimums[ni][nj])<=1e-9&&next<costs[ni][nj])){
-         minimums[ni][nj]=bottleneck;
-         costs[ni][nj]=next;
-         previous[ni][nj]={i,j,triangles:triangles.map(tri=>tri.ids),
-          move,qualities:qualities.map(q=>q.quality)};
-        }
-       };
        if(i<donorSteps){
         const d1=donor[(i+1)%m];
         const tri=bridgeTriangle([d0,d1,h0],
@@ -1949,7 +1979,16 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          const td=donorArc.lengths[i+1]/donorArc.total;
          const th=hostArc.lengths[j]/hostArc.total;
          const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
-         if(q)commit(i+1,j,[tri],'donor',[q]);
+         if(q){
+          const next=base+q.cost;
+          const bottleneck=Math.min(minimums[i][j],q.quality);
+          if(bottleneck>minimums[i+1][j]+1e-9||
+             (Math.abs(bottleneck-minimums[i+1][j])<=1e-9&&next<costs[i+1][j])){
+           minimums[i+1][j]=bottleneck;
+           costs[i+1][j]=next;
+           previous[i+1][j]={i,j,tri,move:'donor',quality:q.quality};
+          }
+         }
         }
        }
        if(j<hostSteps){
@@ -1960,53 +1999,27 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          const td=donorArc.lengths[i]/donorArc.total;
          const th=hostArc.lengths[j+1]/hostArc.total;
          const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
-         if(q)commit(i,j+1,[tri],'host',[q]);
+         if(q){
+          const next=base+q.cost;
+          const bottleneck=Math.min(minimums[i][j],q.quality);
+          if(bottleneck>minimums[i][j+1]+1e-9||
+             (Math.abs(bottleneck-minimums[i][j+1])<=1e-9&&next<costs[i][j+1])){
+           minimums[i][j+1]=bottleneck;
+           costs[i][j+1]=next;
+           previous[i][j+1]={i,j,tri,move:'host',quality:q.quality};
+          }
+         }
         }
        }
-       // A paired move advances one edge on BOTH boundaries and triangulates
-       // the resulting quad. The previous DP could only advance one rim at a
-       // time, which forced skinny one-sided wedges where donor and host
-       // sampling densities diverged. Test both diagonals and retain the pair
-       // with the strongest minimum face quality.
-       if(i<donorSteps&&j<hostSteps){
-        const d1=donor[(i+1)%m],h1=hostIds[(j+1)%n];
-        const donorFallback=[0,1,2].map(k=>normalFor(d0)[k]+normalFor(d1)[k]);
-        const hostFallback=[0,1,2].map(k=>normalFor(h0)[k]+normalFor(h1)[k]);
-        const candidates=[
-         [bridgeTriangle([d0,d1,h0],donorFallback),
-          bridgeTriangle([d1,h1,h0],hostFallback)],
-         [bridgeTriangle([d0,d1,h1],donorFallback),
-          bridgeTriangle([d0,h1,h0],hostFallback)]
-        ].filter(pair=>pair.every(Boolean)).map(pair=>{
-         const td=donorArc.lengths[i+1]/donorArc.total;
-         const th=hostArc.lengths[j+1]/hostArc.total;
-         const error=Math.abs(td-th);
-         const quality=pair.map(tri=>zipperTriangleQuality(tri,scale,error));
-         if(quality.some(value=>!value))return null;
-         return {pair,min:Math.min(...quality.map(value=>value.quality)),
-          sum:quality.reduce((total,value)=>total+value.quality,0)};
-        }).filter(Boolean).sort((left,right)=>
-         right.min-left.min||right.sum-left.sum);
-        if(candidates.length){
-         const best=candidates[0];
-         commit(i+1,j+1,best.pair,'both',
-          best.pair.map((_,k)=>({quality:best.pair[k]&&
-           zipperTriangleQuality(best.pair[k],scale,
-            Math.abs(donorArc.lengths[i+1]/donorArc.total-
-             hostArc.lengths[j+1]/hostArc.total)).quality,
-           cost:zipperTriangleQuality(best.pair[k],scale,
-            Math.abs(donorArc.lengths[i+1]/donorArc.total-
-             hostArc.lengths[j+1]/hostArc.total)).cost})));
-        }
-       }
-      }      if(Number.isFinite(costs[donorSteps][hostSteps])){
+      }
+      if(Number.isFinite(costs[donorSteps][hostSteps])){
        const path=[];let i=donorSteps,j=hostSteps;
        while(i||j){
         const step=previous[i][j];
         if(!step){path.length=0;break;}
         path.push(step);i=step.i;j=step.j;
        }
-       if(path.length&&i===0&&j===0)zipperPath=path.reverse();
+       if(path.length===donorSteps+hostSteps)zipperPath=path.reverse();
       }
      }
      // Prefer a balanced zipper: sample the host arc at every donor-rim
@@ -2081,27 +2094,23 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(resampledBridge){
       // Balanced strip accepted; its shared edges were globally oriented.
      }else if(zipperPath){
-      let localDonorMoves=0,localHostMoves=0,qualitySum=0,qualityCount=0,qualityMin=1;
-      const sourceTriangles=zipperPath.flatMap(step=>step.triangles);
-      const orientedTriangles=orientBridgeStrip(sourceTriangles);
-      let faceIndex=0;
-      for(const step of zipperPath){
-       for(const quality of step.qualities){
-        bridgeIndices.push(...orientedTriangles[faceIndex++]);
-        qualitySum+=quality;qualityCount++;
-        qualityMin=Math.min(qualityMin,quality);
-       }
-       if(step.move==='donor'||step.move==='both')localDonorMoves++;
-       if(step.move==='host'||step.move==='both')localHostMoves++;
+      let localDonorMoves=0,localHostMoves=0,qualitySum=0,qualityMin=1;
+      const orientedTriangles=orientBridgeStrip(zipperPath.map(step=>step.tri.ids));
+      for(let k=0;k<zipperPath.length;k++){
+       const step=zipperPath[k];
+       bridgeIndices.push(...orientedTriangles[k]);
+       qualitySum+=step.quality;qualityMin=Math.min(qualityMin,step.quality);
+       if(step.move==='donor')localDonorMoves++;
+       else localHostMoves++;
       }
       bridgeZipperMovesDonor+=localDonorMoves;
       bridgeZipperMovesHost+=localHostMoves;
       bridgeZipperQualitySum+=qualitySum;
-      bridgeZipperQualityCount+=qualityCount;
+      bridgeZipperQualityCount+=zipperPath.length;
       bridgeZipperMinQuality=Math.min(bridgeZipperMinQuality,qualityMin);
-      bridgeEdges+=orientedTriangles.length;
-      bridgeEdgesByPlane[plane]+=orientedTriangles.length;
-      bridgeTrianglesByPlane[plane]+=orientedTriangles.length;
+      bridgeEdges+=zipperPath.length;
+      bridgeEdgesByPlane[plane]+=zipperPath.length;
+      bridgeTrianglesByPlane[plane]+=zipperPath.length;
       for(let j=0;j<hostSteps;j++){
        const step=distance3(pointAt(hostPos,host[j]),pointAt(hostPos,host[(j+1)%n]));
        bridgeMaxHostStep=Math.max(bridgeMaxHostStep,step);
@@ -2130,6 +2139,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamWarpFactor=seamWarpFactor;
    bodyCut.seamWarpMaxMove=seamWarpMaxMove;
    bodyCut.seamWarpMeanMove=seamWarpMeanMove;
+   bodyCut.seamWarpAcceptedGroups=seamWarpAcceptedGroups;
+   bodyCut.seamWarpRejectedGroups=seamWarpRejectedGroups;
    bodyCut.seamWarpMaxResidualGap=seamWarpMaxResidualGap;
    bodyCut.seamBridgeMethod='monotone-dp-zipper-open-chain';
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
@@ -2525,6 +2536,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamBridgeMethod:bodyCut.seamBridgeMethod||'none',seamBridgeLoopPairs:bodyCut.seamBridgeLoopPairs||0,
    seamWarpFactor:bodyCut.seamWarpFactor||0,seamWarpMaxMove:bodyCut.seamWarpMaxMove||0,
    seamWarpMeanMove:bodyCut.seamWarpMeanMove||0,seamWarpMaxResidualGap:bodyCut.seamWarpMaxResidualGap||0,
+   seamWarpAcceptedGroups:bodyCut.seamWarpAcceptedGroups||0,
+   seamWarpRejectedGroups:bodyCut.seamWarpRejectedGroups||0,
    seamBridgeZipperMovesDonor:bodyCut.seamBridgeZipperMovesDonor||0,seamBridgeZipperMovesHost:bodyCut.seamBridgeZipperMovesHost||0,
    seamBridgeZipperResampledLoops:bodyCut.seamBridgeZipperResampledLoops||0,
    seamBridgeZipperFallbackLoops:bodyCut.seamBridgeZipperFallbackLoops||0,
