@@ -1240,6 +1240,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity,
     bridgeZipperResampledLoops=0,bridgeOrientationFlips=0,bridgeOrientationComponents=0;
    let seamWarpFactor=1,seamWarpMaxMove=0,seamWarpMeanMove=0,seamWarpMaxResidualGap=0;
+   let seamWarpAcceptedGroups=0,seamWarpRejectedGroups=0;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeEdgesByPlane={z:0,y:0,'x-':0,'x+':0};
    const bridgeUnmatchedByPlane={z:0,y:0,'x-':0,'x+':0};
@@ -1885,7 +1886,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      let totalMove=0;
      for(const group of groups){
       const {ids,representative,requested}=group;
-      const twinSet=new Set(ids),affectedSet=new Set();
+      const affectedSet=new Set();
       for(const id of ids)for(const faceIndex of incident[id])affectedSet.add(faceIndex);
       const affected=[...affectedSet].map(faceIndex=>faces[faceIndex]);
       let accepted=null,acceptedFactor=0;
@@ -1934,6 +1935,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      seamWarpFactor=Math.min(seamWarpFactor,
       requestedMove>1e-10?acceptedMove/requestedMove:0);
      seamWarpMeanMove=acceptedGroups?totalMove/acceptedGroups:0;
+     seamWarpAcceptedGroups+=acceptedGroups;
+     seamWarpRejectedGroups+=rejectedGroups;
      donorGeo.computeVertexNormals();
      let gapTotal=0,gapMax=0;
      for(let i=0;i<donor.length;i++){
