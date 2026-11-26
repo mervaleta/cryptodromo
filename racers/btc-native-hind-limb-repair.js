@@ -1412,17 +1412,26 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        const ids=[...aIds,...bIds];
        if(!simpleLoop(ids))continue;
        const score=joinGap+closeGap+(1-minTurn)*.0002;
-       if(!best||score<best.score)best={i,j,ids,joinGap,closeGap,score};
+       if(!best||score<best.score)best={i,j,ids,aIds,bIds,joinGap,closeGap,score};
       }
      }
      return best;
     };
     let donors=donorPaths.slice(),hosts=hostPaths.slice();
-    const mergeAllLocalOpenPairs=(paths,position)=>{
+    const recordVirtualClosure=(merge,position,surface)=>{
+     const describe=id=>({id,position:pointAt(position,id)});
+     seamBoundaryClosureDiagnostics.push({
+      plane,side,surface,joinGap:merge.joinGap,closeGap:merge.closeGap,
+      join:[describe(merge.aIds.at(-1)),describe(merge.bIds[0])],
+      close:[describe(merge.bIds.at(-1)),describe(merge.aIds[0])]
+     });
+    };
+    const mergeAllLocalOpenPairs=(paths,position,surface)=>{
      let current=paths.slice(),closures=0,maxGap=0;
      while(current.length>1){
       const merge=mergeOneLocalOpenPair(current,position);
       if(!merge)break;
+      recordVirtualClosure(merge,position,surface);
       const gap=Math.max(merge.joinGap,merge.closeGap);
       const joined={ids:merge.ids,closed:true,virtualClosureGap:gap,
        virtualClosureGaps:[merge.joinGap,merge.closeGap],mergedBoundaryFragments:2};
@@ -1436,8 +1445,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // Adopting only one side would manufacture a topology mismatch, so the
     // paired closure is accepted only when donor and Maya produce the same
     // number of local, geometrically valid loop closures.
-    const donorJoined=mergeAllLocalOpenPairs(donors,donorPos);
-    const hostJoined=mergeAllLocalOpenPairs(hosts,hostPos);
+    const donorJoined=mergeAllLocalOpenPairs(donors,donorPos,'donor');
+    const hostJoined=mergeAllLocalOpenPairs(hosts,hostPos,'host');
     if(donorJoined.closures>0&&
        donorJoined.closures===hostJoined.closures&&
        donorJoined.paths.length===hostJoined.paths.length){
@@ -1448,6 +1457,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     while(donors.length>targetCount){
      const merge=mergeOneLocalOpenPair(donors,donorPos);
      if(!merge)break;
+     recordVirtualClosure(merge,donorPos,'donor');
      const path={ids:merge.ids,closed:true,
       virtualClosureGap:Math.max(merge.joinGap,merge.closeGap),
       virtualClosureGaps:[merge.joinGap,merge.closeGap],
@@ -1458,6 +1468,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     while(hosts.length>targetCount){
      const merge=mergeOneLocalOpenPair(hosts,hostPos);
      if(!merge)break;
+     recordVirtualClosure(merge,hostPos,'host');
      const path={ids:merge.ids,closed:true,
       virtualClosureGap:Math.max(merge.joinGap,merge.closeGap),
       virtualClosureGaps:[merge.joinGap,merge.closeGap],
@@ -2286,6 +2297,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     return {quality,cost};
    }
    const planes=['z','y','x-','x+'];
+   const seamBoundaryClosureDiagnostics=[];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
     seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
     seamBridgeTangentDirectionFlips=0,seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
@@ -3002,6 +3014,7 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeClosedLoops=seamClosedLoops;
    bodyCut.seamBridgeVirtualClosures=seamVirtualClosures;
    bodyCut.seamBridgeVirtualClosureMaxGap=seamVirtualClosureMaxGap;
+   bodyCut.seamBridgeVirtualClosureDiagnostics=seamBoundaryClosureDiagnostics;
    bodyCut.seamBridgeSurfaceTangentFallbacks=seamBridgeSurfaceTangentFallbacks;
    bodyCut.seamBridgeTangentDirectionFlips=seamBridgeTangentDirectionFlips;
    bodyCut.seamBridgeMeanTangentReach=seamBridgeTangentReachCount?
@@ -3586,7 +3599,13 @@ const fractions=[.2,.4,.6,.8];
     }
    }
    const bridgeLinks=Array.from({length:bridgeFaceCount},()=>[]);
-   const bridgeBoundaryConstraints=[];
+   const bridgeBoundaryConstraints=[],bridgeBoundaryUnmatchedDetails=[];
+   const mergedPosition=combined.getAttribute('position');
+   const describeMergedVertex=id=>{
+    const kind=id<hostCount?'host':id<hostCount+donorBase?'donor':'bridge';
+    const sourceIndex=kind==='host'?id:kind==='donor'?id-hostCount:id-hostCount-donorBase;
+    return {id,kind,sourceIndex,position:[0,1,2].map(k=>mergedPosition.getComponent(id,k))};
+   };
    let bridgeBoundaryUnmatchedEdges=0,bridgeBoundaryNonManifoldEdges=0;
    for(const list of bridgeEdges.values()){
     const bridgeUses=list.filter(use=>use.isBridge);
@@ -3601,7 +3620,17 @@ const fractions=[.2,.4,.6,.8];
      bridgeLinks[bi].push({face:ai,toggle});
     }else if(bridgeUses.length===1){
      const bridgeUse=bridgeUses[0],external=list.find(use=>!use.isBridge);
-     if(!external){bridgeBoundaryUnmatchedEdges++;continue;}
+     if(!external){
+      bridgeBoundaryUnmatchedEdges++;
+      const offset=bridgeUse.face*3;
+      const triangle=[mergedIndex[offset],mergedIndex[offset+1],mergedIndex[offset+2]];
+      bridgeBoundaryUnmatchedDetails.push({
+       face:bridgeUse.face,
+       edge:[describeMergedVertex(bridgeUse.from),describeMergedVertex(bridgeUse.to)],
+       triangle:triangle.map(describeMergedVertex),incidentFaces:list.length
+      });
+      continue;
+     }
      const same=bridgeUse.from===external.from&&bridgeUse.to===external.to;
      bridgeBoundaryConstraints.push({
       face:bridgeUse.face-bridgeFaceStart,
@@ -3674,6 +3703,7 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeBoundaryHostEdges=bridgeBoundaryHostEdges;
    bodyCut.seamBridgeBoundaryDonorEdges=bridgeBoundaryDonorEdges;
    bodyCut.seamBridgeBoundaryUnmatchedEdges=bridgeBoundaryUnmatchedEdges;
+   bodyCut.seamBridgeBoundaryUnmatchedDetails=bridgeBoundaryUnmatchedDetails;
    bodyCut.seamBridgeBoundaryNonManifoldEdges=bridgeBoundaryNonManifoldEdges;
    bodyCut.seamBridgeBoundaryOrientationMismatches=bridgeBoundaryOrientationMismatches;
    bodyCut.seamBridgeBoundaryInternalWindingConflicts=bridgeInternalWindingConflicts;
@@ -3756,6 +3786,7 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeClosedLoops:bodyCut.seamBridgeClosedLoops||0,
    seamBridgeVirtualClosures:bodyCut.seamBridgeVirtualClosures||0,
    seamBridgeVirtualClosureMaxGap:bodyCut.seamBridgeVirtualClosureMaxGap||0,
+    seamBridgeVirtualClosureDiagnostics:bodyCut.seamBridgeVirtualClosureDiagnostics||[],
    seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
    seamBridgeTangentDirectionFlips:bodyCut.seamBridgeTangentDirectionFlips||0,
    seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
@@ -3804,6 +3835,7 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeBoundaryHostEdges:bodyCut.seamBridgeBoundaryHostEdges||0,
    seamBridgeBoundaryDonorEdges:bodyCut.seamBridgeBoundaryDonorEdges||0,
    seamBridgeBoundaryUnmatchedEdges:bodyCut.seamBridgeBoundaryUnmatchedEdges||0,
+    seamBridgeBoundaryUnmatchedDetails:bodyCut.seamBridgeBoundaryUnmatchedDetails||[],
    seamBridgeBoundaryNonManifoldEdges:bodyCut.seamBridgeBoundaryNonManifoldEdges||0,
    seamBridgeBoundaryOrientationMismatches:bodyCut.seamBridgeBoundaryOrientationMismatches||0,
    seamBridgeBoundaryInternalWindingConflicts:bodyCut.seamBridgeBoundaryInternalWindingConflicts||0,
