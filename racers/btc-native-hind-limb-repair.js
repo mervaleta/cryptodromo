@@ -3602,8 +3602,8 @@ const fractions=[.2,.4,.6,.8];
    const bridgeBoundaryConstraints=[],bridgeBoundaryUnmatchedDetails=[];
    const mergedPosition=combined.getAttribute('position');
    const describeMergedVertex=id=>{
-    const kind=id<hostCount?'host':id<hostCount+donorBase?'donor':'bridge';
-    const sourceIndex=kind==='host'?id:kind==='donor'?id-hostCount:id-hostCount-donorBase;
+    const kind=id<hostCount?'host':id<hostCount+data.donorBase?'donor':'bridge';
+    const sourceIndex=kind==='host'?id:kind==='donor'?id-hostCount:id-hostCount-data.donorBase;
     return {id,kind,sourceIndex,position:[0,1,2].map(k=>mergedPosition.getComponent(id,k))};
    };
    let bridgeBoundaryUnmatchedEdges=0,bridgeBoundaryNonManifoldEdges=0;
