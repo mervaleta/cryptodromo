@@ -3261,12 +3261,12 @@ const fractions=[.2,.4,.6,.8];
   }
   bodyCut.seamBridgePostRelaxReprojectedVertices=bridgeVertexSpecs.size;
   bodyCut.seamBridgePostRelaxMaxShift=seamBridgePostRelaxMaxShift;
-  }
   bodyCut.collarRejectedMoves=collarRejectedMoves;
   bodyCut.collarBacktrackedMoves=collarBacktrackedMoves;
   bodyCut.insetVertices=insetVertices;
   bodyCut.reattachedWeights=reattachedWeights;
   bodyCut.uniqueSurfacePoints=uniqueSurfacePoints;
+  }
   hoovesCut=clipNativeTriangles(hoof,p=>{
    const cy=p.reduce((s,v)=>s+v[1],0)/3;
    const cz=p.reduce((s,v)=>s+v[2],0)/3;
