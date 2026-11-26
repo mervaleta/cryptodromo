@@ -1243,7 +1243,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeMaxHostStep=0,bridgeLoopPairs=0,bridgeZipperMovesDonor=0,
     bridgeZipperMovesHost=0,bridgeZipperFallbackLoops=0,
     bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity,
-    bridgeZipperResampledLoops=0,bridgeZipperLayers=0,bridgeOrientationFlips=0,bridgeOrientationComponents=0;
+    bridgeZipperResampledLoops=0,bridgeZipperLayers=0,bridgeZipperCenterFanCells=0,
+    bridgeOrientationFlips=0,bridgeOrientationComponents=0;
    let seamWarpFactor=1,seamWarpMaxMove=0,seamWarpMeanMove=0,seamWarpMaxResidualGap=0;
    let seamWarpAcceptedGroups=0,seamWarpRejectedGroups=0;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
@@ -1733,6 +1734,32 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     layerProjected.set(key,index);
+    return index;
+   }
+   // A skewed seam quad can defeat both diagonals even when its surface
+   // is otherwise valid. Add a skinned center vertex and fan the cell into
+   // four smaller faces; this refines the transition patch without accepting
+   // a needle triangle or relaxing the quality floor.
+   function bridgeCellCenterVertex(ids){
+    const points=ids.map(positionFor),normals=ids.map(normalFor);
+    const point=[0,1,2].map(k=>points.reduce((sum,p)=>sum+p[k],0)/points.length);
+    const normal=[0,1,2].map(k=>normals.reduce((sum,n)=>sum+n[k],0));
+    const normalLength=Math.hypot(...normal)||1;
+    const outward=normal.map(v=>v/normalLength);
+    for(let k=0;k<3;k++)point[k]+=outward[k]*.00008;
+    const influence=new Map();
+    for(const id of ids)for(let k=0;k<4;k++){
+     const offset=(id-donorBase)*4;
+     const joint=id<donorBase?donorSkin.getComponent(id,k):bridgeJoints[offset+k];
+     const weight=id<donorBase?donorWeights.getComponent(id,k):bridgeWeights[offset+k];
+     if(weight>1e-9)influence.set(joint,(influence.get(joint)||0)+weight/ids.length);
+    }
+    const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const total=top.reduce((sum,item)=>sum+item[1],0)||1;
+    const index=donorBase+bridgePositions.length/3;
+    bridgePositions.push(...point);bridgeNormals.push(...outward);
+    bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
+    bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     return index;
    }
    function splitHostBoundaryEdges(samplesByEdge){
@@ -2288,7 +2315,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        rows.push(donor.map((id,i)=>bridgeLayerVertex(id,alignment.samples[i],fraction)));
       rows.push(projectedIds);
       const triangles=[],qualityValues=[];
-      let valid=donorSteps>0;
+      let valid=donorSteps>0,centerFanCells=0;
       for(let band=0;band<rows.length-1&&valid;band++){
        const inner=rows[band],outer=rows[band+1];
        for(let i=0;i<donorSteps&&valid;i++){
@@ -2304,24 +2331,47 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
         ].filter(pair=>pair.every(Boolean)).map(pair=>{
          const quality=pair.map(triangle=>zipperTriangleQuality(triangle,scale,0));
          if(quality.some(value=>!value))return null;
-         return {pair,min:Math.min(...quality.map(value=>value.quality)),
+         return {pair,quality,min:Math.min(...quality.map(value=>value.quality)),
           sum:quality.reduce((total,value)=>total+value.quality,0)};
         }).filter(Boolean).sort((left,right)=>
          right.min-left.min||right.sum-left.sum);
         const best=pairs[0];
-        // Keep the existing geometric quality floor. Extra rings must
-        // improve the actual triangles; no threshold is relaxed.
-        if(!best||best.min<.015){valid=false;break;}
-        triangles.push(...best.pair.map(triangle=>triangle.ids));
-        qualityValues.push(...best.pair.map(triangle=>
-         zipperTriangleQuality(triangle,scale,0).quality));
+        if(best&&best.min>=.015){
+         triangles.push(...best.pair.map(triangle=>triangle.ids));
+         qualityValues.push(...best.quality.map(value=>value.quality));
+         continue;
+        }
+        // Split only the problematic cell. The center inherits the blended
+        // skin of all four corners, so the fan stays on the same Gallop rig.
+        const positionStart=bridgePositions.length,normalStart=bridgeNormals.length,
+         jointStart=bridgeJoints.length,weightStart=bridgeWeights.length;
+        const center=bridgeCellCenterVertex([a,b,pb,pa]);
+        const fan=[
+         bridgeTriangle([a,b,center],donorFallback),
+         bridgeTriangle([b,pb,center],hostFallback),
+         bridgeTriangle([pb,pa,center],hostFallback),
+         bridgeTriangle([pa,a,center],donorFallback)
+        ];
+        const fanQuality=fan.map(triangle=>
+         triangle?zipperTriangleQuality(triangle,scale,0):null);
+        if(fan.every(Boolean)&&fanQuality.every(value=>value&&value.quality>=.015)){
+         triangles.push(...fan.map(triangle=>triangle.ids));
+         qualityValues.push(...fanQuality.map(value=>value.quality));
+         centerFanCells++;
+        }else{
+         bridgePositions.length=positionStart;bridgeNormals.length=normalStart;
+         bridgeJoints.length=jointStart;bridgeWeights.length=weightStart;
+         valid=false;break;
+        }
        }
       }
-      if(valid&&triangles.length===donorSteps*(rows.length-1)*2){
+      const expectedCells=donorSteps*(rows.length-1);
+      if(valid&&triangles.length===qualityValues.length&&qualityValues.length>=expectedCells*2){
        const oriented=orientBridgeStrip(triangles);
        bridgeIndices.length=indexStart;
        for(const triangle of oriented)bridgeIndices.push(...triangle);
        const minQuality=Math.min(...qualityValues);
+       bridgeZipperCenterFanCells+=centerFanCells;
        bridgeZipperResampledLoops++;
        bridgeZipperMovesDonor+=donorSteps*(rows.length-1);
        bridgeZipperMovesHost+=donorSteps*(rows.length-1);
@@ -2415,6 +2465,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
    bodyCut.seamBridgeZipperMovesHost=bridgeZipperMovesHost;
    bodyCut.seamBridgeZipperResampledLoops=bridgeZipperResampledLoops;
+   bodyCut.seamBridgeZipperCenterFanCells=bridgeZipperCenterFanCells;
    bodyCut.seamBridgeZipperFallbackLoops=bridgeZipperFallbackLoops;
    bodyCut.seamBridgeZipperMeanQuality=bridgeZipperQualityCount?
     bridgeZipperQualitySum/bridgeZipperQualityCount:0;
