@@ -739,7 +739,11 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
   // Results are visibly rounded geometry, not a lighting-only cosmetic.
-  const refined=refineSkinnedDonor(bodyCut.geometry,2);
+  // One additional Loop band gives the skinned collar enough local degrees
+  // of freedom to absorb the measured Maya/Quaternius boundary mismatch
+  // without forcing the coarse original triangles to invert. The distal
+  // silhouette and authored Gallop weights remain unchanged.
+  const refined=refineSkinnedDonor(bodyCut.geometry,3);
   bodyCut.geometry.dispose();
   bodyCut.geometry=refined.geometry;
   bodyCut.sourceTriangles=refined.sourceTriangles;
