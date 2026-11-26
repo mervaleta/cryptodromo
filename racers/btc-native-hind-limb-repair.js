@@ -1714,7 +1714,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // under the rump. Scale a restrained convex loft to the actual paired-rim
     // separation; both ends remain exactly on their skinned source surfaces.
     const gapLength=distance3(donorPoint,hostPoint);
-    const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*fraction);
+    // A 0.9 mm cap left the 4.27 mm collar bridge almost planar and
+    // visually recessed. Bow the transition toward the retained Maya exterior
+    // instead of allowing the donor's cut-face normal to pull it inward.
+    const bulge=Math.min(.0018,gapLength*.42)*Math.sin(Math.PI*fraction);
     const point=donorPoint.map((v,k)=>
      v+(hostPoint[k]-v)*fraction+outward[k]*bulge);
     const influence=new Map();
@@ -1897,7 +1900,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const normalLength=Math.hypot(...normal)||1;
     const outward=normal.map(v=>v/normalLength);
     const gap=distance3(donorPoint,hostPoint);
-    const bulge=Math.min(.0009,gap*.22)*Math.sin(Math.PI*t);
+    // The host rim is the retained exterior Maya surface. Use its outward
+    // normal for the loft's geometric bow; blending a donor normal that points
+    // into the cut volume can leave the whole bridge buried under the rump.
+    // Keep both endpoints exact and distribute a measured 42% of the residual
+    // gap as a smooth exterior arc, capped at 1.8 mm.
+    const hostOutward=hostNormal?.getAttribute?null:null;
+    const bulge=Math.min(.0018,gap*.42)*Math.sin(Math.PI*t);
     const point=donorPoint.map((v,k)=>v+(hostPoint[k]-v)*t+outward[k]*bulge);
     const influence=new Map();
     for(const [id,factor] of [[donorId,1-t],[hostId,t]]){
