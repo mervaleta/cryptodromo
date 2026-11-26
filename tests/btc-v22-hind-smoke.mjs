@@ -99,6 +99,22 @@ try{
    console.log('BTC_V22_COMPONENT_ISOLATION',name);
   }
  }
+ // Inspect the actual sewn surface in a distinct diagnostic material. If the
+ // green double-sided bridge still leaves a black cavity, the issue is its
+ // position/coverage, not backface winding. This is internal QA only.
+ await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&btcHideTailQA=1&btcSeamDebugQA=1#BTC',
+  {waitUntil:'domcontentloaded',timeout:90000});
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.harmonyBuild===
+  'btc-v22-continuous-hind-seam-20261107',null,{timeout:120000});
+ await page.locator('[data-btc-camera="rear"]').click();
+ await page.evaluate(()=>window.__cryptodromoBTCAtelierSetPose?.(0));
+ await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===0,null,{timeout:15000});
+ await page.waitForTimeout(180);
+ const seamData=await page.evaluate(()=>document.querySelector('#horse-canvas')?.toDataURL('image/png'));
+ assert.ok(seamData?.startsWith('data:image/png;base64,')&&seamData.length>20000);
+ writeFileSync(dest+'/rear-00-seam-debug.png',Buffer.from(seamData.split(',')[1],'base64'));
+ shots.push('rear-00-seam-debug.png');
+ console.log('BTC_V22_SEAM_DEBUG_SHOT rear-00-seam-debug.png');
  assert.deepEqual(errors,[]);
  console.log('BTC_V22_DIAGNOSTIC_DONE',shots.length);
 }finally{
