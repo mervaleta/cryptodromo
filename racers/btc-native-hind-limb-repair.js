@@ -2244,6 +2244,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
     seamBridgeTangentDirectionFlips=0,seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
    let seamDonorRimWeightOverrides=0;
+   // Record why the DP loft is rejected so the next geometry pass targets the failed cell.
+   const seamBridgeZipperAdaptiveRejectReasons=[];
    for(const plane of planes)for(const side of [-1,1]){
     const hostPaths=orderedBoundaryPaths(hostRim,hostPos,plane,side);
     const donorPaths=orderedBoundaryPaths(donorRimEdges,donorPos,plane,side);
@@ -2589,7 +2591,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // collar gap produced a near-line triangle, then the lower-quality
      // single-strip DP path was used. Four intermediate rings distribute
      // that real gap, blend normals and retain the shared Gallop skeleton.
-     let adaptiveBridge=false,resampledBridge=false;
+     let adaptiveBridge=false,resampledBridge=false,adaptiveRejectReason=null;
      // Use the monotone DP zipper correspondence as the actual surface map.
      // Equal arc-length resampling can pair anatomically different points when
      // the Maya and donor rims have different local vertex densities. Subdivide
@@ -2601,7 +2603,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        jointStart=bridgeJoints.length,weightStart=bridgeWeights.length;
       const crossCache=new Map(),candidateTriangles=[],qualityValues=[];
       let valid=true;
-      const fractions=[0,.2,.4,.6,.8,1];
+      // Three wider Hermite bands give the skewed DP end cells more area per face;
+      // keep the existing per-triangle quality floor and manifold checks unchanged.
+      const fractions=[0,1/3,2/3,1];
       const makeCandidate=(ids,fallback)=>{
        const triangle=bridgeTriangle(ids,fallback);
        if(!triangle)return null;
@@ -2630,6 +2634,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        }
        bridgePositions.length=starts[0];bridgeNormals.length=starts[1];
        bridgeJoints.length=starts[2];bridgeWeights.length=starts[3];
+       adaptiveRejectReason||='end-cap fan failed;quality='+fan.map(item=>item?.quality??'degenerate').join(',')+';ids='+ids.join(',');
        return false;
       };
       const addQuad=(a0,b0,a1,b1,fallback)=>{
@@ -2666,6 +2671,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        }
        bridgePositions.length=starts[0];bridgeNormals.length=starts[1];
        bridgeJoints.length=starts[2];bridgeWeights.length=starts[3];
+       adaptiveRejectReason||='quad fan failed;quality='+fan.map(item=>item?.quality??'degenerate').join(',')+';ids='+[a0,b0,b1,a1].join(',');
        return false;
       };
       for(const step of zipperPath){
@@ -2716,6 +2722,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
         adaptiveBridge=true;
        }catch(error){
         valid=false;
+        adaptiveRejectReason='orientation failure: '+(error?.message||String(error));
        }
       }
       if(!adaptiveBridge){
@@ -2723,6 +2730,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        bridgePositions.length=positionStart;bridgeNormals.length=normalStart;
        bridgeJoints.length=jointStart;bridgeWeights.length=weightStart;
        bridgeZipperAdaptiveRejects++;
+       seamBridgeZipperAdaptiveRejectReasons.push(adaptiveRejectReason||'adaptive strip rejected without a local cell reason');
       }
      }
      // Only the arc-length fallback inserts host edge points. The adaptive DP
@@ -2889,6 +2897,7 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeZipperAdaptiveTriangles=bridgeZipperAdaptiveTriangles;
    bodyCut.seamBridgeZipperAdaptiveSourceTriangles=bridgeZipperAdaptiveSourceTriangles;
    bodyCut.seamBridgeZipperAdaptiveRejects=bridgeZipperAdaptiveRejects;
+   bodyCut.seamBridgeZipperAdaptiveRejectReasons=seamBridgeZipperAdaptiveRejectReasons;
    bodyCut.seamBridgeZipperAdaptiveCenterFanCells=bridgeZipperAdaptiveCenterFanCells;
    bodyCut.seamBridgeZipperAdaptiveCapFanTriangles=bridgeZipperAdaptiveCapFanTriangles;
    bodyCut.seamBridgeZipperMaxAdaptiveTriangles=bridgeZipperMaxAdaptiveTriangles;
@@ -3517,6 +3526,7 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeZipperAdaptiveTriangles:bodyCut.seamBridgeZipperAdaptiveTriangles||0,
    seamBridgeZipperAdaptiveSourceTriangles:bodyCut.seamBridgeZipperAdaptiveSourceTriangles||0,
    seamBridgeZipperAdaptiveRejects:bodyCut.seamBridgeZipperAdaptiveRejects||0,
+   seamBridgeZipperAdaptiveRejectReasons:bodyCut.seamBridgeZipperAdaptiveRejectReasons||[],
    seamBridgeZipperAdaptiveCenterFanCells:bodyCut.seamBridgeZipperAdaptiveCenterFanCells||0,
    seamBridgeZipperAdaptiveCapFanTriangles:bodyCut.seamBridgeZipperAdaptiveCapFanTriangles||0,
    seamBridgeZipperMaxAdaptiveTriangles:bodyCut.seamBridgeZipperMaxAdaptiveTriangles||0,
