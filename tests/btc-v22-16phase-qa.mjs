@@ -197,5 +197,27 @@ try{
    'Tail dock cap must not contain degenerate triangles');
  assert.equal(baseline.heroGroom?.tailDockOpenCapEdges,0,
    'Tail dock cap must be closed and manifold');
+ // The hind zipper must share the exact Maya cut-boundary vertex IDs, not
+ // merely coincident positions, and every bridge boundary edge must be
+ // oppositely wound against the retained host/donor source surface.
+ assert.equal(posterior?.seamBridgeExactHostSourceMatches,
+   posterior?.seamBridgeHostEndpointCount,
+   'every adaptive zipper host endpoint must weld to its exact Maya boundary vertex');
+ assert.equal(posterior?.seamBridgeFallbackHostSourceMatches,0,
+   'adaptive zipper must not fall back to arbitrary coincident Maya UV twins');
+ assert.equal(posterior?.seamBridgeHostSourceMismatches,0,
+   'host source endpoint identities must remain exact');
+ assert.ok(posterior?.seamBridgeBoundaryEdges>0,
+   'welded zipper must expose measurable host/donor boundary edges');
+ assert.ok(posterior?.seamBridgeBoundaryHostEdges>0&&posterior?.seamBridgeBoundaryDonorEdges>0,
+   'zipper must close against both retained Maya torso and donor limb surfaces');
+ assert.equal(posterior?.seamBridgeBoundaryUnmatchedEdges,0,
+   'no bridge boundary edge may remain open after unified weld');
+ assert.equal(posterior?.seamBridgeBoundaryNonManifoldEdges,0,
+   'no bridge boundary edge may have more than two incident faces');
+ assert.equal(posterior?.seamBridgeBoundaryOrientationMismatches,0,
+   'bridge boundary winding must oppose both adjacent source surfaces');
+ assert.equal(posterior?.seamBridgeBoundaryInternalWindingConflicts,0,
+   'bridge faces must form consistently oriented connected components');
 
 }finally{await page.close();await browser.close();}
