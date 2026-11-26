@@ -1362,12 +1362,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      };
      for(let i=0;i<paths.length;i++)for(let j=i+1;j<paths.length;j++){
       const a=paths[i],b=paths[j];
-      if(a.closed||b.closed||Math.min(a.ids.length,b.ids.length)>8)continue;
-      const lengthA=segmentLength(a.ids),lengthB=segmentLength(b.ids);
-      // Equal-length open chains can be the two complementary halves of one
-      // anatomical cut loop. Endpoint proximity, tangent continuity and a
-      // non-self-intersecting projection are the actual safety tests; a 20%
-      // length-ratio heuristic incorrectly prevented those loops from closing.
+      if(a.closed||b.closed)continue;
+      // Complementary cut arcs can both be long. Endpoint proximity,
+      // tangent continuity and a non-self-intersecting projection are the
+      // safety tests; vertex-count and length-ratio heuristics hid the real
+      // closed anatomical loop behind two equally substantial open chains.
       const steps=[];
       for(const ids of [a.ids,b.ids])for(let k=1;k<ids.length;k++)
        steps.push(distance3(pointAt(position,ids[k-1]),pointAt(position,ids[k])));
