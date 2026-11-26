@@ -725,7 +725,20 @@ function sealTinyDonorSlits(geometry){
     entry.uses.push({from,to,tri:i/3});uses.set(key,entry);
    }
   }
-  const boundary=[...uses.values()].filter(e=>e.uses.length===1);
+  // The clipped donor has intersecting z/y/x cut boundaries. A tiny slit on
+  // z=.0200 can meet another plane boundary at its endpoints; collecting the
+  // entire 3D boundary first makes those plane junctions look like branches
+  // and hides the simple open chain from the capper. Detect the slit on the
+  // actual rear cut plane only, while retaining the full directed-use map for
+  // winding and manifold verification when the cap is inserted.
+  const boundary=[...uses.values()].filter(e=>{
+   if(e.uses.length!==1)return false;
+   const a=point(e.a),b=point(e.b),side=Math.sign(a[0]);
+   return side!==0&&side===Math.sign(b[0])&&
+    Math.abs(a[0])>.0014&&Math.abs(b[0])>.0014&&
+    a[1]>=.0050&&b[1]>=.0050&&
+    Math.abs(a[2]-.0200)<=.00003&&Math.abs(b[2]-.0200)<=.00003;
+  });
   const adjacency=new Map();
   for(const e of boundary){
    if(!adjacency.has(e.a))adjacency.set(e.a,new Set());
@@ -833,6 +846,24 @@ function sealTinyDonorSlits(geometry){
   for(const tri of oriented)finalIndices.push(...tri);
   const IndexArray=pos.count+1>65535?Uint32Array:Uint16Array;
   geometry.setIndex(new THREE.BufferAttribute(new IndexArray(finalIndices),1));
+  // The repaired slit must be a real indexed manifold cap, not just a
+  // visually coincident overlay. Every former slit edge now has exactly two
+  // incident faces, the new radial edges are paired, and no edge may have
+  // more than two incident faces.
+  const capEdgeUses=new Map(),capIndex=geometry.getIndex();
+  for(let i=0;i<capIndex.count;i+=3){
+   const tri=[capIndex.getX(i),capIndex.getX(i+1),capIndex.getX(i+2)];
+   for(const [a,b] of [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]){
+    const key=a<b?a+':'+b:b+':'+a,count=(capEdgeUses.get(key)||0)+1;
+    if(count>2)throw Error('BTC donor micro-cap created a non-manifold edge');
+    capEdgeUses.set(key,count);
+   }
+  }
+  for(let i=0;i<loop.length;i++){
+   const a=loop[i],b=loop[(i+1)%loop.length],key=a<b?a+':'+b:b+':'+a;
+   if(capEdgeUses.get(key)!==2)
+    throw Error('BTC donor micro-cap left an unsewn slit boundary edge');
+  }
   geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
   pos=geometry.getAttribute('position');skin=geometry.getAttribute('skinIndex');
   weight=geometry.getAttribute('skinWeight');normal=geometry.getAttribute('normal');index=geometry.getIndex();
