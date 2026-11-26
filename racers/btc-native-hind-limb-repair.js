@@ -2810,7 +2810,9 @@ const fractions=[.2,.4,.6,.8];
    if(bridgeIndices.length>=12){
     bodyCut.seamBridgeData={positions:bridgePositions,normals:bridgeNormals,
      joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices,
-     donorBase,hostEndpointVertices:[...new Set([...projected.values()].map(id=>id-donorBase))]};
+     donorBase,
+     hostEndpointVertices:[...new Set([...projected.values()].map(id=>id-donorBase))],
+     donorEndpointVertices:[...new Set(bridgeIndices.filter(id=>id<donorBase))]};
    }
    // Every zipper step advances exactly one ordered boundary edge. A
    // successful loop therefore covers both rims without skipped cells.
@@ -3202,6 +3204,47 @@ const fractions=[.2,.4,.6,.8];
    }
    if(hostEndpointMap.size!==data.hostEndpointVertices.length)
     throw Error('BTC unified hind mesh failed to weld every host zipper endpoint');
+   // The donor GLB has UV/material-split copies at the same physical cut-rim
+   // points. The zipper uses one representative, but leaving its coincident
+   // twins as separate indices makes computeVertexNormals rebuild a hard
+   // shading seam after the unified host/donor merge. Reuse one donor index
+   // for every exactly coincident rim twin, and require identical skinning:
+   // all such twins were already reweighted from the same Maya boundary map.
+   if(!Array.isArray(data.donorEndpointVertices)||!data.donorEndpointVertices.length)
+    throw Error('BTC unified hind mesh has no donor-side zipper endpoints');
+   const donorByPosition=new Map();
+   for(let id=0;id<data.donorBase;id++){
+    const key=positionKey(dp,id),list=donorByPosition.get(key)||[];
+    list.push(id);donorByPosition.set(key,list);
+   }
+   const donorSkinDistance=(a,b)=>{
+    const left=new Map(),right=new Map();
+    for(let k=0;k<4;k++){
+     const ja=ds.getComponent(a,k),jb=ds.getComponent(b,k);
+     const wa=dw.getComponent(a,k),wb=dw.getComponent(b,k);
+     if(wa>1e-8)left.set(ja,(left.get(ja)||0)+wa);
+     if(wb>1e-8)right.set(jb,(right.get(jb)||0)+wb);
+    }
+    let score=0;
+    for(const joint of new Set([...left.keys(),...right.keys()]))
+     score+=Math.abs((left.get(joint)||0)-(right.get(joint)||0));
+    return score;
+   };
+   const donorTwinMap=new Map(),donorEndpointKeys=new Set();
+   for(const endpoint of data.donorEndpointVertices){
+    if(!Number.isInteger(endpoint)||endpoint<0||endpoint>=data.donorBase)
+     throw Error('BTC donor zipper endpoint is outside original donor geometry');
+    const key=positionKey(dp,endpoint);
+    donorEndpointKeys.add(key);
+    const twins=donorByPosition.get(key)||[endpoint];
+    const canonical=Math.min(...twins);
+    for(const twin of twins){
+     const score=donorSkinDistance(canonical,twin);
+     if(score>1e-3)
+      throw Error('BTC coincident donor seam twins have divergent skin weights: '+score.toFixed(6));
+     donorTwinMap.set(twin,canonical);
+    }
+   }
    const combined=new THREE.BufferGeometry();
    for(const name of ['position','normal','skinIndex','skinWeight']){
     const a=hostGeo.getAttribute(name),b=donorGeo.getAttribute(name);
@@ -3216,7 +3259,9 @@ const fractions=[.2,.4,.6,.8];
    for(let i=0;i<hi.count;i++)mergedIndex[i]=hi.getX(i);
    for(let i=0;i<di.count;i++){
     const id=di.getX(i),hostId=hostEndpointMap.get(id);
-    mergedIndex[hi.count+i]=hostId===undefined?hostCount+id:hostId;
+    const donorId=donorTwinMap.get(id);
+    mergedIndex[hi.count+i]=hostId===undefined?
+     hostCount+(donorId===undefined?id:donorId):hostId;
    }
    combined.setIndex(new THREE.BufferAttribute(mergedIndex,1));
    const groups=hostGeo.groups.length?hostGeo.groups:
@@ -3238,6 +3283,10 @@ const fractions=[.2,.4,.6,.8];
    anatomy.mesh.material=[...anatomy.materials,donorMaterial];
    bodyCut.seamBridgeWeldedHostVertices=hostEndpointMap.size;
    bodyCut.seamBridgeHostEndpointCount=data.hostEndpointVertices.length;
+   bodyCut.seamBridgeWeldedDonorVertices=donorTwinMap.size;
+   bodyCut.seamBridgeDonorEndpointGroups=donorEndpointKeys.size;
+   bodyCut.seamBridgeWeldedDonorTwins=donorTwinMap.size-donorEndpointKeys.size;
+   bodyCut.seamBridgeDonorEndpointCount=data.donorEndpointVertices.length;
    bodyCut.triangles+=data.indices.length/3;
    bodyCut.seamBridgeData=null;
   }
@@ -3322,6 +3371,10 @@ const fractions=[.2,.4,.6,.8];
    originalHoofTriangles:hoovesCut.sourceTriangles,
    seamBridgeWeldedHostVertices:bodyCut.seamBridgeWeldedHostVertices||0,
    seamBridgeHostEndpointCount:bodyCut.seamBridgeHostEndpointCount||0,
+   seamBridgeWeldedDonorVertices:bodyCut.seamBridgeWeldedDonorVertices||0,
+   seamBridgeDonorEndpointGroups:bodyCut.seamBridgeDonorEndpointGroups||0,
+   seamBridgeWeldedDonorTwins:bodyCut.seamBridgeWeldedDonorTwins||0,
+   seamBridgeDonorEndpointCount:bodyCut.seamBridgeDonorEndpointCount||0,
    sameOriginalSkeleton:anatomy.mesh.skeleton===original.skeleton&&donorHooves.skeleton===original.skeleton
   },
   dispose(){
