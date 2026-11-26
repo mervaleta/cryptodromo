@@ -232,3 +232,9 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 ## 2026-11-26 · BTC hind-seam candidates, no release
 - Se probó y revirtió una tercera subdivisión Loop por un path abierto extra de 5 vértices en el rim donante; no se suprimieron validaciones.
 - El conform objetivo al 35% produjo Chromium/WebGL real, pero A/B visual contra el candidato anterior dejó prácticamente idéntica la unión grupa-muslo. El ciclo completo de 16 fases/seis cámaras sigue pendiente. No acreditar V23, no publicar, mantener V21.
+
+## 2026-11-26 · BTC collar conform 70% A/B · RECHAZADO
+- Commit candidato `74de6ce91202bfa1723ef7c6fee3c38bc5b25b52` elevó el objetivo de conformación de 35% a 70%, manteniendo el backtracking geométrico y los gates existentes.
+- Chromium/WebGL smoke: run [45791523271](https://github.com/mervaleta/cryptodromo/actions/runs/45791523271), artifact #15102439561, ZIP SHA-256 `004f22508807c7260b2340deba2f395f82574c5d559c3a803b3f07dc475dc332`. A/B contra artifact #15097153609 (35%): MAE 0.21–0.32/255 y menos de 1.31% de píxeles con cambio superior a 10 niveles; no hay mejora visible de la unión grupa-muslo.
+- La geometría empeora levemente: warp aceptado 0.13756 vs 0.28319, gap máximo 4.28576 vs 4.27307 mm, gap medio 3.14371 vs 3.13476 mm, zipper mínimo 0.02332 vs 0.02467; el puente adaptativo sigue rechazado y se usa fallback.
+- Se revirtió en `f95c63d0ec6d785d134e8c0499bf7fdb9d466075` a 35%. V23 no acreditada; PR #136 permanece draft, sin merge ni publicación. El ciclo completo del candidato 70% fue cancelado tras el smoke negativo; no atribuirle prueba de 16 fases.
