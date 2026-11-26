@@ -706,189 +706,6 @@ function refineSkinnedDonor(source,passes=2){
   vertices:vs.length,passes};
 }
 
-function sealTinyDonorSlits(geometry){
- let pos=geometry.getAttribute('position'),skin=geometry.getAttribute('skinIndex'),
-  weight=geometry.getAttribute('skinWeight'),normal=geometry.getAttribute('normal'),index=geometry.getIndex();
- if(!pos||!skin||!weight||!index||skin.itemSize!==4||weight.itemSize!==4)
-  throw Error('BTC donor micro-cap requires indexed four-weight skin geometry');
- let caps=0,addedTriangles=0,weldedVertices=0;
- const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
- const point=id=>[pos.getX(id),pos.getY(id),pos.getZ(id)];
- const rebuildBoundary=()=>{
-  index=geometry.getIndex();
-  const uses=new Map();
-  for(let i=0;i<index.count;i+=3){
-   const tri=[index.getX(i),index.getX(i+1),index.getX(i+2)];
-   for(let k=0;k<3;k++){
-    const from=tri[k],to=tri[(k+1)%3],key=from<to?from+':'+to:to+':'+from;
-    const entry=uses.get(key)||{a:Math.min(from,to),b:Math.max(from,to),uses:[]};
-    entry.uses.push({from,to,tri:i/3});uses.set(key,entry);
-   }
-  }
-  // The clipped donor has intersecting z/y/x cut boundaries. A tiny slit on
-  // z=.0200 can meet another plane boundary at its endpoints; collecting the
-  // entire 3D boundary first makes those plane junctions look like branches
-  // and hides the simple open chain from the capper. Detect the slit on the
-  // actual rear cut plane only, while retaining the full directed-use map for
-  // winding and manifold verification when the cap is inserted.
-  const boundary=[...uses.values()].filter(e=>{
-   if(e.uses.length!==1)return false;
-   const a=point(e.a),b=point(e.b),side=Math.sign(a[0]);
-   return side!==0&&side===Math.sign(b[0])&&
-    Math.abs(a[0])>.0014&&Math.abs(b[0])>.0014&&
-    a[1]>=.0050&&b[1]>=.0050&&
-    Math.abs(a[2]-.0200)<=.00003&&Math.abs(b[2]-.0200)<=.00003;
-  });
-  const adjacency=new Map();
-  for(const e of boundary){
-   if(!adjacency.has(e.a))adjacency.set(e.a,new Set());
-   if(!adjacency.has(e.b))adjacency.set(e.b,new Set());
-   adjacency.get(e.a).add(e.b);adjacency.get(e.b).add(e.a);
-  }
-  const components=[],visited=new Set();
-  for(const first of adjacency.keys()){
-   if(visited.has(first))continue;
-   const members=[],stack=[first];
-   while(stack.length){
-    const v=stack.pop();if(visited.has(v))continue;
-    visited.add(v);members.push(v);
-    for(const n of adjacency.get(v)||[])if(!visited.has(n))stack.push(n);
-   }
-   const ends=members.filter(v=>adjacency.get(v)?.size===1);
-   const branches=members.filter(v=>(adjacency.get(v)?.size||0)>2);
-   if(branches.length||!(ends.length===0||ends.length===2))continue;
-   const closed=ends.length===0,start=closed?members[0]:ends[0],path=[];
-   let previous=-1,current=start;
-   for(let step=0;step<=members.length;step++){
-    if(closed&&current===start&&path.length)break;
-    path.push(current);
-    const next=[...(adjacency.get(current)||[])].filter(v=>v!==previous);
-    if(!next.length)break;
-    const candidate=next.find(v=>!path.includes(v));
-    if(candidate===undefined)break;
-    previous=current;current=candidate;
-   }
-   if(path.length>=3)components.push({path,closed});
-  }
-  return {uses,boundary,components};
- };
- for(let attempt=0;attempt<4;attempt++){
-  const state=rebuildBoundary();
-  const candidate=state.components.find(component=>{
-   if(component.closed||component.path.length!==5)return false;
-   const pts=component.path.map(point),length=pts.slice(1).reduce((sum,p,i)=>sum+distance(pts[i],p),0);
-   const gap=distance(pts[0],pts.at(-1));
-   const xs=pts.map(p=>Math.abs(p[0])),ys=pts.map(p=>p[1]),zs=pts.map(p=>p[2]);
-   return length>=.0018&&length<=.0023&&gap<=.0004&&
-    Math.min(...zs)>=.01995&&Math.max(...zs)<=.02005&&
-    Math.min(...xs)>=.0024&&Math.max(...xs)<=.0033&&
-    Math.min(...ys)>=.0125&&Math.max(...ys)<=.0140;
-  });
-  if(!candidate)break;
-  const path=candidate.path,root=path[0],last=path.at(-1),loop=path.slice(0,-1);
-  if(loop.length!==4)throw Error('BTC donor micro-cap expected a four-corner slit after endpoint weld');
-  const midpoint=point(root).map((v,k)=>(v+point(last)[k])*.5);
-  pos.setXYZ(root,...midpoint);pos.setXYZ(last,...midpoint);
-  const influence=new Map();
-  for(const id of [root,last])for(let k=0;k<4;k++){
-   const bone=skin.getComponent(id,k),w=weight.getComponent(id,k)*.5;
-   if(w>1e-9)influence.set(bone,(influence.get(bone)||0)+w);
-  }
-  const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
-  const sum=top.reduce((s,item)=>s+item[1],0)||1;
-  for(let k=0;k<4;k++){
-   skin.setComponent(root,k,top[k]?.[0]||0);
-   weight.setComponent(root,k,(top[k]?.[1]||0)/sum);
-  }
-  const raw=Array.from(index.array);
-  for(let i=0;i<raw.length;i++)if(raw[i]===last)raw[i]=root;
-  for(let i=0;i<raw.length;i+=3)
-   if(raw[i]===raw[i+1]||raw[i+1]===raw[i+2]||raw[i+2]===raw[i])
-    throw Error('BTC donor micro-cap endpoint weld collapsed an existing face');
-  const center=pos.count,centerPoint=[0,0,0],centerNormal=[0,0,0],centerWeights=new Map();
-  for(const id of loop){
-   const p=point(id);
-   for(let k=0;k<3;k++)centerPoint[k]+=p[k]/loop.length;
-   if(normal)for(let k=0;k<3;k++)centerNormal[k]+=normal.getComponent(id,k)/loop.length;
-   for(let k=0;k<4;k++){
-    const bone=skin.getComponent(id,k),w=weight.getComponent(id,k)/loop.length;
-    if(w>1e-9)centerWeights.set(bone,(centerWeights.get(bone)||0)+w);
-   }
-  }
-  const centerTop=[...centerWeights].sort((a,b)=>b[1]-a[1]).slice(0,4);
-  const centerSum=centerTop.reduce((s,item)=>s+item[1],0)||1;
-  const positions=Array.from(pos.array);positions.push(...centerPoint);
-  const joints=Array.from(skin.array),weights=Array.from(weight.array);
-  for(let k=0;k<4;k++){joints.push(centerTop[k]?.[0]||0);weights.push((centerTop[k]?.[1]||0)/centerSum);}
-  if(normal){
-   const length=Math.hypot(...centerNormal)||1;
-   const normals=Array.from(normal.array);normals.push(...centerNormal.map(v=>v/length));
-   geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
-  }
-  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(joints,4));
-  geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
-  // The cap must oppose the existing directed boundary edge on every side.
-  // A mixed direction is a real orientation defect and remains a hard stop.
-  const oriented=[];
-  for(let i=0;i<loop.length;i++){
-   const a=loop[i],b=loop[(i+1)%loop.length],edgeB=i===loop.length-1?last:b;
-   const key=a<edgeB?a+':'+edgeB:edgeB+':'+a,entry=state.uses.get(key);
-   if(!entry||entry.uses.length!==1)
-    throw Error('BTC donor micro-cap lost a slit boundary edge');
-   const use=entry.uses[0];
-   const from=use.from===last?root:use.from,to=use.to===last?root:use.to;
-   if(from===a&&to===b)oriented.push([center,b,a]);
-   else if(from===b&&to===a)oriented.push([center,a,b]);
-   else throw Error('BTC donor micro-cap boundary orientation mismatch');
-  }
-  const finalIndices=raw;
-  for(const tri of oriented)finalIndices.push(...tri);
-  const IndexArray=pos.count+1>65535?Uint32Array:Uint16Array;
-  geometry.setIndex(new THREE.BufferAttribute(new IndexArray(finalIndices),1));
-  // The repaired slit must be a real indexed manifold cap, not just a
-  // visually coincident overlay. Every former slit edge now has exactly two
-  // incident faces, the new radial edges are paired, and no edge may have
-  // more than two incident faces.
-  const capEdgeUses=new Map(),capIndex=geometry.getIndex();
-  for(let i=0;i<capIndex.count;i+=3){
-   const tri=[capIndex.getX(i),capIndex.getX(i+1),capIndex.getX(i+2)];
-   for(const [a,b] of [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]){
-    const key=a<b?a+':'+b:b+':'+a,count=(capEdgeUses.get(key)||0)+1;
-    if(count>2)throw Error('BTC donor micro-cap created a non-manifold edge');
-    capEdgeUses.set(key,count);
-   }
-  }
-  for(let i=0;i<loop.length;i++){
-   const a=loop[i],b=loop[(i+1)%loop.length],key=a<b?a+':'+b:b+':'+a;
-   if(capEdgeUses.get(key)!==2)
-    throw Error('BTC donor micro-cap left an unsewn slit boundary edge');
-  }
-  geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
-  pos=geometry.getAttribute('position');skin=geometry.getAttribute('skinIndex');
-  weight=geometry.getAttribute('skinWeight');normal=geometry.getAttribute('normal');index=geometry.getIndex();
-  caps++;addedTriangles+=oriented.length;weldedVertices++;
- }
- if(caps){
-  const currentIndex=geometry.getIndex(),used=[...new Set(Array.from(currentIndex.array))].sort((a,b)=>a-b);
-  const remap=new Map(used.map((id,i)=>[id,i]));
-  for(const [name,attr] of Object.entries(geometry.attributes)){
-   const values=[];
-   for(const id of used)for(let k=0;k<attr.itemSize;k++)
-    values.push(attr.array[id*attr.itemSize+k]);
-   const C=attr.array.constructor,replacement=new THREE.BufferAttribute(new C(values),attr.itemSize,attr.normalized);
-   if(attr.usage!==undefined)replacement.setUsage(attr.usage);
-   geometry.setAttribute(name,replacement);
-  }
-  const compacted=Array.from(currentIndex.array,id=>remap.get(id));
-  const IndexArray=used.length>65535?Uint32Array:Uint16Array;
-  geometry.setIndex(new THREE.BufferAttribute(new IndexArray(compacted),1));
-  geometry.setDrawRange(0,compacted.length);
-  geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
- }
- return {caps,addedTriangles,weldedVertices,vertices:geometry.getAttribute('position').count};
-}
-
 function attachNativeDonor(original,geometry,material,name) {
  const clone=new THREE.SkinnedMesh(geometry,material);
  clone.name=name;
@@ -925,19 +742,16 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   const refined=refineSkinnedDonor(bodyCut.geometry,2);
   bodyCut.geometry.dispose();
   bodyCut.geometry=refined.geometry;
-  const sealed=sealTinyDonorSlits(bodyCut.geometry);
   bodyCut.sourceTriangles=refined.sourceTriangles;
-  bodyCut.triangles=refined.triangles+sealed.addedTriangles;
-  bodyCut.refinedVertices=sealed.vertices;
+  bodyCut.triangles=refined.triangles;
+  bodyCut.refinedVertices=refined.vertices;
   bodyCut.subdivisionPasses=refined.passes;
-  bodyCut.seamDonorMicroCaps=sealed.caps;
   // Topological seam alignment, not a polygon spike tucked in arbitrarily:
   // Pull the UPPER donor vertices toward the nearest retained Maya surface
   // of the same flank, and transfer the equivalent Maya skin influence.
   // Native GLB positions/weights stay intact BELOW the junction.
-  const donorGeo=bodyCut.geometry;
-  let donorPos=donorGeo.getAttribute('position');
-  let donorSkin=donorGeo.getAttribute('skinIndex'),donorWeights=donorGeo.getAttribute('skinWeight');
+  const donorGeo=bodyCut.geometry,donorPos=donorGeo.getAttribute('position');
+  const donorSkin=donorGeo.getAttribute('skinIndex'),donorWeights=donorGeo.getAttribute('skinWeight');
   const hostGeo=anatomy.geometry,hostPos=hostGeo.getAttribute('position'),
    hostSkin=hostGeo.getAttribute('skinIndex'),hostWeights=hostGeo.getAttribute('skinWeight');
   // Only attach to triangles that survived the Maya crop. BufferGeometry
@@ -1240,7 +1054,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const plane=classifySeamEdge(hostPos,e);
     return plane?[{...e,plane}]:[];
    });
-   let di=donorGeo.getIndex();
+   const di=donorGeo.getIndex();
    const donorBoundary=physicalBoundary(di,donorPos);
    const donorRim=new Set(),donorRimPlanes=new Map(),donorRimEdges=[];
    for(const e of donorBoundary.edges){
@@ -1411,32 +1225,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    // No artificial acceptance counters: this is diagnostic only.
    bodyCut.sewnRimVertices=sewn;
-
-   // The guarded rim projection itself can separate a tiny rear-plane slit
-   // that was not present in the pre-snap donor. Seal that *post-snap* slit
-   // now, then rebuild the physical boundary from the updated indexed mesh;
-   // otherwise the zipper would keep pairing a stale, already-capped path.
-   const postSnapSeal=sealTinyDonorSlits(donorGeo);
-   if(postSnapSeal.caps){
-    bodyCut.seamDonorMicroCaps=(bodyCut.seamDonorMicroCaps||0)+postSnapSeal.caps;
-    bodyCut.triangles+=postSnapSeal.addedTriangles;
-    bodyCut.refinedVertices=postSnapSeal.vertices;
-    donorPos=donorGeo.getAttribute('position');
-    donorSkin=donorGeo.getAttribute('skinIndex');
-    donorWeights=donorGeo.getAttribute('skinWeight');
-    di=donorGeo.getIndex();
-    const refreshedBoundary=physicalBoundary(di,donorPos);
-    donorRimEdges.length=0;
-    const refreshedRimVertices=new Set();
-    for(const edge of refreshedBoundary.edges){
-     const plane=classifySeamEdge(donorPos,edge);
-     if(!plane)continue;
-     donorRimEdges.push({...edge,plane});
-     refreshedRimVertices.add(edge.a);refreshedRimVertices.add(edge.b);
-    }
-    bodyCut.donorRimVertices=refreshedRimVertices.size;
-    bodyCut.donorRimEdgesByPlane=countByPlane(donorRimEdges);
-   }
 
    // Match the donor and Maya cut rims as ordered closed loops. Independent
    // nearest-edge projection jumped across adjacent limb folds (28 skipped
@@ -2994,7 +2782,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamBridgeMaxHostStep:bodyCut.seamBridgeMaxHostStep||0,
    collarRejectedMoves:bodyCut.collarRejectedMoves,collarBacktrackedMoves:bodyCut.collarBacktrackedMoves,
    donorReweightedVertices:bodyCut.reattachedWeights,donorSurfacePoints:bodyCut.uniqueSurfacePoints,
-   donorSubdivisionPasses:bodyCut.subdivisionPasses,seamDonorMicroCaps:bodyCut.seamDonorMicroCaps||0,
+   donorSubdivisionPasses:bodyCut.subdivisionPasses,
    originalDonorTriangles:bodyCut.sourceTriangles,refinedDonorVertices:bodyCut.refinedVertices,
    originalHoofTriangles:hoovesCut.sourceTriangles,
    sameOriginalSkeleton:donor.skeleton===original.skeleton&&donorHooves.skeleton===original.skeleton
