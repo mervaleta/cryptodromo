@@ -1706,7 +1706,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const normal=donorN.map((v,k)=>v*(1-normalBlend)+hostN[k]*normalBlend);
     const normalLength=Math.hypot(...normal)||1;
     const outward=normal.map(v=>v/normalLength);
-    const bulge=.00014*Math.sin(Math.PI*fraction);
+    // The measured collar mismatch reaches several millimetres. A fixed 0.14 mm
+    // offset leaves the bridge almost planar, so its edge reads as a dark cut
+    // under the rump. Scale a restrained convex loft to the actual paired-rim
+    // separation; both ends remain exactly on their skinned source surfaces.
+    const gapLength=distance3(donorPoint,hostPoint);
+    const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*fraction);
     const point=donorPoint.map((v,k)=>
      v+(hostPoint[k]-v)*fraction+outward[k]*bulge);
     const influence=new Map();
