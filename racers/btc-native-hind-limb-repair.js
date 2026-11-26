@@ -1231,14 +1231,14 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // cells in the prior WebGL artifact). Arc-length correspondence preserves
    // cyclic order and creates one continuous skinned strip per flank.
    const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
-   const projected=new Map(),donorBase=donorPos.count;
+   const projected=new Map(),layerProjected=new Map(),donorBase=donorPos.count;
    const hostNormal=hostGeo.getAttribute('normal'),donorNormal=donorGeo.getAttribute('normal');
    let bridgeMaxGap=0,bridgeGapTotal=0,bridgeGapCount=0,bridgeEdges=0,
     bridgeUnmatchedVertices=0,bridgeUnmatchedEdges=0,bridgeSingleTriangleEdges=0,
     bridgeMaxHostStep=0,bridgeLoopPairs=0,bridgeZipperMovesDonor=0,
     bridgeZipperMovesHost=0,bridgeZipperFallbackLoops=0,
     bridgeZipperQualitySum=0,bridgeZipperQualityCount=0,bridgeZipperMinQuality=Infinity,
-    bridgeZipperResampledLoops=0,bridgeOrientationFlips=0,bridgeOrientationComponents=0;
+    bridgeZipperResampledLoops=0,bridgeZipperLayers=0,bridgeOrientationFlips=0,bridgeOrientationComponents=0;
    let seamWarpFactor=1,seamWarpMaxMove=0,seamWarpMeanMove=0,seamWarpMaxResidualGap=0;
    let seamWarpAcceptedGroups=0,seamWarpRejectedGroups=0;
    const bridgeTrianglesByPlane={z:0,y:0,'x-':0,'x+':0};
@@ -1639,6 +1639,50 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     projected.set(key,index);
+    return index;
+   }
+   function bridgeLayerVertex(donorId,sample,fraction){
+    const key=[donorId,Math.round(fraction*1e8)].join(':');
+    if(layerProjected.has(key))return layerProjected.get(key);
+    const donorPoint=pointAt(donorPos,donorId),hostPoint=sample.point;
+    const donorN=donorNormal?[0,1,2].map(k=>donorNormal.getComponent(donorId,k)):[0,1,0];
+    let hostN=hostNormal?[0,1,2].map(k=>
+     hostNormal.getComponent(sample.a,k)*(1-sample.t)+
+     hostNormal.getComponent(sample.b,k)*sample.t):[0,1,0];
+    const hostLength=Math.hypot(...hostN)||1;
+    hostN=hostN.map(v=>v/hostLength);
+    const normalBlend=fraction*fraction*(3-2*fraction);
+    const normal=donorN.map((v,k)=>v*(1-normalBlend)+hostN[k]*normalBlend);
+    const normalLength=Math.hypot(...normal)||1;
+    const outward=normal.map(v=>v/normalLength);
+    const bulge=.00014*Math.sin(Math.PI*fraction);
+    const point=donorPoint.map((v,k)=>
+     v+(hostPoint[k]-v)*fraction+outward[k]*bulge);
+    const influence=new Map();
+    for(let k=0;k<4;k++){
+     const weight=donorWeights.getComponent(donorId,k)*(1-fraction);
+     if(weight>1e-9){
+      const joint=donorSkin.getComponent(donorId,k);
+      influence.set(joint,(influence.get(joint)||0)+weight);
+     }
+    }
+    const t=Math.max(0,Math.min(1,sample.t));
+    for(const [hostId,factor] of [[sample.a,1-t],[sample.b,t]]){
+     for(let k=0;k<4;k++){
+      const weight=hostWeights.getComponent(hostId,k)*factor*fraction;
+      if(weight>1e-9){
+       const joint=hostSkin.getComponent(hostId,k);
+       influence.set(joint,(influence.get(joint)||0)+weight);
+      }
+     }
+    }
+    const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const total=top.reduce((sum,item)=>sum+item[1],0)||1;
+    const index=donorBase+bridgePositions.length/3;
+    bridgePositions.push(...point);bridgeNormals.push(...outward);
+    bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
+    bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
+    layerProjected.set(key,index);
     return index;
    }
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
@@ -2058,69 +2102,80 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        if(path.length===donorSteps+hostSteps)zipperPath=path.reverse();
       }
      }
-     // Prefer a balanced zipper: sample the host arc at every donor-rim
-     // vertex, so each quad advances both boundaries together. The previous
-     // dynamic path often advanced the denser donor rim several times while
-     // the host stayed fixed, creating extremely skinny bridge triangles
-     // (observed minimum quality 0.0038) and dark wedges at the hock.
-     // The samples lie exactly on existing host boundary edges and carry
-     // interpolated Maya weights. Fall back to the original monotone DP only
-     // when every balanced quad cannot meet the geometric quality floor.
+     // Build a curved, skinned transition surface instead of one flat
+     // ribbon. The previous balanced quad was rejected whenever its 3–4 mm
+     // collar gap produced a near-line triangle, then the lower-quality
+     // single-strip DP path was used. Four intermediate rings distribute
+     // that real gap, blend normals and retain the shared Gallop skeleton.
      let resampledBridge=false;
      {
       const indexStart=bridgeIndices.length;
       const positionStart=bridgePositions.length,normalStart=bridgeNormals.length,
        jointStart=bridgeJoints.length,weightStart=bridgeWeights.length;
       const projectedBefore=new Set(projected.keys());
+      const layerProjectedBefore=new Set(layerProjected.keys());
       const projectedIds=alignment.samples.map(bridgeVertex);
+      const fractions=[.2,.4,.6,.8];
+      const rows=[donor];
+      for(const fraction of fractions)
+       rows.push(donor.map((id,i)=>bridgeLayerVertex(id,alignment.samples[i],fraction)));
+      rows.push(projectedIds);
       const triangles=[],qualityValues=[];
       let valid=donorSteps>0;
-      for(let i=0;i<donorSteps&&valid;i++){
-       const nextDonor=(i+1)%m;
-       const nextHost=alignment.closed?(i+1)%projectedIds.length:i+1;
-       const a=donor[i],b=donor[nextDonor],pa=projectedIds[i],pb=projectedIds[nextHost];
-       const donorFallback=[0,1,2].map(k=>normalFor(a)[k]+normalFor(b)[k]);
-       const hostFallback=[0,1,2].map(k=>normalFor(pa)[k]+normalFor(pb)[k]);
-       const pairs=[
-        [bridgeTriangle([a,b,pa],donorFallback),
-         bridgeTriangle([b,pb,pa],hostFallback)],
-        [bridgeTriangle([a,b,pb],donorFallback),
-         bridgeTriangle([a,pb,pa],hostFallback)]
-       ].filter(pair=>pair.every(Boolean)).map(pair=>{
-        const quality=pair.map(triangle=>zipperTriangleQuality(triangle,scale,0));
-        if(quality.some(value=>!value))return null;
-        return {pair,min:Math.min(...quality.map(value=>value.quality)),
-         sum:quality.reduce((total,value)=>total+value.quality,0)};
-       }).filter(Boolean).sort((left,right)=>
-        right.min-left.min||right.sum-left.sum);
-       const best=pairs[0];
-       // A 1.5% normalized triangle-quality floor rejects near-line slivers
-       // instead of sealing the cut with a visually dark, unstable ribbon.
-       if(!best||best.min<.015){valid=false;break;}
-       triangles.push(...best.pair.map(triangle=>triangle.ids));
-       qualityValues.push(...best.pair.map(triangle=>
-        zipperTriangleQuality(triangle,scale,0).quality));
-       const hostStep=distance3(positionFor(pa),positionFor(pb));
-       bridgeMaxHostStep=Math.max(bridgeMaxHostStep,hostStep);
+      for(let band=0;band<rows.length-1&&valid;band++){
+       const inner=rows[band],outer=rows[band+1];
+       for(let i=0;i<donorSteps&&valid;i++){
+        const next=alignment.closed?(i+1)%m:i+1;
+        const a=inner[i],b=inner[next],pa=outer[i],pb=outer[next];
+        const donorFallback=[0,1,2].map(k=>normalFor(a)[k]+normalFor(b)[k]);
+        const hostFallback=[0,1,2].map(k=>normalFor(pa)[k]+normalFor(pb)[k]);
+        const pairs=[
+         [bridgeTriangle([a,b,pa],donorFallback),
+          bridgeTriangle([b,pb,pa],hostFallback)],
+         [bridgeTriangle([a,b,pb],donorFallback),
+          bridgeTriangle([a,pb,pa],hostFallback)]
+        ].filter(pair=>pair.every(Boolean)).map(pair=>{
+         const quality=pair.map(triangle=>zipperTriangleQuality(triangle,scale,0));
+         if(quality.some(value=>!value))return null;
+         return {pair,min:Math.min(...quality.map(value=>value.quality)),
+          sum:quality.reduce((total,value)=>total+value.quality,0)};
+        }).filter(Boolean).sort((left,right)=>
+         right.min-left.min||right.sum-left.sum);
+        const best=pairs[0];
+        // Keep the existing geometric quality floor. Extra rings must
+        // improve the actual triangles; no threshold is relaxed.
+        if(!best||best.min<.015){valid=false;break;}
+        triangles.push(...best.pair.map(triangle=>triangle.ids));
+        qualityValues.push(...best.pair.map(triangle=>
+         zipperTriangleQuality(triangle,scale,0).quality));
+       }
       }
-      if(valid&&triangles.length===donorSteps*2){
+      if(valid&&triangles.length===donorSteps*fractions.length*2){
        const oriented=orientBridgeStrip(triangles);
        bridgeIndices.length=indexStart;
        for(const triangle of oriented)bridgeIndices.push(...triangle);
        const minQuality=Math.min(...qualityValues);
        bridgeZipperResampledLoops++;
-       bridgeZipperMovesDonor+=donorSteps;
-       bridgeZipperMovesHost+=donorSteps;
+       bridgeZipperMovesDonor+=donorSteps*fractions.length;
+       bridgeZipperMovesHost+=donorSteps*fractions.length;
        bridgeZipperQualitySum+=qualityValues.reduce((sum,value)=>sum+value,0);
        bridgeZipperQualityCount+=qualityValues.length;
        bridgeZipperMinQuality=Math.min(bridgeZipperMinQuality,minQuality);
        bridgeEdges+=oriented.length;
        bridgeEdgesByPlane[plane]+=oriented.length;
        bridgeTrianglesByPlane[plane]+=oriented.length;
+       bridgeZipperLayers=Math.max(bridgeZipperLayers,rows.length);
+       for(let i=0;i<donorSteps;i++){
+        const next=alignment.closed?(i+1)%projectedIds.length:i+1;
+        bridgeMaxHostStep=Math.max(bridgeMaxHostStep,
+         distance3(positionFor(projectedIds[i]),positionFor(projectedIds[next])));
+       }
        resampledBridge=true;
       }else{
        bridgeIndices.length=indexStart;
        for(const key of [...projected.keys()])if(!projectedBefore.has(key))projected.delete(key);
+       for(const key of [...layerProjected.keys()])
+        if(!layerProjectedBefore.has(key))layerProjected.delete(key);
        bridgePositions.length=positionStart;
        bridgeNormals.length=normalStart;
        bridgeJoints.length=jointStart;
@@ -2179,7 +2234,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamWarpAcceptedGroups=seamWarpAcceptedGroups;
    bodyCut.seamWarpRejectedGroups=seamWarpRejectedGroups;
    bodyCut.seamWarpMaxResidualGap=seamWarpMaxResidualGap;
-   bodyCut.seamBridgeMethod='monotone-dp-zipper-open-chain';
+   bodyCut.seamBridgeMethod='curved-multi-ring-zipper-open-chain';
+   bodyCut.seamBridgeLayerCount=bridgeZipperLayers;
    bodyCut.seamBridgeLoopPairs=bridgeLoopPairs;
    bodyCut.seamBridgeOpenPaths=seamOpenPaths;
    bodyCut.seamBridgeClosedLoops=seamClosedLoops;
@@ -2582,6 +2638,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamWarpRejectedGroups:bodyCut.seamWarpRejectedGroups||0,
    seamBridgeZipperMovesDonor:bodyCut.seamBridgeZipperMovesDonor||0,seamBridgeZipperMovesHost:bodyCut.seamBridgeZipperMovesHost||0,
    seamBridgeZipperResampledLoops:bodyCut.seamBridgeZipperResampledLoops||0,
+   seamBridgeLayerCount:bodyCut.seamBridgeLayerCount||0,
    seamBridgeZipperFallbackLoops:bodyCut.seamBridgeZipperFallbackLoops||0,
    seamBridgeZipperMeanQuality:bodyCut.seamBridgeZipperMeanQuality||0,seamBridgeZipperMinQuality:bodyCut.seamBridgeZipperMinQuality||0,
    seamBridgeOrientationFlips:bodyCut.seamBridgeOrientationFlips||0,
