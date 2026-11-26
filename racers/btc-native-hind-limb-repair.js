@@ -922,7 +922,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
   // Results are visibly rounded geometry, not a lighting-only cosmetic.
-  const refined=refineSkinnedDonor(bodyCut.geometry,3);
+  const refined=refineSkinnedDonor(bodyCut.geometry,2);
   bodyCut.geometry.dispose();
   bodyCut.geometry=refined.geometry;
   const sealed=sealTinyDonorSlits(bodyCut.geometry);
