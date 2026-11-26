@@ -732,8 +732,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
  // GLTFLoader creates separate Skeleton wrapper objects for sibling GLB
  // primitives even though both share the same 50 authored joint names.
  // Bind ALL donors to the Main skeleton to ensure matrix parity.
+ const originalHostGeometry=anatomy.geometry;
+ const originalMeshMaterial=anatomy.mesh.material;
  const crop=cropMayaHind(anatomy);
- let donor=null,donorHooves=null,bodyCut=null,hoovesCut=null;
+ let donorHooves=null,bodyCut=null,hoovesCut=null,combinedGeometry=null,donorMaterial=null;
  try{
   bodyCut=clipNativeBodyHindExact(original);
 
@@ -1714,12 +1716,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // under the rump. Scale a restrained convex loft to the actual paired-rim
     // separation; both ends remain exactly on their skinned source surfaces.
     const gapLength=distance3(donorPoint,hostPoint);
-    // A 0.9 mm cap left the 4.27 mm collar bridge almost planar and
-    // visually recessed. Bow the transition toward the retained Maya exterior
-    // instead of allowing the donor's cut-face normal to pull it inward.
-    const bulge=Math.min(.0018,gapLength*.42)*Math.sin(Math.PI*fraction);
+    const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*fraction);
     const point=donorPoint.map((v,k)=>
-     v+(hostPoint[k]-v)*fraction+hostN[k]*bulge);
+     v+(hostPoint[k]-v)*fraction+outward[k]*bulge);
     const influence=new Map();
     for(let k=0;k<4;k++){
      const weight=donorWeights.getComponent(donorId,k)*(1-fraction);
@@ -1900,15 +1899,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const normalLength=Math.hypot(...normal)||1;
     const outward=normal.map(v=>v/normalLength);
     const gap=distance3(donorPoint,hostPoint);
-    // The host rim is the retained exterior Maya surface. Use its outward
-    // normal for the loft's geometric bow; blending a donor normal that points
-    // into the cut volume can leave the whole bridge buried under the rump.
-    // Keep both endpoints exact and distribute a measured 42% of the residual
-    // gap as a smooth exterior arc, capped at 1.8 mm.
-    const hostNormalLength=Math.hypot(...hostNormal)||1;
-    const hostOutward=hostNormal.map(v=>v/hostNormalLength);
-    const bulge=Math.min(.0018,gap*.42)*Math.sin(Math.PI*t);
-    const point=donorPoint.map((v,k)=>v+(hostPoint[k]-v)*t+hostOutward[k]*bulge);
+    const bulge=Math.min(.0009,gap*.22)*Math.sin(Math.PI*t);
+    const point=donorPoint.map((v,k)=>v+(hostPoint[k]-v)*t+outward[k]*bulge);
     const influence=new Map();
     for(const [id,factor] of [[donorId,1-t],[hostId,t]]){
      const offset=(id-donorBase)*4;
@@ -2642,7 +2634,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamBridgeUnmatchedByPlane=bridgeUnmatchedByPlane;
    if(bridgeIndices.length>=12){
     bodyCut.seamBridgeData={positions:bridgePositions,normals:bridgeNormals,
-     joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices};
+     joints:bridgeJoints,weights:bridgeWeights,indices:bridgeIndices,
+     donorBase,hostEndpointVertices:[...new Set([...projected.values()].map(id=>id-donorBase))]};
    }
    // Every zipper step advances exactly one ordered boundary edge. A
    // successful loop therefore covers both rims without skipped cells.
@@ -2947,41 +2940,118 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
   hoovesCut.geometry.dispose();hoovesCut.geometry=smoothHooves.geometry;
   hoovesCut.sourceTriangles=smoothHooves.sourceTriangles;
   hoovesCut.triangles=smoothHooves.triangles;
-  // Append the seam strip to the donor BODY geometry before binding it.
-  // Its donor-side vertices are existing indices; only host-edge samples
-  // are new vertices, with Maya-derived weights on the same Gallop rig.
-  if(bodyCut.seamBridgeData){
-   const geo=bodyCut.geometry,data=bodyCut.seamBridgeData;
-   const position=geo.getAttribute('position'),normal=geo.getAttribute('normal');
-   const skin=geo.getAttribute('skinIndex'),weight=geo.getAttribute('skinWeight'),index=geo.getIndex();
-   if(!position||!normal||!skin||!weight||!index)
-    throw Error('BTC seam bridge cannot merge into the skinned donor body');
-   geo.setAttribute('position',new THREE.Float32BufferAttribute(
-    [...position.array,...data.positions],3));
-   geo.setAttribute('normal',new THREE.Float32BufferAttribute(
-    [...normal.array,...data.normals],3));
-   geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(
-    [...skin.array,...data.joints],4));
-   geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(
-    [...weight.array,...data.weights],4));
-   geo.setIndex(new THREE.Uint32BufferAttribute(
-    [...index.array,...data.indices],1));
-   geo.computeBoundingSphere();
+  // The bridge must be part of the SAME indexed SkinnedMesh as the Maya
+  // rump. A separate donor mesh can match positions and weights yet still
+  // shade as a floating flap because its boundary normals are never shared
+  // with the retained host surface. Weld every host-side zipper sample to
+  // the exact Maya split vertex, then recompute normals across the union.
+  if(!bodyCut.seamBridgeData)
+   throw Error('BTC seam bridge data missing before unified skin merge');
+  {
+   const hostGeo=anatomy.geometry,donorGeo=bodyCut.geometry,data=bodyCut.seamBridgeData;
+   const hp=hostGeo.getAttribute('position'),dp=donorGeo.getAttribute('position');
+   const hs=hostGeo.getAttribute('skinIndex'),hw=hostGeo.getAttribute('skinWeight');
+   const ds=donorGeo.getAttribute('skinIndex'),dw=donorGeo.getAttribute('skinWeight');
+   const hi=hostGeo.getIndex(),di=donorGeo.getIndex();
+   if(!hp||!dp||!hs||!hw||!ds||!dw||!hi||!di)
+    throw Error('BTC unified hind mesh requires indexed four-weight host and donor geometry');
+   const hostCount=hp.count,donorCount=dp.count;
+   const positionKey=(attr,id)=>[
+    Math.round(attr.getX(id)*1e7),Math.round(attr.getY(id)*1e7),
+    Math.round(attr.getZ(id)*1e7)
+   ].join(':');
+   const hostByPosition=new Map();
+   for(let id=0;id<hostCount;id++){
+    const key=positionKey(hp,id),list=hostByPosition.get(key)||[];
+    list.push(id);hostByPosition.set(key,list);
+   }
+   const skinDistance=(hostId,donorId)=>{
+    const a=new Map(),b=new Map();
+    for(let k=0;k<4;k++){
+     const ja=hs.getComponent(hostId,k),jb=ds.getComponent(donorId,k);
+     const wa=hw.getComponent(hostId,k),wb=dw.getComponent(donorId,k);
+     if(wa>1e-8)a.set(ja,(a.get(ja)||0)+wa);
+     if(wb>1e-8)b.set(jb,(b.get(jb)||0)+wb);
+    }
+    const joints=new Set([...a.keys(),...b.keys()]);
+    let score=0;for(const joint of joints)score+=Math.abs((a.get(joint)||0)-(b.get(joint)||0));
+    return score;
+   };
+   const hostEndpointMap=new Map();
+   for(const local of data.hostEndpointVertices){
+    const donorId=data.donorBase+local;
+    if(donorId<data.donorBase||donorId>=donorCount)
+     throw Error('BTC host seam endpoint index outside appended bridge vertices');
+    const candidates=hostByPosition.get(positionKey(dp,donorId))||[];
+    if(!candidates.length)
+     throw Error('BTC host zipper endpoint has no exact split Maya vertex at '+positionKey(dp,donorId));
+    let best=candidates[0],bestScore=Infinity;
+    for(const candidate of candidates){
+     const score=skinDistance(candidate,donorId);
+     if(score<bestScore){bestScore=score;best=candidate;}
+    }
+    if(bestScore>1e-3)
+     throw Error('BTC host zipper endpoint skin weights do not match split Maya edge: '+bestScore.toFixed(6));
+    hostEndpointMap.set(donorId,best);
+   }
+   if(hostEndpointMap.size!==data.hostEndpointVertices.length)
+    throw Error('BTC unified hind mesh failed to weld every host zipper endpoint');
+   const combined=new THREE.BufferGeometry();
+   for(const name of ['position','normal','skinIndex','skinWeight']){
+    const a=hostGeo.getAttribute(name),b=donorGeo.getAttribute(name);
+    if(!a||!b||a.itemSize!==b.itemSize)
+     throw Error('BTC unified hind mesh attribute mismatch: '+name);
+    const ArrayType=a.array.constructor;
+    const values=new ArrayType(a.array.length+b.array.length);
+    values.set(a.array,0);values.set(b.array,a.array.length);
+    combined.setAttribute(name,new THREE.BufferAttribute(values,a.itemSize,a.normalized));
+   }
+   const mergedIndex=new Uint32Array(hi.count+di.count);
+   for(let i=0;i<hi.count;i++)mergedIndex[i]=hi.getX(i);
+   for(let i=0;i<di.count;i++){
+    const id=di.getX(i),hostId=hostEndpointMap.get(id);
+    mergedIndex[hi.count+i]=hostId===undefined?hostCount+id:hostId;
+   }
+   combined.setIndex(new THREE.BufferAttribute(mergedIndex,1));
+   const groups=hostGeo.groups.length?hostGeo.groups:
+    [{start:0,count:hi.count,materialIndex:0}];
+   for(const group of groups)
+    combined.addGroup(group.start,group.count,group.materialIndex||0);
+   combined.addGroup(hi.count,di.count,2);
+   // Recompute normals only after host and donor seam indices are welded.
+   // This averages the transition over actual adjacent faces, not a detached
+   // strip's guessed normal field.
+   combined.computeVertexNormals();
+   combined.computeBoundingSphere();
+   combined.name='BTC Maya rump + welded native hind limbs + skinned seam';
+   combinedGeometry=combined;
+   donorMaterial=anatomy.materials[0].clone();
+   donorMaterial.name='BTC unified native hind-limb coat';
+   anatomy.mesh.geometry=combinedGeometry;
+   anatomy.geometry=combinedGeometry;
+   anatomy.mesh.material=[...anatomy.materials,donorMaterial];
+   bodyCut.seamBridgeWeldedHostVertices=hostEndpointMap.size;
+   bodyCut.seamBridgeHostEndpointCount=data.hostEndpointVertices.length;
    bodyCut.triangles+=data.indices.length/3;
    bodyCut.seamBridgeData=null;
   }
-  donor=attachNativeDonor(original,bodyCut.geometry,anatomy.materials[0],
-   'BTC V20 original Gallop hind limbs with original skin weights');
   donorHooves=attachNativeDonor(original,hoovesCut.geometry,anatomy.materials[1],
    'BTC V20 original Gallop posterior hoof keratin');
-  // Opt-in screenshot isolation: hidden ONLY in this diagnostic browser URL.
-  // No effect on the published BTC model, physics or default candidate.
+  // Opt-in screenshot isolation: hide only the added hind-limb material group.
+  // The retained Maya rump remains visible in this diagnostic browser URL.
   if(typeof location!=='undefined'&&
      new URLSearchParams(location.search).get('btcHideDonorQA')==='1'){
-   donor.visible=false;donorHooves.visible=false;
+   donorMaterial.visible=false;donorHooves.visible=false;
   }
  }catch(e){
-  donor?.removeFromParent();donorHooves?.removeFromParent();
+  donorHooves?.removeFromParent();
+  if(combinedGeometry){
+   anatomy.mesh.geometry=originalHostGeometry;
+   anatomy.geometry=originalHostGeometry;
+   anatomy.mesh.material=originalMeshMaterial;
+   combinedGeometry.dispose();combinedGeometry=null;
+  }
+  donorMaterial?.dispose();donorMaterial=null;
   bodyCut?.geometry.dispose();hoovesCut?.geometry.dispose();
   crop.restore();throw e;
  }
@@ -3041,11 +3111,18 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    donorSubdivisionPasses:bodyCut.subdivisionPasses,
    originalDonorTriangles:bodyCut.sourceTriangles,refinedDonorVertices:bodyCut.refinedVertices,
    originalHoofTriangles:hoovesCut.sourceTriangles,
-   sameOriginalSkeleton:donor.skeleton===original.skeleton&&donorHooves.skeleton===original.skeleton
+   seamBridgeWeldedHostVertices:bodyCut.seamBridgeWeldedHostVertices||0,
+   seamBridgeHostEndpointCount:bodyCut.seamBridgeHostEndpointCount||0,
+   sameOriginalSkeleton:anatomy.mesh.skeleton===original.skeleton&&donorHooves.skeleton===original.skeleton
   },
   dispose(){
    if(disposed)return;disposed=true;
-   donor.removeFromParent();donorHooves.removeFromParent();
+   donorHooves.removeFromParent();
+   anatomy.mesh.geometry=originalHostGeometry;
+   anatomy.geometry=originalHostGeometry;
+   anatomy.mesh.material=originalMeshMaterial;
+   combinedGeometry?.dispose();combinedGeometry=null;
+   donorMaterial?.dispose();donorMaterial=null;
    bodyCut.geometry.dispose();hoovesCut.geometry.dispose();
    crop.restore();
   }
