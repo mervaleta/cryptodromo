@@ -1590,42 +1590,13 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
      const meanSq=sumSq/Math.max(1,count);
      const meanQuality=qualitySum/Math.max(1,qualityCount);
-     // Arc-length samples can look well aligned while the actual monotone
-     // zipper still contains one needle face. Score the best bottleneck path
-     // on independently resampled donor/host loops, using the same triangle
-     // quality metric as the final bridge DP. This makes cyclic phase/winding
-     // selection optimize the surface that will actually be built.
-     const sampleCount=step<=2?48:24;
-     const sampledDonor=Array.from({length:sampleCount},(_,i)=>
-      sampleArc(donor.arc,i/sampleCount).point);
-     const sampledHost=Array.from({length:sampleCount},(_,i)=>
-      sampleArc(host.arc,i/sampleCount).point);
-     const bottleneck=Array.from({length:sampleCount+1},()=>
-      new Float32Array(sampleCount+1));
-     bottleneck[0][0]=1;
-     for(let i=0;i<=sampleCount;i++)for(let j=0;j<=sampleCount;j++){
-      const current=bottleneck[i][j];
-      if(current<=0||(i===sampleCount&&j===sampleCount))continue;
-      const d0=sampledDonor[i%sampleCount],h0=sampledHost[j%sampleCount];
-      if(i<sampleCount){
-       const q=triangleQuality([d0,sampledDonor[(i+1)%sampleCount],h0]);
-       const next=Math.min(current,q);
-       if(next>bottleneck[i+1][j])bottleneck[i+1][j]=next;
-      }
-      if(j<sampleCount){
-       const q=triangleQuality([d0,sampledHost[(j+1)%sampleCount],h0]);
-       const next=Math.min(current,q);
-       if(next>bottleneck[i][j+1])bottleneck[i][j+1]=next;
-      }
-     }
-     const pathQuality=bottleneck[sampleCount][sampleCount];
-     // Gap remains important, but the actual zipper bottleneck receives a
-     // separate penalty. A low-quality sliver is not hidden by dozens of
-     // healthy cells elsewhere on the loop.
+     // Keep gap as the primary objective, but penalize an alignment whose
+     // worst sampled bridge cell is nearly degenerate. The penalty is scaled
+     // to the measured gap energy so it cannot dominate a clearly superior
+     // anatomical match merely because of one noisy sample.
      const score=meanSq+maxGap*maxGap*.35+
-      meanSq*2.5*(1-minQuality)+meanSq*.35*(1-meanQuality)+
-      meanSq*8*(1-pathQuality);
-     return {meanSq,maxGap,minQuality,meanQuality,pathQuality,score};
+      meanSq*2.5*(1-minQuality)+meanSq*.35*(1-meanQuality);
+     return {meanSq,maxGap,minQuality,meanQuality,score};
     }
     const donorCoarseStarts=new Set();
     for(let i=0;i<donorCount;i+=donorStride)donorCoarseStarts.add(i);
@@ -1671,8 +1642,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      samples.push(sample);sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);
     }
     const meanSq=sumSq/Math.max(1,donorCount);
-    return {donor,host,samples,score:best.score.score,maxGap,meanSq,
-     bottleneckQuality:best.score.pathQuality,donorArc,hostArc,closed:true};
+    return {donor,host,samples,score:meanSq+maxGap*maxGap*.35,maxGap,meanSq,
+     donorArc,hostArc,closed:true};
    }
    function findBestBoundaryAlignment(donorPath,hostPath){
     if(donorPath.closed!==hostPath.closed)return null;
