@@ -1235,6 +1235,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
    const projected=new Map(),layerProjected=new Map(),donorBase=donorPos.count;
    const bridgeEndpointInfo=new Map();
+   // The collar relaxation runs after the first loft build. Keep the source
+   // correspondence so the curved rings can be reprojected onto the final
+   // relaxed donor surface instead of retaining stale pre-relax tangents.
+   const bridgeVertexSpecs=new Map(),donorRimNeighborsById=new Map();
    let donorBoundaryInward=new Map(),hostBoundaryInward=new Map();
    let donorRimTangentById=new Map(),hostRimTangentById=new Map();
    // Keep the host-side zipper samples as real subdivisions of the Maya
@@ -1870,6 +1874,15 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgePositions.push(...point);bridgeNormals.push(...outward);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
+    bridgeVertexSpecs.set(index,{
+     donorId,
+     sample:{a:sample.a,b:sample.b,t},
+     fraction,
+     hostRimTangent:hostRimTangent?.slice()||null,
+     hostSurfaceInward:hostSurfaceInward?.vector?
+      {vector:hostSurfaceInward.vector.slice()}:null,
+     orientation:{...seamTangentOrientation}
+    });
     layerProjected.set(key,index);
     return index;
    }
@@ -2437,6 +2450,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const donorRimTangents=donor.map((id,i)=>{
        const previous=alignment.closed?donor[(i-1+m)%m]:donor[Math.max(0,i-1)];
        const next=alignment.closed?donor[(i+1)%m]:donor[Math.min(m-1,i+1)];
+       donorRimNeighborsById.set(id,[previous,next]);
        const a=pointAt(donorPos,previous),b=pointAt(donorPos,next);
        return b.map((v,k)=>v-a[k]);
       });
@@ -3201,6 +3215,51 @@ const fractions=[.2,.4,.6,.8];
   };
   const uniqueSurfacePoints=smoothNormals(donorGeo);
   donorGeo.computeBoundingSphere();
+  // The loft above was first constructed against the pre-relax donor
+  // collar. The guarded two-pass relaxation then changes the donor's
+  // one-ring tangents and surface normals while leaving its open rim pinned.
+  // Re-evaluate every curved bridge ring against that FINAL donor surface;
+  // otherwise the first 20% ring can retain an obsolete tangent and expose
+  // a dark slit even though both endpoint loops are indexed and welded.
+  let seamBridgePostRelaxMaxShift=0;
+  if(bridgeVertexSpecs.size){
+   const refreshedInward=boundaryInteriorMap(donorRimEdges,di,donorPos);
+   const refreshedNormal=donorGeo.getAttribute('normal');
+   const refreshedHostNormal=hostGeo.getAttribute('normal');
+   for(const [index,spec] of bridgeVertexSpecs){
+    const neighbors=donorRimNeighborsById.get(spec.donorId);
+    if(!neighbors)throw Error('BTC post-relax seam bridge lost donor rim neighbors for '+spec.donorId);
+    const [previous,next]=neighbors;
+    const donorPoint=pointAt(donorPos,spec.donorId);
+    const previousPoint=pointAt(donorPos,previous),nextPoint=pointAt(donorPos,next);
+    const donorTangent=nextPoint.map((value,k)=>value-previousPoint[k]);
+    const t=Math.max(0,Math.min(1,spec.sample.t));
+    const hostA=pointAt(hostPos,spec.sample.a),hostB=pointAt(hostPos,spec.sample.b);
+    const hostPoint=hostA.map((value,k)=>value+(hostB[k]-value)*t);
+    const donorN=refreshedNormal?
+     [0,1,2].map(k=>refreshedNormal.getComponent(spec.donorId,k)):[0,1,0];
+    let hostN=refreshedHostNormal?
+     [0,1,2].map(k=>refreshedHostNormal.getComponent(spec.sample.a,k)*(1-t)+
+      refreshedHostNormal.getComponent(spec.sample.b,k)*t):[0,1,0];
+    const hostLength=Math.hypot(...hostN)||1;
+    hostN=hostN.map(value=>value/hostLength);
+    const donorSurface=refreshedInward.get(seamKey(donorPos,spec.donorId))||null;
+    seamTangentOrientation=spec.orientation;
+    const bridge=tangentHermiteBridgePoint(
+     donorPoint,hostPoint,donorN,hostN,spec.fraction,
+     donorTangent,spec.hostRimTangent,donorSurface,spec.hostSurfaceInward);
+    const offset=(index-donorBase)*3;
+    const previousPointOnBridge=bridgePositions.slice(offset,offset+3);
+    seamBridgePostRelaxMaxShift=Math.max(seamBridgePostRelaxMaxShift,
+     distance3(previousPointOnBridge,bridge.point));
+    for(let k=0;k<3;k++){
+     bridgePositions[offset+k]=bridge.point[k];
+     bridgeNormals[offset+k]=bridge.outward[k];
+    }
+   }
+  }
+  bodyCut.seamBridgePostRelaxReprojectedVertices=bridgeVertexSpecs.size;
+  bodyCut.seamBridgePostRelaxMaxShift=seamBridgePostRelaxMaxShift;
   bodyCut.collarRejectedMoves=collarRejectedMoves;
   bodyCut.collarBacktrackedMoves=collarBacktrackedMoves;
   bodyCut.insetVertices=insetVertices;
@@ -3443,6 +3502,8 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
    seamBridgeTangentDirectionFlips:bodyCut.seamBridgeTangentDirectionFlips||0,
    seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
+   seamBridgePostRelaxReprojectedVertices:bodyCut.seamBridgePostRelaxReprojectedVertices||0,
+   seamBridgePostRelaxMaxShift:bodyCut.seamBridgePostRelaxMaxShift||0,
    seamWarpFactor:bodyCut.seamWarpFactor||0,seamWarpTargetFraction:bodyCut.seamWarpTargetFraction||0,
    seamWarpMaxMove:bodyCut.seamWarpMaxMove||0,
    seamWarpMeanMove:bodyCut.seamWarpMeanMove||0,seamWarpMaxResidualGap:bodyCut.seamWarpMaxResidualGap||0,
