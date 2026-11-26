@@ -653,7 +653,7 @@ function refineSkinnedDonor(source,passes=2){
    // pushes its midpoint off the plane and reopens the rump/limb seam.
    // Preserve a linear midpoint on all such coplanar cut edges.
    const onCutPlane=(p,q)=>[
-    [1,.0045],[2,.0245],[0,.0012],[0,-.0012]
+    [1,.0052],[2,.0200],[0,.0015],[0,-.0015]
    ].some(([axis,value])=>Math.abs(p[axis]-value)<1e-7&&
                             Math.abs(q[axis]-value)<1e-7);
    const constrained=e.opp.length!==2||onCutPlane(a.p,b.p);
