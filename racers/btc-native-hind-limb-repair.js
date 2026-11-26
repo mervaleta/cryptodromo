@@ -838,6 +838,23 @@ function sealTinyDonorSlits(geometry){
   weight=geometry.getAttribute('skinWeight');normal=geometry.getAttribute('normal');index=geometry.getIndex();
   caps++;addedTriangles+=oriented.length;weldedVertices++;
  }
+ if(caps){
+  const currentIndex=geometry.getIndex(),used=[...new Set(Array.from(currentIndex.array))].sort((a,b)=>a-b);
+  const remap=new Map(used.map((id,i)=>[id,i]));
+  for(const [name,attr] of Object.entries(geometry.attributes)){
+   const values=[];
+   for(const id of used)for(let k=0;k<attr.itemSize;k++)
+    values.push(attr.array[id*attr.itemSize+k]);
+   const C=attr.array.constructor,replacement=new THREE.BufferAttribute(new C(values),attr.itemSize,attr.normalized);
+   if(attr.usage!==undefined)replacement.setUsage(attr.usage);
+   geometry.setAttribute(name,replacement);
+  }
+  const compacted=Array.from(currentIndex.array,id=>remap.get(id));
+  const IndexArray=used.length>65535?Uint32Array:Uint16Array;
+  geometry.setIndex(new THREE.BufferAttribute(new IndexArray(compacted),1));
+  geometry.setDrawRange(0,compacted.length);
+  geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+ }
  return {caps,addedTriangles,weldedVertices,vertices:geometry.getAttribute('position').count};
 }
 
