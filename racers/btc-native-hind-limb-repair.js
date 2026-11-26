@@ -1930,6 +1930,17 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        const base=costs[i][j];
        if(!Number.isFinite(base)||(i===donorSteps&&j===hostSteps))continue;
        const d0=donor[i%m],h0=hostIds[j%n];
+       const commit=(ni,nj,triangles,move,qualities)=>{
+        const bottleneck=Math.min(minimums[i][j],...qualities.map(q=>q.quality));
+        const next=base+qualities.reduce((sum,q)=>sum+q.cost,0);
+        if(bottleneck>minimums[ni][nj]+1e-9||
+           (Math.abs(bottleneck-minimums[ni][nj])<=1e-9&&next<costs[ni][nj])){
+         minimums[ni][nj]=bottleneck;
+         costs[ni][nj]=next;
+         previous[ni][nj]={i,j,triangles:triangles.map(tri=>tri.ids),
+          move,qualities:qualities.map(q=>q.quality)};
+        }
+       };
        if(i<donorSteps){
         const d1=donor[(i+1)%m];
         const tri=bridgeTriangle([d0,d1,h0],
@@ -1938,16 +1949,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          const td=donorArc.lengths[i+1]/donorArc.total;
          const th=hostArc.lengths[j]/hostArc.total;
          const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
-         if(q){
-          const next=base+q.cost;
-          const bottleneck=Math.min(minimums[i][j],q.quality);
-          if(bottleneck>minimums[i+1][j]+1e-9||
-             (Math.abs(bottleneck-minimums[i+1][j])<=1e-9&&next<costs[i+1][j])){
-           minimums[i+1][j]=bottleneck;
-           costs[i+1][j]=next;
-           previous[i+1][j]={i,j,tri,move:'donor',quality:q.quality};
-          }
-         }
+         if(q)commit(i+1,j,[tri],'donor',[q]);
         }
        }
        if(j<hostSteps){
@@ -1958,27 +1960,53 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          const td=donorArc.lengths[i]/donorArc.total;
          const th=hostArc.lengths[j+1]/hostArc.total;
          const q=zipperTriangleQuality(tri,scale,Math.abs(td-th));
-         if(q){
-          const next=base+q.cost;
-          const bottleneck=Math.min(minimums[i][j],q.quality);
-          if(bottleneck>minimums[i][j+1]+1e-9||
-             (Math.abs(bottleneck-minimums[i][j+1])<=1e-9&&next<costs[i][j+1])){
-           minimums[i][j+1]=bottleneck;
-           costs[i][j+1]=next;
-           previous[i][j+1]={i,j,tri,move:'host',quality:q.quality};
-          }
-         }
+         if(q)commit(i,j+1,[tri],'host',[q]);
         }
        }
-      }
-      if(Number.isFinite(costs[donorSteps][hostSteps])){
+       // A paired move advances one edge on BOTH boundaries and triangulates
+       // the resulting quad. The previous DP could only advance one rim at a
+       // time, which forced skinny one-sided wedges where donor and host
+       // sampling densities diverged. Test both diagonals and retain the pair
+       // with the strongest minimum face quality.
+       if(i<donorSteps&&j<hostSteps){
+        const d1=donor[(i+1)%m],h1=hostIds[(j+1)%n];
+        const donorFallback=[0,1,2].map(k=>normalFor(d0)[k]+normalFor(d1)[k]);
+        const hostFallback=[0,1,2].map(k=>normalFor(h0)[k]+normalFor(h1)[k]);
+        const candidates=[
+         [bridgeTriangle([d0,d1,h0],donorFallback),
+          bridgeTriangle([d1,h1,h0],hostFallback)],
+         [bridgeTriangle([d0,d1,h1],donorFallback),
+          bridgeTriangle([d0,h1,h0],hostFallback)]
+        ].filter(pair=>pair.every(Boolean)).map(pair=>{
+         const td=donorArc.lengths[i+1]/donorArc.total;
+         const th=hostArc.lengths[j+1]/hostArc.total;
+         const error=Math.abs(td-th);
+         const quality=pair.map(tri=>zipperTriangleQuality(tri,scale,error));
+         if(quality.some(value=>!value))return null;
+         return {pair,min:Math.min(...quality.map(value=>value.quality)),
+          sum:quality.reduce((total,value)=>total+value.quality,0)};
+        }).filter(Boolean).sort((left,right)=>
+         right.min-left.min||right.sum-left.sum);
+        if(candidates.length){
+         const best=candidates[0];
+         commit(i+1,j+1,best.pair,'both',
+          best.pair.map((_,k)=>({quality:best.pair[k]&&
+           zipperTriangleQuality(best.pair[k],scale,
+            Math.abs(donorArc.lengths[i+1]/donorArc.total-
+             hostArc.lengths[j+1]/hostArc.total)).quality,
+           cost:zipperTriangleQuality(best.pair[k],scale,
+            Math.abs(donorArc.lengths[i+1]/donorArc.total-
+             hostArc.lengths[j+1]/hostArc.total)).cost})));
+        }
+       }
+      }      if(Number.isFinite(costs[donorSteps][hostSteps])){
        const path=[];let i=donorSteps,j=hostSteps;
        while(i||j){
         const step=previous[i][j];
         if(!step){path.length=0;break;}
         path.push(step);i=step.i;j=step.j;
        }
-       if(path.length===donorSteps+hostSteps)zipperPath=path.reverse();
+       if(path.length&&i===0&&j===0)zipperPath=path.reverse();
       }
      }
      // Prefer a balanced zipper: sample the host arc at every donor-rim
@@ -2053,23 +2081,27 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      if(resampledBridge){
       // Balanced strip accepted; its shared edges were globally oriented.
      }else if(zipperPath){
-      let localDonorMoves=0,localHostMoves=0,qualitySum=0,qualityMin=1;
-      const orientedTriangles=orientBridgeStrip(zipperPath.map(step=>step.tri.ids));
-      for(let k=0;k<zipperPath.length;k++){
-       const step=zipperPath[k];
-       bridgeIndices.push(...orientedTriangles[k]);
-       qualitySum+=step.quality;qualityMin=Math.min(qualityMin,step.quality);
-       if(step.move==='donor')localDonorMoves++;
-       else localHostMoves++;
+      let localDonorMoves=0,localHostMoves=0,qualitySum=0,qualityCount=0,qualityMin=1;
+      const sourceTriangles=zipperPath.flatMap(step=>step.triangles);
+      const orientedTriangles=orientBridgeStrip(sourceTriangles);
+      let faceIndex=0;
+      for(const step of zipperPath){
+       for(const quality of step.qualities){
+        bridgeIndices.push(...orientedTriangles[faceIndex++]);
+        qualitySum+=quality;qualityCount++;
+        qualityMin=Math.min(qualityMin,quality);
+       }
+       if(step.move==='donor'||step.move==='both')localDonorMoves++;
+       if(step.move==='host'||step.move==='both')localHostMoves++;
       }
       bridgeZipperMovesDonor+=localDonorMoves;
       bridgeZipperMovesHost+=localHostMoves;
       bridgeZipperQualitySum+=qualitySum;
-      bridgeZipperQualityCount+=zipperPath.length;
+      bridgeZipperQualityCount+=qualityCount;
       bridgeZipperMinQuality=Math.min(bridgeZipperMinQuality,qualityMin);
-      bridgeEdges+=zipperPath.length;
-      bridgeEdgesByPlane[plane]+=zipperPath.length;
-      bridgeTrianglesByPlane[plane]+=zipperPath.length;
+      bridgeEdges+=orientedTriangles.length;
+      bridgeEdgesByPlane[plane]+=orientedTriangles.length;
+      bridgeTrianglesByPlane[plane]+=orientedTriangles.length;
       for(let j=0;j<hostSteps;j++){
        const step=distance3(pointAt(hostPos,host[j]),pointAt(hostPos,host[(j+1)%n]));
        bridgeMaxHostStep=Math.max(bridgeMaxHostStep,step);
