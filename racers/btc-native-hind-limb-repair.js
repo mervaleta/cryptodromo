@@ -3547,6 +3547,17 @@ const fractions=[.2,.4,.6,.8];
    combinedGeometry=combined;
    donorMaterial=anatomy.materials[0].clone();
    donorMaterial.name='BTC unified native hind-limb coat';
+   // One-off real-WebGL diagnostic: color and double-side only the added
+   // donor+seam material to distinguish a backface hole from a missing/
+   // misplaced bridge. The flag is never enabled in the public build.
+   if(typeof location!=='undefined'&&
+      new URLSearchParams(location.search).get('btcSeamDebugQA')==='1'){
+    donorMaterial.side=THREE.DoubleSide;
+    donorMaterial.color.setHex(0x36ff72);
+    donorMaterial.emissive.setHex(0x002b10);
+    donorMaterial.emissiveIntensity=.85;
+    donorMaterial.needsUpdate=true;
+   }
    anatomy.mesh.geometry=combinedGeometry;
    anatomy.geometry=combinedGeometry;
    anatomy.mesh.material=[...anatomy.materials,donorMaterial];
