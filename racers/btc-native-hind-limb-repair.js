@@ -1719,7 +1719,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // instead of allowing the donor's cut-face normal to pull it inward.
     const bulge=Math.min(.0018,gapLength*.42)*Math.sin(Math.PI*fraction);
     const point=donorPoint.map((v,k)=>
-     v+(hostPoint[k]-v)*fraction+outward[k]*bulge);
+     v+(hostPoint[k]-v)*fraction+hostN[k]*bulge);
     const influence=new Map();
     for(let k=0;k<4;k++){
      const weight=donorWeights.getComponent(donorId,k)*(1-fraction);
@@ -1905,9 +1905,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // into the cut volume can leave the whole bridge buried under the rump.
     // Keep both endpoints exact and distribute a measured 42% of the residual
     // gap as a smooth exterior arc, capped at 1.8 mm.
-    const hostOutward=hostNormal?.getAttribute?null:null;
+    const hostNormalLength=Math.hypot(...hostNormal)||1;
+    const hostOutward=hostNormal.map(v=>v/hostNormalLength);
     const bulge=Math.min(.0018,gap*.42)*Math.sin(Math.PI*t);
-    const point=donorPoint.map((v,k)=>v+(hostPoint[k]-v)*t+outward[k]*bulge);
+    const point=donorPoint.map((v,k)=>v+(hostPoint[k]-v)*t+hostOutward[k]*bulge);
     const influence=new Map();
     for(const [id,factor] of [[donorId,1-t],[hostId,t]]){
      const offset=(id-donorBase)*4;
