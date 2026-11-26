@@ -429,10 +429,10 @@ function clipNativeBodyHindExact(mesh){
   // the host opening and 0.50 mm farther inward on each flank. Those
   // mismatched cuts create an unfillable dark band before any rig motion.
   // The donor remains an isolated candidate until rear/3Q WebGL A/B.
-  {id:'y',f:v=>xyz[3*v+1]-.0052},
-  {id:'z',f:v=>.0200-xyz[3*v+2]},
-  {id:'R',f:v=>xyz[3*v]-.0015},
-  {id:'L',f:v=>-xyz[3*v]-.0015}
+  {id:'y',f:v=>xyz[3*v+1]-.0045},
+  {id:'z',f:v=>.0245-xyz[3*v+2]},
+  {id:'R',f:v=>xyz[3*v]-.0012},
+  {id:'L',f:v=>-xyz[3*v]-.0012}
  ];
  function intersection(a,b,plane){
   const fa=plane.f(a),fb=plane.f(b);
@@ -626,7 +626,7 @@ function refineSkinnedDonor(source,passes=2){
    // off the plane. That bends adjacent triangles into the host surface
    // and makes a visible serrated wedge at the Maya/GLB rump join.
    const onExactCutPlane=[
-    [1,.0052],[2,.0200],[0,.0015],[0,-.0015]
+    [1,.0045],[2,.0245],[0,.0012],[0,-.0012]
    ].some(([axis,value])=>Math.abs(vs[i].p[axis]-value)<1e-7);
    if(near.length>0||onExactCutPlane){
     // Every vertex incident to an open boundary is constrained, including
@@ -653,7 +653,7 @@ function refineSkinnedDonor(source,passes=2){
    // pushes its midpoint off the plane and reopens the rump/limb seam.
    // Preserve a linear midpoint on all such coplanar cut edges.
    const onCutPlane=(p,q)=>[
-    [1,.0052],[2,.0200],[0,.0015],[0,-.0015]
+    [1,.0045],[2,.0245],[0,.0012],[0,-.0012]
    ].some(([axis,value])=>Math.abs(p[axis]-value)<1e-7&&
                             Math.abs(q[axis]-value)<1e-7);
    const constrained=e.opp.length!==2||onCutPlane(a.p,b.p);
@@ -741,7 +741,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
 
   // Refine the actual skinned GLB limb before sewing its upper edge.
   // Results are visibly rounded geometry, not a lighting-only cosmetic.
-  const refined=refineSkinnedDonor(bodyCut.geometry,1);
+  const refined=refineSkinnedDonor(bodyCut.geometry,2);
   bodyCut.geometry.dispose();
   bodyCut.geometry=refined.geometry;
   bodyCut.sourceTriangles=refined.sourceTriangles;
@@ -1037,30 +1037,31 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // Stitching only z left the visible pale slit at the top of each hind
    // thigh because the y/x cut arcs remained open in real WebGL.
    const seamPlaneTolerance=.00003;
-   const classifySeamEdge=(position,e)=>{
+   const classifySeamEdge=(position,e,surface='host')=>{
+    const plane=surface==='donor'?{y:.0045,z:.0245,x:.0012}:{y:.0052,z:.0200,x:.0015};
     const a=[position.getX(e.a),position.getY(e.a),position.getZ(e.a)];
     const b=[position.getX(e.b),position.getY(e.b),position.getZ(e.b)];
     const sideA=Math.sign(a[0]),sideB=Math.sign(b[0]);
-    if(!sideA||sideA!==sideB||Math.abs(a[0])<=.0014||Math.abs(b[0])<=.0014)return null;
+    if(!sideA||sideA!==sideB||Math.abs(a[0])<=plane.x-.0001||Math.abs(b[0])<=plane.x-.0001)return null;
     const near=(p,axis,value)=>Math.abs(p[axis]-value)<=seamPlaneTolerance;
-    if(near(a,2,.0200)&&near(b,2,.0200)&&a[1]>=.0050&&b[1]>=.0050)return 'z';
-    if(near(a,1,.0052)&&near(b,1,.0052)&&
-       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)return 'y';
-    if(near(a,0,sideA*.0015)&&near(b,0,sideB*.0015)&&
-       a[1]>=.0050&&b[1]>=.0050&&
-       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)
+    if(near(a,2,plane.z)&&near(b,2,plane.z)&&a[1]>=plane.y-.0002&&b[1]>=plane.y-.0002)return 'z';
+    if(near(a,1,plane.y)&&near(b,1,plane.y)&&
+       a[2]<=plane.z+seamPlaneTolerance&&b[2]<=plane.z+seamPlaneTolerance)return 'y';
+    if(near(a,0,sideA*plane.x)&&near(b,0,sideB*plane.x)&&
+       a[1]>=plane.y-.0002&&b[1]>=plane.y-.0002&&
+       a[2]<=plane.z+seamPlaneTolerance&&b[2]<=plane.z+seamPlaneTolerance)
      return sideA<0?'x-':'x+';
     return null;
    };
    const hostRim=hostBoundary.edges.flatMap(e=>{
-    const plane=classifySeamEdge(hostPos,e);
+    const plane=classifySeamEdge(hostPos,e,'host');
     return plane?[{...e,plane}]:[];
    });
    const di=donorGeo.getIndex();
    const donorBoundary=physicalBoundary(di,donorPos);
    const donorRim=new Set(),donorRimPlanes=new Map(),donorRimEdges=[];
    for(const e of donorBoundary.edges){
-    const plane=classifySeamEdge(donorPos,e);
+    const plane=classifySeamEdge(donorPos,e,'donor');
     if(!plane)continue;
     donorRimEdges.push({...e,plane});
     for(const vertex of [e.a,e.b]){
