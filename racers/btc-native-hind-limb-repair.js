@@ -1879,17 +1879,50 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // a needle triangle or relaxing the quality floor.
    function bridgeCellCenterVertex(ids){
     const points=ids.map(positionFor),normals=ids.map(normalFor);
-    const point=[0,1,2].map(k=>points.reduce((sum,p)=>sum+p[k],0)/points.length);
-    const normal=[0,1,2].map(k=>normals.reduce((sum,n)=>sum+n[k],0));
-    const normalLength=Math.hypot(...normal)||1;
-    const outward=normal.map(v=>v/normalLength);
+    // For a triangular DP end-cap, the centroid can sit almost on a long,
+    // narrow edge and the averaged vertex normal can be tangent to the cap.
+    // Use the true triangle incenter and its geometric normal instead. This
+    // gives the three fan faces a balanced interior anchor while preserving
+    // a tiny outward lift and barycentric skinning. Quad cells retain the
+    // previous area-neutral center fan.
+    let factors=ids.map(()=>1/ids.length);
+    let point=[0,1,2].map(k=>points.reduce((sum,p)=>sum+p[k],0)/points.length);
+    let outward;
+    if(ids.length===3){
+     const lengths=[
+      distance3(points[1],points[2]),
+      distance3(points[2],points[0]),
+      distance3(points[0],points[1])
+     ];
+     const perimeter=lengths.reduce((sum,value)=>sum+value,0)||1;
+     factors=lengths.map(value=>value/perimeter);
+     point=[0,1,2].map(k=>points.reduce((sum,p,i)=>sum+p[k]*factors[i],0));
+     const u=points[1].map((value,k)=>value-points[0][k]);
+     const v=points[2].map((value,k)=>value-points[0][k]);
+     let normal=[
+      u[1]*v[2]-u[2]*v[1],
+      u[2]*v[0]-u[0]*v[2],
+      u[0]*v[1]-u[1]*v[0]
+     ];
+     const normalLength=Math.hypot(...normal)||1;
+     normal=normal.map(value=>value/normalLength);
+     const reference=[0,1,2].map(k=>
+      normals.reduce((sum,n,i)=>sum+n[k]*factors[i],0));
+     if(normal.reduce((sum,value,k)=>sum+value*reference[k],0)<0)
+      normal=normal.map(value=>-value);
+     outward=normal;
+    }else{
+     const normal=[0,1,2].map(k=>normals.reduce((sum,n)=>sum+n[k],0));
+     const normalLength=Math.hypot(...normal)||1;
+     outward=normal.map(value=>value/normalLength);
+    }
     for(let k=0;k<3;k++)point[k]+=outward[k]*.00008;
     const influence=new Map();
-    for(const id of ids)for(let k=0;k<4;k++){
-     const offset=(id-donorBase)*4;
+    for(let i=0;i<ids.length;i++)for(let k=0;k<4;k++){
+     const id=ids[i],offset=(id-donorBase)*4;
      const joint=id<donorBase?donorSkin.getComponent(id,k):bridgeJoints[offset+k];
-     const weight=id<donorBase?donorWeights.getComponent(id,k):bridgeWeights[offset+k];
-     if(weight>1e-9)influence.set(joint,(influence.get(joint)||0)+weight/ids.length);
+     const weight=(id<donorBase?donorWeights.getComponent(id,k):bridgeWeights[offset+k])*factors[i];
+     if(weight>1e-9)influence.set(joint,(influence.get(joint)||0)+weight);
     }
     const top=[...influence].sort((a,b)=>b[1]-a[1]).slice(0,4);
     const total=top.reduce((sum,item)=>sum+item[1],0)||1;
