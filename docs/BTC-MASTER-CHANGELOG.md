@@ -228,3 +228,7 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Crin y cola: raíz pegada a la línea cervical, mechones con menor arco y longitud superficial. El cuerpo, crin, ojos y Gallop son animados en Three.js, no imágenes estáticas.
 - En `/racers/#BTC` se selecciona Maya V16 por defecto. Reversión instantánea: `?btcMaster=v5#BTC` o `?btcMaster=original#BTC`; ningún otro símbolo se modifica.
 - Pruebas reales Chromium/WebGL previas: rama work/btc-face-restore-visual-20261105, run 42041368297 (contorno/ojos/hocico), 42041764109 (16 fases y 6 cámaras; revisión en curso al integrar). Esta no es aprobación estética ni certificación de Hostinger. Candidato needs_visual_qa, no modelo maestro, no replicación.
+
+## 2026-11-26 · BTC hind-seam candidates, no release
+- Se probó y revirtió una tercera subdivisión Loop por un path abierto extra de 5 vértices en el rim donante; no se suprimieron validaciones.
+- El conform objetivo al 35% produjo Chromium/WebGL real, pero A/B visual contra el candidato anterior dejó prácticamente idéntica la unión grupa-muslo. El ciclo completo de 16 fases/seis cámaras sigue pendiente. No acreditar V23, no publicar, mantener V21.
