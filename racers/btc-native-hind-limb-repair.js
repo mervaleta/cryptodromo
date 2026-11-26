@@ -1550,7 +1550,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }).filter(Boolean);
     }
     function scorePair(donor,host,step){
-     let sumSq=0,maxGap=0,count=0,minQuality=1,qualitySum=0,qualityCount=0;
+     let sumSq=0,maxGap=0,count=0,minQuality=1,qualitySum=0,qualityCount=0,
+      tangentSum=0,tangentCount=0;
      const triangleQuality=points=>{
       const u=points[1].map((v,k)=>v-points[0][k]);
       const v=points[2].map((x,k)=>x-points[0][k]);
@@ -1575,6 +1576,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const h0=sampleArc(host.arc,u0).point;
       const h1=sampleArc(host.arc,u1).point;
       const d0=donor.arc.points[i],d1=donor.arc.points[next];
+      const dT=d1.map((v,k)=>v-d0[k]),hT=h1.map((v,k)=>v-h0[k]);
+      const dLength=Math.hypot(...dT)||1,hLength=Math.hypot(...hT)||1;
+      const tangentDot=Math.max(-1,Math.min(1,
+       dT.reduce((sum,v,k)=>sum+(v/dLength)*(hT[k]/hLength),0)));
+      tangentSum+=tangentDot;tangentCount++;
       const gap=distance3(d0,h0);
       sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);count++;
       // A low-distance correspondence can still twist the zipper into
@@ -1596,13 +1602,15 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
      const meanSq=sumSq/Math.max(1,count);
      const meanQuality=qualitySum/Math.max(1,qualityCount);
-     // Keep gap as the primary objective, but penalize an alignment whose
-     // worst sampled bridge cell is nearly degenerate. The penalty is scaled
-     // to the measured gap energy so it cannot dominate a clearly superior
-     // anatomical match merely because of one noisy sample.
+     const meanTangent=tangentSum/Math.max(1,tangentCount);
+     // Distance and triangle quality alone can select a low-gap cyclic
+     // offset whose two anatomical rims run in different directions. That
+     // twists the thigh collar into a dark wedge. Prefer correspondence with
+     // aligned boundary tangents as well as a compact, non-degenerate loft.
      const score=meanSq+maxGap*maxGap*.35+
-      meanSq*2.5*(1-minQuality)+meanSq*.35*(1-meanQuality);
-     return {meanSq,maxGap,minQuality,meanQuality,score};
+      meanSq*2.5*(1-minQuality)+meanSq*.35*(1-meanQuality)+
+      meanSq*.60*(1-meanTangent);
+     return {meanSq,maxGap,minQuality,meanQuality,meanTangent,score};
     }
     const donorCoarseStarts=new Set();
     for(let i=0;i<donorCount;i+=donorStride)donorCoarseStarts.add(i);
@@ -1648,7 +1656,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      samples.push(sample);sumSq+=gap*gap;maxGap=Math.max(maxGap,gap);
     }
     const meanSq=sumSq/Math.max(1,donorCount);
-    return {donor,host,samples,score:meanSq+maxGap*maxGap*.35,maxGap,meanSq,
+    return {donor,host,samples,score:best.score.score,maxGap,meanSq,
+     meanTangent:best.score.meanTangent,
      donorArc,hostArc,closed:true};
    }
    function findBestBoundaryAlignment(donorPath,hostPath){
@@ -2074,7 +2083,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const planes=['z','y','x-','x+'];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
-    seamVirtualClosureMaxGap=0;
+    seamVirtualClosureMaxGap=0,seamAlignmentTangentSum=0,
+    seamAlignmentTangentCount=0,seamAlignmentTangentMin=Infinity;
    let seamDonorRimWeightOverrides=0;
    for(const plane of planes)for(const side of [-1,1]){
     const hostPaths=orderedBoundaryPaths(hostRim,hostPos,plane,side);
@@ -2087,6 +2097,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     for(const {donorPath,hostPath} of pairs){
      const alignment=findBestBoundaryAlignment(donorPath,hostPath);
      if(!alignment)throw Error('BTC seam path has no nondegenerate arc-length alignment');
+     if(Number.isFinite(alignment.meanTangent)){
+      seamAlignmentTangentSum+=alignment.meanTangent;
+      seamAlignmentTangentCount++;
+      seamAlignmentTangentMin=Math.min(seamAlignmentTangentMin,alignment.meanTangent);
+     }
      bridgeLoopPairs++;
      if(alignment.closed)seamClosedLoops++;else seamOpenPaths++;
      for(const path of [donorPath,hostPath])if(Number.isFinite(path.virtualClosureGap)){
@@ -2610,6 +2625,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamWarpAcceptedGroups=seamWarpAcceptedGroups;
    bodyCut.seamWarpRejectedGroups=seamWarpRejectedGroups;
    bodyCut.seamWarpMaxResidualGap=seamWarpMaxResidualGap;
+   bodyCut.seamBridgeAlignmentMeanTangent=seamAlignmentTangentCount?
+    seamAlignmentTangentSum/seamAlignmentTangentCount:0;
+   bodyCut.seamBridgeAlignmentMinTangent=Number.isFinite(seamAlignmentTangentMin)?
+    seamAlignmentTangentMin:0;
    bodyCut.seamBridgeMethod=bridgeZipperAdaptiveLoops?
     'curved-dp-adaptive-zipper':'curved-multi-ring-zipper-open-chain';
    bodyCut.seamBridgeZipperAdaptiveLoops=bridgeZipperAdaptiveLoops;
@@ -3121,7 +3140,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamHostBoundarySplitEdges:bodyCut.seamHostBoundarySplitEdges||0,
    seamHostBoundarySplitMissing:bodyCut.seamHostBoundarySplitMissing||0,
    hostRimEdgesByPlane:bodyCut.hostRimEdgesByPlane||{},donorRimEdgesByPlane:bodyCut.donorRimEdgesByPlane||{},
-   seamBridgeMethod:bodyCut.seamBridgeMethod||'none',seamBridgeLoopPairs:bodyCut.seamBridgeLoopPairs||0,
+   seamBridgeMethod:bodyCut.seamBridgeMethod||'none',
+   seamBridgeAlignmentMeanTangent:bodyCut.seamBridgeAlignmentMeanTangent||0,
+   seamBridgeAlignmentMinTangent:bodyCut.seamBridgeAlignmentMinTangent||0,
+   seamBridgeLoopPairs:bodyCut.seamBridgeLoopPairs||0,
    seamBridgeOpenPaths:bodyCut.seamBridgeOpenPaths||0,
    seamBridgeClosedLoops:bodyCut.seamBridgeClosedLoops||0,
    seamBridgeVirtualClosures:bodyCut.seamBridgeVirtualClosures||0,
