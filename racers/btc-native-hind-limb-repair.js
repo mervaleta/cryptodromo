@@ -713,9 +713,12 @@ function sealTinyDonorSlits(geometry){
  if(!pos||!skin||!weight||!index||skin.itemSize!==4||weight.itemSize!==4)
   throw Error('BTC donor micro-cap requires indexed four-weight skin geometry');
  let caps=0,addedTriangles=0,weldedVertices=0;
+ let pos=geometry.getAttribute('position'),skin=geometry.getAttribute('skinIndex'),
+  weight=geometry.getAttribute('skinWeight'),normal=geometry.getAttribute('normal'),index=geometry.getIndex();
  const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
  const point=id=>[pos.getX(id),pos.getY(id),pos.getZ(id)];
  const rebuildBoundary=()=>{
+  index=geometry.getIndex();
   const uses=new Map();
   for(let i=0;i<index.count;i+=3){
    const tri=[index.getX(i),index.getX(i+1),index.getX(i+2)];
@@ -819,13 +822,14 @@ function sealTinyDonorSlits(geometry){
   // A mixed direction is a real orientation defect and remains a hard stop.
   const oriented=[];
   for(let i=0;i<loop.length;i++){
-   const a=loop[i],b=loop[(i+1)%loop.length];
-   const key=a<b?a+':'+b:b+':'+a,entry=state.uses.get(key);
+   const a=loop[i],b=loop[(i+1)%loop.length],edgeB=i===loop.length-1?last:b;
+   const key=a<edgeB?a+':'+edgeB:edgeB+':'+a,entry=state.uses.get(key);
    if(!entry||entry.uses.length!==1)
     throw Error('BTC donor micro-cap lost a slit boundary edge');
    const use=entry.uses[0];
-   if(use.from===a&&use.to===b)oriented.push([center,b,a]);
-   else if(use.from===b&&use.to===a)oriented.push([center,a,b]);
+   const from=use.from===last?root:use.from,to=use.to===last?root:use.to;
+   if(from===a&&to===b)oriented.push([center,b,a]);
+   else if(from===b&&to===a)oriented.push([center,a,b]);
    else throw Error('BTC donor micro-cap boundary orientation mismatch');
   }
   const finalIndices=raw;
@@ -833,6 +837,8 @@ function sealTinyDonorSlits(geometry){
   const IndexArray=pos.count+1>65535?Uint32Array:Uint16Array;
   geometry.setIndex(new THREE.BufferAttribute(new IndexArray(finalIndices),1));
   geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+  pos=geometry.getAttribute('position');skin=geometry.getAttribute('skinIndex');
+  weight=geometry.getAttribute('skinWeight');normal=geometry.getAttribute('normal');index=geometry.getIndex();
   caps++;addedTriangles+=oriented.length;weldedVertices++;
  }
  return {caps,addedTriangles,weldedVertices,vertices:geometry.getAttribute('position').count};
