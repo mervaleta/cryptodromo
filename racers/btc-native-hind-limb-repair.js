@@ -2940,6 +2940,37 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
   hoovesCut.geometry.dispose();hoovesCut.geometry=smoothHooves.geometry;
   hoovesCut.sourceTriangles=smoothHooves.sourceTriangles;
   hoovesCut.triangles=smoothHooves.triangles;
+  // Materialize the zipper vertices and faces in the donor geometry before
+  // remapping it into the unified host+donor index space. seamBridgeData uses
+  // virtual IDs offset by donorBase; without this append, those IDs are outside
+  // donorGeo.position.count and the unified weld cannot resolve them.
+  if(bodyCut.seamBridgeData){
+   const geo=bodyCut.geometry,data=bodyCut.seamBridgeData;
+   const position=geo.getAttribute('position'),normal=geo.getAttribute('normal');
+   const skin=geo.getAttribute('skinIndex'),weight=geo.getAttribute('skinWeight'),index=geo.getIndex();
+   if(!position||!normal||!skin||!weight||!index)
+    throw Error('BTC seam bridge cannot merge into the skinned donor body');
+   if(position.count!==data.donorBase||data.positions.length%3!==0||
+      data.joints.length!==data.positions.length/3*4||
+      data.weights.length!==data.positions.length/3*4||
+      data.normals.length!==data.positions.length)
+    throw Error('BTC seam bridge virtual index base or skinned attributes are inconsistent');
+   const bridgeVertexCount=data.positions.length/3;
+   for(const id of data.hostEndpointVertices)
+    if(!Number.isInteger(id)||id<0||id>=bridgeVertexCount)
+     throw Error('BTC host seam endpoint is outside appended bridge vertex range');
+   geo.setAttribute('position',new THREE.Float32BufferAttribute(
+    [...position.array,...data.positions],3));
+   geo.setAttribute('normal',new THREE.Float32BufferAttribute(
+    [...normal.array,...data.normals],3));
+   geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(
+    [...skin.array,...data.joints],4));
+   geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(
+    [...weight.array,...data.weights],4));
+   geo.setIndex(new THREE.Uint32BufferAttribute(
+    [...index.array,...data.indices],1));
+   geo.computeBoundingSphere();
+  }
   // The bridge must be part of the SAME indexed SkinnedMesh as the Maya
   // rump. A separate donor mesh can match positions and weights yet still
   // shade as a floating flap because its boundary normals are never shared
