@@ -2562,6 +2562,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        if(!quality||quality.quality<.015)return null;
        return {ids:triangle.ids,quality:quality.quality};
       };
+      let adaptiveCenterFanCells=0;
       const addQuad=(a0,b0,a1,b1,fallback)=>{
        const pairs=[
         [[a0,b0,a1],[b0,b1,a1]],
@@ -2572,9 +2573,31 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
         const r=Math.min(...right.map(item=>item.quality));
         return r-l;
        })[0];
-       if(!accepted)return false;
-       for(const item of accepted){candidateTriangles.push(item);qualityValues.push(item.quality);}
-       return true;
+       if(accepted){
+        for(const item of accepted){candidateTriangles.push(item);qualityValues.push(item.quality);}
+        return true;
+       }
+       // A curved DP strip can contain one skewed quad even when its neighboring
+       // cells are healthy. Match the resampled bridge's center-fan fallback:
+       // the center is skinned from the four boundary samples and every face
+       // still has to meet the unchanged minimum triangle-quality threshold.
+       const starts=[bridgePositions.length,bridgeNormals.length,
+        bridgeJoints.length,bridgeWeights.length];
+       const center=bridgeCellCenterVertex([a0,b0,b1,a1]);
+       const fan=[
+        makeCandidate([a0,b0,center],fallback),
+        makeCandidate([b0,b1,center],fallback),
+        makeCandidate([b1,a1,center],fallback),
+        makeCandidate([a1,a0,center],fallback)
+       ];
+       if(fan.every(Boolean)){
+        for(const item of fan){candidateTriangles.push(item);qualityValues.push(item.quality);}
+        adaptiveCenterFanCells++;
+        return true;
+       }
+       bridgePositions.length=starts[0];bridgeNormals.length=starts[1];
+       bridgeJoints.length=starts[2];bridgeWeights.length=starts[3];
+       return false;
       };
       for(const step of zipperPath){
        const ids=step.tri.ids;
