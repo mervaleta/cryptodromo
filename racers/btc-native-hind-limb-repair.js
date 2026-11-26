@@ -1892,15 +1892,34 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // a needle triangle or relaxing the quality floor.
    function bridgeCellCenterVertex(ids){
     const points=ids.map(positionFor),normals=ids.map(normalFor);
-    // For a triangular DP end-cap, the centroid can sit almost on a long,
-    // narrow edge and the averaged vertex normal can be tangent to the cap.
-    // Use the true triangle incenter and its geometric normal instead. This
-    // gives the three fan faces a balanced interior anchor while preserving
-    // a tiny outward lift and barycentric skinning. Quad cells retain the
-    // previous area-neutral center fan.
-    let factors=ids.map(()=>1/ids.length);
-    let point=[0,1,2].map(k=>points.reduce((sum,p)=>sum+p[k],0)/points.length);
-    let outward;
+    const dot=(a,b)=>a.reduce((sum,value,k)=>sum+value*b[k],0);
+    const cross=(a,b,c)=>{
+     const u=b.map((value,k)=>value-a[k]),v=c.map((value,k)=>value-a[k]);
+     return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+    };
+    const normalize=value=>{
+     const length=Math.hypot(...value);
+     return length>1e-12?value.map(v=>v/length):[0,1,0];
+    };
+    let geometric=[0,0,0];
+    if(ids.length===3)geometric=cross(points[0],points[1],points[2]);
+    else if(ids.length===4){
+     const first=cross(points[0],points[1],points[2]);
+     const second=cross(points[0],points[2],points[3]);
+     geometric=first.map((value,k)=>value+second[k]);
+    }
+    const reference=[0,1,2].map(k=>
+     normals.reduce((sum,n)=>sum+n[k],0));
+    if(Math.hypot(...geometric)<1e-10)geometric=reference.slice();
+    if(dot(geometric,reference)<0)geometric=geometric.map(value=>-value);
+    const outward=normalize(geometric);
+    const quality=(a,b,c)=>{
+     const n=cross(a,b,c),twiceArea=Math.hypot(...n);
+     const edgeSq=distance3(a,b)**2+distance3(b,c)**2+distance3(c,a)**2;
+     if(!Number.isFinite(twiceArea)||twiceArea<1e-9||edgeSq<1e-18)return 0;
+     return Math.min(1,(2*Math.sqrt(3)*twiceArea)/edgeSq);
+    };
+    const factorsCandidates=[];
     if(ids.length===3){
      const lengths=[
       distance3(points[1],points[2]),
@@ -1908,28 +1927,53 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       distance3(points[0],points[1])
      ];
      const perimeter=lengths.reduce((sum,value)=>sum+value,0)||1;
-     factors=lengths.map(value=>value/perimeter);
-     point=[0,1,2].map(k=>points.reduce((sum,p,i)=>sum+p[k]*factors[i],0));
-     const u=points[1].map((value,k)=>value-points[0][k]);
-     const v=points[2].map((value,k)=>value-points[0][k]);
-     let normal=[
-      u[1]*v[2]-u[2]*v[1],
-      u[2]*v[0]-u[0]*v[2],
-      u[0]*v[1]-u[1]*v[0]
-     ];
-     const normalLength=Math.hypot(...normal)||1;
-     normal=normal.map(value=>value/normalLength);
-     const reference=[0,1,2].map(k=>
-      normals.reduce((sum,n,i)=>sum+n[k]*factors[i],0));
-     if(normal.reduce((sum,value,k)=>sum+value*reference[k],0)<0)
-      normal=normal.map(value=>-value);
-     outward=normal;
+     factorsCandidates.push(lengths.map(value=>value/perimeter));
+     factorsCandidates.push([1/3,1/3,1/3]);
+     for(const heavy of [0,1,2]){
+      const factors=[.375,.375,.375];
+      factors[heavy]=.25;
+      const total=factors.reduce((sum,value)=>sum+value,0);
+      factorsCandidates.push(factors.map(value=>value/total));
+     }
+     for(const heavy of [0,1,2]){
+      const factors=[.2,.2,.2];
+      factors[heavy]=.6;
+      factorsCandidates.push(factors);
+     }
     }else{
-     const normal=[0,1,2].map(k=>normals.reduce((sum,n)=>sum+n[k],0));
-     const normalLength=Math.hypot(...normal)||1;
-     outward=normal.map(value=>value/normalLength);
+     for(const u of [.2,.3,.4,.5,.6,.7,.8])for(const v of [.2,.3,.4,.5,.6,.7,.8])
+      factorsCandidates.push([(1-u)*(1-v),u*(1-v),u*v,(1-u)*v]);
+     factorsCandidates.push([.25,.25,.25,.25]);
     }
-    for(let k=0;k<3;k++)point[k]+=outward[k]*.00008;
+    // A small outward Steiner lift keeps the fan away from a nearly collapsed
+    // boundary plane; the candidate search chooses the point that maximizes
+    // the worst child-triangle quality without relaxing the .015 floor.
+    const lift=Math.min(.00024,Math.max(.00012,scale*.18));
+    let best=null;
+    for(const factors of factorsCandidates){
+     const base=[0,1,2].map(k=>
+      points.reduce((sum,p,i)=>sum+p[k]*factors[i],0));
+     const point=base.map((value,k)=>value+outward[k]*lift);
+     const childQualities=[],orientation=[];
+     for(let i=0;i<ids.length;i++){
+      const a=points[i],b=points[(i+1)%ids.length];
+      const n=cross(a,b,point);
+      childQualities.push(quality(a,b,point));
+      orientation.push(dot(n,outward));
+     }
+     if(orientation.some(value=>value<=1e-14))continue;
+     const minimum=Math.min(...childQualities);
+     const average=childQualities.reduce((sum,value)=>sum+value,0)/childQualities.length;
+     const score=minimum+average*.02;
+     if(!best||score>best.score)best={factors,point,score,minimum};
+    }
+    if(!best){
+     const factors=ids.length===3?[1/3,1/3,1/3]:ids.map(()=>1/ids.length);
+     const point=[0,1,2].map(k=>
+      points.reduce((sum,p,i)=>sum+p[k]*factors[i],0)+outward[k]*lift);
+     best={factors,point,score:-1,minimum:0};
+    }
+    const factors=best.factors,point=best.point;
     const influence=new Map();
     for(let i=0;i<ids.length;i++)for(let k=0;k<4;k++){
      const id=ids[i],offset=(id-donorBase)*4;
