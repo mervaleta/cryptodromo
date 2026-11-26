@@ -1738,6 +1738,11 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // both source rims, which reads as a raised flap even when the indices weld.
    // Project each endpoint tangent into its own source surface and make the
    // normal bulge have zero slope at both ends.
+   // A seam path must keep one coherent tangent orientation. Flipping each
+   // sample independently against its local gap made neighboring Hermite
+   // derivatives alternate across the curved rump, producing a twisted,
+   // dark collar even when the zipper indices were manifold.
+   let seamTangentOrientation={donor:1,host:1};
    function tangentHermiteBridgePoint(donorPoint,hostPoint,donorN,hostN,t,
     donorRimTangent=null,hostRimTangent=null,
     donorSurfaceInward=null,hostSurfaceInward=null){
@@ -1763,31 +1768,18 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     };
     let tangent0=null,tangent1=null,usedSurfaceTangents=false,reach0=0,reach1=0;
     if(donorRimTangent&&hostRimTangent){
-     // The donor patch leaves the cut rim opposite the donor's interior
-     // one-ring; at the Maya rim it arrives along the host's interior
-     // one-ring. These signs make both endpoint derivatives tangent to the
-     // real source surfaces, independent of the direction of the 3D gap.
-     const orientTowardGap=sample=>{
-      if(!sample)return null;
-      if(dot(sample.direction,gap)>=0)return sample;
-      seamBridgeTangentDirectionFlips++;
-      return {...sample,direction:sample.direction.map(v=>-v)};
-     };
-     // One-ring tangents are local, but their sign is not guaranteed by
-     // UV/material seam winding. At the donor rim the derivative must leave
-     // the donor toward the host; at the host rim it must enter the host from
-     // the gap. Orient both projected surface tangents against the measured
-     // donor-to-host gap before constructing the Hermite loft. A reversed
-     // endpoint tangent curls the bridge under the rump and renders as a
-     // dark triangular cut even when the zipper is topologically closed.
-     const donorOut=orientTowardGap(projectSurfaceDirection(donorSurfaceInward,donorRimTangent,-1));
-     const hostIn=orientTowardGap(projectSurfaceDirection(hostSurfaceInward,hostRimTangent,1));
+     // The donor derivative leaves its own one-ring; the host derivative
+     // enters the host one-ring. Their signs are chosen ONCE per connected
+     // boundary path, not independently per vertex, so the loft cannot twist
+     // when a local gap vector crosses a near-perpendicular tangent.
+     const donorOut=projectSurfaceDirection(donorSurfaceInward,donorRimTangent,-seamTangentOrientation.donor);
+     const hostIn=projectSurfaceDirection(hostSurfaceInward,hostRimTangent,seamTangentOrientation.host);
      if(donorOut&&hostIn){
-      // The 30% Hermite floor still left a visible collar lip: the measured
-      // mean tangent reach was 0.91 mm against a 3.13 mm bridge. Test a 45%
-      // minimum while retaining the 55% ceiling and per-face inversion guards.
-      reach0=Math.min(gapLength*.55,Math.max(gapLength*.45,donorOut.reach*.85));
-      reach1=Math.min(gapLength*.55,Math.max(gapLength*.45,hostIn.reach*.85));
+      // Keep the conservative 30% reach floor: the 45% experiment improved
+      // mean quality but halved the worst triangle quality and did not remove
+      // the visible rump slit. Preserve per-face inversion and area guards.
+      reach0=Math.min(gapLength*.55,Math.max(gapLength*.30,donorOut.reach*.85));
+      reach1=Math.min(gapLength*.55,Math.max(gapLength*.30,hostIn.reach*.85));
       tangent0=donorOut.direction.map(v=>v*reach0);
       tangent1=hostIn.direction.map(v=>v*reach1);
       usedSurfaceTangents=true;
@@ -2436,6 +2428,37 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        const t=Math.max(0,Math.min(1,sample.t));
        return {vector:a.vector.map((v,k)=>v*(1-t)+b.vector[k]*t)};
       });
+      // Pick a single orientation for each entire donor/host boundary pair.
+      // This uses the aggregate projected one-ring directions against the
+      // measured gap, then keeps that sign fixed along the path. It avoids
+      // the old per-sample sign flips that curled adjacent loft cells in
+      // opposite directions near the stifle and rump.
+      const tangentDot=(a,b)=>a.reduce((sum,v,k)=>sum+v*b[k],0);
+      const projectedDirection=(surface,rimTangent,sign)=>{
+       if(!surface?.vector||!rimTangent)return null;
+       const length=Math.hypot(...rimTangent);
+       if(length<1e-10)return null;
+       const tangent=rimTangent.map(v=>v/length),source=surface.vector;
+       const along=tangentDot(source,tangent);
+       const projected=source.map((v,k)=>v-tangent[k]*along);
+       const magnitude=Math.hypot(...projected);
+       return magnitude<1e-8?null:{direction:projected.map(v=>v/magnitude*sign)};
+      };
+      let donorOrientationScore=0,hostOrientationScore=0;
+      for(let i=0;i<m;i++){
+       const donorPoint=pointAt(donorPos,donor[i]);
+       const gap=alignment.samples[i].point.map((v,k)=>v-donorPoint[k]);
+       const donorDirection=projectedDirection(donorSurfaceInwards[i],donorRimTangents[i],-1);
+       const hostDirection=projectedDirection(hostSurfaceInwards[i],hostRimTangents[i],1);
+       if(donorDirection)donorOrientationScore+=tangentDot(donorDirection.direction,gap);
+       if(hostDirection)hostOrientationScore+=tangentDot(hostDirection.direction,gap);
+      }
+      seamTangentOrientation={
+       donor:donorOrientationScore>=0?1:-1,
+       host:hostOrientationScore>=0?1:-1
+      };
+      if(seamTangentOrientation.donor<0)seamBridgeTangentDirectionFlips++;
+      if(seamTangentOrientation.host<0)seamBridgeTangentDirectionFlips++;
       donorRimTangentById=new Map(donor.map((id,i)=>[id,donorRimTangents[i]]));
       hostRimTangentById=new Map(host.map((id,i)=>[id,hostPathRimTangents[i]]));
      const donorArc=arcTable(donor,donorPos,alignment.closed),
