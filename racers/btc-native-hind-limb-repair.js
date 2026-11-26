@@ -1697,13 +1697,41 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     projected.set(key,index);
     return index;
    }
+   // Recover the cross-boundary tangent from the actual adjacent source
+   // faces. A normal x rim-tangent estimate is ambiguous when the two cut
+   // rims are separated mostly along their normals; it can collapse the
+   // Hermite derivative to zero and leave a visible hard collar.
+   function boundaryInteriorMap(edges,index,position){
+    const boundary=new Set(edges.map(edge=>edge.a<edge.b?
+     edge.a+':'+edge.b:edge.b+':'+edge.a));
+    const sums=new Map();
+    const add=(id,other)=>{
+     const key=seamKey(position,id),a=pointAt(position,id),b=pointAt(position,other);
+     const entry=sums.get(key)||{vector:[0,0,0],count:0};
+     for(let k=0;k<3;k++)entry.vector[k]+=b[k]-a[k];
+     entry.count++;sums.set(key,entry);
+    };
+    for(let j=0;j<index.count;j+=3){
+     const ids=[index.getX(j),index.getX(j+1),index.getX(j+2)];
+     for(let k=0;k<3;k++){
+      const a=ids[k],b=ids[(k+1)%3],opposite=ids[(k+2)%3];
+      const key=a<b?a+':'+b:b+':'+a;
+      if(!boundary.has(key))continue;
+      add(a,opposite);add(b,opposite);
+     }
+    }
+    return new Map([...sums].map(([key,value])=>[
+     key,{vector:value.vector.map(v=>v/value.count),count:value.count}
+    ]));
+   }
    // Shape the zipper as a tangent-aware Hermite loft. The old linear
    // interpolation plus sin(pi*t) bulge left a non-zero normal derivative at
    // both source rims, which reads as a raised flap even when the indices weld.
    // Project each endpoint tangent into its own source surface and make the
    // normal bulge have zero slope at both ends.
    function tangentHermiteBridgePoint(donorPoint,hostPoint,donorN,hostN,t,
-    donorRimTangent=null,hostRimTangent=null){
+    donorRimTangent=null,hostRimTangent=null,
+    donorSurfaceInward=null,hostSurfaceInward=null){
     const gap=hostPoint.map((v,k)=>v-donorPoint[k]);
     const gapLength=Math.hypot(...gap);
     const unit=normal=>{
@@ -1712,49 +1740,62 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     };
     const n0=unit(donorN),n1=unit(hostN);
     const dot=(a,b)=>a.reduce((sum,v,k)=>sum+v*b[k],0);
-    const surfaceInward=(normal,rimTangent,toward)=>{
-     if(!rimTangent)return null;
+    const projectSurfaceDirection=(surface,rimTangent,sign)=>{
+     if(!surface?.vector||!rimTangent)return null;
      const tangentLength=Math.hypot(...rimTangent);
      if(tangentLength<1e-10)return null;
      const tangent=rimTangent.map(v=>v/tangentLength);
-     let direction=[
-      normal[1]*tangent[2]-normal[2]*tangent[1],
-      normal[2]*tangent[0]-normal[0]*tangent[2],
-      normal[0]*tangent[1]-normal[1]*tangent[0]
-     ];
-     const length=Math.hypot(...direction);
-     if(length<1e-9)return null;
-     direction=direction.map(v=>v/length);
-     const alignment=dot(direction,toward);
-     if(Math.abs(alignment)<1e-9)return null;
-     if(alignment<0)direction=direction.map(v=>-v);
-     return direction;
+     const source=surface.vector.slice();
+     const along=dot(source,tangent);
+     const projected=source.map((v,k)=>v-tangent[k]*along);
+     const reach=Math.hypot(...projected);
+     if(reach<1e-8)return null;
+     return {direction:projected.map(v=>v/reach*sign),reach};
     };
-    let tangent0=null,tangent1=null;
+    let tangent0=null,tangent1=null,usedSurfaceTangents=false,reach0=0,reach1=0;
     if(donorRimTangent&&hostRimTangent){
-     // Cross the cut boundary along each surface's own inward tangent.
-     // Projecting the gap alone lets the loft slide along the rim and form
-     // the dark triangular flap seen under the BTC rump in rear Gallop poses.
-     const donorIn=surfaceInward(n0,donorRimTangent,gap);
-     const hostIn=surfaceInward(n1,hostRimTangent,gap.map(v=>-v));
-     if(donorIn&&hostIn){
-      const donorReach=Math.min(gapLength*.45,
-       Math.max(0,dot(gap,donorIn))*.45);
-      const hostReach=Math.min(gapLength*.45,
-       Math.max(0,dot(gap.map(v=>-v),hostIn))*.45);
-      tangent0=donorIn.map(v=>v*donorReach);
-      // Hermite's terminal derivative points opposite the host's inward
-      // direction because the curve is arriving at the host boundary.
-      tangent1=hostIn.map(v=>-v*hostReach);
+     // The donor patch leaves the cut rim opposite the donor's interior
+     // one-ring; at the Maya rim it arrives along the host's interior
+     // one-ring. These signs make both endpoint derivatives tangent to the
+     // real source surfaces, independent of the direction of the 3D gap.
+     const donorOut=projectSurfaceDirection(donorSurfaceInward,donorRimTangent,-1);
+     const hostIn=projectSurfaceDirection(hostSurfaceInward,hostRimTangent,1);
+     if(donorOut&&hostIn){
+      reach0=Math.min(gapLength*.55,Math.max(gapLength*.12,donorOut.reach*.85));
+      reach1=Math.min(gapLength*.55,Math.max(gapLength*.12,hostIn.reach*.85));
+      tangent0=donorOut.direction.map(v=>v*reach0);
+      tangent1=hostIn.direction.map(v=>v*reach1);
+      usedSurfaceTangents=true;
      }
     }
     if(!tangent0||!tangent1){
-     // Degenerate normals or boundary tangents retain the previous safe
-     // projected-gap behavior rather than emitting NaNs or a flipped loft.
-     tangent0=gap.map((v,k)=>v-n0[k]*dot(gap,n0));
-     tangent1=gap.map((v,k)=>v-n1[k]*dot(gap,n1));
-     tangent0=tangent0.map(v=>v*.45);
-     tangent1=tangent1.map(v=>v*.45);
+     // Fail-safe for an incomplete boundary neighborhood: retain the prior
+     // normal/tangent estimate rather than inventing a direction or NaN.
+     const fallbackDirection=(normal,rimTangent,toward)=>{
+      if(!rimTangent)return null;
+      const length=Math.hypot(...rimTangent);
+      if(length<1e-10)return null;
+      const tangent=rimTangent.map(v=>v/length);
+      let direction=[
+       normal[1]*tangent[2]-normal[2]*tangent[1],
+       normal[2]*tangent[0]-normal[0]*tangent[2],
+       normal[0]*tangent[1]-normal[1]*tangent[0]
+      ];
+      const size=Math.hypot(...direction);
+      if(size<1e-9)return null;
+      direction=direction.map(v=>v/size);
+      if(dot(direction,toward)<0)direction=direction.map(v=>-v);
+      return direction;
+     };
+     const donorFallback=fallbackDirection(n0,donorRimTangent,gap);
+     const hostFallback=fallbackDirection(n1,hostRimTangent,gap.map(v=>-v));
+     if(donorFallback&&hostFallback){
+      tangent0=donorFallback.map(v=>v*gapLength*.45);
+      tangent1=hostFallback.map(v=>-v*gapLength*.45);
+     }else{
+      tangent0=gap.map((v,k)=>v-n0[k]*dot(gap,n0)).map(v=>v*.45);
+      tangent1=gap.map((v,k)=>v-n1[k]*dot(gap,n1)).map(v=>v*.45);
+     }
     }
     const t2=t*t,t3=t2*t;
     const h00=2*t3-3*t2+1,h10=t3-2*t2+t,
@@ -1766,9 +1807,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*t)**2;
     const point=donorPoint.map((v,k)=>
      v*h00+tangent0[k]*h10+hostPoint[k]*h01+tangent1[k]*h11+outward[k]*bulge);
-    return {point,outward};
+    return {point,outward,usedSurfaceTangents,reach0,reach1};
    }
-   function bridgeLayerVertex(donorId,sample,fraction,donorRimTangent=null,hostRimTangent=null){
+   function bridgeLayerVertex(donorId,sample,fraction,donorRimTangent=null,hostRimTangent=null,
+    donorSurfaceInward=null,hostSurfaceInward=null){
     const key=[donorId,sample.a,sample.b,Math.round(sample.t*1e8),Math.round(fraction*1e8)].join(':');
     if(layerProjected.has(key))return layerProjected.get(key);
     const donorPoint=pointAt(donorPos,donorId),hostPoint=sample.point;
@@ -1778,8 +1820,15 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      hostNormal.getComponent(sample.b,k)*sample.t):[0,1,0];
     const hostLength=Math.hypot(...hostN)||1;
     hostN=hostN.map(v=>v/hostLength);
-    const {point,outward}=tangentHermiteBridgePoint(
-     donorPoint,hostPoint,donorN,hostN,fraction,donorRimTangent,hostRimTangent);
+    const bridge=tangentHermiteBridgePoint(
+     donorPoint,hostPoint,donorN,hostN,fraction,donorRimTangent,hostRimTangent,
+     donorSurfaceInward,hostSurfaceInward);
+    const {point,outward}=bridge;
+    if(!bridge.usedSurfaceTangents)seamBridgeSurfaceTangentFallbacks++;
+    else{
+     seamBridgeTangentReachSum+=bridge.reach0+bridge.reach1;
+     seamBridgeTangentReachCount+=2;
+    }
     const influence=new Map();
     for(let k=0;k<4;k++){
      const weight=donorWeights.getComponent(donorId,k)*(1-fraction);
@@ -2116,7 +2165,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const planes=['z','y','x-','x+'];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
-    seamVirtualClosureMaxGap=0;
+    seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
+    seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
    let seamDonorRimWeightOverrides=0;
    for(const plane of planes)for(const side of [-1,1]){
     const hostPaths=orderedBoundaryPaths(hostRim,hostPos,plane,side);
@@ -2517,11 +2567,22 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        const a=pointAt(hostPos,sample.a),b=pointAt(hostPos,sample.b);
        return b.map((v,k)=>v-a[k]);
       });
+      const donorBoundaryInward=boundaryInteriorMap(donorRimEdges,di,donorPos);
+      const hostBoundaryInward=boundaryInteriorMap(hostRim,hostIndex,hostPos);
+      const donorSurfaceInwards=donor.map(id=>
+       donorBoundaryInward.get(seamKey(donorPos,id))||null);
+      const hostSurfaceInwards=alignment.samples.map(sample=>{
+       const a=hostBoundaryInward.get(seamKey(hostPos,sample.a));
+       const b=hostBoundaryInward.get(seamKey(hostPos,sample.b));
+       if(!a||!b)return null;
+       const t=Math.max(0,Math.min(1,sample.t));
+       return {vector:a.vector.map((v,k)=>v*(1-t)+b.vector[k]*t)};
+      });
       const fractions=[.2,.4,.6,.8];
       const rows=[donor];
       for(const fraction of fractions)
        rows.push(donor.map((id,i)=>bridgeLayerVertex(id,alignment.samples[i],fraction,
-        donorRimTangents[i],hostRimTangents[i])));
+        donorRimTangents[i],hostRimTangents[i],donorSurfaceInwards[i],hostSurfaceInwards[i])));
       rows.push(projectedIds);
       const triangles=[],qualityValues=[];
       let valid=donorSteps>0,centerFanCells=0;
@@ -2677,6 +2738,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    bodyCut.seamBridgeClosedLoops=seamClosedLoops;
    bodyCut.seamBridgeVirtualClosures=seamVirtualClosures;
    bodyCut.seamBridgeVirtualClosureMaxGap=seamVirtualClosureMaxGap;
+   bodyCut.seamBridgeSurfaceTangentFallbacks=seamBridgeSurfaceTangentFallbacks;
+   bodyCut.seamBridgeMeanTangentReach=seamBridgeTangentReachCount?
+    seamBridgeTangentReachSum/seamBridgeTangentReachCount:0;
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
    bodyCut.seamBridgeZipperMovesHost=bridgeZipperMovesHost;
    bodyCut.seamBridgeZipperResampledLoops=bridgeZipperResampledLoops;
@@ -3180,6 +3244,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    seamBridgeClosedLoops:bodyCut.seamBridgeClosedLoops||0,
    seamBridgeVirtualClosures:bodyCut.seamBridgeVirtualClosures||0,
    seamBridgeVirtualClosureMaxGap:bodyCut.seamBridgeVirtualClosureMaxGap||0,
+   seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
+   seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
    seamWarpFactor:bodyCut.seamWarpFactor||0,seamWarpTargetFraction:bodyCut.seamWarpTargetFraction||0,
    seamWarpMaxMove:bodyCut.seamWarpMaxMove||0,
    seamWarpMeanMove:bodyCut.seamWarpMeanMove||0,seamWarpMaxResidualGap:bodyCut.seamWarpMaxResidualGap||0,
