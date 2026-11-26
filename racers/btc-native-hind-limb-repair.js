@@ -789,10 +789,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   if(attachment.length<30)throw Error('BTC V23 host rump triangles missing');
   const donorPoint=new THREE.Vector3(),closest=new THREE.Vector3(),
    bary=new THREE.Vector3(),triangle=new THREE.Triangle();
-  // Real geometry safeguard: a fixed 0.68 mm projection can exceed the
-  // edge length of the subdivided thigh triangles by several times.
-  // Bound each upper-collar displacement relative to its own local mesh
-  // scale, preventing thin stretched wedges without moving the cut rim.
+  // Real geometry safeguard: collar projection now reaches farther local
+  // host triangles, but every move is backtracked against live face winding,
+  // area and aspect quality. The wider 2.4 mm falloff distributes the join
+  // instead of concentrating deformation in a thin 1.8 mm strip.
   const localMinEdge=new Float32Array(donorPos.count).fill(Infinity);
   const donorFaces=donorGeo.getIndex();
   for(let j=0;j<donorFaces.count;j+=3){
@@ -819,14 +819,27 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    return [uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];
   };
   const collarPoint=v=>[donorPos.getX(v),donorPos.getY(v),donorPos.getZ(v)];
+  const collarQuality=points=>{
+   const n=collarNormal(...points);
+   const lengths=[
+    points[0].reduce((sum,v,k)=>sum+(v-points[1][k])**2,0),
+    points[1].reduce((sum,v,k)=>sum+(v-points[2][k])**2,0),
+    points[2].reduce((sum,v,k)=>sum+(v-points[0][k])**2,0)
+   ];
+   const perimeter=lengths.reduce((sum,v)=>sum+v,0);
+   return perimeter>1e-18?2*Math.sqrt(3)*Math.hypot(...n)/perimeter:0;
+  };
   // The sequential seam projection must preserve the ORIGINAL face winding,
   // not just the face from the immediately preceding accepted displacement.
   // Several individually small turns can otherwise accumulate into a fold.
-  const collarRestNormals=new Map();
+  const collarRestNormals=new Map(),collarRestQuality=new Map();
   for(const faces of collarFaces)for(const tri of faces){
    const key=tri.join(':');
-   if(!collarRestNormals.has(key))
-    collarRestNormals.set(key,collarNormal(...tri.map(collarPoint)));
+   if(!collarRestNormals.has(key)){
+    const points=tri.map(collarPoint);
+    collarRestNormals.set(key,collarNormal(...points));
+    collarRestQuality.set(key,collarQuality(points));
+   }
   }
   let collarRejectedMoves=0,collarBacktrackedMoves=0;
   // UV/material splits duplicate vertices at identical rest positions.
@@ -852,8 +865,8 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // so almost no donor vertices could be attached to the Maya rump.
    // Project the real 1.8mm strip immediately BELOW the cut rim instead;
    // keep the projection strongest on z=.0200 and fade toward the leg.
-   if(z<.0182||z>.0200+1e-7||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((.0200-z)/(.0200-.0182),0,1);
+   if(z<.0176||z>.0200+1e-7||y<.0039||Math.abs(x)<.0010)continue;
+   const u=THREE.MathUtils.clamp((.0200-z)/(.0200-.0176),0,1);
    // Attachment is strongest on the z=.0200 cut and fades into the
    // actual retained donor leg at z=.0130.
    // The old ascending smoothstep did the opposite, dragging interior
@@ -882,7 +895,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
     // could snap a skinned thigh collar to the far croup/tail crease,
     // stretching triangles into the dark spikes seen in rear WebGL.
     // These limits are in the model's native (metre-scaled) coordinates.
-    if(Math.abs(dx)>.0025||Math.abs(dy)>.0030||Math.abs(dz)>.0030)
+    if(Math.abs(dx)>.0040||Math.abs(dy)>.0040||Math.abs(dz)>.0040)
      continue;
     const dist=dx*dx+dy*dy+2.4*dz*dz;
     if(dist<bestDist){
@@ -892,7 +905,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    }
    // Do not invent a bridge across an anatomically unrelated surface.
    // Leave the authored donor vertex in place when no LOCAL Maya host exists.
-   if(!best||bestDist>.00000625)continue;
+   if(!best||bestDist>.000025)continue;
    triangle.set(...best.face.pts);
    THREE.Triangle.getBarycoord(best.point,...best.face.pts,bary);
    if(![bary.x,bary.y,bary.z].every(Number.isFinite))continue;
@@ -923,8 +936,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
    const displacement=Math.hypot(deltaX,deltaY,deltaZ);
    const twinMinEdge=Math.min(...twins.map(v=>localMinEdge[v]).filter(Number.isFinite));
-   const maxDisplacement=Math.min(.00068,Number.isFinite(twinMinEdge)
-    ?Math.max(.00010,twinMinEdge*.65):.00068);
+   const maxDisplacement=Math.min(.00120,Number.isFinite(twinMinEdge)
+    ?Math.max(.00012,twinMinEdge*.82):.00120);
    const safe=displacement>maxDisplacement?maxDisplacement/displacement:1;
    const origin=[x,y,z],delta=[deltaX*safe,deltaY*safe,deltaZ*safe];
    let accepted=null,backtracked=false;
@@ -948,7 +961,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // Both incremental and rest-space tests are required: the first
      // rejects a sudden flip, the second cumulative drift and collapsed
      // triangles that render as black wedges during Gallop.
+     const restQuality=collarRestQuality.get(tri.join(':'))||0;
+     const currentQuality=collarQuality(after);
      if(sq0<1e-24||restSq<1e-24||sq1<Math.max(sq0,restSq)*.55||
+        currentQuality<Math.max(.012,restQuality*.52)||
         dot<=0||restDot<=0){valid=false;break;}
     }
     if(valid){accepted=candidate;backtracked=factor<1;break;}
