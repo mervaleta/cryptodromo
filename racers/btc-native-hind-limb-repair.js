@@ -1948,7 +1948,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // A small outward Steiner lift keeps the fan away from a nearly collapsed
     // boundary plane; the candidate search chooses the point that maximizes
     // the worst child-triangle quality without relaxing the .015 floor.
-    const lift=Math.min(.00024,Math.max(.00012,scale*.18));
+    const cellScale=Math.max(...points.map((point,i)=>distance3(point,points[(i+1)%points.length])));
+    const lift=Math.min(.00024,Math.max(.00012,cellScale*.18));
     let best=null;
     for(const factors of factorsCandidates){
      const base=[0,1,2].map(k=>
