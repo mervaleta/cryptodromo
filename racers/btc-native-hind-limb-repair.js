@@ -1431,7 +1431,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      while(current.length>1){
       const merge=mergeOneLocalOpenPair(current,position);
       if(!merge)break;
-      recordVirtualClosure(merge,position,surface);
+      // Candidate pairing is diagnostic only; physical closure is applied after path-count selection.
       const gap=Math.max(merge.joinGap,merge.closeGap);
       const joined={ids:merge.ids,closed:true,virtualClosureGap:gap,
        virtualClosureGaps:[merge.joinGap,merge.closeGap],mergedBoundaryFragments:2};
@@ -1457,10 +1457,69 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     while(donors.length>targetCount){
      const merge=mergeOneLocalOpenPair(donors,donorPos);
      if(!merge)break;
-     recordVirtualClosure(merge,donorPos,'donor');
-     const path={ids:merge.ids,closed:true,
-      virtualClosureGap:Math.max(merge.joinGap,merge.closeGap),
-      virtualClosureGaps:[merge.joinGap,merge.closeGap],
+     // The donor arcs are physically open. A virtual chord creates an
+     // unmatched boundary edge in the final bridge. Weld both endpoint
+     // pairs in rest geometry, then zipper the resulting real closed loop.
+     const endpointPairs=[
+      [merge.aIds.at(-1),merge.bIds[0]],
+      [merge.bIds.at(-1),merge.aIds[0]]
+     ];
+     const twinsByPosition=new Map();
+     for(let id=0;id<donorPos.count;id++){
+      const key=seamKey(donorPos,id),bucket=twinsByPosition.get(key)||[];
+      bucket.push(id);twinsByPosition.set(key,bucket);
+     }
+     const weldMoves=new Map(),weldReports=[];
+     for(const [a,b] of endpointPairs){
+      const keyA=seamKey(donorPos,a),keyB=seamKey(donorPos,b);
+      if(keyA===keyB)throw Error('BTC donor endpoint weld pair is already coincident');
+      const twinsA=twinsByPosition.get(keyA)||[a];
+      const twinsB=twinsByPosition.get(keyB)||[b];
+      const pa=pointAt(donorPos,a),pb=pointAt(donorPos,b);
+      const midpoint=pa.map((value,k)=>(value+pb[k])*.5);
+      const affected=[...new Set([...twinsA,...twinsB])];
+      for(const id of affected){
+       if(weldMoves.has(id))throw Error('BTC donor endpoint weld groups overlap');
+       weldMoves.set(id,midpoint);
+      }
+      weldReports.push({endpointIds:[a,b],gap:distance3(pa,pb),
+       weldedVertices:affected.length,midpoint});
+     }
+     const faceNormal=(a,b,c)=>{
+      const u=b.map((value,k)=>value-a[k]),v=c.map((value,k)=>value-a[k]);
+      return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+     };
+     const movedPoint=id=>weldMoves.get(id)||pointAt(donorPos,id);
+     // Fail closed if welding collapses or reverses any authored donor face.
+     for(let j=0;j<di.count;j+=3){
+      const ids=[di.getX(j),di.getX(j+1),di.getX(j+2)];
+      if(!ids.some(id=>weldMoves.has(id)))continue;
+      const before=ids.map(id=>pointAt(donorPos,id));
+      const after=ids.map(movedPoint);
+      const n0=faceNormal(...before),n1=faceNormal(...after);
+      const l0=Math.hypot(...n0),l1=Math.hypot(...n1);
+      const alignment=n0.reduce((sum,value,k)=>sum+value*n1[k],0)/
+       Math.max(l0*l1,1e-24);
+      if(l0<1e-12||l1<l0*.20||alignment<=0)
+       throw Error('BTC donor endpoint weld would collapse or invert source face '+(j/3));
+     }
+     for(const [id,point] of weldMoves)donorPos.setXYZ(id,...point);
+     donorPos.needsUpdate=true;
+     const closedIds=[];
+     for(const id of merge.ids){
+      const key=seamKey(donorPos,id);
+      if(!closedIds.length||seamKey(donorPos,closedIds.at(-1))!==key)
+       closedIds.push(id);
+     }
+     if(closedIds.length>2&&
+        seamKey(donorPos,closedIds[0])===seamKey(donorPos,closedIds.at(-1)))
+      closedIds.pop();
+     if(closedIds.length<3)
+      throw Error('BTC donor endpoint weld collapsed the closed rim path');
+     seamBoundaryEndpointWeldDiagnostics.push({
+      plane,side,joinGap:merge.joinGap,closeGap:merge.closeGap,pairs:weldReports
+     });
+     const path={ids:closedIds,closed:true,physicalEndpointWelds:2,
       mergedBoundaryFragments:2};
      donors.splice(merge.j,1);
      donors.splice(merge.i,1,path);
@@ -2298,6 +2357,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const planes=['z','y','x-','x+'];
    const seamBoundaryClosureDiagnostics=[];
+    const seamBoundaryEndpointWeldDiagnostics=[];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
     seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
     seamBridgeTangentDirectionFlips=0,seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
@@ -3015,6 +3075,7 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeVirtualClosures=seamVirtualClosures;
    bodyCut.seamBridgeVirtualClosureMaxGap=seamVirtualClosureMaxGap;
    bodyCut.seamBridgeVirtualClosureDiagnostics=seamBoundaryClosureDiagnostics;
+    bodyCut.seamBridgeEndpointWeldDiagnostics=seamBoundaryEndpointWeldDiagnostics;
    bodyCut.seamBridgeSurfaceTangentFallbacks=seamBridgeSurfaceTangentFallbacks;
    bodyCut.seamBridgeTangentDirectionFlips=seamBridgeTangentDirectionFlips;
    bodyCut.seamBridgeMeanTangentReach=seamBridgeTangentReachCount?
@@ -3787,6 +3848,7 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeVirtualClosures:bodyCut.seamBridgeVirtualClosures||0,
    seamBridgeVirtualClosureMaxGap:bodyCut.seamBridgeVirtualClosureMaxGap||0,
     seamBridgeVirtualClosureDiagnostics:bodyCut.seamBridgeVirtualClosureDiagnostics||[],
+     seamBridgeEndpointWeldDiagnostics:bodyCut.seamBridgeEndpointWeldDiagnostics||[],
    seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
    seamBridgeTangentDirectionFlips:bodyCut.seamBridgeTangentDirectionFlips||0,
    seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
