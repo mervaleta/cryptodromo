@@ -707,14 +707,11 @@ function refineSkinnedDonor(source,passes=2){
 }
 
 function sealTinyDonorSlits(geometry){
- const pos=geometry.getAttribute('position'),skin=geometry.getAttribute('skinIndex'),
-  weight=geometry.getAttribute('skinWeight'),normal=geometry.getAttribute('normal'),
-  index=geometry.getIndex();
+ let pos=geometry.getAttribute('position'),skin=geometry.getAttribute('skinIndex'),
+  weight=geometry.getAttribute('skinWeight'),normal=geometry.getAttribute('normal'),index=geometry.getIndex();
  if(!pos||!skin||!weight||!index||skin.itemSize!==4||weight.itemSize!==4)
   throw Error('BTC donor micro-cap requires indexed four-weight skin geometry');
  let caps=0,addedTriangles=0,weldedVertices=0;
- let pos=geometry.getAttribute('position'),skin=geometry.getAttribute('skinIndex'),
-  weight=geometry.getAttribute('skinWeight'),normal=geometry.getAttribute('normal'),index=geometry.getIndex();
  const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
  const point=id=>[pos.getX(id),pos.getY(id),pos.getZ(id)];
  const rebuildBoundary=()=>{
