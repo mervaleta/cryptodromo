@@ -935,8 +935,9 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   // Pull the UPPER donor vertices toward the nearest retained Maya surface
   // of the same flank, and transfer the equivalent Maya skin influence.
   // Native GLB positions/weights stay intact BELOW the junction.
-  const donorGeo=bodyCut.geometry,donorPos=donorGeo.getAttribute('position');
-  const donorSkin=donorGeo.getAttribute('skinIndex'),donorWeights=donorGeo.getAttribute('skinWeight');
+  const donorGeo=bodyCut.geometry;
+  let donorPos=donorGeo.getAttribute('position');
+  let donorSkin=donorGeo.getAttribute('skinIndex'),donorWeights=donorGeo.getAttribute('skinWeight');
   const hostGeo=anatomy.geometry,hostPos=hostGeo.getAttribute('position'),
    hostSkin=hostGeo.getAttribute('skinIndex'),hostWeights=hostGeo.getAttribute('skinWeight');
   // Only attach to triangles that survived the Maya crop. BufferGeometry
@@ -1239,7 +1240,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const plane=classifySeamEdge(hostPos,e);
     return plane?[{...e,plane}]:[];
    });
-   const di=donorGeo.getIndex();
+   let di=donorGeo.getIndex();
    const donorBoundary=physicalBoundary(di,donorPos);
    const donorRim=new Set(),donorRimPlanes=new Map(),donorRimEdges=[];
    for(const e of donorBoundary.edges){
@@ -1410,6 +1411,32 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    // No artificial acceptance counters: this is diagnostic only.
    bodyCut.sewnRimVertices=sewn;
+
+   // The guarded rim projection itself can separate a tiny rear-plane slit
+   // that was not present in the pre-snap donor. Seal that *post-snap* slit
+   // now, then rebuild the physical boundary from the updated indexed mesh;
+   // otherwise the zipper would keep pairing a stale, already-capped path.
+   const postSnapSeal=sealTinyDonorSlits(donorGeo);
+   if(postSnapSeal.caps){
+    bodyCut.seamDonorMicroCaps=(bodyCut.seamDonorMicroCaps||0)+postSnapSeal.caps;
+    bodyCut.triangles+=postSnapSeal.addedTriangles;
+    bodyCut.refinedVertices=postSnapSeal.vertices;
+    donorPos=donorGeo.getAttribute('position');
+    donorSkin=donorGeo.getAttribute('skinIndex');
+    donorWeights=donorGeo.getAttribute('skinWeight');
+    di=donorGeo.getIndex();
+    const refreshedBoundary=physicalBoundary(di,donorPos);
+    donorRimEdges.length=0;
+    const refreshedRimVertices=new Set();
+    for(const edge of refreshedBoundary.edges){
+     const plane=classifySeamEdge(donorPos,edge);
+     if(!plane)continue;
+     donorRimEdges.push({...edge,plane});
+     refreshedRimVertices.add(edge.a);refreshedRimVertices.add(edge.b);
+    }
+    bodyCut.donorRimVertices=refreshedRimVertices.size;
+    bodyCut.donorRimEdgesByPlane=countByPlane(donorRimEdges);
+   }
 
    // Match the donor and Maya cut rims as ordered closed loops. Independent
    // nearest-edge projection jumped across adjacent limb folds (28 skipped
