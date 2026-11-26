@@ -3553,9 +3553,9 @@ const fractions=[.2,.4,.6,.8];
    if(typeof location!=='undefined'&&
       new URLSearchParams(location.search).get('btcSeamDebugQA')==='1'){
     donorMaterial.side=THREE.DoubleSide;
-    donorMaterial.color.setHex(0x36ff72);
-    donorMaterial.emissive.setHex(0x002b10);
-    donorMaterial.emissiveIntensity=.85;
+    donorMaterial.color?.setHex?.(0x36ff72);
+    donorMaterial.emissive?.setHex?.(0x002b10);
+    if('emissiveIntensity' in donorMaterial)donorMaterial.emissiveIntensity=.85;
     donorMaterial.needsUpdate=true;
    }
    anatomy.mesh.geometry=combinedGeometry;
