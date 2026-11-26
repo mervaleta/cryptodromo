@@ -1799,10 +1799,6 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     hostGeo.computeBoundingBox();hostGeo.computeBoundingSphere();
     return {points:vertexCount-vertexStart,edges:seenEdges.size,missing};
    }
-   const hostBoundarySplit=splitHostBoundaryEdges(hostBoundarySplitSamples);
-   bodyCut.seamHostBoundarySplitPoints=hostBoundarySplit.points;
-   bodyCut.seamHostBoundarySplitEdges=hostBoundarySplit.edges;
-   bodyCut.seamHostBoundarySplitMissing=hostBoundarySplit.missing;
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
     bridgePositions.slice((id-donorBase)*3,(id-donorBase)*3+3);
    const normalFor=id=>id<donorBase?
@@ -2352,6 +2348,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      }
     }
    }
+   const hostBoundarySplit=splitHostBoundaryEdges(hostBoundarySplitSamples);
+   bodyCut.seamHostBoundarySplitPoints=hostBoundarySplit.points;
+   bodyCut.seamHostBoundarySplitEdges=hostBoundarySplit.edges;
+   bodyCut.seamHostBoundarySplitMissing=hostBoundarySplit.missing;
    bodyCut.seamDonorRimWeightOverrides=seamDonorRimWeightOverrides;
    bodyCut.seamWarpFactor=seamWarpFactor;
    bodyCut.seamWarpTargetFraction=.35;
