@@ -1697,6 +1697,35 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     projected.set(key,index);
     return index;
    }
+   // Shape the zipper as a tangent-aware Hermite loft. The old linear
+   // interpolation plus sin(pi*t) bulge left a non-zero normal derivative at
+   // both source rims, which reads as a raised flap even when the indices weld.
+   // Project each endpoint tangent into its own source surface and make the
+   // normal bulge have zero slope at both ends.
+   function tangentHermiteBridgePoint(donorPoint,hostPoint,donorN,hostN,t){
+    const gap=hostPoint.map((v,k)=>v-donorPoint[k]);
+    const gapLength=Math.hypot(...gap);
+    const unit=normal=>{
+     const length=Math.hypot(...normal)||1;
+     return normal.map(v=>v/length);
+    };
+    const n0=unit(donorN),n1=unit(hostN);
+    const dot=(a,b)=>a.reduce((sum,v,k)=>sum+v*b[k],0);
+    const tangent0=gap.map((v,k)=>v-n0[k]*dot(gap,n0));
+    const tangent1=gap.map((v,k)=>v-n1[k]*dot(gap,n1));
+    const m0=tangent0.map(v=>v*.45),m1=tangent1.map(v=>v*.45);
+    const t2=t*t,t3=t2*t;
+    const h00=2*t3-3*t2+1,h10=t3-2*t2+t,
+     h01=-2*t3+3*t2,h11=t3-t2;
+    const smooth=t2*(3-2*t);
+    const blended=n0.map((v,k)=>v*(1-smooth)+n1[k]*smooth);
+    const blendedLength=Math.hypot(...blended)||1;
+    const outward=blended.map(v=>v/blendedLength);
+    const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*t)**2;
+    const point=donorPoint.map((v,k)=>
+     v*h00+m0[k]*h10+hostPoint[k]*h01+m1[k]*h11+outward[k]*bulge);
+    return {point,outward};
+   }
    function bridgeLayerVertex(donorId,sample,fraction){
     const key=[donorId,sample.a,sample.b,Math.round(sample.t*1e8),Math.round(fraction*1e8)].join(':');
     if(layerProjected.has(key))return layerProjected.get(key);
@@ -1707,18 +1736,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      hostNormal.getComponent(sample.b,k)*sample.t):[0,1,0];
     const hostLength=Math.hypot(...hostN)||1;
     hostN=hostN.map(v=>v/hostLength);
-    const normalBlend=fraction*fraction*(3-2*fraction);
-    const normal=donorN.map((v,k)=>v*(1-normalBlend)+hostN[k]*normalBlend);
-    const normalLength=Math.hypot(...normal)||1;
-    const outward=normal.map(v=>v/normalLength);
-    // The measured collar mismatch reaches several millimetres. A fixed 0.14 mm
-    // offset leaves the bridge almost planar, so its edge reads as a dark cut
-    // under the rump. Scale a restrained convex loft to the actual paired-rim
-    // separation; both ends remain exactly on their skinned source surfaces.
-    const gapLength=distance3(donorPoint,hostPoint);
-    const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*fraction);
-    const point=donorPoint.map((v,k)=>
-     v+(hostPoint[k]-v)*fraction+outward[k]*bulge);
+    const {point,outward}=tangentHermiteBridgePoint(
+     donorPoint,hostPoint,donorN,hostN,fraction);
     const influence=new Map();
     for(let k=0;k<4;k++){
      const weight=donorWeights.getComponent(donorId,k)*(1-fraction);
@@ -1894,13 +1913,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     if(cache.has(key))return cache.get(key);
     const donorPoint=positionFor(donorId),hostPoint=positionFor(hostId);
     const donorNormal=normalFor(donorId),hostNormal=normalFor(hostId);
-    const smooth=t*t*(3-2*t);
-    const normal=donorNormal.map((v,k)=>v*(1-smooth)+hostNormal[k]*smooth);
-    const normalLength=Math.hypot(...normal)||1;
-    const outward=normal.map(v=>v/normalLength);
-    const gap=distance3(donorPoint,hostPoint);
-    const bulge=Math.min(.0009,gap*.22)*Math.sin(Math.PI*t);
-    const point=donorPoint.map((v,k)=>v+(hostPoint[k]-v)*t+outward[k]*bulge);
+    const {point,outward}=tangentHermiteBridgePoint(
+     donorPoint,hostPoint,donorNormal,hostNormal,t);
     const influence=new Map();
     for(const [id,factor] of [[donorId,1-t],[hostId,t]]){
      const offset=(id-donorBase)*4;
