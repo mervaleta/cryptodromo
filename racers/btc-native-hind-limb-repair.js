@@ -2641,7 +2641,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
          if(!addTriangle([donors[0],a1,b1],fallback)){valid=false;break;}
         }else if(donors.length===2&&band===fractions.length-2){
          if(!addTriangle([a0,b0,hosts[0]],fallback)){valid=false;break;}
-        }        }else if(!addQuad(a0,b0,a1,b1,fallback)){
+        }else if(!addQuad(a0,b0,a1,b1,fallback)){
          valid=false;break;
         }
        }
