@@ -1733,7 +1733,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        for(const value of values)target.push(integer?Math.round(value):value);
       }
      }
-     const id=vertexStart+(arrays.get('position').length/hostGeo.getAttribute('position').itemSize-vertexStart);
+     const id=arrays.get('position').length/hostGeo.getAttribute('position').itemSize-1;
      if(cacheKey)vertexCache.set(cacheKey,id);
      return id;
     };
