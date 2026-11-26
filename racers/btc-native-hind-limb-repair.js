@@ -69,11 +69,10 @@ function cropMayaHind(anatomy){
  // pieces are triangulated independently, so hidden centerline islands
  // cannot be bridged by an edge with two crossings.
  const planes=[
-  {id:'z',f:v=>.0145-xyz[3*v+2]},
-  // Preserve the Maya proximal haunch and move the replacement junction
-  // below the bulky rump, toward the narrower hock transition. This should
-  // reduce the open volume that the donor collar must span; judge only from
-  // the new real Chromium/WebGL rear and three-quarter frames.
+  {id:'z',f:v=>.0200-xyz[3*v+2]},
+  // P0 anatomy A/B: remove low hanging Maya rump flaps up to 5.2 mm,
+  // leaving the upper haunch untouched. Must be judged on real WebGL
+  // rear/threeQuarter frames against artifact 14135961152; not approved.
   {id:'y',f:v=>xyz[3*v+1]-.0052},
   // Real WebGL A/B of run 43703166983 against 43649277060 shows
   // larger triangular tears at the rump and stifle with x=0.00010.
@@ -425,13 +424,13 @@ function clipNativeBodyHindExact(mesh){
  const xyz=Array.from(pos.array),bones=Array.from(ji.array),weights=Array.from(jw.array);
  const faces=[],edgePoints=new Map();
  const planes=[
-  // Match the three exact planes of cropMayaHind's lower-hock transition.
-  // Move the seam down from the proximal rump (20.0 mm) to 14.5 mm so the
-  // authored Maya haunch remains continuous above it and the donor replaces
-  // only the distal hind limb. This is a geometry candidate pending real
-  // 16-phase rear/3Q WebGL comparison; it is not a version acceptance.
+  // Match the three exact planes of cropMayaHind's upper posterior
+  // subtraction. Previously the donor began 0.25 mm above and ahead of
+  // the host opening and 0.50 mm farther inward on each flank. Those
+  // mismatched cuts create an unfillable dark band before any rig motion.
+  // The donor remains an isolated candidate until rear/3Q WebGL A/B.
   {id:'y',f:v=>xyz[3*v+1]-.0052},
-  {id:'z',f:v=>.0145-xyz[3*v+2]},
+  {id:'z',f:v=>.0200-xyz[3*v+2]},
   {id:'R',f:v=>xyz[3*v]-.0015},
   {id:'L',f:v=>-xyz[3*v]-.0015}
  ];
@@ -627,7 +626,7 @@ function refineSkinnedDonor(source,passes=2){
    // off the plane. That bends adjacent triangles into the host surface
    // and makes a visible serrated wedge at the Maya/GLB rump join.
    const onExactCutPlane=[
-    [1,.0052],[2,.0145],[0,.0015],[0,-.0015]
+    [1,.0052],[2,.0200],[0,.0015],[0,-.0015]
    ].some(([axis,value])=>Math.abs(vs[i].p[axis]-value)<1e-7);
    if(near.length>0||onExactCutPlane){
     // Every vertex incident to an open boundary is constrained, including
@@ -654,7 +653,7 @@ function refineSkinnedDonor(source,passes=2){
    // pushes its midpoint off the plane and reopens the rump/limb seam.
    // Preserve a linear midpoint on all such coplanar cut edges.
    const onCutPlane=(p,q)=>[
-    [1,.0052],[2,.0145],[0,.0015],[0,-.0015]
+    [1,.0052],[2,.0200],[0,.0015],[0,-.0015]
    ].some(([axis,value])=>Math.abs(p[axis]-value)<1e-7&&
                             Math.abs(q[axis]-value)<1e-7);
    const constrained=e.opp.length!==2||onCutPlane(a.p,b.p);
@@ -777,14 +776,14 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const cx=(pts[0].x+pts[1].x+pts[2].x)/3;
    const cy=(pts[0].y+pts[1].y+pts[2].y)/3;
    const cz=(pts[0].z+pts[1].z+pts[2].z)/3;
-   if(cz<=.0144||cz>=.032||cy<=.0042||Math.abs(cx)<=.0012)continue;
+   if(cz<=.0199||cz>=.032||cy<=.0042||Math.abs(cx)<=.0012)continue;
    if(pts.some(p=>Math.sign(p.x)!==Math.sign(cx)))continue;
    // The centroid can lie in the rump while one corner extends deep
    // into the excised hind leg. Projecting a donor collar onto such a
    // triangle bridges the actual cut and produces a dark thigh wedge.
    // Restrict attachment to entirely retained, local host faces; this
    // changes the 3D collar projection, not an acceptance threshold.
-   if(pts.some(p=>p.z<.0144||p.y<.0038||Math.abs(p.x)<.0010))continue;
+   if(pts.some(p=>p.z<.0199||p.y<.0038||Math.abs(p.x)<.0010))continue;
    attachment.push({ids,pts,side:Math.sign(cx)});
   }
   if(attachment.length<30)throw Error('BTC V23 host rump triangles missing');
@@ -848,12 +847,15 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const twins=collarTwins[i];
    if(i!==twins[0])continue;
    const z=donorPos.getZ(i),y=donorPos.getY(i),x=donorPos.getX(i);
-   // Project the actual 1.8 mm donor collar immediately below the new
-   // z=.0145 hock seam. The proximal Maya haunch is retained above it.
-   if(z<.0127||z>.0145+1e-7||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((.0145-z)/(.0145-.0127),0,1);
-   // Attachment is strongest on the z=.0145 cut and fades into the
-   // actual retained donor leg at z=.0127.
+   // Actual donor triangles satisfy z<=.0145 after exact clipping. The
+   // former collar range [.0208,.0226) was entirely OUTSIDE that mesh,
+   // so almost no donor vertices could be attached to the Maya rump.
+   // Project the real 1.8mm strip immediately BELOW the cut rim instead;
+   // keep the projection strongest on z=.0200 and fade toward the leg.
+   if(z<.0182||z>.0200+1e-7||y<.0039||Math.abs(x)<.0010)continue;
+   const u=THREE.MathUtils.clamp((.0200-z)/(.0200-.0182),0,1);
+   // Attachment is strongest on the z=.0200 cut and fades into the
+   // actual retained donor leg at z=.0130.
    // The old ascending smoothstep did the opposite, dragging interior
    // triangles toward the rump while leaving the actual rim unsown.
    // This is a geometric candidate, not V23 visual approval.
@@ -961,7 +963,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // retain 100% donor influence below z=.0130 and never alter the hock.
    // This is an unapproved animation/geometry A/B, not a V23 milestone.
    // The cut boundary must deform with the Maya host surface, not with a
-   // nearest-neighbour donor approximation. Use 100% host skin at z=.0145
+   // nearest-neighbour donor approximation. Use 100% host skin at z=.0200
    // and decay smoothly to the donor's authored limb weights over 1.8 mm.
    const mayaFactor=1.0*t*t,influences=new Map();
    // Coincident UV/material copies can have DIFFERENT source skin weights.
@@ -996,8 +998,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    insetVertices+=twins.length;reattachedWeights+=twins.length;
   }
-  // The exact donor cut creates an open rim at the lower z=.0145 hock seam;
-  // the closest-triangle collar projection targets the 1.8 mm band below it.
+  // The exact donor cut creates an open rim at z=.0200, while the
+  // existing closest-triangle collar projection now targets the 1.8 mm band below z=.0200.
   // Therefore it cannot sew the actual cut edge. Align ONLY donor rim
   // vertices with nearby surviving Maya cut edges on the SAME flank.
   // This is a small geometry candidate, not visual acceptance.
@@ -1031,7 +1033,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const hostBoundary=physicalBoundary(hostIndex,hostPos);
    // The cut is a three-plane boundary, not just the rear z plane:
-   // z=.0145, y=.0052 and the bilateral x=+/-.0015 flank planes.
+   // z=.0200, y=.0052 and the bilateral x=+/-.0015 flank planes.
    // Stitching only z left the visible pale slit at the top of each hind
    // thigh because the y/x cut arcs remained open in real WebGL.
    const seamPlaneTolerance=.00003;
@@ -1041,12 +1043,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const sideA=Math.sign(a[0]),sideB=Math.sign(b[0]);
     if(!sideA||sideA!==sideB||Math.abs(a[0])<=.0014||Math.abs(b[0])<=.0014)return null;
     const near=(p,axis,value)=>Math.abs(p[axis]-value)<=seamPlaneTolerance;
-    if(near(a,2,.0145)&&near(b,2,.0145)&&a[1]>=.0050&&b[1]>=.0050)return 'z';
+    if(near(a,2,.0200)&&near(b,2,.0200)&&a[1]>=.0050&&b[1]>=.0050)return 'z';
     if(near(a,1,.0052)&&near(b,1,.0052)&&
-       a[2]<=.0145+seamPlaneTolerance&&b[2]<=.0145+seamPlaneTolerance)return 'y';
+       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)return 'y';
     if(near(a,0,sideA*.0015)&&near(b,0,sideB*.0015)&&
        a[1]>=.0050&&b[1]>=.0050&&
-       a[2]<=.0145+seamPlaneTolerance&&b[2]<=.0145+seamPlaneTolerance)
+       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)
      return sideA<0?'x-':'x+';
     return null;
    };
@@ -3140,7 +3142,7 @@ const fractions=[.2,.4,.6,.8];
    // Quaternius normal, pushing the new collar across its actual surface.
    // This changes the skinned donor geometry, not just its shading.
    donorGeo.computeVertexNormals();
-   // The donor body is clipped at z <= .0145. The old smoothing window
+   // The donor body is clipped at z <= .0200. The old smoothing window
    // [.0148,.0170] was empty, leaving the jagged upper thigh untreated.
    // Relax only the actual 1.8 mm collar below the physical cut rim;
    // pin the open boundary and retain the face-orientation backtracking.
@@ -3155,13 +3157,13 @@ const fractions=[.2,.4,.6,.8];
      // spatially welded group atomically, or leave the whole group pinned.
      const twins=[...(physicalVertices.get(spatialVertex[i])||[i])];
      if(i!==Math.min(...twins)||twins.some(v=>rim.has(v))||
-        z<=.0127||z>=.0145||y<=.0041)continue;
+        z<=.0182||z>=.0200||y<=.0041)continue;
      // A UV split lowers the representative's indexed valence even when
      // the welded physical one-ring is well formed. Use the physical
      // neighbor count below, not edges[i].size, to decide eligibility.
      // Pin the transition's endpoints AND the true open rim. Attenuate
      // the smoothing one edge inward to avoid a hard displacement step.
-     const u=(z-.0127)/(.0145-.0127);
+     const u=(z-.0182)/(.0200-.0182);
      const taper=Math.sin(Math.PI*u)**2;
      const rimNeighbor=[...edges[i]].some(v=>rim.has(v));
      const alpha=.28*taper*(rimNeighbor?.18:1);
@@ -3761,7 +3763,7 @@ const fractions=[.2,.4,.6,.8];
  let disposed=false;
  return {
   snapshot:{
-   build:'btc-v22-continuous-hind-seam-20261107',seamCutZ:.0145,
+   build:'btc-v22-continuous-hind-seam-20261107',seamCutZ:.0200,
    originalNativeSkeleton:true,originalGallopPreserved:true,
    donorHindTriangles:bodyCut.triangles,
    donorHoofTriangles:hoovesCut.triangles,
