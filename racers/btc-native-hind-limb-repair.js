@@ -1469,40 +1469,68 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       const key=seamKey(donorPos,id),bucket=twinsByPosition.get(key)||[];
       bucket.push(id);twinsByPosition.set(key,bucket);
      }
-     const weldMoves=new Map(),weldReports=[];
-     for(const [a,b] of endpointPairs){
+     const pairGroups=endpointPairs.map(([a,b])=>{
       const keyA=seamKey(donorPos,a),keyB=seamKey(donorPos,b);
       if(keyA===keyB)throw Error('BTC donor endpoint weld pair is already coincident');
       const twinsA=twinsByPosition.get(keyA)||[a];
       const twinsB=twinsByPosition.get(keyB)||[b];
-      const pa=pointAt(donorPos,a),pb=pointAt(donorPos,b);
-      const midpoint=pa.map((value,k)=>(value+pb[k])*.5);
-      const affected=[...new Set([...twinsA,...twinsB])];
-      for(const id of affected){
-       if(weldMoves.has(id))throw Error('BTC donor endpoint weld groups overlap');
-       weldMoves.set(id,midpoint);
-      }
-      weldReports.push({endpointIds:[a,b],gap:distance3(pa,pb),
-       weldedVertices:affected.length,midpoint});
+      return {a,b,pa:pointAt(donorPos,a),pb:pointAt(donorPos,b),
+       twins:[...new Set([...twinsA,...twinsB])]};
+     });
+     const endpointIds=new Set();
+     for(const pair of pairGroups)for(const id of pair.twins){
+      if(endpointIds.has(id))throw Error('BTC donor endpoint weld groups overlap');
+      endpointIds.add(id);
      }
      const faceNormal=(a,b,c)=>{
       const u=b.map((value,k)=>value-a[k]),v=c.map((value,k)=>value-a[k]);
       return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
      };
-     const movedPoint=id=>weldMoves.get(id)||pointAt(donorPos,id);
-     // Fail closed if welding collapses or reverses any authored donor face.
+     const relevantFaces=[];
      for(let j=0;j<di.count;j+=3){
       const ids=[di.getX(j),di.getX(j+1),di.getX(j+2)];
-      if(!ids.some(id=>weldMoves.has(id)))continue;
-      const before=ids.map(id=>pointAt(donorPos,id));
-      const after=ids.map(movedPoint);
-      const n0=faceNormal(...before),n1=faceNormal(...after);
-      const l0=Math.hypot(...n0),l1=Math.hypot(...n1);
-      const alignment=n0.reduce((sum,value,k)=>sum+value*n1[k],0)/
-       Math.max(l0*l1,1e-24);
-      if(l0<1e-12||l1<l0*.20||alignment<=0)
-       throw Error('BTC donor endpoint weld would collapse or invert source face '+(j/3));
+      if(!ids.some(id=>endpointIds.has(id)))continue;
+      const before=ids.map(id=>pointAt(donorPos,id)),normal=faceNormal(...before);
+      const length=Math.hypot(...normal);
+      if(length<1e-12)throw Error('BTC donor endpoint weld found degenerate source face '+(j/3));
+      relevantFaces.push({face:j/3,ids,before,normal,length});
      }
+     const fractions=[0,.125,.25,.375,.5,.625,.75,.875,1];
+     let bestWeld=null,bestFailure=null;
+     for(const t0 of fractions)for(const t1 of fractions){
+      const ts=[t0,t1],moves=new Map(),reports=[];
+      let cost=0;
+      for(let p=0;p<pairGroups.length;p++){
+       const pair=pairGroups[p],t=ts[p];
+       const point=pair.pa.map((value,k)=>value*(1-t)+pair.pb[k]*t);
+       for(const id of pair.twins){
+        moves.set(id,point);
+        const old=pointAt(donorPos,id);
+        cost+=(old[0]-point[0])**2+(old[1]-point[1])**2+(old[2]-point[2])**2;
+       }
+       reports.push({endpointIds:[pair.a,pair.b],gap:distance3(pair.pa,pair.pb),
+        weldFraction:t,weldedVertices:pair.twins.length,position:point});
+      }
+      let safe=true,failure=null,minAreaRatio=Infinity;
+      for(const face of relevantFaces){
+       const after=face.ids.map(id=>moves.get(id)||pointAt(donorPos,id));
+       const normal=faceNormal(...after),length=Math.hypot(...normal);
+       const ratio=length/face.length;
+       const alignment=face.normal.reduce((sum,value,k)=>sum+value*normal[k],0)/
+        Math.max(face.length*length,1e-24);
+       minAreaRatio=Math.min(minAreaRatio,ratio);
+       if(length<face.length*.20||alignment<=0){
+        safe=false;failure={face:face.face,vertexIds:face.ids,
+         areaRatio:ratio,normalAlignment:alignment};break;
+       }
+      }
+      if(!safe){bestFailure=failure;continue;}
+      if(!bestWeld||cost<bestWeld.cost)
+       bestWeld={moves,reports,cost,minAreaRatio};
+     }
+     if(!bestWeld)
+      throw Error('BTC donor endpoint weld has no face-safe placement; best failure '+JSON.stringify(bestFailure));
+     const weldMoves=bestWeld.moves,weldReports=bestWeld.reports;
      for(const [id,point] of weldMoves)donorPos.setXYZ(id,...point);
      donorPos.needsUpdate=true;
      const closedIds=[];
