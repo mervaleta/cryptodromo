@@ -722,6 +722,97 @@ function attachNativeDonor(original,geometry,material,name) {
  clone.frustumCulled=false;clone.castShadow=true;clone.receiveShadow=true;
  return clone;
 }
+function flareUpperHindThigh(geometry,cutZ){
+ const pos=geometry.getAttribute('position'),index=geometry.getIndex();
+ if(!pos||!index)throw Error('BTC upper-thigh sculpt requires indexed skinned donor geometry');
+ const base=Float32Array.from(pos.array),binSize=.0012,bins=new Map();
+ const key=(side,bin)=>side+':'+bin;
+ const selected=[];
+ const smooth01=value=>{const t=Math.max(0,Math.min(1,value));return t*t*(3-2*t);};
+ for(let id=0;id<pos.count;id++){
+  const x=base[id*3],y=base[id*3+1],z=base[id*3+2],side=Math.sign(x);
+  const depth=cutZ-z;
+  if(!side||Math.abs(x)<.001||y<.0039||depth<.00025||depth>.009)continue;
+  const bin=Math.round(z/binSize),k=key(side,bin);
+  let entry=bins.get(k);
+  if(!entry){entry={x:0,y:0,count:0};bins.set(k,entry);}
+  entry.x+=x;entry.y+=y;entry.count++;
+ }
+ if(bins.size<4)return {vertices:0,factor:0,maxMove:0};
+ const centerFor=(side,bin)=>{
+  let x=0,y=0,total=0;
+  for(const [offset,weight] of [[-1,1],[0,2],[1,1]]){
+   const entry=bins.get(key(side,bin+offset));
+   if(!entry)continue;
+   x+=entry.x/entry.count*weight;y+=entry.y/entry.count*weight;total+=weight;
+  }
+  return total?{x:x/total,y:y/total}:null;
+ };
+ for(let id=0;id<pos.count;id++){
+  const x=base[id*3],y=base[id*3+1],z=base[id*3+2],side=Math.sign(x);
+  const depth=cutZ-z;
+  if(!side||Math.abs(x)<.001||y<.0039||depth<.00025||depth>.009)continue;
+  const center=centerFor(side,Math.round(z/binSize));
+  if(!center)continue;
+  const envelope=smooth01((depth-.00025)/.0022)*smooth01((.009-depth)/.0025);
+  const dx=x-center.x,dy=y-center.y;
+  if(envelope<.001||Math.hypot(dx,dy)<.00025)continue;
+  selected.push({id,dx,dy,envelope});
+ }
+ if(selected.length<80)return {vertices:selected.length,factor:0,maxMove:0};
+ const faces=[];
+ const cross=(a,b,c)=>{
+  const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2];
+  const vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+  return [uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];
+ };
+ const quality=(a,b,c,n)=>{
+  const edgeSq=(a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2+
+   (b[0]-c[0])**2+(b[1]-c[1])**2+(b[2]-c[2])**2+
+   (c[0]-a[0])**2+(c[1]-a[1])**2+(c[2]-a[2])**2;
+  const area2=Math.hypot(...n);
+  return edgeSq>1e-18?Math.min(1,2*Math.sqrt(3)*area2/edgeSq):0;
+ };
+ for(let i=0;i<index.count;i+=3){
+  const ids=[index.getX(i),index.getX(i+1),index.getX(i+2)];
+  const points=ids.map(id=>[base[id*3],base[id*3+1],base[id*3+2]]);
+  const normal=cross(...points),area=Math.hypot(...normal);
+  if(area<1e-12)continue;
+  faces.push({ids,normal,area,quality:quality(...points,normal)});
+ }
+ let accepted=null,acceptedFactor=0;
+ for(let factor=1;factor>=1/16;factor/=2){
+  const candidate=Float32Array.from(base);
+  for(const item of selected){
+   const offset=item.id*3,w=item.envelope*factor;
+   candidate[offset]+=item.dx*.22*w;
+   candidate[offset+1]+=item.dy*.14*w;
+  }
+  let safe=true;
+  for(const face of faces){
+   const points=face.ids.map(id=>[candidate[id*3],candidate[id*3+1],candidate[id*3+2]]);
+   const normal=cross(...points),area=Math.hypot(...normal);
+   if(area<face.area*.35||normal.reduce((sum,v,k)=>sum+v*face.normal[k],0)<=0||
+      quality(...points,normal)<Math.max(.004,face.quality*.48)){
+    safe=false;break;
+   }
+  }
+  if(safe){accepted=candidate;acceptedFactor=factor;break;}
+ }
+ if(!accepted)return {vertices:selected.length,factor:0,maxMove:0};
+ let maxMove=0,moved=0;
+ for(const item of selected){
+  const offset=item.id*3;
+  const dx=accepted[offset]-base[offset],dy=accepted[offset+1]-base[offset+1];
+  const move=Math.hypot(dx,dy);
+  if(move>1e-7)moved++;
+  maxMove=Math.max(maxMove,move);
+ }
+ pos.array.set(accepted);pos.needsUpdate=true;
+ geometry.computeVertexNormals();geometry.computeBoundingSphere();
+ return {vertices:moved,factor:acceptedFactor,maxMove};
+}
+
 function originalHoof(root) {
  let hoof=null;
  root.traverse(x=>{if(x.isSkinnedMesh&&[x.material].flat()[0]?.name==='Hooves')hoof=x;});
@@ -753,6 +844,13 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
   bodyCut.triangles=refined.triangles;
   bodyCut.refinedVertices=refined.vertices;
   bodyCut.subdivisionPasses=refined.passes;
+  // Add a guarded muscle flare to the upper donor thighs. The cut rim remains
+  // fixed; volume peaks a few millimetres below it and fades into the Gallop leg.
+  // Every affected face is checked for winding, area and triangle quality.
+  const thighFlare=flareUpperHindThigh(bodyCut.geometry,BTC_SEAM_CUT_Z);
+  bodyCut.thighFlareVertices=thighFlare.vertices;
+  bodyCut.thighFlareFactor=thighFlare.factor;
+  bodyCut.thighFlareMaxMove=thighFlare.maxMove;
   // Topological seam alignment, not a polygon spike tucked in arbitrarily:
   // Pull the UPPER donor vertices toward the nearest retained Maya surface
   // of the same flank, and transfer the equivalent Maya skin influence.
@@ -3899,6 +3997,9 @@ const fractions=[.2,.4,.6,.8];
    build:'btc-v22-continuous-hind-seam-20261107',seamCutZ:BTC_SEAM_CUT_Z,
    originalNativeSkeleton:true,originalGallopPreserved:true,
    donorHindTriangles:bodyCut.triangles,
+   donorThighFlareVertices:bodyCut.thighFlareVertices||0,
+   donorThighFlareFactor:bodyCut.thighFlareFactor||0,
+   donorThighFlareMaxMove:bodyCut.thighFlareMaxMove||0,
    donorHoofTriangles:hoovesCut.triangles,
    removedMayaTriangles:crop.removedMayaTriangles,
    isolatedMayaPosteriorIslandsRemoved:crop.isolatedMayaPosteriorIslandsRemoved,
