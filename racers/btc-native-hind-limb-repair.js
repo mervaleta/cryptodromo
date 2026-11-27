@@ -819,6 +819,33 @@ function originalHoof(root) {
  return hoof;
 }
 export function createBTCNativeHindLimbRepair(root,original,anatomy) {
+ // Diagnostic A/B only: preserve the complete Maya posterior mesh and bypass
+ // the Quaternius donor transplant. The Maya mesh still uses the current
+ // nearest-neighbour 50-joint transfer, NOT the private 70-influence skinCluster.
+ // This isolates whether the visible rump/thigh discontinuity is introduced
+ // by donor geometry, without changing the default production/candidate path.
+ const nativeMayaHindExperiment=typeof window!=='undefined'&&
+  new URLSearchParams(window.location.search).get('btcNativeHindExperiment')==='1';
+ if(nativeMayaHindExperiment){
+  return {
+   snapshot:{
+    nativeMayaHindExperiment:true,
+    source:'uncropped-Maya-2017-full-body-sculpt',
+    originalGallopPreserved:true,
+    originalNativeSkeleton:true,
+    originalMayaSkinClusterRestored:false,
+    originalMayaInfluenceCount:70,
+    activeSkinMethod:'nearest-neighbour transfer from original Quaternius 50-joint Gallop',
+    donorHindTriangles:0,
+    donorHoofTriangles:0,
+    removedMayaTriangles:0,
+    cutTriangles:0,
+    seamBridgeTriangles:0,
+    seamBridgeUnmatchedEdges:0
+   },
+   dispose(){}
+  };
+ }
  if(!original.skeleton?.bones.some(b=>b.name.startsWith('BackLowerLeg')))
   throw Error('BTC V20 requires original GLB Gallop hock joints');
  const hoof=originalHoof(root);
