@@ -8,6 +8,7 @@ on:
       - 'racers/btc-maya-master.js'
       - 'racers/btc-maya-groom.js'
       - 'tests/btc-v22-hind-smoke.mjs'
+      - 'tests/btc-native-hind-ab-smoke.mjs'
       - '.github/workflows/btc-v22-hind-smoke.yml'
   workflow_dispatch:
 concurrency:
@@ -46,6 +47,8 @@ jobs:
           trap 'kill "$PID" || true' EXIT
           sleep 2
           node tests/btc-v22-hind-smoke.mjs
+          node --check tests/btc-native-hind-ab-smoke.mjs
+          node tests/btc-native-hind-ab-smoke.mjs
       - name: Finalize isolated WebGL run locator (commit status only)
         if: always()
         env:
@@ -64,5 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: btc-v22-hind-six-real-webgl
-          path: artifacts/btc-v22-hind-diagnostic/**
+          path: |
+            artifacts/btc-v22-hind-diagnostic/**
+            artifacts/btc-native-hind-ab-smoke/**
           if-no-files-found: warn
