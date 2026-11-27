@@ -1843,10 +1843,18 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    function bridgeVertex(sample){
     const t=Math.max(0,Math.min(1,sample.t));
     const key=[sample.a,sample.b,Math.round(t*1e8)].join(':');
-    const hostSourceId=sample.a===sample.b?sample.a:null;
+    const hostSourceId=sample.a===sample.b||t<=1e-5?sample.a:
+     t>=1-1e-5?sample.b:null;
+    // Interior resampled endpoints must weld to the exact vertex created by
+    // splitHostBoundaryEdges for this original Maya edge+t pair. Position-only
+    // lookup can select a UV twin or miss the float32 interpolation entirely.
+    const fromLowId=sample.a<sample.b?t:1-t;
+    const hostSplitKey=Number.isInteger(hostSourceId)?null:
+     [Math.min(sample.a,sample.b),Math.max(sample.a,sample.b),Math.round(fromLowId*1e8)].join(':');
+    const hostLink={hostSourceId,hostSplitKey};
     if(projected.has(key)){
      const existing=projected.get(key);
-     bridgeEndpointInfo.set(existing,{hostSourceId});
+     bridgeEndpointInfo.set(existing,{...(bridgeEndpointInfo.get(existing)||{}),...hostLink});
      return existing;
     }
     const influence=new Map();
@@ -1872,7 +1880,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     assertBridgeSkinArrays('host endpoint');
     projected.set(key,index);
-    bridgeEndpointInfo.set(index,{hostSourceId});
+    bridgeEndpointInfo.set(index,hostLink);
     return index;
    }
    // Recover the cross-boundary tangent from the actual adjacent source
@@ -2300,7 +2308,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     for(const group of nextGroups)hostGeo.addGroup(group.start,group.count,group.materialIndex);
     hostGeo.setDrawRange(0,nextIndices.length);
     hostGeo.computeBoundingBox();hostGeo.computeBoundingSphere();
-    return {points:vertexCount-vertexStart,edges:seenEdges.size,missing};
+    return {points:vertexCount-vertexStart,edges:seenEdges.size,missing,vertexMap:vertexCache};
    }
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
     bridgePositions.slice((id-donorBase)*3,(id-donorBase)*3+3);
@@ -3200,6 +3208,7 @@ const fractions=[.2,.4,.6,.8];
       // open cut chain. Every original donor boundary segment is considered.
       bridgeZipperFallbackLoops++;
       const projectedIds=alignment.samples.map(bridgeVertex);
+      registerHostBoundarySamples(alignment);
       for(let i=0;i<donorSteps;i++){
        const a=donor[i],b=donor[(i+1)%m];
        const nextIndex=alignment.closed?(i+1)%projectedIds.length:i+1;
@@ -3216,6 +3225,44 @@ const fractions=[.2,.4,.6,.8];
     }
    }
    const hostBoundarySplit=splitHostBoundaryEdges(hostBoundarySplitSamples);
+   // Resolve every interpolated zipper endpoint to the exact Maya vertex
+   // appended while splitting its source edge. This is deliberately done
+   // after the host geometry is rebuilt and before the unified SkinnedMesh
+   // merge; no nearest-position fallback is needed for resampled endpoints.
+   let hostSplitEndpointMatches=0,hostSplitEndpointMissing=0;
+   const splitHostPosition=hostGeo.getAttribute('position');
+   const splitHostNormal=hostGeo.getAttribute('normal');
+   const splitHostSkin=hostGeo.getAttribute('skinIndex');
+   const splitHostWeight=hostGeo.getAttribute('skinWeight');
+   if(!splitHostPosition||!splitHostNormal||!splitHostSkin||!splitHostWeight)
+    throw Error('BTC exact seam endpoint remap lost Maya position/normal/skin attributes');
+   for(const [bridgeId,info] of bridgeEndpointInfo){
+    if(Number.isInteger(info.hostSourceId)||!info.hostSplitKey)continue;
+    const hostId=hostBoundarySplit.vertexMap.get(info.hostSplitKey);
+    if(!Number.isInteger(hostId)){
+     hostSplitEndpointMissing++;
+     continue;
+    }
+    const local=bridgeId-donorBase;
+    if(!Number.isInteger(local)||local<0||local>=bridgePositions.length/3)
+     throw Error('BTC exact seam endpoint remap references invalid bridge vertex '+bridgeId);
+    info.hostSourceId=hostId;
+    info.hostSplitVertex=true;
+    for(let k=0;k<3;k++){
+     bridgePositions[local*3+k]=splitHostPosition.getComponent(hostId,k);
+     bridgeNormals[local*3+k]=splitHostNormal.getComponent(hostId,k);
+    }
+    for(let k=0;k<4;k++){
+     bridgeJoints[local*4+k]=splitHostSkin.getComponent(hostId,k);
+     bridgeWeights[local*4+k]=splitHostWeight.getComponent(hostId,k);
+    }
+    hostSplitEndpointMatches++;
+   }
+   if(hostSplitEndpointMissing)
+    throw Error('BTC resampled seam could not remap '+hostSplitEndpointMissing+
+     ' host endpoints to exact split Maya edge vertices');
+   bodyCut.seamBridgeHostSplitEndpointMatches=hostSplitEndpointMatches;
+   bodyCut.seamBridgeHostSplitEndpointMissing=hostSplitEndpointMissing;
    bodyCut.seamHostBoundarySplitPoints=hostBoundarySplit.points;
    bodyCut.seamHostBoundarySplitEdges=hostBoundarySplit.edges;
    bodyCut.seamHostBoundarySplitMissing=hostBoundarySplit.missing;
@@ -4095,6 +4142,8 @@ const fractions=[.2,.4,.6,.8];
    seamBridgeWeldedHostVertices:bodyCut.seamBridgeWeldedHostVertices||0,
    seamBridgeHostEndpointCount:bodyCut.seamBridgeHostEndpointCount||0,
    seamBridgeExactHostSourceMatches:bodyCut.seamBridgeExactHostSourceMatches||0,
+   seamBridgeHostSplitEndpointMatches:bodyCut.seamBridgeHostSplitEndpointMatches||0,
+   seamBridgeHostSplitEndpointMissing:bodyCut.seamBridgeHostSplitEndpointMissing||0,
    seamBridgeFallbackHostSourceMatches:bodyCut.seamBridgeFallbackHostSourceMatches||0,
    seamBridgeHostSourceMismatches:bodyCut.seamBridgeHostSourceMismatches||0,
    seamBridgeBoundaryComponents:bodyCut.seamBridgeBoundaryComponents||0,
