@@ -79,21 +79,21 @@ try{
   throw e;
  }
  const baseline=await page.evaluate(()=>window.__cryptodromoBTCAtelierQA());
- assert.ok(baseline.heroGroom?.hindRestoration?.sameOriginalSkeleton);
- assert.equal(baseline.heroGroom?.hindRestoration?.seamMethod,'shared-edge-skinned-plane-clipping','Must use true skin-weighted cut boundary, not V20 centroid culling');
- assert.ok(baseline.heroGroom?.hindRestoration?.addedCutVertices>=15);
- assert.ok(baseline.heroGroom?.hindRestoration?.donorUpperInsetVertices>=10);
- // Keep the orphan-removal rejection strict, but capture the actual WebGL
- // evidence first. Previously the assertion aborted before a single PNG,
- // leaving the geometry defect impossible to inspect or compare.
  const posterior=baseline.heroGroom?.hindRestoration;
- console.log('BTC_V22_POSTERIOR_AUDIT',JSON.stringify(posterior));
-
- // Keep the two-pass geometry gate strict, but evaluate the candidate in
- // actual WebGL first. A rejected subdivision-count change must still leave
- // the 16-pose/six-camera evidence needed to decide whether to retain it.
- assert.ok(baseline.heroGroom?.hindRestoration?.donorHindTriangles>4000,'real limb geometry must have substantially more smooth faces');
- assert.ok(baseline.heroGroom?.hindRestoration?.donorReweightedVertices>10,'upper donor transition must follow Maya thigh during Gallop');
+ assert.equal(posterior?.nativeMayaHindExperiment,true,'The isolated BTC candidate must use the complete Maya posterior sculpt');
+ assert.equal(posterior?.originalGallopPreserved,true,'Keep the authored Gallop cycle');
+ assert.equal(posterior?.originalGallopSkeletonPreserved,true,'Keep the original Quaternius Gallop skeleton intact');
+ assert.equal(posterior?.originalNativeSkeleton,false,'Do not claim the original Maya skeleton is active');
+ assert.equal(posterior?.originalMayaSkeletonRestored,false,'The Maya 2017 skeleton has not yet been restored');
+ assert.equal(posterior?.originalMayaSkinClusterRestored,false,'The original 70-influence Maya skinCluster has not yet been restored');
+ assert.equal(posterior?.activeSkinMethod,'nearest-neighbour transfer from original Quaternius 50-joint Gallop');
+ assert.equal(posterior?.donorHindTriangles,0,'Do not transplant Quaternius hind-limb geometry into the complete Maya sculpt');
+ assert.equal(posterior?.donorHoofTriangles,0,'Do not duplicate donor hoof geometry');
+ assert.equal(posterior?.removedMayaTriangles,0,'Preserve the complete Maya hind sculpt');
+ assert.equal(posterior?.cutTriangles,0,'The native Maya hind candidate must not contain a donor cut');
+ assert.equal(posterior?.seamBridgeTriangles,0,'The native Maya hind candidate must not depend on a floating seam bridge');
+ assert.ok(posterior?.mayaSculptTriangles>10000,'The complete Maya sculpt must remain indexed');
+ console.log('BTC_NATIVE_MAYA_POSTERIOR_AUDIT',JSON.stringify(posterior));
  assert.equal(baseline.heroGroom?.tailDockCapHalves,1,'the transverse tail-stem cut must close as one simple cap loop');
  assert.equal(baseline.heroGroom?.tailDockCutPlaneY,.016,'tail dock must use the measured transverse cut plane');
  assert.equal(baseline.heroGroom?.tailDockBorderEdges,24,'tail dock must have one 24-edge loop without midline branches');
@@ -155,14 +155,16 @@ try{
   diagnosticFrames.push({name:name+'.png',sha,bytes:bytes.length,flags});
   console.log('BTC_V22_DIAGNOSTIC_FRAME',name,bytes.length,sha);
  }
- await captureDiagnostic('btcHideTailQA=1','rear-00-no-tail');
- await captureDiagnostic('btcHideDonorQA=1','rear-00-no-donor');
- await captureDiagnostic('btcHideTailQA=1&btcHideDonorQA=1','rear-00-native-only');
+ await captureDiagnostic('btcDonorHindExperiment=1','rear-00-donor-baseline');
+ await captureDiagnostic('btcDonorHindExperiment=1&btcHideDonorQA=1','rear-00-donor-hidden');
+ await captureDiagnostic('btcHideTailQA=1','rear-00-native-no-tail');
  assert.equal(all.size,16,'Original native Gallop must produce 16 distinct actual WebGL poses');
  assert.deepEqual(errors,[],errors.join('\n'));
  writeFileSync(DIR+'/qa.json',JSON.stringify({
-  build:BUILD,source:'actual original Quaternius GLB authored Gallop plus original Maya 2017 torso',
+  build:BUILD,source:'complete original Maya 2017 body sculpt including hind limbs; Quaternius 50-joint Gallop weight transfer remains temporary',
   liveHostingerVerified:false,AAAApproved:false,photographs:frames,
+  rigStatus:{originalMayaSkeletonRestored:false,originalMayaSkinClusterRestored:false,
+   activeSkinMethod:posterior?.activeSkinMethod,originalMayaInfluenceCount:70},
   hind:baseline.heroGroom.hindRestoration,
   diagnosticFrames,
   tailDock:{
@@ -178,15 +180,9 @@ try{
    normalAlignmentBefore:baseline.heroGroom.tailDockCapNormalAlignmentBefore,
    orientationFlipped:baseline.heroGroom.tailDockCapOrientationFlipped
   },
-  visualGate:'Must compare with V21 actual Hostinger images: no posterior surface shards, no open stifle, no hoof detachment. Fail visually if rear or 3Q is worse.'
+  visualGate:'Compare the full Maya hind candidate against V21 and the rejected donor candidate. Require continuous rump-to-hock silhouettes in all 16 phases and six cameras. Original Maya 70-weight skin and skeleton are still not restored; this is not a release or AAA approval.'
  },null,2));
  console.log('BTC_V22_16_POSES_REAL_WEBGL_COMPLETE',frames.length);
- assert.equal(baseline.heroGroom?.hindRestoration?.donorSubdivisionPasses,2,
-  'two topology-smoothing passes on the real native leg; retain the strict gate until the third pass is visually approved');
- assert.ok(posterior?.isolatedMayaPosteriorIslandsRemoved>=2,
-   'two disconnected old Maya hind-foot scraps must be removed; inspect archived PNGs and BTC_V22_POSTERIOR_AUDIT');
- assert.ok(posterior?.isolatedMayaPosteriorTrianglesRemoved>=10,
-   'actual orphaned posterior 5-face scraps must be culled, not just hidden');
  assert.equal(baseline.heroGroom?.tailDockCapInteriorRingVertices,baseline.heroGroom?.tailDockBorderEdges,
    'Tail dock cap must use one skinned inset vertex per retained boundary vertex');
  assert.equal(baseline.heroGroom?.tailDockCapCoreTriangles,baseline.heroGroom?.tailDockBorderEdges-2,
@@ -197,27 +193,4 @@ try{
    'Tail dock cap must not contain degenerate triangles');
  assert.equal(baseline.heroGroom?.tailDockOpenCapEdges,0,
    'Tail dock cap must be closed and manifold');
- // The hind zipper must share the exact Maya cut-boundary vertex IDs, not
- // merely coincident positions, and every bridge boundary edge must be
- // oppositely wound against the retained host/donor source surface.
- assert.equal(posterior?.seamBridgeExactHostSourceMatches,
-   posterior?.seamBridgeHostEndpointCount,
-   'every adaptive zipper host endpoint must weld to its exact Maya boundary vertex');
- assert.equal(posterior?.seamBridgeFallbackHostSourceMatches,0,
-   'adaptive zipper must not fall back to arbitrary coincident Maya UV twins');
- assert.equal(posterior?.seamBridgeHostSourceMismatches,0,
-   'host source endpoint identities must remain exact');
- assert.ok(posterior?.seamBridgeBoundaryEdges>0,
-   'welded zipper must expose measurable host/donor boundary edges');
- assert.ok(posterior?.seamBridgeBoundaryHostEdges>0&&posterior?.seamBridgeBoundaryDonorEdges>0,
-   'zipper must close against both retained Maya torso and donor limb surfaces');
- assert.equal(posterior?.seamBridgeBoundaryUnmatchedEdges,0,
-   'no bridge boundary edge may remain open after unified weld');
- assert.equal(posterior?.seamBridgeBoundaryNonManifoldEdges,0,
-   'no bridge boundary edge may have more than two incident faces');
- assert.equal(posterior?.seamBridgeBoundaryOrientationMismatches,0,
-   'bridge boundary winding must oppose both adjacent source surfaces');
- assert.equal(posterior?.seamBridgeBoundaryInternalWindingConflicts,0,
-   'bridge faces must form consistently oriented connected components');
-
 }finally{await page.close();await browser.close();}
