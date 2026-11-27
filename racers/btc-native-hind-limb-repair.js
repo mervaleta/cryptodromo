@@ -2879,6 +2879,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        jointStart=bridgeJoints.length,weightStart=bridgeWeights.length;
       const projectedBefore=new Set(projected.keys());
       const layerProjectedBefore=new Set(layerProjected.keys());
+      // A rejected resampled strip must also roll back its deferred post-relax
+      // vertex specs. Otherwise stale indices are reprojected after the arrays
+      // are truncated, silently extending positions/normals without skin data.
+      const bridgeSpecsBefore=new Set(bridgeVertexSpecs.keys());
       const projectedIds=alignment.samples.map(bridgeVertex);
 const fractions=[.2,.4,.6,.8];
       const rows=[donor];
@@ -2963,6 +2967,8 @@ const fractions=[.2,.4,.6,.8];
        for(const key of [...projected.keys()])if(!projectedBefore.has(key))projected.delete(key);
        for(const key of [...layerProjected.keys()])
         if(!layerProjectedBefore.has(key))layerProjected.delete(key);
+       for(const key of [...bridgeVertexSpecs.keys()])
+        if(!bridgeSpecsBefore.has(key))bridgeVertexSpecs.delete(key);
        bridgePositions.length=positionStart;
        bridgeNormals.length=normalStart;
        bridgeJoints.length=jointStart;
@@ -3381,7 +3387,12 @@ const fractions=[.2,.4,.6,.8];
    const refreshedInward=boundaryInteriorMap(donorRimEdges,di,donorPos);
    const refreshedNormal=donorGeo.getAttribute('normal');
    const refreshedHostNormal=hostGeo.getAttribute('normal');
+   const bridgeVertexCount=bridgePositions.length/3;
    for(const [index,spec] of bridgeVertexSpecs){
+    const localIndex=index-donorBase;
+    if(!Number.isInteger(localIndex)||localIndex<0||localIndex>=bridgeVertexCount)
+     throw Error('BTC post-relax seam bridge references a rolled-back vertex: '+index+
+      ' / '+bridgeVertexCount);
     const neighbors=donorRimNeighborsById.get(spec.donorId);
     if(!neighbors)throw Error('BTC post-relax seam bridge lost donor rim neighbors for '+spec.donorId);
     const [previous,next]=neighbors;
@@ -3412,6 +3423,7 @@ const fractions=[.2,.4,.6,.8];
      bridgeNormals[offset+k]=bridge.outward[k];
     }
    }
+   assertBridgeSkinArrays('post-relax reprojection');
   }
   bodyCut.seamBridgePostRelaxReprojectedVertices=bridgeVertexSpecs.size;
   bodyCut.seamBridgePostRelaxMaxShift=seamBridgePostRelaxMaxShift;
