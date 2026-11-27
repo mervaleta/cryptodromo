@@ -7,7 +7,7 @@ import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve,sep} from 'node:path';
 import {chromium} from 'playwright';
 const DIR='artifacts/btc-v22-full-cycle';mkdirSync(DIR,{recursive:true});
-const BUILD='btc-v22-continuous-hind-seam-20261107';
+const BUILD='btc-v23-native-hind-sculpt-20261127';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:1100,height:750},deviceScaleFactor:1});
 const errors=[],consoleMessages=[],requestFailures=[],frames=[],all=new Set();
@@ -55,10 +55,10 @@ try{
    const modules=[
     'three',
     'three/addons/controls/OrbitControls.js',
-    './btc-atelier-preview.js?v=btc-v22-continuous-hind-seam-20261107',
-    './btc-maya-master.js?v=btc-v22-continuous-hind-seam-20261107',
-    './btc-native-hind-limb-repair.js?v=btc-v22-continuous-hind-seam-20261107',
-    './btc-maya-groom.js?v=btc-v22-continuous-hind-seam-20261107',
+    './btc-atelier-preview.js?v=btc-v23-native-hind-sculpt-20261127',
+    './btc-maya-master.js?v=btc-v23-native-hind-sculpt-20261127',
+    './btc-native-hind-limb-repair.js?v=btc-v23-native-hind-sculpt-20261127',
+    './btc-maya-groom.js?v=btc-v23-native-hind-sculpt-20261127',
     './btc-maya-hindquarters.js?v=btc-master-procedural-hind-groom-20261104-v12',
     './btc-maya-face-details.js?v=btc-maya-face-native-gallop-20261105-v16',
     './btc-maya-ears.js?v=btc-master-procedural-hind-groom-20261104-v12',
