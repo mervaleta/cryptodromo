@@ -258,3 +258,13 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Next geometry A/B increases only the interior Hermite loft bulge from 0.9 mm / 22% of gap to 1.6 mm / 36%, with donor/host endpoints and skin weights held fixed. Keep only if the actual WebGL seam closes without a protruding lump or worse silhouette.
 - The original Horse_VR_2017.ma and 70-influence skin/bind-matrix export remain absent from Git and accessible Library files. 212734.mp4 was not found in accessible Library sources. No original Maya skinCluster restoration is claimed.
 - PR #136 remains draft/unmerged; public Hostinger build remains V21. No production deploy or version increment.
+
+
+## 2026-11-27 · reject 1.6 mm Hermite loft bulge and roll back
+
+- Candidate commit 72d3341764d70ae9fad71c6dd3c2e68defd6517c increased the interior Hermite bridge bulge from 0.9 mm / 22% to 1.6 mm / 36%, with donor/host endpoints and skin weights fixed.
+- Smoke run [45929247631](https://github.com/mervaleta/cryptodromo/actions/runs/45929247631), artifact #15168001034, SHA-256 204fe4227abd9885630f2e1c643325ca276123c7dd784015ee76db64d754cda5. Full 16-phase/six-camera WebGL run [45929247825](https://github.com/mervaleta/cryptodromo/actions/runs/45929247825), artifact #15168700343, 34 real PNGs, SHA-256 200dfe38b890d4d2a1a42ae1d5ced4b7507477c2d42ebb56b0563a7304686316.
+- Rejected: rear-00/rear-08/3Q-08 show a more prominent flap. The larger bulge caused one adaptive end-cap to fail; the other loop fell back to the resampled loft. The result had 1 adaptive + 1 resampled loop, only 74/138 exact Maya host endpoint matches, 64 fallback endpoints, and 28 unmatched host edges. CI correctly failed at the assertion “every adaptive zipper host endpoint must weld to its exact Maya boundary vertex” (74 !== 138). No assertion was relaxed.
+- Root cause of resampled fallback: bridgeVertex creates duplicate host endpoint vertices for interior samples; splitHostBoundaryEdges inserts separate host vertices but bridgeEndpointInfo is not remapped to those new host IDs. The artifact confirms 92 split points / 29 split edges and 28 unmatched edges. Do not accept the resampled loft until each edge+t sample maps to the exact vertex created by splitHostBoundaryEdges.
+- Roll back to the 0.9 mm / 22% bulge, keep the 20 mm cut and exact adaptive DP path from 3673f0b. V23 is not credited. Next P0 is to repair resampled endpoint identity without changing assertions, or improve the adaptive surface while preserving 2/2 exact loops and zero unmatched edges.
+- PR #136 remains draft/unmerged; public Hostinger build remains V21. Original Horse_VR_2017.ma / 70-influence bind data and 212734.mp4 remain unavailable in accessible sources; no Maya rig restoration or video study is claimed.

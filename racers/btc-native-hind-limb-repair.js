@@ -1861,10 +1861,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const blended=n0.map((v,k)=>v*(1-smooth)+n1[k]*smooth);
     const blendedLength=Math.hypot(...blended)||1;
     const outward=blended.map(v=>v/blendedLength);
-    // P0 loft A/B: the 0.9 mm bulge leaves a dark stifle wedge in real WebGL.
-    // Increase only the interior Hermite bulge; donor/host endpoints, skin weights
-    // and cut topology stay fixed so this tests outer-surface coverage directly.
-    const bulge=Math.min(.0016,gapLength*.36)*Math.sin(Math.PI*t)**2;
+    // Retain the 0.9 mm interior bulge: the 1.6 mm A/B rejected one adaptive loop
+    // and fell back to a resampled strip with unmatched Maya host edges.
+    const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*t)**2;
     const point=donorPoint.map((v,k)=>
      v*h00+tangent0[k]*h10+hostPoint[k]*h01+tangent1[k]*h11+outward[k]*bulge);
     return {point,outward,usedSurfaceTangents,reach0,reach1};
