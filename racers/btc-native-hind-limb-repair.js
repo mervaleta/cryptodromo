@@ -1865,9 +1865,33 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const h00=2*t3-3*t2+1,h10=t3-2*t2+t,
      h01=-2*t3+3*t2,h11=t3-t2;
     const smooth=t2*(3-2*t);
-    const blended=n0.map((v,k)=>v*(1-smooth)+n1[k]*smooth);
-    const blendedLength=Math.hypot(...blended)||1;
-    const outward=blended.map(v=>v/blendedLength);
+    // The Maya rump and Quaternius thigh can meet at a steep fold where
+    // their authored outward normals fall into opposite hemispheres. A raw
+    // lerp then collapses toward zero at the center of the loft, hiding the
+    // bridge under the rump and leaving a dark slit. Align endpoint normals
+    // for the loft offset; final render normals are recomputed from the
+    // welded mesh after the bridge is accepted.
+    const normalDot=dot(n0,n1);
+    const alignedN1=normalDot<-.05?n1.map(v=>-v):n1;
+    if(normalDot<-.05)seamBridgeNormalHemisphereFlips++;
+    const blended=n0.map((v,k)=>v*(1-smooth)+alignedN1[k]*smooth);
+    const blendedLength=Math.hypot(...blended);
+    let outward;
+    if(blendedLength>1e-7){
+     outward=blended.map(v=>v/blendedLength);
+    }else{
+     seamBridgeNormalBlendDegeneracies++;
+     const rim=(donorRimTangent&&hostRimTangent)?
+      donorRimTangent.map((v,k)=>v+hostRimTangent[k]):donorRimTangent||hostRimTangent;
+     const cross=rim?[
+      rim[1]*gap[2]-rim[2]*gap[1],
+      rim[2]*gap[0]-rim[0]*gap[2],
+      rim[0]*gap[1]-rim[1]*gap[0]
+     ]:[0,0,0];
+     const length=Math.hypot(...cross);
+     outward=length>1e-8?cross.map(v=>v/length):n0.slice();
+     if(dot(outward,n0)<0)outward=outward.map(v=>-v);
+    }
     // Retain the 0.9 mm interior bulge: the 1.6 mm A/B rejected one adaptive loop
     // and fell back to a resampled strip with unmatched Maya host edges.
     const bulge=Math.min(.0009,gapLength*.22)*Math.sin(Math.PI*t)**2;
@@ -2339,7 +2363,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const seamBoundaryClosureDiagnostics=[];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
     seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
-    seamBridgeTangentDirectionFlips=0,seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
+    seamBridgeTangentDirectionFlips=0,seamBridgeNormalHemisphereFlips=0,
+    seamBridgeNormalBlendDegeneracies=0,
+    seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
    let seamDonorRimWeightOverrides=0;
    // Record why the DP loft is rejected so the next geometry pass targets the failed cell.
    const seamBridgeZipperAdaptiveRejectReasons=[];
@@ -3084,6 +3110,8 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeVirtualClosureDiagnostics=seamBoundaryClosureDiagnostics;
    bodyCut.seamBridgeSurfaceTangentFallbacks=seamBridgeSurfaceTangentFallbacks;
    bodyCut.seamBridgeTangentDirectionFlips=seamBridgeTangentDirectionFlips;
+   bodyCut.seamBridgeNormalHemisphereFlips=seamBridgeNormalHemisphereFlips;
+   bodyCut.seamBridgeNormalBlendDegeneracies=seamBridgeNormalBlendDegeneracies;
    bodyCut.seamBridgeMeanTangentReach=seamBridgeTangentReachCount?
     seamBridgeTangentReachSum/seamBridgeTangentReachCount:0;
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
@@ -3871,6 +3899,8 @@ const fractions=[.2,.4,.6,.8];
     seamBridgeVirtualClosureDiagnostics:bodyCut.seamBridgeVirtualClosureDiagnostics||[],
    seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
    seamBridgeTangentDirectionFlips:bodyCut.seamBridgeTangentDirectionFlips||0,
+   seamBridgeNormalHemisphereFlips:bodyCut.seamBridgeNormalHemisphereFlips||0,
+   seamBridgeNormalBlendDegeneracies:bodyCut.seamBridgeNormalBlendDegeneracies||0,
    seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
    seamBridgePostRelaxReprojectedVertices:bodyCut.seamBridgePostRelaxReprojectedVertices||0,
    seamBridgePostRelaxMaxShift:bodyCut.seamBridgePostRelaxMaxShift||0,
