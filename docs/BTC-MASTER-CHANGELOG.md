@@ -278,3 +278,10 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - QA geometry: 10,322 Maya sculpt triangles; zero donor hind triangles, zero Maya crop, zero cut triangles and zero seam-bridge triangles. The original Gallop remains active.
 - This is a limited geometry milestone only. Original Maya skinCluster1 weights and 164-joint hierarchy are not restored; nearest-neighbour transfer from the Quaternius 50-joint Gallop remains. `AAAApproved=false`, `liveHostingerVerified=false`; PR #136 remains draft and public Hostinger remains V21. No release or V50 claim.
 - Next root P0: recover the actual original Maya scene/70-influence data and reconstruct native hierarchy, inverse binds and animation mapping. The source scene, private weight/bind archives and `212734.mp4` are not currently accessible in the Library/runtime.
+
+
+## 2026-11-27 · Native Maya rig extraction tooling (NOT V24)
+
+- Added `tools/btc/export_maya_rig_motion.py` at code commit `8562fc33ed554c36ae84c41674a3ad6a9cf05a8b`. It is a Maya `mayapy` source extractor: all scene joints and ancestor transforms, the 70 skinCluster influence-to-joint mappings, original bindPreMatrix values, mesh inclusive matrix, and sampled local joint matrices at a requested FPS/range. It deliberately emits JSON, not a GLB, and labels the selected animation range unverified.
+- Pair it with existing `tools/export_btc_maya_skin.py` for all sparse original skin weights. Do not truncate the original rows to four influences or bind them to the unrelated Quaternius 50-joint rig.
+- **Not executed:** `Horse_VR_2017.ma` and the private sparse-weight/bind archives are not present in the current Library/runtime. No Maya export, rig restoration, animation certification or V24 visual credit is claimed. The script is preparation for a real source-backed reconstruction, not a substitute for it.
