@@ -14,6 +14,11 @@
  */
 import * as THREE from 'three';
 
+// Isolated geometry A/B: lower the paired Maya/donor posterior cut by 1 mm.
+// The previous 20 mm cross-section left a 4.31 mm maximum rim mismatch in real WebGL.
+// This is a candidate parameter, not a numbered or approved version.
+const BTC_SEAM_CUT_Z = 0.0190;
+
 
 /**
  * Clip, rather than delete, boundary triangles of the actual Maya skinned
@@ -69,7 +74,7 @@ function cropMayaHind(anatomy){
  // pieces are triangulated independently, so hidden centerline islands
  // cannot be bridged by an edge with two crossings.
  const planes=[
-  {id:'z',f:v=>.0200-xyz[3*v+2]},
+  {id:'z',f:v=>BTC_SEAM_CUT_Z-xyz[3*v+2]},
   // P0 anatomy A/B: remove low hanging Maya rump flaps up to 5.2 mm,
   // leaving the upper haunch untouched. Must be judged on real WebGL
   // rear/threeQuarter frames against artifact 14135961152; not approved.
@@ -430,7 +435,7 @@ function clipNativeBodyHindExact(mesh){
   // mismatched cuts create an unfillable dark band before any rig motion.
   // The donor remains an isolated candidate until rear/3Q WebGL A/B.
   {id:'y',f:v=>xyz[3*v+1]-.0052},
-  {id:'z',f:v=>.0200-xyz[3*v+2]},
+  {id:'z',f:v=>BTC_SEAM_CUT_Z-xyz[3*v+2]},
   {id:'R',f:v=>xyz[3*v]-.0015},
   {id:'L',f:v=>-xyz[3*v]-.0015}
  ];
@@ -626,7 +631,7 @@ function refineSkinnedDonor(source,passes=2){
    // off the plane. That bends adjacent triangles into the host surface
    // and makes a visible serrated wedge at the Maya/GLB rump join.
    const onExactCutPlane=[
-    [1,.0052],[2,.0200],[0,.0015],[0,-.0015]
+    [1,.0052],[2,BTC_SEAM_CUT_Z],[0,.0015],[0,-.0015]
    ].some(([axis,value])=>Math.abs(vs[i].p[axis]-value)<1e-7);
    if(near.length>0||onExactCutPlane){
     // Every vertex incident to an open boundary is constrained, including
@@ -653,7 +658,7 @@ function refineSkinnedDonor(source,passes=2){
    // pushes its midpoint off the plane and reopens the rump/limb seam.
    // Preserve a linear midpoint on all such coplanar cut edges.
    const onCutPlane=(p,q)=>[
-    [1,.0052],[2,.0200],[0,.0015],[0,-.0015]
+    [1,.0052],[2,BTC_SEAM_CUT_Z],[0,.0015],[0,-.0015]
    ].some(([axis,value])=>Math.abs(p[axis]-value)<1e-7&&
                             Math.abs(q[axis]-value)<1e-7);
    const constrained=e.opp.length!==2||onCutPlane(a.p,b.p);
@@ -776,14 +781,14 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    const cx=(pts[0].x+pts[1].x+pts[2].x)/3;
    const cy=(pts[0].y+pts[1].y+pts[2].y)/3;
    const cz=(pts[0].z+pts[1].z+pts[2].z)/3;
-   if(cz<=.0199||cz>=.032||cy<=.0042||Math.abs(cx)<=.0012)continue;
+   if(cz<=BTC_SEAM_CUT_Z-.0001||cz>=.032||cy<=.0042||Math.abs(cx)<=.0012)continue;
    if(pts.some(p=>Math.sign(p.x)!==Math.sign(cx)))continue;
    // The centroid can lie in the rump while one corner extends deep
    // into the excised hind leg. Projecting a donor collar onto such a
    // triangle bridges the actual cut and produces a dark thigh wedge.
    // Restrict attachment to entirely retained, local host faces; this
    // changes the 3D collar projection, not an acceptance threshold.
-   if(pts.some(p=>p.z<.0199||p.y<.0038||Math.abs(p.x)<.0010))continue;
+   if(pts.some(p=>p.z<BTC_SEAM_CUT_Z-.0001||p.y<.0038||Math.abs(p.x)<.0010))continue;
    attachment.push({ids,pts,side:Math.sign(cx)});
   }
   if(attachment.length<30)throw Error('BTC V23 host rump triangles missing');
@@ -864,10 +869,10 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    // former collar range [.0208,.0226) was entirely OUTSIDE that mesh,
    // so almost no donor vertices could be attached to the Maya rump.
    // Project the real 1.8mm strip immediately BELOW the cut rim instead;
-   // keep the projection strongest on z=.0200 and fade toward the leg.
-   if(z<.0176||z>.0198+1e-7||y<.0039||Math.abs(x)<.0010)continue;
-   const u=THREE.MathUtils.clamp((.0198-z)/(.0198-.0176),0,1);
-   // Attachment is strongest on the z=.0200 cut and fades into the
+   // keep the projection strongest on z=BTC_SEAM_CUT_Z and fade toward the leg.
+   if(z<BTC_SEAM_CUT_Z-.0024||z>BTC_SEAM_CUT_Z-.0002+1e-7||y<.0039||Math.abs(x)<.0010)continue;
+   const u=THREE.MathUtils.clamp((BTC_SEAM_CUT_Z-.0002-z)/.0022,0,1);
+   // Attachment is strongest on the z=BTC_SEAM_CUT_Z cut and fades into the
    // actual retained donor leg at z=.0130.
    // The old ascending smoothstep did the opposite, dragging interior
    // triangles toward the rump while leaving the actual rim unsown.
@@ -910,7 +915,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
    THREE.Triangle.getBarycoord(best.point,...best.face.pts,bary);
    if(![bary.x,bary.y,bary.z].every(Number.isFinite))continue;
    // Visual candidate: widen the collar search while keeping the final 0.2 mm
-   // below the exact z=.0200 cut rim untouched. The previous wider projection
+   // below the exact z=BTC_SEAM_CUT_Z cut rim untouched. The previous wider projection
    // moved donor vertices across the cut plane and split the left donor rim
    // into three open chains before the zipper. The face-quality and live
    // backtracking guards remain active for all interior collar vertices.
@@ -925,7 +930,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // BTC isolated geometric seam candidate: align the upper donor collar
    // more closely with the real retained Maya rump along the fore-aft axis.
    // The existing 3D displacement and face-orientation guards remain active.
-   const targetZ=Math.min(THREE.MathUtils.lerp(z,best.point.z,blend*.90),.0198);
+   const targetZ=Math.min(THREE.MathUtils.lerp(z,best.point.z,blend*.90),BTC_SEAM_CUT_Z-.0002);
    const deltaX=targetX-x,deltaY=targetY-y,deltaZ=targetZ-z;
    const displacement=Math.hypot(deltaX,deltaY,deltaZ);
    const twinMinEdge=Math.min(...twins.map(v=>localMinEdge[v]).filter(Number.isFinite));
@@ -972,7 +977,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // retain 100% donor influence below z=.0130 and never alter the hock.
    // This is an unapproved animation/geometry A/B, not a V23 milestone.
    // The cut boundary must deform with the Maya host surface, not with a
-   // nearest-neighbour donor approximation. Use 100% host skin at z=.0200
+   // nearest-neighbour donor approximation. Use 100% host skin at z=BTC_SEAM_CUT_Z
    // and decay smoothly to the donor's authored limb weights over 1.8 mm.
    const mayaFactor=1.0*t*t,influences=new Map();
    // Coincident UV/material copies can have DIFFERENT source skin weights.
@@ -1007,8 +1012,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    insetVertices+=twins.length;reattachedWeights+=twins.length;
   }
-  // The exact donor cut creates an open rim at z=.0200, while the
-  // existing closest-triangle collar projection now targets the 1.8 mm band below z=.0200.
+  // The exact donor cut creates an open rim at z=BTC_SEAM_CUT_Z, while the
+  // existing closest-triangle collar projection now targets the 1.8 mm band below z=BTC_SEAM_CUT_Z.
   // Therefore it cannot sew the actual cut edge. Align ONLY donor rim
   // vertices with nearby surviving Maya cut edges on the SAME flank.
   // This is a small geometry candidate, not visual acceptance.
@@ -1042,7 +1047,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    }
    const hostBoundary=physicalBoundary(hostIndex,hostPos);
    // The cut is a three-plane boundary, not just the rear z plane:
-   // z=.0200, y=.0052 and the bilateral x=+/-.0015 flank planes.
+   // z=BTC_SEAM_CUT_Z, y=.0052 and the bilateral x=+/-.0015 flank planes.
    // Stitching only z left the visible pale slit at the top of each hind
    // thigh because the y/x cut arcs remained open in real WebGL.
    const seamPlaneTolerance=.00003;
@@ -1052,12 +1057,12 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const sideA=Math.sign(a[0]),sideB=Math.sign(b[0]);
     if(!sideA||sideA!==sideB||Math.abs(a[0])<=.0014||Math.abs(b[0])<=.0014)return null;
     const near=(p,axis,value)=>Math.abs(p[axis]-value)<=seamPlaneTolerance;
-    if(near(a,2,.0200)&&near(b,2,.0200)&&a[1]>=.0050&&b[1]>=.0050)return 'z';
+    if(near(a,2,BTC_SEAM_CUT_Z)&&near(b,2,BTC_SEAM_CUT_Z)&&a[1]>=.0050&&b[1]>=.0050)return 'z';
     if(near(a,1,.0052)&&near(b,1,.0052)&&
-       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)return 'y';
+       a[2]<=BTC_SEAM_CUT_Z+seamPlaneTolerance&&b[2]<=BTC_SEAM_CUT_Z+seamPlaneTolerance)return 'y';
     if(near(a,0,sideA*.0015)&&near(b,0,sideB*.0015)&&
        a[1]>=.0050&&b[1]>=.0050&&
-       a[2]<=.0200+seamPlaneTolerance&&b[2]<=.0200+seamPlaneTolerance)
+       a[2]<=BTC_SEAM_CUT_Z+seamPlaneTolerance&&b[2]<=BTC_SEAM_CUT_Z+seamPlaneTolerance)
      return sideA<0?'x-':'x+';
     return null;
    };
@@ -3166,13 +3171,13 @@ const fractions=[.2,.4,.6,.8];
      // spatially welded group atomically, or leave the whole group pinned.
      const twins=[...(physicalVertices.get(spatialVertex[i])||[i])];
      if(i!==Math.min(...twins)||twins.some(v=>rim.has(v))||
-        z<=.0182||z>=.0200||y<=.0041)continue;
+        z<=BTC_SEAM_CUT_Z-.0018||z>=BTC_SEAM_CUT_Z||y<=.0041)continue;
      // A UV split lowers the representative's indexed valence even when
      // the welded physical one-ring is well formed. Use the physical
      // neighbor count below, not edges[i].size, to decide eligibility.
      // Pin the transition's endpoints AND the true open rim. Attenuate
      // the smoothing one edge inward to avoid a hard displacement step.
-     const u=(z-.0182)/(.0200-.0182);
+     const u=(z-(BTC_SEAM_CUT_Z-.0018))/.0018;
      const taper=Math.sin(Math.PI*u)**2;
      const rimNeighbor=[...edges[i]].some(v=>rim.has(v));
      const alpha=.28*taper*(rimNeighbor?.18:1);
@@ -3772,7 +3777,7 @@ const fractions=[.2,.4,.6,.8];
  let disposed=false;
  return {
   snapshot:{
-   build:'btc-v22-continuous-hind-seam-20261107',seamCutZ:.0200,
+   build:'btc-v22-continuous-hind-seam-20261107',seamCutZ:BTC_SEAM_CUT_Z,
    originalNativeSkeleton:true,originalGallopPreserved:true,
    donorHindTriangles:bodyCut.triangles,
    donorHoofTriangles:hoovesCut.triangles,
