@@ -370,3 +370,10 @@
 - Se agregó workflow aislado `.github/workflows/btc-maya-source-export.yml`, commit `6f22536abf69b51b0e9cf5ce1788ce0ba46a9976`. Run [45983169440](https://github.com/mervaleta/cryptodromo/actions/runs/45983169440) SUCCESS: compilación de los exportadores y 25 pruebas del contrato sintético. El runner no tiene Autodesk Maya/mayapy: esto NO demuestra una exportación de `Horse_VR_2017.ma`, ni restaura rig, pesos o galope.
 - **V24 permanece pendiente y sin crédito.** El runtime BTC sigue usando transferencia nearest-neighbour del Gallop Quaternius de 50 huesos; no afirmar que el rig Maya de 70 influencias esté restaurado. El siguiente paso real es ejecutar ambos exportadores sobre la escena original, validar correspondencia de vértices, jerarquía, bind matrices, blend weights y localizar un rango de animación Gallop antes de crear cualquier importador o cambiar skinning.
 - No se modificaron producción, Hostinger, los otros 99 corredores, fixture, estadio, apuestas ni precios.
+
+
+### 2026-11-27 · ampliación del extractor de rig y animación (sin crédito V24)
+
+- `tools/btc/export_maya_rig_motion.py`, commits `16b4b5ede2e4c80bbffe9c068c4b8d1dbbbcf9bc` y `25c9caff9f931b1a895f595097bd130f5757a6fb`: ahora conserva el transform del mesh y todos sus ancestros en la jerarquía; registra su matriz inclusiva en cada muestra; incluye también influencias que sean transforms y no joints; inventaría curvas de animación con tipo, cantidad de keys, rangos de tiempo/valor y conexiones de destino, además de constraints y animation layers. El inventario declara explícitamente que no clasifica por sí mismo ningún rango como Gallop.
+- Workflow `btc-maya-source-export.yml`, run [45984393005](https://github.com/mervaleta/cryptodromo/actions/runs/45984393005), SUCCESS: py_compile y 25 regresiones del contrato de skin. La ejecución no dispone de Maya/mayapy; no exportó la escena real ni certificó el clip.
+- El siguiente bloqueo sigue siendo disponer de `Horse_VR_2017.ma` o de sus exports reales. No se cuenta V24 ni se cambia el skinning runtime hasta verificar los datos nativos en WebGL.
