@@ -819,23 +819,27 @@ function originalHoof(root) {
  return hoof;
 }
 export function createBTCNativeHindLimbRepair(root,original,anatomy) {
- // Diagnostic A/B only: preserve the complete Maya posterior mesh and bypass
- // the Quaternius donor transplant. The Maya mesh still uses the current
- // nearest-neighbour 50-joint transfer, NOT the private 70-influence skinCluster.
- // This isolates whether the visible rump/thigh discontinuity is introduced
- // by donor geometry, without changing the default production/candidate path.
- const nativeMayaHindExperiment=typeof window!=='undefined'&&
-  new URLSearchParams(window.location.search).get('btcNativeHindExperiment')==='1';
+ // Default isolated BTC candidate: preserve the complete Maya posterior
+ // sculpt and bypass the Quaternius donor transplant. The original Maya
+ // 70-influence skinCluster is NOT restored yet; the sculpt still uses the
+ // explicit 50-joint Gallop transfer recorded below. The rejected donor
+ // candidate remains available only for A/B via btcDonorHindExperiment=1.
+ const btcQuery=typeof window!=='undefined'?new URLSearchParams(window.location.search):null;
+ const nativeMayaHindExperiment=!!btcQuery&&
+  (btcQuery.get('btcDonorHindExperiment')!=='1'||btcQuery.get('btcNativeHindExperiment')==='1');
  if(nativeMayaHindExperiment){
   return {
    snapshot:{
     nativeMayaHindExperiment:true,
     source:'uncropped-Maya-2017-full-body-sculpt',
     originalGallopPreserved:true,
-    originalNativeSkeleton:true,
+    originalGallopSkeletonPreserved:true,
+    originalNativeSkeleton:false,
+    originalMayaSkeletonRestored:false,
     originalMayaSkinClusterRestored:false,
     originalMayaInfluenceCount:70,
     activeSkinMethod:'nearest-neighbour transfer from original Quaternius 50-joint Gallop',
+    mayaSculptTriangles:anatomy.geometry.getIndex()?.count/3||0,
     donorHindTriangles:0,
     donorHoofTriangles:0,
     removedMayaTriangles:0,
