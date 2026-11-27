@@ -117,13 +117,12 @@ def run():
         if vertex_count != 5406:
             raise RuntimeError("Expected 5406 original Maya vertices, got %d" % vertex_count)
 
-        # Preserve every DAG transform between each skin influence and world.
-        # Non-joint transform parents are retained because they affect the bind.
+        # Preserve all 164 source joints, not only the 70 skin influences,
+        # plus every DAG transform between each joint and world. This keeps
+        # non-influencing anatomical joints and animated parent groups visible.
+        all_joint_paths = cmds.ls(type="joint", long=True) or []
         node_paths = set()
-        influence_paths = []
-        for influence in influences:
-            path = influence.fullPathName()
-            influence_paths.append(path)
+        for path in all_joint_paths:
             current = path
             while current:
                 node_paths.add(current)
@@ -223,7 +222,6 @@ def run():
             cmds.currentTime(original_time, edit=True, update=True)
             cmds.refresh(force=True)
 
-        all_joints = cmds.ls(type="joint", long=True) or []
         anim_curves = cmds.ls(type="animCurve") or []
         output = {
             "format": "btc-maya-rig-motion-v1",
@@ -232,7 +230,7 @@ def run():
             "meshPath": mesh_path.fullPathName(),
             "meshInclusiveMatrix": [float(x) for x in mesh_path.inclusiveMatrix()],
             "vertexCount": vertex_count,
-            "sceneJointCount": len(all_joints),
+            "sceneJointCount": len(all_joint_paths),
             "exportedHierarchyNodeCount": len(nodes),
             "exportedHierarchyJointCount": sum(1 for n in nodes if n["type"] == "joint"),
             "influenceCount": len(influence_map),
