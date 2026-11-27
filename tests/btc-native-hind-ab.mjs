@@ -11,7 +11,7 @@ import {chromium} from 'playwright';
 
 const DIR='artifacts/btc-native-hind-ab';
 mkdirSync(DIR,{recursive:true});
-const BUILD='btc-v22-continuous-hind-seam-20261107';
+const BUILD='btc-v23-native-hind-sculpt-20261127';
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
 ]});
