@@ -2883,6 +2883,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
       // vertex specs. Otherwise stale indices are reprojected after the arrays
       // are truncated, silently extending positions/normals without skin data.
       const bridgeSpecsBefore=new Set(bridgeVertexSpecs.keys());
+      const bridgeEndpointInfoBefore=new Set(bridgeEndpointInfo.keys());
       const projectedIds=alignment.samples.map(bridgeVertex);
 const fractions=[.2,.4,.6,.8];
       const rows=[donor];
@@ -2969,6 +2970,8 @@ const fractions=[.2,.4,.6,.8];
         if(!layerProjectedBefore.has(key))layerProjected.delete(key);
        for(const key of [...bridgeVertexSpecs.keys()])
         if(!bridgeSpecsBefore.has(key))bridgeVertexSpecs.delete(key);
+       for(const key of [...bridgeEndpointInfo.keys()])
+        if(!bridgeEndpointInfoBefore.has(key))bridgeEndpointInfo.delete(key);
        bridgePositions.length=positionStart;
        bridgeNormals.length=normalStart;
        bridgeJoints.length=jointStart;
