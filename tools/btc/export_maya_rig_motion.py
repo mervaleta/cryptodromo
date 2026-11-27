@@ -8,6 +8,8 @@ Run with Autodesk Maya mayapy, not system Python:
 
 This is a SOURCE EXTRACTOR only. It does not build a GLB, retarget to
 Quaternius, modify the scene, or claim that the selected time range is Gallop.
+It inventories animCurve destinations, constraints and animation layers to help
+locate candidate motion intervals, but never labels a range as Gallop itself.
 Use tools/export_btc_maya_skin.py separately for the complete sparse skin rows.
 Matrices remain in Maya's original coordinate basis and row-major convention.
 """
