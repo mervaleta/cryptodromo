@@ -299,3 +299,9 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - `tools/export_btc_maya_skin.py` ahora produce el esquema compatible con el validador del skin original y conserva sparse weights completos, blend weights, matrices de bind, conexiones y parámetros del skinCluster. Commits `fb37e9404eae0a72ade703e9a7aefe5b18788ab7` y `0a753906be1c63ea53819082abcfef3f166b9a2f`.
 - Workflow [45983169440](https://github.com/mervaleta/cryptodromo/actions/runs/45983169440) aprobó py_compile y 25 pruebas de contrato. No contiene Maya/mayapy y no ejecutó `Horse_VR_2017.ma`; no se afirma exportación, restauración del rig ni cambio visual.
 - El original y `212734.mp4` siguen sin estar disponibles en los archivos accesibles. No avanzar V24 hasta ejecutar y verificar los datos fuente reales.
+
+
+### 2026-11-27 · extractor Maya: transform del mesh y auditoría de animCurves
+
+- El exportador de movimiento ahora incluye la matriz del transform del mesh en cada muestra, sus ancestros y las influencias no-joint, además de un inventario de animCurves, conexiones, constraints y animation layers para localizar rangos candidatos sin etiquetarlos falsamente como Gallop. Commits `16b4b5ede2e4c80bbffe9c068c4b8d1dbbbcf9bc` y `25c9caff9f931b1a895f595097bd130f5757a6fb`.
+- Run [45984393005](https://github.com/mervaleta/cryptodromo/actions/runs/45984393005) SUCCESS en compilación Python y 25 pruebas del contrato de skin. No se ejecutó Autodesk Maya ni se exportó `Horse_VR_2017.ma`; no representa una mejora visual ni crédito V24.
