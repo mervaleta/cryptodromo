@@ -1715,9 +1715,16 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const t=Math.max(0,Math.min(1,sample.t));
     const key=[sample.a,sample.b,Math.round(t*1e8)].join(':');
     const hostSourceId=sample.a===sample.b?sample.a:null;
+    // Interior arc-length samples become actual Maya edge vertices when the
+    // accepted resampled strip is committed. Preserve the same canonical
+    // edge+t identity used by splitHostBoundaryEdges so the bridge can weld
+    // to that exact inserted vertex rather than a coincident UV/material twin.
+    const hostSplitKey=hostSourceId===null?
+     [Math.min(sample.a,sample.b),Math.max(sample.a,sample.b),
+      Math.round((sample.a<sample.b?t:1-t)*1e8)].join(':'):null;
     if(projected.has(key)){
      const existing=projected.get(key);
-     bridgeEndpointInfo.set(existing,{hostSourceId});
+     bridgeEndpointInfo.set(existing,{hostSourceId,hostSplitKey});
      return existing;
     }
     const influence=new Map();
@@ -1743,7 +1750,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     assertBridgeSkinArrays('host endpoint');
     projected.set(key,index);
-    bridgeEndpointInfo.set(index,{hostSourceId});
+    bridgeEndpointInfo.set(index,{hostSourceId,hostSplitKey});
     return index;
    }
    // Recover the cross-boundary tangent from the actual adjacent source
@@ -2137,7 +2144,10 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     for(const group of nextGroups)hostGeo.addGroup(group.start,group.count,group.materialIndex);
     hostGeo.setDrawRange(0,nextIndices.length);
     hostGeo.computeBoundingBox();hostGeo.computeBoundingSphere();
-    return {points:vertexCount-vertexStart,edges:seenEdges.size,missing};
+    return {points:vertexCount-vertexStart,edges:seenEdges.size,missing,
+     // Keep the exact edge+t -> newly inserted Maya vertex correspondence.
+     // The bridge endpoint must weld by identity, not by nearest position.
+     vertexIds:vertexCache};
    }
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
     bridgePositions.slice((id-donorBase)*3,(id-donorBase)*3+3);
@@ -3030,6 +3040,19 @@ const fractions=[.2,.4,.6,.8];
     }
    }
    const hostBoundarySplit=splitHostBoundaryEdges(hostBoundarySplitSamples);
+   // Resampled bridge endpoints lie inside original Maya edges. Once those
+   // edges are subdivided, resolve every such endpoint to the precise vertex
+   // created by the same canonical edge+t key. This removes the former
+   // position-only fallback that could leave T-junctions and open bridge
+   // edges when one adaptive loop fell back to the resampled loft.
+   for(const endpoint of bridgeEndpointInfo.values()){
+    if(Number.isInteger(endpoint.hostSourceId)||!endpoint.hostSplitKey)continue;
+    const sourceId=hostBoundarySplit.vertexIds.get(endpoint.hostSplitKey);
+    if(!Number.isInteger(sourceId))
+     throw Error('BTC seam resampled endpoint has no exact subdivided Maya edge vertex: '+
+      endpoint.hostSplitKey);
+    endpoint.hostSourceId=sourceId;
+   }
    bodyCut.seamHostBoundarySplitPoints=hostBoundarySplit.points;
    bodyCut.seamHostBoundarySplitEdges=hostBoundarySplit.edges;
    bodyCut.seamHostBoundarySplitMissing=hostBoundarySplit.missing;
