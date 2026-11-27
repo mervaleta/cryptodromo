@@ -117,12 +117,20 @@ def run():
         if vertex_count != 5406:
             raise RuntimeError("Expected 5406 original Maya vertices, got %d" % vertex_count)
 
-        # Preserve all 164 source joints, not only the 70 skin influences,
-        # plus every DAG transform between each joint and world. This keeps
-        # non-influencing anatomical joints and animated parent groups visible.
+        # Preserve every scene joint, every actual skin influence (which may
+        # be a transform rather than a joint), and the skinned mesh transform.
+        # Their ancestors are retained too, so no animated parent/geometry
+        # transform silently disappears from the exported deformation chain.
         all_joint_paths = cmds.ls(type="joint", long=True) or []
+        influence_paths = [influence.fullPathName() for influence in influences]
+        mesh_parents = cmds.listRelatives(mesh_path.fullPathName(), parent=True,
+                                          fullPath=True) or []
+        if len(mesh_parents) != 1:
+            raise RuntimeError("Cannot resolve unique skinned mesh transform: %r" % mesh_parents)
+        mesh_transform_path = mesh_parents[0]
+        required_paths = set(all_joint_paths + influence_paths + [mesh_transform_path])
         node_paths = set()
-        for path in all_joint_paths:
+        for path in required_paths:
             current = path
             while current:
                 node_paths.add(current)
@@ -214,9 +222,11 @@ def run():
                 else:
                     for a, b in zip(first_pose, matrices):
                         max_pose_delta = max(max_pose_delta, abs(a - b))
+                mesh_matrix = [float(mesh_path.inclusiveMatrix()[i]) for i in range(16)]
                 frames.append({
                     "timeFrame": frame_time,
                     "localMatricesRowMajor": matrices,
+                    "meshInclusiveMatrixRowMajor": mesh_matrix,
                 })
         finally:
             cmds.currentTime(original_time, edit=True, update=True)
@@ -228,7 +238,10 @@ def run():
             "sourceScene": cmds.file(query=True, sceneName=True),
             "skinCluster": skin_name,
             "meshPath": mesh_path.fullPathName(),
-            "meshInclusiveMatrix": [float(x) for x in mesh_path.inclusiveMatrix()],
+            "meshTransformPath": mesh_transform_path,
+            "meshTransformNodeIndex": node_index[mesh_transform_path],
+            "meshInclusiveMatrix": frames[0]["meshInclusiveMatrixRowMajor"],
+            "meshTransformSampledEveryFrame": True,
             "vertexCount": vertex_count,
             "sceneJointCount": len(all_joint_paths),
             "exportedHierarchyNodeCount": len(nodes),
