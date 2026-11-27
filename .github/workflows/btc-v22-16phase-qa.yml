@@ -11,6 +11,7 @@ on:
       - 'racers/btc-maya-groom.js'
       - 'racers/btc-atelier-preview.js'
       - 'tests/btc-v22-16phase-qa.mjs'
+      - 'tests/btc-native-hind-ab.mjs'
       - '.github/workflows/btc-v22-16phase-qa.yml'
   pull_request:
     branches: [main]
@@ -59,6 +60,7 @@ jobs:
           node --check racers/btc-maya-master.js
           node --check racers/btc-atelier-preview.js
           node --check tests/btc-v22-16phase-qa.mjs
+          node --check tests/btc-native-hind-ab.mjs
           node --test tests/btc-v12-anatomy-contract.mjs tests/btc-horse-atelier-contract.mjs tests/btc-master-change-policy.mjs tests/btc-maya-native-index-identity.mjs
       - name: Install Chromium and 3D runtime
         run: |
@@ -71,6 +73,7 @@ jobs:
           trap 'kill "$PID" || true' EXIT
           sleep 2
           node tests/btc-v22-16phase-qa.mjs
+          node tests/btc-native-hind-ab.mjs
       - name: Finalize isolated WebGL run locator (commit status only)
         if: always()
         env:
@@ -89,5 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: btc-v22-16-gallop-six-cameras
-          path: artifacts/btc-v22-full-cycle/**
+          path: |
+            artifacts/btc-v22-full-cycle/**
+            artifacts/btc-native-hind-ab/**
           if-no-files-found: warn
