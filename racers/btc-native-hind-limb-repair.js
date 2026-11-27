@@ -1248,6 +1248,15 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    // cyclic order and creates one continuous skinned strip per flank.
    const bridgePositions=[],bridgeNormals=[],bridgeJoints=[],bridgeWeights=[],bridgeIndices=[];
    const projected=new Map(),layerProjected=new Map(),donorBase=donorPos.count;
+   const assertBridgeSkinArrays=stage=>{
+    const vertices=bridgePositions.length/3;
+    const shape={stage,positionValues:bridgePositions.length,normalValues:bridgeNormals.length,
+     jointValues:bridgeJoints.length,weightValues:bridgeWeights.length,vertices,
+     jointVertexCount:bridgeJoints.length/4,weightVertexCount:bridgeWeights.length/4};
+    if(bridgePositions.length%3||bridgeNormals.length!==bridgePositions.length||
+       bridgeJoints.length!==vertices*4||bridgeWeights.length!==vertices*4)
+     throw Error('BTC seam bridge attribute arrays diverged during '+stage+': '+JSON.stringify(shape));
+   };
    const bridgeEndpointInfo=new Map();
    // The collar relaxation runs after the first loft build. Keep the source
    // correspondence so the curved rings can be reprojected onto the final
@@ -1732,6 +1741,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgePositions.push(...sample.point);bridgeNormals.push(...n);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
+    assertBridgeSkinArrays('host endpoint');
     projected.set(key,index);
     bridgeEndpointInfo.set(index,{hostSourceId});
     return index;
@@ -1900,6 +1910,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgePositions.push(...point);bridgeNormals.push(...outward);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
+    assertBridgeSkinArrays('Hermite layer');
     bridgeVertexSpecs.set(index,{
      donorId,
      sample:{a:sample.a,b:sample.b,t},
@@ -2014,6 +2025,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgePositions.push(...point);bridgeNormals.push(...outward);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
+    assertBridgeSkinArrays('Steiner center');
     return index;
    }
    function splitHostBoundaryEdges(samplesByEdge){
@@ -2168,6 +2180,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgePositions.push(...point);bridgeNormals.push(...outward);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
+    assertBridgeSkinArrays('cross-boundary interpolation');
     cache.set(key,index);
     return index;
    }
@@ -2769,6 +2782,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
         bridgeNormals.push(...bestTrianglePair.normals);
         bridgeJoints.push(...bestTrianglePair.joints);
         bridgeWeights.push(...bestTrianglePair.weights);
+        assertBridgeSkinArrays('accepted adaptive quad fan');
         candidateTriangles.push(...bestTrianglePair.candidates);
         qualityValues.push(...bestTrianglePair.qualities);
         adaptiveQuadTriangleFanCells+=bestTrianglePair.fanCells;
@@ -2819,6 +2833,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        }
        if(!valid)break;
       }
+      assertBridgeSkinArrays('adaptive strip completion');
       if(valid&&candidateTriangles.length&&candidateTriangles.length===qualityValues.length){
        try{
         const oriented=orientBridgeStrip(candidateTriangles.map(item=>item.ids));
@@ -2853,6 +2868,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        seamBridgeZipperAdaptiveRejectReasons.push(adaptiveRejectReason||'adaptive strip rejected without a local cell reason');
       }
      }
+     assertBridgeSkinArrays('boundary loop completion');
      // Only the arc-length fallback inserts host edge points. The adaptive DP
      // patch terminates on original Maya vertices and must leave those edges
      // unsplit so the bridge and host share the exact same indexed boundary.
