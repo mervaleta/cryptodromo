@@ -33,7 +33,7 @@ page.on('console',m=>{
 });
 page.on('requestfailed',r=>requestFailures.push({url:r.url(),error:r.failure()?.errorText||'unknown'}));
 try{
- await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
+ await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&btcDonorHindExperiment=1#BTC',{waitUntil:'domcontentloaded',timeout:90000});
  try{
   await page.waitForFunction(()=>{
    const s=window.__cryptodromoBTCAtelierQA?.();
@@ -82,7 +82,7 @@ try{
  // Isolate the same components at rest and under the failing Gallop pose.
  // These diagnostic URLs NEVER represent a publishable model.
  for(const [label,flag] of [['no-tail','btcHideTailQA'],['no-donor','btcHideDonorQA']]){
-  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&'+flag+'=1#BTC',
+  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&btcDonorHindExperiment=1&'+flag+'=1#BTC',
    {waitUntil:'domcontentloaded',timeout:90000});
   await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.harmonyBuild===
    'btc-v22-continuous-hind-seam-20261107',null,{timeout:120000});
@@ -102,7 +102,7 @@ try{
  // Inspect the actual sewn surface in a distinct diagnostic material. If the
  // green double-sided bridge still leaves a black cavity, the issue is its
  // position/coverage, not backface winding. This is internal QA only.
- await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&btcHideTailQA=1&btcSeamDebugQA=1#BTC',
+ await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&btcDonorHindExperiment=1&btcHideTailQA=1&btcSeamDebugQA=1#BTC',
   {waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.harmonyBuild===
   'btc-v22-continuous-hind-seam-20261107',null,{timeout:120000});
