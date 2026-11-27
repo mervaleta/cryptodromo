@@ -9,7 +9,7 @@ import {resolve,sep} from 'node:path';
 import {createHash} from 'node:crypto';
 import {chromium} from 'playwright';
 const dest='artifacts/btc-native-hind-ab-smoke';mkdirSync(dest,{recursive:true});
-const build='btc-v22-continuous-hind-seam-20261107';
+const build='btc-v23-native-hind-sculpt-20261127';
 const browser=await chromium.launch({headless:true,args:[
  '--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--enable-unsafe-swiftshader'
 ]});
