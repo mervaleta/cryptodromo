@@ -12,6 +12,7 @@ It does not change the running BTC model or the other 99 racers.
 from __future__ import print_function
 import argparse
 import json
+import math
 import os
 import sys
 
@@ -27,7 +28,7 @@ def flatten_matrix(raw):
         raw = raw[0]
     if isinstance(raw, (tuple, list)) and len(raw) == 16:
         values = [float(x) for x in raw]
-        if not all(__import__("math").isfinite(x) for x in values):
+        if not all(math.isfinite(x) for x in values):
             raise RuntimeError("Maya matrix contains nonfinite values")
         return values
     raise RuntimeError("Expected Maya 4x4 bindPreMatrix; got %r" % (raw,))
