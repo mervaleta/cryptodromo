@@ -1,0 +1,44 @@
+name: BTC Maya native skin export · source contract
+on:
+  push:
+    branches:
+      - feat/btc-v22-continuous-hind-seam-20261107
+    paths:
+      - 'tools/export_btc_maya_skin.py'
+      - 'tools/btc/export_maya_rig_motion.py'
+      - 'tools/btc/export_maya_skincluster.py'
+      - 'tools/btc/validate_maya_skincluster.py'
+      - 'tools/btc/test_validate_maya_skincluster.py'
+      - 'scripts/extract-btc-maya-skin.py'
+      - '.github/workflows/btc-maya-source-export.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/export_btc_maya_skin.py'
+      - 'tools/btc/**'
+      - 'scripts/extract-btc-maya-skin.py'
+      - '.github/workflows/btc-maya-source-export.yml'
+permissions:
+  contents: read
+jobs:
+  source-export-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile source-only Maya exporters
+        run: |
+          python -m py_compile tools/export_btc_maya_skin.py
+          python -m py_compile tools/btc/export_maya_rig_motion.py
+          python -m py_compile tools/btc/export_maya_skincluster.py
+          python -m py_compile tools/btc/validate_maya_skincluster.py
+          python -m py_compile scripts/extract-btc-maya-skin.py
+      - name: Run sparse native-skin contract regressions
+        run: python -m unittest discover -s tools/btc -p 'test_validate_maya_skincluster.py' -v
+      - name: State Maya execution boundary
+        run: |
+          echo "This runner does not contain Autodesk Maya or mayapy."
+          echo "No Horse_VR_2017.ma export, rig restoration, or animation certification is claimed."
