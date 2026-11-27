@@ -285,3 +285,17 @@ No declarar `verified` únicamente por editar un GLB, abrir PR, ajustar código 
 - Added `tools/btc/export_maya_rig_motion.py` at code commit `8562fc33ed554c36ae84c41674a3ad6a9cf05a8b`. It is a Maya `mayapy` source extractor: all scene joints and ancestor transforms, the 70 skinCluster influence-to-joint mappings, original bindPreMatrix values, mesh inclusive matrix, and sampled local joint matrices at a requested FPS/range. It deliberately emits JSON, not a GLB, and labels the selected animation range unverified.
 - Pair it with existing `tools/export_btc_maya_skin.py` for all sparse original skin weights. Do not truncate the original rows to four influences or bind them to the unrelated Quaternius 50-joint rig.
 - **Not executed:** `Horse_VR_2017.ma` and the private sparse-weight/bind archives are not present in the current Library/runtime. No Maya export, rig restoration, animation certification or V24 visual credit is claimed. The script is preparation for a real source-backed reconstruction, not a substitute for it.
+
+
+## 2026-11-27 · V23 · retirar injerto posterior y conservar el sculpt Maya completo (aceptada internamente, no publicada)
+
+- Commit geométrico `3ad85adb475157ba15341d8b74d976a5e871b7a8`: la ruta BTC por defecto conserva las patas posteriores completas del sculpt Maya 2017 y omite el injerto de muslo/casco Quaternius; la ruta donante queda sólo como A/B explícito.
+- Chromium/SwiftShader WebGL real en head `3177da5aac0ed0bbe5d6d6f51009015eda1c8cef`: run [45969143111](https://github.com/mervaleta/cryptodromo/actions/runs/45969143111), 34 PNG, 16 fases de perfil y seis familias de cámara; artifact #15184722644, ZIP SHA-256 `c0cbd4a1df3cdceeca92fb5835b6feeccc5f8850ce8099d13003d95ed8377192`. A/B donor anterior: run [45958946652](https://github.com/mervaleta/cryptodromo/actions/runs/45958946652), artifact #15181108515, SHA-256 `7c3f677e3c854ec3a67287ecc3cb65c4666ddd37a1c21f844d2491fdf29b8dd9`.
+- La comparación física confirma que desaparecen el flap del collar donante y la separación visible grupa-muslo. MAE RGB reportado en las vistas equivalentes: perfil 2.845/255, rear 3.567/255, tres cuartos 2.837/255, frente 0.994/255, top 0.862/255 y detalle 3.900/255. Métricas del render: 10.322 triángulos del sculpt Maya, cero triángulos posteriores donantes, cero cortes y cero puente de costura.
+- Límite: el skinning todavía usa nearest-neighbour desde el Gallop Quaternius de 50 huesos. No están restaurados skinCluster1 de 70 influencias ni jerarquía Maya de 164 joints. Crin/cola y biomecánica requieren trabajo adicional. `AAAApproved=false`, `liveHostingerVerified=false`; PR #136 sigue draft y Hostinger/main permanece en V21. No es release ni aprobación final.
+
+## 2026-11-27 · preparación del export nativo Maya (sin crédito V24)
+
+- `tools/export_btc_maya_skin.py` ahora produce el esquema compatible con el validador del skin original y conserva sparse weights completos, blend weights, matrices de bind, conexiones y parámetros del skinCluster. Commits `fb37e9404eae0a72ade703e9a7aefe5b18788ab7` y `0a753906be1c63ea53819082abcfef3f166b9a2f`.
+- Workflow [45983169440](https://github.com/mervaleta/cryptodromo/actions/runs/45983169440) aprobó py_compile y 25 pruebas de contrato. No contiene Maya/mayapy y no ejecutó `Horse_VR_2017.ma`; no se afirma exportación, restauración del rig ni cambio visual.
+- El original y `212734.mp4` siguen sin estar disponibles en los archivos accesibles. No avanzar V24 hasta ejecutar y verificar los datos fuente reales.
