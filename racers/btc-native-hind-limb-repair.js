@@ -2429,7 +2429,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     // no donor triangle can invert or collapse.
     {
      const side=Math.sign(pointAt(donorPos,donor[0])[0]);
-     const radius=.024,sigma=.0096,radiusSq=radius*radius;
+     const radius=.032,sigma=.0128,radiusSq=radius*radius;
      // A full projection asks the coarse donor collar to absorb a 3-4 mm
      // shape mismatch in one pass. Its face-preserving line search accepted
      // under 10% of that motion. Start with a controlled 35% conform target;
