@@ -59,6 +59,109 @@ def node_matrix(cmds, path, attribute):
     return flatten_matrix(cmds.getAttr(path + "." + attribute), path + "." + attribute)
 
 
+def collect_animation_inventory(cmds, om, oma, max_curves):
+    """Describe source animation curves without guessing which range is Gallop."""
+    curve_paths = sorted(cmds.ls(type="animCurve", long=True) or [])
+    if len(curve_paths) > max_curves:
+        raise RuntimeError("Scene has %d animCurves; inventory limit is %d" %
+                           (len(curve_paths), max_curves))
+
+    curves = []
+    type_counts = {}
+    total_keys = 0
+    all_time_ranges = []
+    for path in curve_paths:
+        selection = om.MSelectionList()
+        selection.add(path)
+        fn = oma.MFnAnimCurve(selection.getDependNode(0))
+        key_count = int(fn.numKeys)
+        input_values = []
+        key_values = []
+        time_based = None
+        for index in range(key_count):
+            input_value = fn.input(index)
+            if hasattr(input_value, "asUnits"):
+                time_based = True
+                input_values.append(float(input_value.asUnits(om.MTime.uiUnit())))
+            else:
+                if time_based is None:
+                    time_based = False
+                input_values.append(float(input_value))
+            key_values.append(float(fn.value(index)))
+
+        destinations = sorted(set(cmds.listConnections(
+            path, source=False, destination=True, plugs=True) or []))
+        destination_nodes = sorted(set(
+            plug.rsplit(".", 1)[0] for plug in destinations if "." in plug))
+        destination_types = {}
+        for node in destination_nodes:
+            destination_types[node] = cmds.nodeType(node)
+
+        curve_type = cmds.nodeType(path)
+        type_counts[curve_type] = type_counts.get(curve_type, 0) + 1
+        total_keys += key_count
+        input_range = [min(input_values), max(input_values)] if input_values else None
+        value_range = [min(key_values), max(key_values)] if key_values else None
+        if time_based and input_range:
+            all_time_ranges.append(input_range)
+
+        curves.append({
+            "path": path,
+            "type": curve_type,
+            "timeBased": bool(time_based),
+            "keyCount": key_count,
+            "keyInputRange": input_range,
+            "keyTimeRangeFrames": input_range if time_based else None,
+            "keyValueRange": value_range,
+            "destinationPlugs": destinations,
+            "destinationNodes": destination_nodes,
+            "destinationNodeTypes": destination_types,
+        })
+
+    constraint_types = (
+        "parentConstraint", "pointConstraint", "orientConstraint",
+        "aimConstraint", "scaleConstraint", "poleVectorConstraint",
+        "ikHandle", "motionPath", "pairBlend",
+    )
+    constraints = []
+    for node_type in constraint_types:
+        for node in sorted(cmds.ls(type=node_type, long=True) or []):
+            incoming = sorted(set(cmds.listConnections(
+                node, source=True, destination=False, plugs=True) or []))
+            outgoing = sorted(set(cmds.listConnections(
+                node, source=False, destination=True, plugs=True) or []))
+            constraints.append({
+                "path": node,
+                "type": node_type,
+                "incomingPlugs": incoming,
+                "outgoingPlugs": outgoing,
+            })
+
+    animation_layers = []
+    for layer in sorted(cmds.ls(type="animLayer", long=True) or []):
+        attributes = sorted(set(cmds.animLayer(
+            layer, query=True, attribute=True) or []))
+        animation_layers.append({
+            "path": layer,
+            "attributeCount": len(attributes),
+            "attributes": attributes,
+        })
+
+    return {
+        "curveCount": len(curves),
+        "totalKeyCount": total_keys,
+        "curveTypeCounts": type_counts,
+        "sceneTimeRangeFrames": [
+            min(pair[0] for pair in all_time_ranges),
+            max(pair[1] for pair in all_time_ranges),
+        ] if all_time_ranges else None,
+        "curves": curves,
+        "constraints": constraints,
+        "animationLayers": animation_layers,
+        "classification": "inventory-only; no clip is declared Gallop by this scan",
+    }
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--scene", required=True, help="Original Horse_VR_2017.ma")
@@ -68,6 +171,7 @@ def parse_args():
     parser.add_argument("--end", type=float, default=None, help="End frame; defaults to Maya playback maximum")
     parser.add_argument("--fps", type=float, default=60.0, help="Baked output sampling rate")
     parser.add_argument("--max-samples", type=int, default=1800, help="Safety limit for sampled poses")
+    parser.add_argument("--max-anim-curves", type=int, default=25000, help="Safety limit for source animation inventory")
     parser.add_argument("--clip-name", default="unclassified-playback-range")
     return parser.parse_args()
 
@@ -76,8 +180,8 @@ def run():
     args = parse_args()
     if not os.path.isfile(args.scene):
         raise RuntimeError("Maya source missing: " + args.scene)
-    if args.fps <= 0 or args.max_samples < 2:
-        raise RuntimeError("Invalid sample rate or max-samples")
+    if args.fps <= 0 or args.max_samples < 2 or args.max_anim_curves < 1:
+        raise RuntimeError("Invalid sample rate, max-samples or max-anim-curves")
 
     import maya.standalone
     maya.standalone.initialize(name="python")
@@ -232,7 +336,7 @@ def run():
             cmds.currentTime(original_time, edit=True, update=True)
             cmds.refresh(force=True)
 
-        anim_curves = cmds.ls(type="animCurve") or []
+        animation_inventory = collect_animation_inventory(cmds, om, oma, args.max_anim_curves)
         output = {
             "format": "btc-maya-rig-motion-v1",
             "sourceScene": cmds.file(query=True, sceneName=True),
@@ -263,8 +367,13 @@ def run():
                 "maxLocalMatrixDeltaFromFirstPose": max_pose_delta,
                 "frames": frames,
             },
+            "animationInventory": animation_inventory,
             "diagnostics": {
-                "animCurveNodeCountInScene": len(anim_curves),
+                "animCurveNodeCountInScene": animation_inventory["curveCount"],
+                "animCurveKeyCountInScene": animation_inventory["totalKeyCount"],
+                "animCurveTypeCounts": animation_inventory["curveTypeCounts"],
+                "constraintNodeCountInScene": len(animation_inventory["constraints"]),
+                "animationLayerCountInScene": len(animation_inventory["animationLayers"]),
                 "coordinateBasis": "original Maya scene basis; no axis conversion",
                 "matrixConvention": "16-value Maya row-major",
                 "weights": "export separately with tools/export_btc_maya_skin.py; preserve every sparse influence",
