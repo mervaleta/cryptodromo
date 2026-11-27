@@ -14,10 +14,10 @@
  */
 import * as THREE from 'three';
 
-// Isolated geometry A/B: lower the paired Maya/donor posterior cut by 1 mm.
-// The previous 20 mm cross-section left a 4.31 mm maximum rim mismatch in real WebGL.
-// This is a candidate parameter, not a numbered or approved version.
-const BTC_SEAM_CUT_Z = 0.0190;
+// Roll back the 19 mm cut: real WebGL produced a larger residual gap and rejected both loft loops.
+// Keep the previously accepted 20 mm paired Maya/donor cross-section while repairing the loft itself.
+// This is an isolated geometry rollback, not a numbered or approved version.
+const BTC_SEAM_CUT_Z = 0.0200;
 
 
 /**
