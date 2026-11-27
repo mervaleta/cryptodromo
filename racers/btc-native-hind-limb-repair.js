@@ -2873,7 +2873,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // patch terminates on original Maya vertices and must leave those edges
      // unsplit so the bridge and host share the exact same indexed boundary.
      if(!adaptiveBridge){
-      registerHostBoundarySamples(alignment);
+      // Do not split the Maya host boundary until the resampled bridge is
+      // accepted. A rejected loft falls back to the original DP zipper, whose
+      // edges must still meet the unsplit source boundary.
       const indexStart=bridgeIndices.length;
       const positionStart=bridgePositions.length,normalStart=bridgeNormals.length,
        jointStart=bridgeJoints.length,weightStart=bridgeWeights.length;
@@ -2962,6 +2964,7 @@ const fractions=[.2,.4,.6,.8];
         bridgeMaxHostStep=Math.max(bridgeMaxHostStep,
          distance3(positionFor(projectedIds[i]),positionFor(projectedIds[next])));
        }
+       registerHostBoundarySamples(alignment);
        resampledBridge=true;
       }else{
        bridgeIndices.length=indexStart;
