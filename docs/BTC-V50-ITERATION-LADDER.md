@@ -354,3 +354,10 @@
 - **Remaining defects / limits:** this is a localized geometry improvement, not a restored native rig. `HorseRig1:skinCluster1` 70-influence weights and the original 164-joint hierarchy are still NOT active; skinning remains nearest-neighbour transfer from the Quaternius 50-joint Gallop. Some hind-joint deformation and the overall gait still need biomechanical review. Mane/tail groom remains angular and detached-looking in some views. The exact `Horse_VR_2017.ma`, its private sparse-weight/bind exports and `212734.mp4` are not available in the current Library/runtime, so no native rig or video study is claimed.
 - **Decision:** V23 is credited only for this verified removal of the donor graft and improved hind-limb continuity. `AAAApproved=false`; `liveHostingerVerified=false`. PR #136 remains draft/unmerged and Hostinger/main remains V21. No release, no V24 increment, no V50 claim.
 - **Next root priority:** recover the actual original Maya source/70-weight export and reconstruct its hierarchy, inverse binds and animation mapping; do not disguise the remaining Quaternius weight transfer as native Maya skinning.
+
+
+## 2026-11-27 · Native Maya rig extraction tooling (NOT V24)
+
+- Added `tools/btc/export_maya_rig_motion.py` at code commit `8562fc33ed554c36ae84c41674a3ad6a9cf05a8b`. It is a Maya `mayapy` source extractor: all scene joints and ancestor transforms, the 70 skinCluster influence-to-joint mappings, original bindPreMatrix values, mesh inclusive matrix, and sampled local joint matrices at a requested FPS/range. It deliberately emits JSON, not a GLB, and labels the selected animation range unverified.
+- Pair it with existing `tools/export_btc_maya_skin.py` for all sparse original skin weights. Do not truncate the original rows to four influences or bind them to the unrelated Quaternius 50-joint rig.
+- **Not executed:** `Horse_VR_2017.ma` and the private sparse-weight/bind archives are not present in the current Library/runtime. No Maya export, rig restoration, animation certification or V24 visual credit is claimed. The script is preparation for a real source-backed reconstruction, not a substitute for it.
