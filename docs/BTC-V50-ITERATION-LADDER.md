@@ -8,9 +8,9 @@
 
 ## 28 hitos condicionados a mejora real
 - [x] V23: conservar el esculpido Maya completo de las patas posteriores y retirar el injerto Quaternius · code SHA: `3ad85adb475157ba15341d8b74d976a5e871b7a8` · verification SHA: `3177da5aac0ed0bbe5d6d6f51009015eda1c8cef` · WebGL artifact: `15184722644` · QA visual: mejora aceptada internamente; V24–V50 pendientes
-- [ ] V24: cerrar costura posterior continua · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
-- [ ] V25: exportar pesos exactos del skinCluster1 Maya · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
-- [ ] V26: exportar matrices inverse-bind y jerarquía propia · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
+- [ ] V24: aplicar skinCluster1 Maya de 70 influencias al sculpt completo y retirar el nearest-neighbour Quaternius · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
+- [ ] V25: reconstruir la jerarquía Maya original de 164 joints · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
+- [ ] V26: integrar bindPreMatrix, geometryMatrix, blend weights y skinning method fieles · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
 - [ ] V27: hornear y retargetear locomoción al rig original · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
 - [ ] V28: recomponer hombro y grupa · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
 - [ ] V29: preservar articulaciones de rodilla/corvejón/menudillo · SHA: pendiente · fotos WebGL: pendientes · QA visual: pendiente
