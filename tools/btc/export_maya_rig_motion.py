@@ -230,9 +230,7 @@ def run():
             "sourceScene": cmds.file(query=True, sceneName=True),
             "skinCluster": skin_name,
             "meshPath": mesh_path.fullPathName(),
-            "meshInclusiveMatrix": flatten_matrix(
-                cmds.xform(geometry[0], query=True, matrix=True, worldSpace=True),
-                "skinCluster mesh inclusive matrix"),
+            "meshInclusiveMatrix": [float(x) for x in mesh_path.inclusiveMatrix()],
             "vertexCount": vertex_count,
             "sceneJointCount": len(all_joints),
             "exportedHierarchyNodeCount": len(nodes),
