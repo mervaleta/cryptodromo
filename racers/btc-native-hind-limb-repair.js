@@ -2217,6 +2217,23 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeJoints.push(...Array.from({length:4},(_,k)=>top[k]?.[0]||0));
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     assertBridgeSkinArrays('cross-boundary interpolation');
+    // Adaptive DP bridge vertices are built before the guarded donor-collar
+    // relaxation below. Retain their exact Maya endpoint and Hermite inputs
+    // so the loft can be rebuilt against the FINAL donor one-ring. Without
+    // this, the donor rim stays pinned but its supporting collar normals and
+    // tangents change, leaving the old bridge surface stale at the rump/stifle.
+    if(!Number.isInteger(hostSourceId))
+     throw Error('BTC adaptive seam vertex has no exact Maya host source for post-relax reprojection');
+    const hostRimTangent=hostRimTangentById.get(hostSourceId)||null;
+    bridgeVertexSpecs.set(index,{
+     donorId,
+     sample:{a:hostSourceId,b:hostSourceId,t:0},
+     fraction:t,
+     hostRimTangent:hostRimTangent?.slice()||null,
+     hostSurfaceInward:hostSurface?.vector?
+      {vector:hostSurface.vector.slice()}:null,
+     orientation:{...seamTangentOrientation}
+    });
     cache.set(key,index);
     return index;
    }
@@ -2721,6 +2738,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
      // each DP triangle along its donor-to-host edges so the adaptive mapping
      // retains a rounded, skinned transition without creating T-junctions.
      if(zipperPath?.length){
+      const bridgeSpecsBeforeAdaptive=new Set(bridgeVertexSpecs.keys());
       const indexStart=bridgeIndices.length;
       const positionStart=bridgePositions.length,normalStart=bridgeNormals.length,
        jointStart=bridgeJoints.length,weightStart=bridgeWeights.length;
@@ -2902,6 +2920,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
        bridgeIndices.length=indexStart;
        bridgePositions.length=positionStart;bridgeNormals.length=normalStart;
        bridgeJoints.length=jointStart;bridgeWeights.length=weightStart;
+       // Discard provenance for adaptive vertices whose geometry was rolled back.
+       for(const key of [...bridgeVertexSpecs.keys()])
+        if(!bridgeSpecsBeforeAdaptive.has(key))bridgeVertexSpecs.delete(key);
        bridgeZipperAdaptiveRejects++;
        seamBridgeZipperAdaptiveRejectReasons.push(adaptiveRejectReason||'adaptive strip rejected without a local cell reason');
       }
