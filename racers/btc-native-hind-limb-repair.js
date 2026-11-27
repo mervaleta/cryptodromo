@@ -740,7 +740,7 @@ export function createBTCNativeHindLimbRepair(root,original,anatomy) {
  const originalHostGeometry=anatomy.geometry;
  const originalMeshMaterial=anatomy.mesh.material;
  const crop=cropMayaHind(anatomy);
- let donorHooves=null,bodyCut=null,hoovesCut=null,combinedGeometry=null,donorMaterial=null;
+ let donorHooves=null,bodyCut=null,hoovesCut=null,combinedGeometry=null,donorMaterial=null,bridgeMaterial=null;
  try{
   bodyCut=clipNativeBodyHindExact(original);
 
@@ -3696,7 +3696,7 @@ const fractions=[.2,.4,.6,.8];
    for(const group of groups)
     combined.addGroup(group.start,group.count,group.materialIndex||0);
    combined.addGroup(hi.count,donorSurfaceIndexCount,2);
-   combined.addGroup(bridgeIndexStart,data.indices.length,2);
+   combined.addGroup(bridgeIndexStart,data.indices.length,3);
    // Solve bridge winding against BOTH real source surfaces after welding.
    // Orienting the zipper internally is insufficient: its outer edges must
    // run opposite to the adjacent Maya and donor faces, or WebGL back-face
@@ -3835,20 +3835,33 @@ const fractions=[.2,.4,.6,.8];
    combinedGeometry=combined;
    donorMaterial=anatomy.materials[0].clone();
    donorMaterial.name='BTC unified native hind-limb coat';
-   // One-off real-WebGL diagnostic: color and double-side only the added
-   // donor+seam material to distinguish a backface hole from a missing/
-   // misplaced bridge. The flag is never enabled in the public build.
+   bridgeMaterial=donorMaterial;
+   // One-off real-WebGL diagnostic: separate the bridge from the donor skin
+   // and draw it through the host shell. This reveals whether the loft is
+   // missing or merely recessed behind the retained Maya surface. The flag
+   // is never enabled in the public build.
    if(typeof location!=='undefined'&&
       new URLSearchParams(location.search).get('btcSeamDebugQA')==='1'){
     donorMaterial.side=THREE.DoubleSide;
     donorMaterial.color?.setHex?.(0x36ff72);
     donorMaterial.emissive?.setHex?.(0x002b10);
     if('emissiveIntensity' in donorMaterial)donorMaterial.emissiveIntensity=.85;
+    bridgeMaterial=donorMaterial.clone();
+    bridgeMaterial.name='BTC seam loft depth diagnostic';
+    bridgeMaterial.side=THREE.DoubleSide;
+    bridgeMaterial.color?.setHex?.(0xff32dd);
+    bridgeMaterial.emissive?.setHex?.(0x650052);
+    if('emissiveIntensity' in bridgeMaterial)bridgeMaterial.emissiveIntensity=1.1;
+    bridgeMaterial.depthTest=false;
+    bridgeMaterial.depthWrite=false;
+    bridgeMaterial.transparent=true;
+    bridgeMaterial.opacity=.96;
+    bridgeMaterial.needsUpdate=true;
     donorMaterial.needsUpdate=true;
    }
    anatomy.mesh.geometry=combinedGeometry;
    anatomy.geometry=combinedGeometry;
-   anatomy.mesh.material=[...anatomy.materials,donorMaterial];
+   anatomy.mesh.material=[...anatomy.materials,donorMaterial,bridgeMaterial];
    bodyCut.seamBridgeWeldedHostVertices=hostEndpointMap.size;
    bodyCut.seamBridgeHostEndpointCount=data.hostEndpointVertices.length;
    bodyCut.seamBridgeWeldedDonorVertices=donorTwinMap.size;
@@ -3874,6 +3887,8 @@ const fractions=[.2,.4,.6,.8];
    anatomy.mesh.material=originalMeshMaterial;
    combinedGeometry.dispose();combinedGeometry=null;
   }
+  if(bridgeMaterial&&bridgeMaterial!==donorMaterial)bridgeMaterial.dispose();
+  bridgeMaterial=null;
   donorMaterial?.dispose();donorMaterial=null;
   bodyCut?.geometry.dispose();hoovesCut?.geometry.dispose();
   crop.restore();throw e;
@@ -3973,6 +3988,8 @@ const fractions=[.2,.4,.6,.8];
    anatomy.geometry=originalHostGeometry;
    anatomy.mesh.material=originalMeshMaterial;
    combinedGeometry?.dispose();combinedGeometry=null;
+   if(bridgeMaterial&&bridgeMaterial!==donorMaterial)bridgeMaterial.dispose();
+   bridgeMaterial=null;
    donorMaterial?.dispose();donorMaterial=null;
    bodyCut.geometry.dispose();hoovesCut.geometry.dispose();
    crop.restore();
