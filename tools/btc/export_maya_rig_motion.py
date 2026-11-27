@@ -192,6 +192,9 @@ def run():
             raise RuntimeError("Animation sample end must be greater than start")
         step = scene_fps / args.fps
         sample_count = int(math.floor((end - start) / step + 1e-8)) + 1
+        last_sample = start + (sample_count - 1) * step
+        if end - last_sample > 1e-6:
+            sample_count += 1
         if sample_count < 2 or sample_count > args.max_samples:
             raise RuntimeError("Refusing %d samples; set a shorter clip range or explicit max-samples" % sample_count)
 
@@ -227,6 +230,9 @@ def run():
             "sourceScene": cmds.file(query=True, sceneName=True),
             "skinCluster": skin_name,
             "meshPath": mesh_path.fullPathName(),
+            "meshInclusiveMatrix": flatten_matrix(
+                cmds.xform(geometry[0], query=True, matrix=True, worldSpace=True),
+                "skinCluster mesh inclusive matrix"),
             "vertexCount": vertex_count,
             "sceneJointCount": len(all_joints),
             "exportedHierarchyNodeCount": len(nodes),
