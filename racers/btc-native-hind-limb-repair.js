@@ -1715,16 +1715,9 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const t=Math.max(0,Math.min(1,sample.t));
     const key=[sample.a,sample.b,Math.round(t*1e8)].join(':');
     const hostSourceId=sample.a===sample.b?sample.a:null;
-    // Interior arc-length samples become actual Maya edge vertices when the
-    // accepted resampled strip is committed. Preserve the same canonical
-    // edge+t identity used by splitHostBoundaryEdges so the bridge can weld
-    // to that exact inserted vertex rather than a coincident UV/material twin.
-    const hostSplitKey=hostSourceId===null?
-     [Math.min(sample.a,sample.b),Math.max(sample.a,sample.b),
-      Math.round((sample.a<sample.b?t:1-t)*1e8)].join(':'):null;
     if(projected.has(key)){
      const existing=projected.get(key);
-     bridgeEndpointInfo.set(existing,{hostSourceId,hostSplitKey});
+     bridgeEndpointInfo.set(existing,{hostSourceId});
      return existing;
     }
     const influence=new Map();
@@ -1750,7 +1743,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     bridgeWeights.push(...Array.from({length:4},(_,k)=>(top[k]?.[1]||0)/total));
     assertBridgeSkinArrays('host endpoint');
     projected.set(key,index);
-    bridgeEndpointInfo.set(index,{hostSourceId,hostSplitKey});
+    bridgeEndpointInfo.set(index,{hostSourceId});
     return index;
    }
    // Recover the cross-boundary tangent from the actual adjacent source
@@ -1865,32 +1858,42 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     const h00=2*t3-3*t2+1,h10=t3-2*t2+t,
      h01=-2*t3+3*t2,h11=t3-t2;
     const smooth=t2*(3-2*t);
-    // The Maya rump and Quaternius thigh can meet at a steep fold where
-    // their authored outward normals fall into opposite hemispheres. A raw
-    // lerp then collapses toward zero at the center of the loft, hiding the
-    // bridge under the rump and leaving a dark slit. Align endpoint normals
-    // for the loft offset; final render normals are recomputed from the
-    // welded mesh after the bridge is accepted.
-    const normalDot=dot(n0,n1);
-    const alignedN1=normalDot<-.05?n1.map(v=>-v):n1;
-    if(normalDot<-.05)seamBridgeNormalHemisphereFlips++;
-    const blended=n0.map((v,k)=>v*(1-smooth)+alignedN1[k]*smooth);
-    const blendedLength=Math.hypot(...blended);
+    // Rotate the loft offset from the donor's outward normal to the Maya
+    // host's outward normal. Linear interpolation collapses when the two
+    // source surfaces face opposite hemispheres, placing the bridge inside
+    // the rump. Spherical interpolation preserves unit length and both
+    // endpoint directions throughout the transition.
+    const unitNormal=values=>{
+     const length=Math.hypot(...values);
+     return length>1e-9?values.map(v=>v/length):[0,1,0];
+    };
+    const slerpNormal=(a,b,f)=>{
+     const cosine=Math.max(-1,Math.min(1,dot(a,b)));
+     if(cosine>.9995)return unitNormal(a.map((v,k)=>v*(1-f)+b[k]*f));
+     const angle=Math.acos(cosine),sine=Math.sin(angle);
+     if(Math.abs(sine)<1e-8)return unitNormal(a.map((v,k)=>v*(1-f)+b[k]*f));
+     const wa=Math.sin((1-f)*angle)/sine,wb=Math.sin(f*angle)/sine;
+     return unitNormal(a.map((v,k)=>v*wa+b[k]*wb));
+    };
+    const startNormal=unitNormal(n0),endNormal=unitNormal(n1);
+    const normalDot=Math.max(-1,Math.min(1,dot(startNormal,endNormal)));
+    if(normalDot<-.05)seamBridgeNormalSlerpPairs++;
     let outward;
-    if(blendedLength>1e-7){
-     outward=blended.map(v=>v/blendedLength);
-    }else{
-     seamBridgeNormalBlendDegeneracies++;
+    if(normalDot<-.9995){
+     seamBridgeNormalAntipodalFallbacks++;
      const rim=(donorRimTangent&&hostRimTangent)?
       donorRimTangent.map((v,k)=>v+hostRimTangent[k]):donorRimTangent||hostRimTangent;
-     const cross=rim?[
+     let middle=rim?[
       rim[1]*gap[2]-rim[2]*gap[1],
       rim[2]*gap[0]-rim[0]*gap[2],
       rim[0]*gap[1]-rim[1]*gap[0]
      ]:[0,0,0];
-     const length=Math.hypot(...cross);
-     outward=length>1e-8?cross.map(v=>v/length):n0.slice();
-     if(dot(outward,n0)<0)outward=outward.map(v=>-v);
+     middle=unitNormal(middle);
+     if(dot(middle,endNormal)<0)middle=middle.map(v=>-v);
+     outward=smooth<.5?slerpNormal(startNormal,middle,smooth*2):
+      slerpNormal(middle,endNormal,(smooth-.5)*2);
+    }else{
+     outward=slerpNormal(startNormal,endNormal,smooth);
     }
     // Retain the 0.9 mm interior bulge: the 1.6 mm A/B rejected one adaptive loop
     // and fell back to a resampled strip with unmatched Maya host edges.
@@ -2168,10 +2171,7 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
     for(const group of nextGroups)hostGeo.addGroup(group.start,group.count,group.materialIndex);
     hostGeo.setDrawRange(0,nextIndices.length);
     hostGeo.computeBoundingBox();hostGeo.computeBoundingSphere();
-    return {points:vertexCount-vertexStart,edges:seenEdges.size,missing,
-     // Keep the exact edge+t -> newly inserted Maya vertex correspondence.
-     // The bridge endpoint must weld by identity, not by nearest position.
-     vertexIds:vertexCache};
+    return {points:vertexCount-vertexStart,edges:seenEdges.size,missing};
    }
    const positionFor=id=>id<donorBase?pointAt(donorPos,id):
     bridgePositions.slice((id-donorBase)*3,(id-donorBase)*3+3);
@@ -2363,8 +2363,8 @@ const targetX=THREE.MathUtils.lerp(x,best.point.x-side*.00008,blend);
    const seamBoundaryClosureDiagnostics=[];
    let seamOpenPaths=0,seamClosedLoops=0,seamVirtualClosures=0,
     seamVirtualClosureMaxGap=0,seamBridgeSurfaceTangentFallbacks=0,
-    seamBridgeTangentDirectionFlips=0,seamBridgeNormalHemisphereFlips=0,
-    seamBridgeNormalBlendDegeneracies=0,
+    seamBridgeTangentDirectionFlips=0,seamBridgeNormalSlerpPairs=0,
+    seamBridgeNormalAntipodalFallbacks=0,
     seamBridgeTangentReachSum=0,seamBridgeTangentReachCount=0;
    let seamDonorRimWeightOverrides=0;
    // Record why the DP loft is rejected so the next geometry pass targets the failed cell.
@@ -3066,19 +3066,6 @@ const fractions=[.2,.4,.6,.8];
     }
    }
    const hostBoundarySplit=splitHostBoundaryEdges(hostBoundarySplitSamples);
-   // Resampled bridge endpoints lie inside original Maya edges. Once those
-   // edges are subdivided, resolve every such endpoint to the precise vertex
-   // created by the same canonical edge+t key. This removes the former
-   // position-only fallback that could leave T-junctions and open bridge
-   // edges when one adaptive loop fell back to the resampled loft.
-   for(const endpoint of bridgeEndpointInfo.values()){
-    if(Number.isInteger(endpoint.hostSourceId)||!endpoint.hostSplitKey)continue;
-    const sourceId=hostBoundarySplit.vertexIds.get(endpoint.hostSplitKey);
-    if(!Number.isInteger(sourceId))
-     throw Error('BTC seam resampled endpoint has no exact subdivided Maya edge vertex: '+
-      endpoint.hostSplitKey);
-    endpoint.hostSourceId=sourceId;
-   }
    bodyCut.seamHostBoundarySplitPoints=hostBoundarySplit.points;
    bodyCut.seamHostBoundarySplitEdges=hostBoundarySplit.edges;
    bodyCut.seamHostBoundarySplitMissing=hostBoundarySplit.missing;
@@ -3110,8 +3097,8 @@ const fractions=[.2,.4,.6,.8];
    bodyCut.seamBridgeVirtualClosureDiagnostics=seamBoundaryClosureDiagnostics;
    bodyCut.seamBridgeSurfaceTangentFallbacks=seamBridgeSurfaceTangentFallbacks;
    bodyCut.seamBridgeTangentDirectionFlips=seamBridgeTangentDirectionFlips;
-   bodyCut.seamBridgeNormalHemisphereFlips=seamBridgeNormalHemisphereFlips;
-   bodyCut.seamBridgeNormalBlendDegeneracies=seamBridgeNormalBlendDegeneracies;
+   bodyCut.seamBridgeNormalSlerpPairs=seamBridgeNormalSlerpPairs;
+   bodyCut.seamBridgeNormalAntipodalFallbacks=seamBridgeNormalAntipodalFallbacks;
    bodyCut.seamBridgeMeanTangentReach=seamBridgeTangentReachCount?
     seamBridgeTangentReachSum/seamBridgeTangentReachCount:0;
    bodyCut.seamBridgeZipperMovesDonor=bridgeZipperMovesDonor;
@@ -3899,8 +3886,8 @@ const fractions=[.2,.4,.6,.8];
     seamBridgeVirtualClosureDiagnostics:bodyCut.seamBridgeVirtualClosureDiagnostics||[],
    seamBridgeSurfaceTangentFallbacks:bodyCut.seamBridgeSurfaceTangentFallbacks||0,
    seamBridgeTangentDirectionFlips:bodyCut.seamBridgeTangentDirectionFlips||0,
-   seamBridgeNormalHemisphereFlips:bodyCut.seamBridgeNormalHemisphereFlips||0,
-   seamBridgeNormalBlendDegeneracies:bodyCut.seamBridgeNormalBlendDegeneracies||0,
+   seamBridgeNormalSlerpPairs:bodyCut.seamBridgeNormalSlerpPairs||0,
+   seamBridgeNormalAntipodalFallbacks:bodyCut.seamBridgeNormalAntipodalFallbacks||0,
    seamBridgeMeanTangentReach:bodyCut.seamBridgeMeanTangentReach||0,
    seamBridgePostRelaxReprojectedVertices:bodyCut.seamBridgePostRelaxReprojectedVertices||0,
    seamBridgePostRelaxMaxShift:bodyCut.seamBridgePostRelaxMaxShift||0,
