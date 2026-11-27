@@ -37,7 +37,7 @@ try{
  try{
   await page.waitForFunction(()=>{
    const s=window.__cryptodromoBTCAtelierQA?.();
-   return s?.heroGroom?.harmonyBuild==='btc-v22-continuous-hind-seam-20261107'
+   return s?.heroGroom?.harmonyBuild==='btc-v23-native-hind-sculpt-20261127'
      && s?.clips?.includes('Gallop') && s.drawCalls>0;
   },null,{timeout:120000});
  }catch(error){
@@ -85,7 +85,7 @@ try{
   await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&btcDonorHindExperiment=1&'+flag+'=1#BTC',
    {waitUntil:'domcontentloaded',timeout:90000});
   await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.harmonyBuild===
-   'btc-v22-continuous-hind-seam-20261107',null,{timeout:120000});
+   'btc-v23-native-hind-sculpt-20261127',null,{timeout:120000});
   await page.locator('[data-btc-camera="rear"]').click();
   for(const pose of [0,8]){
    await page.evaluate(i=>window.__cryptodromoBTCAtelierSetPose?.(i),pose);
@@ -105,7 +105,7 @@ try{
  await page.goto('http://127.0.0.1:8799/racers/?btcFreeze=1&btcCapture=1&btcDonorHindExperiment=1&btcHideTailQA=1&btcSeamDebugQA=1#BTC',
   {waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heroGroom?.harmonyBuild===
-  'btc-v22-continuous-hind-seam-20261107',null,{timeout:120000});
+  'btc-v23-native-hind-sculpt-20261127',null,{timeout:120000});
  await page.locator('[data-btc-camera="rear"]').click();
  await page.evaluate(()=>window.__cryptodromoBTCAtelierSetPose?.(0));
  await page.waitForFunction(()=>window.__cryptodromoBTCAtelierQA?.()?.heldPoseIndex===0,null,{timeout:15000});
