@@ -3430,11 +3430,20 @@ const fractions=[.2,.4,.6,.8];
    const skin=geo.getAttribute('skinIndex'),weight=geo.getAttribute('skinWeight'),index=geo.getIndex();
    if(!position||!normal||!skin||!weight||!index)
     throw Error('BTC seam bridge cannot merge into the skinned donor body');
+   const bridgeShape={
+    donorPositionCount:position.count,donorBase:data.donorBase,
+    bridgePositionValues:data.positions.length,bridgeNormalValues:data.normals.length,
+    bridgeJointValues:data.joints.length,bridgeWeightValues:data.weights.length,
+    bridgeIndexValues:data.indices.length,positionRemainder:data.positions.length%3,
+    normalDelta:data.normals.length-data.positions.length,
+    jointDelta:data.joints.length-data.positions.length/3*4,
+    weightDelta:data.weights.length-data.positions.length/3*4
+   };
    if(position.count!==data.donorBase||data.positions.length%3!==0||
       data.joints.length!==data.positions.length/3*4||
       data.weights.length!==data.positions.length/3*4||
       data.normals.length!==data.positions.length)
-    throw Error('BTC seam bridge virtual index base or skinned attributes are inconsistent');
+    throw Error('BTC seam bridge virtual index base or skinned attributes are inconsistent: '+JSON.stringify(bridgeShape));
    const bridgeVertexCount=data.positions.length/3;
    for(const id of data.hostEndpointVertices)
     if(!Number.isInteger(id)||id<0||id>=bridgeVertexCount)
